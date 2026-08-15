@@ -35,7 +35,7 @@ SDD -> input direto para a IA que vai implementar o código
 Veja o diagrama completo em
 [`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png)
 e a especificação completa em
-[`Framework_Documentacao_Rastreabilidade_v1.1.docx`](Framework_Documentacao_Rastreabilidade_v1.1.docx).
+[`Framework_Documentacao_Rastreabilidade_v1.1.md`](Framework_Documentacao_Rastreabilidade_v1.1.md).
 
 ## Estrutura deste repositório
 

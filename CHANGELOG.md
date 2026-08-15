@@ -4,6 +4,11 @@ Este projeto segue versionamento semântico. Ver `framework.version` em
 `_framework/rules/workflow-rules.yaml` como fonte da verdade da versão
 atual.
 
+## [Unreleased]
+- Especificação convertida de `.docx` para
+  `Framework_Documentacao_Rastreabilidade_v1.1.md` (documento nativo do
+  repositório, sem dependência de Word).
+
 ## [1.1.0] - 2026-08-15
 - Modelo explícito de dois repositórios (central + por projeto); SDD
   passa a viver no repositório do projeto, com `source_docs` carregando
