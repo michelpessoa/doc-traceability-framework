@@ -1,0 +1,43 @@
+# docs/sdd/registry.yaml (repositório do PROJETO "checkout")
+#
+# Só SDDs deste projeto. source_docs referencia PRD/TS/ADR que vivem no
+# repositório central "framework-central" — por isso cada entrada carrega
+# id + url (sem a url a rastreabilidade quebraria ao atravessar repositórios).
+
+project: "EXEMPLO"
+framework_version: "1.1.0"
+
+documents:
+  - id: SDD-EXEMPLO-0001
+    type: SDD
+    title: "Spec Driven Design — checkout com Provedor X"
+    status: approved
+    owner: "time-checkout"
+    created: "2026-08-08"
+    updated: "2026-08-08"
+    relates_to: [PRD-EXEMPLO-0001, TS-EXEMPLO-0001, ADR-EXEMPLO-0001]
+    source_docs:
+      - id: PRD-EXEMPLO-0001
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-prd/PRD-EXEMPLO-0001.md"
+      - id: TS-EXEMPLO-0001
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0001.md"
+      - id: ADR-EXEMPLO-0001
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/02-adr/ADR-EXEMPLO-0001.md"
+    ai_targets: [claude-code, cursor]
+    path: "docs/sdd/SDD-EXEMPLO-0001.md"
+
+  - id: SDD-EXEMPLO-0002
+    type: SDD
+    title: "Spec Driven Design — campo apelido de endereço"
+    status: draft
+    owner: "time-checkout"
+    created: "2026-08-12"
+    updated: "2026-08-12"
+    relates_to: [PRD-EXEMPLO-0002, TS-EXEMPLO-0002]
+    source_docs:
+      - id: PRD-EXEMPLO-0002
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-prd/PRD-EXEMPLO-0002.md"
+      - id: TS-EXEMPLO-0002
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0002.md"
+    ai_targets: [claude-code]
+    path: "docs/sdd/SDD-EXEMPLO-0002.md"

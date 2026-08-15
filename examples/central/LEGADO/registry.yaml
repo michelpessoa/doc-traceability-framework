@@ -1,0 +1,85 @@
+# docs/LEGADO/registry.yaml (repositório central)
+#
+# Cenário: projeto "LEGADO", já em produção antes de adotar o framework.
+# Demonstra Fase 1 de onboarding (BASE + ADR reconstruído), um incidente
+# com postmortem, e o cutover para o fluxo normal (RFC-LEGADO-0001
+# nascendo de um action item estrutural do postmortem).
+
+project: "LEGADO"
+framework_version: "1.1.0"
+
+documents:
+  # --- Fase 1 do onboarding ---
+  - id: BASE-LEGADO-0001
+    type: BASE
+    title: "Baseline — estado atual do projeto LEGADO"
+    status: approved
+    owner: "time-legado"
+    created: "2026-08-09"
+    updated: "2026-08-09"
+    relates_to: [ADR-LEGADO-0001]
+    scan_date: "2026-08-09"
+    tags: [onboarding]
+    path: "docs/LEGADO/06-baseline/BASE-LEGADO-0001.md"
+
+  - id: ADR-LEGADO-0001
+    type: ADR
+    title: "Uso de fila única para processamento assíncrono (reconstruído)"
+    status: approved
+    owner: "arquitetura"
+    created: "2026-08-09"
+    updated: "2026-08-10"
+    relates_to: [BASE-LEGADO-0001]
+    parent_rfc: BASE-LEGADO-0001
+    strategic_impact: false
+    provenance: reconstructed
+    tags: [onboarding]
+    path: "docs/LEGADO/02-adr/ADR-LEGADO-0001.md"
+
+  # --- Incidente e postmortem (fluxo apartado) ---
+  - id: INC-LEGADO-0001
+    type: INC
+    title: "Fila de processamento travou por 40min, pedidos atrasados"
+    status: closed
+    owner: "time-legado"
+    created: "2026-08-20"
+    updated: "2026-08-21"
+    relates_to: [PM-LEGADO-0001]
+    severity: SEV2
+    detected_at: "2026-08-20T14:05"
+    impact_summary: "Pedidos de checkout atrasados em até 40min para ~15% dos usuários."
+    root_cause_key: "fila-unica-sem-particionamento"
+    path: "docs/LEGADO/07-incidents/INC-LEGADO-0001.md"
+
+  - id: PM-LEGADO-0001
+    type: PM
+    title: "Postmortem — travamento da fila de processamento"
+    status: approved
+    owner: "time-legado"
+    created: "2026-08-21"
+    updated: "2026-08-22"
+    relates_to: [INC-LEGADO-0001, RFC-LEGADO-0001]
+    source_incident: INC-LEGADO-0001
+    severity_inherited: SEV2
+    action_items:
+      - description: "Particionar a fila por região para evitar ponto único de contenção"
+        triage: structural_change
+        generated_doc: RFC-LEGADO-0001
+      - description: "Adicionar alerta de profundidade de fila acima do normal"
+        triage: small_direct_fix
+        generated_doc: null
+    path: "docs/LEGADO/08-postmortems/PM-LEGADO-0001.md"
+
+  # --- Fase 2: cutover para o fluxo normal ---
+  - id: RFC-LEGADO-0001
+    type: RFC
+    title: "Particionar fila de processamento assíncrono por região"
+    status: in_review
+    owner: "time-legado"
+    created: "2026-08-22"
+    updated: "2026-08-22"
+    relates_to: [PM-LEGADO-0001]
+    parent_postmortem: PM-LEGADO-0001
+    requires_adr: null
+    decision_gate_criteria_met: []
+    path: "docs/LEGADO/01-rfc/RFC-LEGADO-0001.md"

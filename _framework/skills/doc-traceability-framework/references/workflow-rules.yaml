@@ -1,0 +1,540 @@
+##############################################################################
+# workflow-rules.yaml
+#
+# Fonte única de verdade do Framework de Documentação & Rastreabilidade
+# para uso com IA. Qualquer skill, prompt ou automação (Claude, Cursor,
+# Copilot, ChatGPT, Gemini etc.) DEVE seguir exatamente as regras descritas
+# aqui. Se um comportamento não está aqui, não deve ser inventado pela IA.
+#
+# Alterar este arquivo é a ÚNICA forma correta de evoluir o framework.
+# Os prompts (universal.md, cursor, copilot) e a Claude Skill são apenas
+# "renderizações" destas regras em formatos diferentes — todos devem
+# produzir o mesmo resultado para a mesma entrada.
+##############################################################################
+
+framework:
+  name: "Framework de Documentação & Rastreabilidade para IA"
+  version: "1.1.0"
+  last_updated: "2026-08-15"
+  changelog:
+    - version: "1.0.0"
+      summary: "Fluxo Strategy->RFC->[gate]->ADR->PRD/TS->SDD, registry, IDs, kit multi-projeto."
+    - version: "1.1.0"
+      summary: >
+        Modelo multi-repositório explícito (repo central + repo por projeto,
+        SDD vive no repo do projeto); onboarding de projeto já existente
+        (tipo BASE + ADRs reconstruídos); fluxo de incidentes e postmortem
+        (tipos INC/PM, severidade, regra de recorrência).
+
+##############################################################################
+# 1. TOPOLOGIA DE REPOSITÓRIOS (MODELO MULTI-REPO)
+##############################################################################
+# Este framework assume DOIS tipos de repositório git, nunca um só:
+#
+#   (a) REPOSITÓRIO CENTRAL — um único repositório, guarda:
+#         - _framework/ (este arquivo, templates, prompts, skill, scripts) —
+#           cópia ÚNICA, nunca duplicada por projeto.
+#         - docs/{PROJECT_CODE}/ para TODOS os projetos, mas somente os
+#           tipos "upstream": STRAT, RFC, ADR, PRD, TS, BASE, INC, PM.
+#         - É o histórico institucional completo: por que cada decisão foi
+#           tomada, em qualquer projeto, desde sempre.
+#
+#   (b) REPOSITÓRIO DE CADA PROJETO — um repositório de código por projeto
+#       (o lugar onde a IA de implementação efetivamente roda), guarda:
+#         - docs/sdd/ — as SDDs desse projeto NASCEM e VIVEM aqui, não no
+#           repositório central. É o único tipo de documento do framework
+#           que mora no repositório de código.
+#         - docs/sdd/registry.yaml — registry local, só de SDDs, no mesmo
+#           formato do registry central (ver seção 7).
+#
+# Por que a SDD é a exceção: ela é o único tipo de documento pensado para
+# ser lido por uma IA no momento de gerar código, então precisa estar onde
+# o código está. Os demais tipos são artefatos de decisão, não de
+# implementação, e ganham mais valor centralizados (rastreabilidade entre
+# projetos, uma só cópia da regra canônica).
+repository_topology:
+  central_repo:
+    contains: ["_framework/", "docs/{PROJECT_CODE}/ (STRAT, RFC, ADR, PRD, TS, BASE, INC, PM)"]
+    registry: "docs/{PROJECT_CODE}/registry.yaml (um por projeto, não um arquivo único gigante)"
+    role: "Fonte da verdade de todas as decisões, de todos os projetos, para sempre."
+  project_repo:
+    contains: ["docs/sdd/ (SDDs deste projeto)"]
+    registry: "docs/sdd/registry.yaml (local, mesmo schema, escopo só SDD)"
+    role: "Onde a IA de implementação lê a SDD e onde o rastreio de código (commits/PRs) acontece."
+  cross_repo_reference:
+    description: >
+      Como o repositório de projeto não tem os arquivos do repositório
+      central presentes localmente, toda referência de uma SDD a um
+      documento de origem (PRD, TS, ADR) DEVE incluir não só o id mas
+      também a URL completa do arquivo no repositório central — sem isso,
+      a rastreabilidade quebra ao atravessar repositórios. Ver
+      frontmatter_schema.type_specific_fields.SDD.source_docs.
+    format: "{ id: 'PRD-CHECKOUT-0002', url: 'https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-prd/PRD-CHECKOUT-0002.md' }"
+
+##############################################################################
+# 2. TIPOS DE DOCUMENTO
+##############################################################################
+document_types:
+  STRAT:
+    name: "Strategy Doc"
+    purpose: "Registra uma ideia/direção estratégica antes de virar trabalho concreto."
+    repo: central
+    folder: "docs/{PROJECT_CODE}/00-strategy"
+    template: "templates/strategy.template.md"
+    can_originate: ["RFC"]
+
+  RFC:
+    name: "Request for Comments"
+    purpose: >
+      Propõe e abre discussão técnica/produto antes de decisões relevantes:
+      mudança transversal, impacto em múltiplos times, custo alto, risco
+      técnico, nova tecnologia ou alteração de contrato entre serviços.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/01-rfc"
+    template: "templates/rfc.template.md"
+    required_sections:
+      - contexto
+      - problema
+      - objetivos
+      - nao_objetivos
+      - alternativas
+      - proposta
+      - impactos
+      - riscos
+      - plano
+      - metricas
+    parent_types: ["STRAT", "PM"]     # PM = pode nascer de um action item de postmortem
+    can_originate: ["ADR", "PRD", "TS"]   # depende do gate, ver decision_gates
+
+  ADR:
+    name: "Architectural Decision Record"
+    purpose: >
+      Registro atômico e imutável de UMA decisão de arquitetura: contexto,
+      decisão tomada e consequências. Evita rediscutir o mesmo problema e
+      explica por que alternativas foram rejeitadas.
+    format_reference: "Modelo enxuto de Michael Nygard (https://adr.github.io/adr-templates/)"
+    repo: central
+    folder: "docs/{PROJECT_CODE}/02-adr"
+    template: "templates/adr.template.md"
+    immutable_after_status: ["approved"]   # após aprovado, só pode ser superseded, nunca editado
+    parent_types: ["RFC", "BASE"]   # BASE = origem quando o ADR é reconstruído no onboarding
+    can_originate: ["PRD", "TS"]
+
+  PRD:
+    name: "Product Requirements Document"
+    purpose: "Detalha o requisito de produto a ser construído."
+    repo: central
+    folder: "docs/{PROJECT_CODE}/03-prd"
+    template: "templates/prd.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
+  TS:
+    name: "Tech Spec"
+    purpose: >
+      Transforma uma decisão em desenho executável: detalha implementação,
+      explicita contratos técnicos, alinha times consumidores, reduz
+      ambiguidade de execução, antecipa riscos operacionais e conecta
+      arquitetura, código e rollout. É fonte final para SDD's.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/04-tech-spec"
+    template: "templates/tech-spec.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
+  SDD:
+    name: "Spec Driven Design"
+    purpose: >
+      Documento compilado a partir de PRD + Tech Spec (+ ADR quando existir),
+      escrito para ser consumido DIRETAMENTE por ferramentas de IA (Claude
+      Code, Cursor, Copilot, agentes de implementação etc.) como input
+      primário de geração/implementação de código. É o elo entre "decisão
+      documentada" e "IA executando o trabalho".
+    repo: project      # única exceção: vive no repositório do projeto, não no central
+    folder: "docs/sdd"
+    template: "templates/sdd.template.md"
+    parent_types: ["PRD", "TS", "ADR"]   # todos vivem no repo central — ver cross_repo_reference
+    ai_input: true   # marca este tipo como artefato de entrada para ferramentas de IA
+
+  BASE:
+    name: "Baseline (retrato do estado atual)"
+    purpose: >
+      Usado SOMENTE no onboarding de um projeto que já existia antes deste
+      framework. Não é uma decisão — é uma fotografia do que já existe hoje
+      (stack, estrutura, integrações, dívidas conhecidas), levantada por
+      uma IA lendo o repositório de código. Serve de âncora/contexto para
+      os ADRs reconstruídos que vierem a partir dela.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/06-baseline"
+    template: "templates/base.template.md"
+    can_originate: ["ADR"]   # ADRs reconstruídos, ver seção 4 (onboarding)
+    one_time: true   # normalmente um único BASE por projeto, criado no dia do onboarding
+
+  INC:
+    name: "Incident Record"
+    purpose: >
+      Registro de um incidente em produção, do início até o fechamento.
+      Não é um documento de decisão a ser aprovado — é um evento a ser
+      acompanhado, por isso tem ciclo de vida próprio (ver seção 5).
+    repo: central
+    folder: "docs/{PROJECT_CODE}/07-incidents"
+    template: "templates/inc.template.md"
+    can_originate: ["PM"]
+    lifecycle: incident_lifecycle   # não usa status_lifecycle padrão
+
+  PM:
+    name: "Postmortem"
+    purpose: >
+      Documento analítico pós-incidente: causa raiz, linha do tempo,
+      fatores contribuintes e action items. Usa o ciclo de vida padrão
+      (é um documento de decisão/aprendizado como os demais). Pode
+      originar novas RFCs ou PRDs/Tech Specs a partir dos action items.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/08-postmortems"
+    template: "templates/pm.template.md"
+    parent_types: ["INC"]
+    can_originate: ["RFC", "PRD", "TS"]   # ver seção 5 (triagem de action items)
+
+##############################################################################
+# 3. FLUXO PRINCIPAL (TO-BE) E GATE DE DECISÃO
+##############################################################################
+# Fluxo textual:
+#   Strategy Doc -> RFC -> [GATE: exige ADR?]
+#       -> sim: ADR -> PRD + Tech Spec -> SDD (no repo do projeto)
+#       -> não: PRD + Tech Spec -> SDD (no repo do projeto)
+#   SDD -> consumido por ferramentas de IA na implementação, no repo do projeto
+#   Loop: decisões com impacto estratégico realimentam o Strategy Doc
+#
+# Este foi o GAP corrigido na v1.0: antes, TODA RFC aprovada exigia ADR
+# antes de PRD/Tech Spec. Agora existe um gate explícito.
+
+decision_gates:
+  rfc_to_adr:
+    description: >
+      Após uma RFC ser aprovada (status = approved), avalia-se se ela exige
+      um ADR antes de seguir para PRD/Tech Spec, ou se pode seguir direto.
+    trigger: "RFC.status == approved"
+    rule: "requires_adr = true SE qualquer critério abaixo for verdadeiro"
+    criteria:
+      - id: novo_padrao_arquitetural
+        description: "Introduz ou altera um padrão arquitetural (novo componente estrutural, novo serviço, mudança de topologia)."
+      - id: alto_custo_reversao
+        description: "Decisão de alto custo ou difícil reversão (rollback caro, lento ou impossível)."
+      - id: trade_off_tecnico_relevante
+        description: "Existe mais de uma alternativa técnica viável cujos prós/contras precisam ficar registrados para não serem rediscutidos."
+      - id: impacto_cross_team
+        description: "Mais de um time/domínio é diretamente afetado pela decisão."
+      - id: troca_tecnologia_vendor
+        description: "Introduz ou troca tecnologia, vendor ou dependência externa relevante (banco de dados, provedor cloud, linguagem, lib crítica)."
+    on_true:
+      next_step: "Criar ADR"
+      next_types: ["ADR"]
+      rfc_field_update: { requires_adr: true }
+    on_false:
+      next_step: "Seguir direto para PRD e/ou Tech Spec, sem ADR"
+      next_types: ["PRD", "TS"]
+      rfc_field_update: { requires_adr: false }
+    on_rejected:
+      description: "Se a RFC for rejeitada, o fluxo encerra: status = rejected -> archived. Nenhum documento downstream é criado."
+      next_types: []
+
+  prd_ts_to_sdd:
+    description: >
+      PRD e Tech Spec (e o ADR, se existir) alimentam a SDD, que compila
+      tudo em um único artefato pronto para ser usado como input de IA.
+      A SDD é criada no repositório do PROJETO, não no central.
+    trigger: "PRD.status == approved AND TS.status == approved"
+    next_step: "Compilar SDD a partir de PRD + Tech Spec (+ ADR se houver) no repositório do projeto"
+    next_types: ["SDD"]
+    note: >
+      A SDD NÃO deve ser escrita do zero: seu conteúdo é derivado/consolidado
+      dos documentos de origem (source_docs), garantindo rastreabilidade
+      mesmo atravessando repositórios (ver repository_topology.cross_repo_reference).
+
+  strategic_feedback_loop:
+    description: >
+      Quando uma ADR (ou o resultado do gate) revela impacto estratégico
+      (novo direcionamento, mudança de prioridade, novo risco de negócio),
+      isso deve realimentar um Strategy Doc novo ou existente.
+    trigger: "ADR criado com campo strategic_impact = true"
+    next_step: "Atualizar ou criar Strategy Doc, referenciando o ADR de origem"
+    next_types: ["STRAT"]
+
+##############################################################################
+# 4. ONBOARDING DE PROJETO JÁ EXISTENTE
+##############################################################################
+# Aplica-se quando um projeto que já tem código em produção, sem nenhum
+# documento deste framework, precisa "entrar" no fluxo. É um procedimento
+# de DUAS FASES, executado uma única vez por projeto.
+onboarding:
+  applies_when: "Projeto com código em produção e nenhum histórico de STRAT/RFC/ADR/PRD/TS neste framework."
+  phase_1_baseline:
+    description: >
+      Levantamento único do estado atual, feito por uma IA lendo o
+      repositório de código existente. Não inventa histórico que não
+      existe — descreve o que encontra e infere decisões passadas a
+      partir do código.
+    steps:
+      - step: 1
+        action: "IA lê o repositório de código do projeto (stack, estrutura, integrações, dívidas técnicas visíveis)."
+      - step: 2
+        action: "IA cria um único documento BASE-{PROJECT_CODE}-0001 no repositório central, resumindo o estado atual."
+      - step: 3
+        action: >
+          Para cada decisão de arquitetura que a IA consegue inferir do
+          código (ex.: escolha de banco de dados, padrão de autenticação,
+          modelo de deploy), ela cria um ADR normal, mas com
+          provenance=reconstructed e status inicial=in_review (nunca
+          approved direto — é inferência, precisa confirmação humana).
+        constraint: "parent_rfc do ADR reconstruído aponta para o BASE, não para uma RFC (não existe RFC retroativa)."
+      - step: 4
+        action: >
+          Uma pessoa do time revisa cada ADR reconstruído: confirma se o
+          raciocínio da IA está certo ou corrige com o motivo real. Só
+          depois dessa revisão o ADR passa para status=approved.
+      - step: 5
+        action: >
+          Registrar todos os documentos da Fase 1 (BASE + ADRs
+          reconstruídos aprovados) no docs/{PROJECT_CODE}/registry.yaml do
+          repositório central, com tags=[onboarding] em cada entrada.
+    what_not_to_do: >
+      Não reconstruir PRD ou Tech Spec do que já foi construído no
+      passado — o código já é a especificação do que existe; o valor de
+      reconstruir está apenas no "porquê" (ADRs), não no "como" (PRD/TS).
+  phase_2_cutover:
+    description: >
+      A partir daqui, o projeto segue o fluxo principal normalmente, como
+      se fosse um projeto novo — não há mais diferença de tratamento.
+    steps:
+      - step: 1
+        action: "A próxima demanda real do projeto vira RFC-{PROJECT_CODE}-0001 (numeração começa do zero para RFC, PRD, TS e SDD — só BASE e os ADRs reconstruídos carregam a marca de onboarding)."
+      - step: 2
+        action: "Segue normalmente: gate de decisão (seção 3), PRD/Tech Spec, e a primeira SDD nasce no repositório do projeto."
+
+##############################################################################
+# 5. INCIDENTES E POSTMORTEM (FLUXO APARTADO)
+##############################################################################
+# Incidentes não seguem o ciclo de vida padrão (draft/review/approved) —
+# são eventos operacionais, não decisões a aprovar. O postmortem, sim, usa
+# o ciclo de vida padrão, porque é um documento analítico/decisório.
+incident_lifecycle:
+  states: ["open", "mitigated", "resolved", "closed"]
+  description_by_state:
+    open: "Incidente detectado e em andamento."
+    mitigated: "Impacto contido/reduzido, mas causa raiz ainda não resolvida definitivamente."
+    resolved: "Causa raiz tratada, sistema normalizado."
+    closed: "Incidente encerrado; se exigia postmortem, o postmortem já existe (ao menos em draft)."
+  allowed_transitions:
+    open: ["mitigated", "resolved"]
+    mitigated: ["resolved"]
+    resolved: ["closed"]
+    closed: []
+
+severity_scale:
+  description: "Critérios objetivos para classificar um incidente, na mesma lógica do gate RFC->ADR: reduzir julgamento subjetivo."
+  levels:
+    - id: SEV1
+      name: "Crítico"
+      criteria: "Indisponibilidade total ou de função crítica para todos/maioria dos usuários; perda de dados; incidente de segurança confirmado."
+      postmortem: "obrigatório_completo"
+    - id: SEV2
+      name: "Alto"
+      criteria: "Degradação relevante de uma função importante para parte significativa dos usuários; sem workaround viável."
+      postmortem: "obrigatório_completo"
+    - id: SEV3
+      name: "Moderado"
+      criteria: "Impacto limitado a um subconjunto pequeno de usuários ou a uma função não crítica; existe workaround razoável."
+      postmortem: "obrigatório_leve"
+    - id: SEV4
+      name: "Baixo"
+      criteria: "Impacto mínimo/cosmético, sem efeito perceptível para o usuário final, ou corrigido antes de qualquer impacto externo."
+      postmortem: "opcional"
+
+postmortem_policy:
+  by_severity:
+    obrigatório_completo: "Postmortem completo obrigatório: linha do tempo, causa raiz, fatores contribuintes, action items com dono e prazo."
+    obrigatório_leve: "Postmortem obrigatório, mas em formato leve: resumo curto do que aconteceu, causa e ação, sem necessidade de reunião formal."
+    opcional: "Postmortem só é criado se o time identificar aprendizado relevante."
+  recurrence_rule:
+    description: >
+      Independente da severidade individual, se a mesma causa raiz se
+      repetir dentro de uma janela de 90 dias, o postmortem torna-se
+      obrigatório (ao menos leve) — um problema SEV4 recorrente é, na
+      prática, um problema estrutural.
+    trigger: "2ª ocorrência (ou mais) da mesma causa raiz em <= 90 dias"
+    effect: "postmortem passa a ser obrigatório_leve no mínimo, mesmo se o incidente individual for SEV4"
+
+action_item_triage:
+  description: >
+    Cada action item de um postmortem é triado para dentro do fluxo
+    principal, reaproveitando o mesmo critério de significância do gate
+    RFC->ADR em vez de criar uma régua nova.
+  small_direct_fix:
+    description: "Ajuste pontual, bem entendido, sem nenhum critério do gate rfc_to_adr aplicável."
+    next_types: ["PRD", "TS"]
+    note: "Não passa por RFC — vira backlog direto."
+  structural_change:
+    description: "Implica mudança que atenderia a pelo menos 1 critério de decision_gates.rfc_to_adr.criteria."
+    next_types: ["RFC"]
+    note: "Vira uma RFC normal (relates_to aponta para o PM de origem) e segue o gate normalmente a partir daí."
+
+##############################################################################
+# 6. CICLO DE VIDA DE STATUS PADRÃO (STRAT, RFC, ADR, PRD, TS, SDD, BASE, PM)
+##############################################################################
+status_lifecycle:
+  states: ["draft", "in_review", "approved", "rejected", "implemented", "superseded", "archived"]
+  description_by_state:
+    draft: "Em elaboração, ainda não submetido."
+    in_review: "Submetido para discussão/aprovação. Para ADR reconstruído, é o estado obrigatório até a revisão humana confirmar."
+    approved: "Aprovado/aceito. Para ADR, este estado torna o documento imutável."
+    rejected: "Não seguirá adiante. Terminal (a menos que uma nova versão seja aberta como novo doc)."
+    implemented: "O que o documento descreve já foi entregue/construído."
+    superseded: "Substituído por outro documento mais recente (aponta para superseded_by)."
+    archived: "Estado terminal/histórico. Documento não está mais ativo."
+  allowed_transitions:
+    draft: ["in_review", "archived"]
+    in_review: ["approved", "rejected", "draft"]
+    approved: ["implemented", "superseded", "archived"]
+    rejected: ["archived"]
+    implemented: ["superseded", "archived"]
+    superseded: ["archived"]
+    archived: []
+  notes: >
+    INC usa incident_lifecycle (seção 5), não este ciclo — é a única
+    exceção. Todos os outros 8 tipos usam este mesmo ciclo, o que mantém
+    o registry consistente e as consultas de rastreabilidade previsíveis.
+
+##############################################################################
+# 7. ESQUEMA DE ID
+##############################################################################
+id_scheme:
+  pattern: "{TYPE}-{PROJECT_CODE}-{SEQ}"
+  seq_format: "4 dígitos, zero-padded, sequencial por TYPE dentro do projeto (0001, 0002, ...)"
+  example: "RFC-CHECKOUT-0007"
+  project_code_rule: "Código curto, maiúsculo, sem espaços, definido uma vez por projeto."
+  uniqueness: "id é único dentro do registry do tipo/projeto. Nunca reutilizar um id, mesmo de documento archived."
+  onboarding_note: "BASE e ADRs reconstruídos usam a mesma sequência normal do tipo — não têm prefixo especial, só o campo provenance os distingue."
+
+##############################################################################
+# 8. METADADOS (FRONT-MATTER) — TODO documento começa com este bloco YAML
+##############################################################################
+frontmatter_schema:
+  common_fields:
+    id: "string — obrigatório, segue id_scheme"
+    type: "enum[STRAT, RFC, ADR, PRD, TS, SDD, BASE, INC, PM] — obrigatório"
+    title: "string — obrigatório"
+    status: "enum, ver status_lifecycle.states (ou incident_lifecycle.states se type=INC) — obrigatório"
+    project: "string — PROJECT_CODE — obrigatório"
+    owner: "string — pessoa ou time responsável — obrigatório"
+    created: "date (YYYY-MM-DD) — obrigatório"
+    updated: "date (YYYY-MM-DD) — obrigatório, atualizar a cada mudança"
+    relates_to: "lista de ids — outros documentos diretamente conectados (pais/filhos)"
+    supersedes: "id ou null"
+    superseded_by: "id ou null"
+    tags: "lista de strings — livre (ex.: [onboarding] para documentos da Fase 1)"
+  type_specific_fields:
+    RFC:
+      requires_adr: "boolean ou null (null = gate ainda não avaliado)"
+      decision_gate_criteria_met: "lista de ids de decision_gates.rfc_to_adr.criteria que se aplicaram"
+      parent_strategy: "id do STRAT de origem, ou null"
+      parent_postmortem: "id do PM de origem, ou null (quando a RFC nasce de um action item)"
+    ADR:
+      parent_rfc: "id da RFC que originou este ADR, ou id do BASE se for reconstruído"
+      strategic_impact: "boolean — se true, aciona strategic_feedback_loop"
+      decision: "resumo de 1 linha da decisão tomada"
+      provenance: "authored | reconstructed — reconstructed = inferido pela IA a partir de código existente no onboarding"
+    PRD:
+      parent_rfc: "id da RFC de origem"
+      parent_adr: "id do ADR de origem, ou null se o gate dispensou ADR"
+    TS:
+      parent_rfc: "id da RFC de origem"
+      parent_adr: "id do ADR de origem, ou null se o gate dispensou ADR"
+    SDD:
+      source_docs: >
+        lista de objetos { id, url } — PRD(s), TS(s) e ADR(s) que
+        originaram esta SDD. url é obrigatório porque esses documentos
+        vivem no repositório central, não no repositório do projeto onde
+        a SDD está (ver repository_topology.cross_repo_reference).
+      ai_targets: "lista de ferramentas de IA para as quais este documento é preparado (ex: ['claude-code', 'cursor'])"
+      consumption_instructions: "texto curto — como uma IA deve usar este documento antes de implementar"
+    BASE:
+      scan_date: "data em que o levantamento foi feito"
+      known_gaps: "lista curta — o que a IA não conseguiu inferir com confiança a partir do código"
+    INC:
+      severity: "SEV1 | SEV2 | SEV3 | SEV4"
+      detected_at: "timestamp de detecção"
+      impact_summary: "1-2 frases do impacto real"
+      root_cause_key: "identificador curto e estável da causa raiz, usado para detectar recorrência (postmortem_policy.recurrence_rule)"
+    PM:
+      source_incident: "id do INC de origem"
+      severity_inherited: "severidade herdada do INC (para aplicar postmortem_policy)"
+      action_items: "lista de { description, triage: small_direct_fix|structural_change, generated_doc: id ou null }"
+
+##############################################################################
+# 9. REGISTRY (RASTREABILIDADE)
+##############################################################################
+registry:
+  central_registry:
+    path: "docs/{PROJECT_CODE}/registry.yaml"
+    human_readable_view: "docs/{PROJECT_CODE}/registry.md"   # gerado, nunca editado à mão
+    scope: "STRAT, RFC, ADR, PRD, TS, BASE, INC, PM deste projeto"
+  project_registry:
+    path: "docs/sdd/registry.yaml"
+    human_readable_view: "docs/sdd/registry.md"
+    scope: "Só SDD deste projeto, no repositório de código do projeto"
+  entry_fields: ["id", "type", "title", "status", "owner", "created", "updated", "relates_to", "path"]
+  update_rule: >
+    Toda vez que um documento é criado ou tem status/relates_to alterado,
+    o registry correspondente (central ou de projeto, conforme o tipo)
+    DEVE ser atualizado no mesmo momento. O front-matter do documento e a
+    entrada no registry nunca podem divergir.
+  traceability_query: >
+    Dado um id, a cadeia completa (ancestrais e descendentes) é obtida
+    percorrendo relates_to/parent_*/source_docs recursivamente. Quando a
+    cadeia atravessa do repositório de projeto para o central (via SDD),
+    a resolução usa a url gravada em source_docs em vez de leitura local.
+
+##############################################################################
+# 10. REUSO MULTI-PROJETO
+##############################################################################
+multi_project:
+  approach: "kit de templates versionado + repositório central único"
+  instructions: >
+    _framework/ existe em UMA cópia só, dentro do repositório central.
+    Para adicionar um projeto novo: criar docs/{PROJECT_CODE}/ no
+    repositório central com as subpastas de document_types (exceto SDD) e
+    um registry.yaml vazio; e, no repositório de código do projeto, criar
+    docs/sdd/ com seu próprio registry.yaml vazio. As regras de negócio
+    (gate, lifecycle, schema, severidade) NÃO mudam entre projetos —
+    apenas o PROJECT_CODE e o conteúdo dos documentos.
+  versioning: >
+    Mudanças no framework são feitas uma única vez em
+    _framework/rules/workflow-rules.yaml (fonte canônica) e versionadas em
+    framework.version (semver) — como só existe uma cópia, não há
+    propagação manual entre projetos.
+
+##############################################################################
+# 11. CAPACIDADES QUE QUALQUER FERRAMENTA DE IA (CLAUDE, CURSOR, COPILOT,
+#     CHATGPT, GEMINI) DEVE OFERECER AO EXECUTAR ESTE FRAMEWORK
+##############################################################################
+capabilities:
+  - id: create_document
+    description: "Criar um novo documento de um tipo válido, a partir do template correto, no repositório correto (central ou de projeto), atribuindo id novo (sequencial), preenchendo front-matter e adicionando entrada no registry correspondente."
+  - id: evaluate_rfc_gate
+    description: "Aplicar decision_gates.rfc_to_adr a uma RFC aprovada: checar os critérios, decidir requires_adr, atualizar o front-matter da RFC e o registry, e indicar o próximo passo correto (ADR, ou direto PRD/TS)."
+  - id: update_status
+    description: "Mover um documento para um novo status respeitando status_lifecycle.allowed_transitions (ou incident_lifecycle se for INC), atualizando front-matter e registry juntos."
+  - id: compile_sdd
+    description: "Compilar uma SDD no repositório do projeto a partir de PRD + Tech Spec (+ ADR se existir) do repositório central, populando source_docs com id+url e preparando o texto para consumo por ferramentas de IA de implementação."
+  - id: trace
+    description: "Dado um id, retornar a cadeia completa de documentos relacionados (ancestrais e descendentes), atravessando repositórios via url quando necessário."
+  - id: validate_registry
+    description: "Detectar inconsistências: ids órfãos, referências quebradas em relates_to/parent_*/source_docs, documentos sem status válido, front-matter divergente do registry."
+  - id: bootstrap_existing_project
+    description: "Executar onboarding.phase_1_baseline num repositório de código já existente: gerar BASE, propor ADRs reconstruídos (provenance=reconstructed, status=in_review) e aguardar revisão humana antes de aprovar."
+  - id: register_incident
+    description: "Abrir um INC com severidade classificada por severity_scale, e conduzi-lo pelo incident_lifecycle até resolved/closed."
+  - id: evaluate_postmortem_requirement
+    description: "Aplicar postmortem_policy (por severidade + recurrence_rule) a um INC para decidir se o postmortem é obrigatório completo, obrigatório leve ou opcional."
+  - id: triage_postmortem_action_items
+    description: "Aplicar action_item_triage a cada action item de um PM, decidindo se vira PRD/TS direto ou uma nova RFC."

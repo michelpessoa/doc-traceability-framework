@@ -1,0 +1,107 @@
+# docs/EXEMPLO/registry.yaml (repositório central)
+#
+# Cenário: projeto "EXEMPLO" (checkout), demonstrando os dois caminhos do
+# gate RFC->ADR. As SDDs deste projeto NÃO aparecem aqui — elas vivem no
+# repositório de projeto (ver ../../project-repo-checkout/docs/sdd/registry.yaml).
+# Ver regras completas em _framework/rules/workflow-rules.yaml
+
+project: "EXEMPLO"
+framework_version: "1.1.0"
+
+documents:
+  # --- Caso A: RFC que exige ADR ---
+  - id: STRAT-EXEMPLO-0001
+    type: STRAT
+    title: "Reduzir tempo de checkout em 30%"
+    status: approved
+    owner: "time-produto"
+    created: "2026-08-01"
+    updated: "2026-08-01"
+    relates_to: [RFC-EXEMPLO-0001]
+    path: "docs/EXEMPLO/00-strategy/STRAT-EXEMPLO-0001.md"
+
+  - id: RFC-EXEMPLO-0001
+    type: RFC
+    title: "Migrar processamento de pagamento para novo provedor"
+    status: approved
+    owner: "time-checkout"
+    created: "2026-08-02"
+    updated: "2026-08-05"
+    relates_to: [STRAT-EXEMPLO-0001, ADR-EXEMPLO-0001]
+    requires_adr: true
+    decision_gate_criteria_met: [troca_tecnologia_vendor, alto_custo_reversao, impacto_cross_team]
+    path: "docs/EXEMPLO/01-rfc/RFC-EXEMPLO-0001.md"
+
+  - id: ADR-EXEMPLO-0001
+    type: ADR
+    title: "Adotar Provedor X para processamento de pagamento"
+    status: approved
+    owner: "arquitetura"
+    created: "2026-08-06"
+    updated: "2026-08-06"
+    relates_to: [RFC-EXEMPLO-0001, PRD-EXEMPLO-0001, TS-EXEMPLO-0001]
+    parent_rfc: RFC-EXEMPLO-0001
+    strategic_impact: false
+    provenance: authored
+    path: "docs/EXEMPLO/02-adr/ADR-EXEMPLO-0001.md"
+
+  - id: PRD-EXEMPLO-0001
+    type: PRD
+    title: "Novo fluxo de checkout com Provedor X"
+    status: approved
+    owner: "time-produto"
+    created: "2026-08-07"
+    updated: "2026-08-07"
+    relates_to: [RFC-EXEMPLO-0001, ADR-EXEMPLO-0001, SDD-EXEMPLO-0001]
+    parent_rfc: RFC-EXEMPLO-0001
+    parent_adr: ADR-EXEMPLO-0001
+    path: "docs/EXEMPLO/03-prd/PRD-EXEMPLO-0001.md"
+
+  - id: TS-EXEMPLO-0001
+    type: TS
+    title: "Especificação técnica — integração com Provedor X"
+    status: approved
+    owner: "time-checkout"
+    created: "2026-08-07"
+    updated: "2026-08-07"
+    relates_to: [RFC-EXEMPLO-0001, ADR-EXEMPLO-0001, SDD-EXEMPLO-0001]
+    parent_rfc: RFC-EXEMPLO-0001
+    parent_adr: ADR-EXEMPLO-0001
+    path: "docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0001.md"
+
+  # --- Caso B: RFC que NÃO exige ADR (gate pula direto) ---
+  - id: RFC-EXEMPLO-0002
+    type: RFC
+    title: "Adicionar campo opcional de apelido no formulário de endereço"
+    status: approved
+    owner: "time-checkout"
+    created: "2026-08-10"
+    updated: "2026-08-11"
+    relates_to: [PRD-EXEMPLO-0002, TS-EXEMPLO-0002]
+    requires_adr: false
+    decision_gate_criteria_met: []
+    path: "docs/EXEMPLO/01-rfc/RFC-EXEMPLO-0002.md"
+
+  - id: PRD-EXEMPLO-0002
+    type: PRD
+    title: "Campo opcional de apelido no endereço de entrega"
+    status: approved
+    owner: "time-produto"
+    created: "2026-08-11"
+    updated: "2026-08-11"
+    relates_to: [RFC-EXEMPLO-0002, SDD-EXEMPLO-0002]
+    parent_rfc: RFC-EXEMPLO-0002
+    parent_adr: null
+    path: "docs/EXEMPLO/03-prd/PRD-EXEMPLO-0002.md"
+
+  - id: TS-EXEMPLO-0002
+    type: TS
+    title: "Especificação técnica — campo apelido de endereço"
+    status: approved
+    owner: "time-checkout"
+    created: "2026-08-11"
+    updated: "2026-08-11"
+    relates_to: [RFC-EXEMPLO-0002, SDD-EXEMPLO-0002]
+    parent_rfc: RFC-EXEMPLO-0002
+    parent_adr: null
+    path: "docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0002.md"

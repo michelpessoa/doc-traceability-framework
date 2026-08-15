@@ -1,0 +1,55 @@
+---
+description: Framework de Documentação & Rastreabilidade para IA — SDD local + Strategy/RFC/ADR/PRD/TechSpec no repositório central
+globs: ["docs/sdd/**/*.md", "docs/sdd/registry.yaml"]
+alwaysApply: true
+---
+# Framework de Documentação & Rastreabilidade (v1.1.0)
+
+Este arquivo roda no **repositório do projeto** (onde o código vive) e
+implementa as MESMAS regras de `_framework/rules/workflow-rules.yaml` e
+`_framework/prompts/universal.md`, que moram no **repositório central**.
+Qualquer alteração de regra é feita lá primeiro e replicada aqui — nunca
+o contrário.
+
+## Modelo de dois repositórios
+STRAT, RFC, ADR, PRD, Tech Spec, BASE, INC e PM vivem no repositório
+central, em `docs/{PROJECT_CODE}/`. **Só a SDD vive aqui**, em
+`docs/sdd/`, porque é o único documento pensado para você (IA) ler no
+momento de implementar. Se precisar do "porquê" por trás de uma SDD,
+siga a `url` de cada entrada em `source_docs` — ela aponta para o
+arquivo real no repositório central, que você não tem localmente.
+
+## SDD — o que fazer antes de gerar código
+Antes de gerar código para uma feature coberta por este framework,
+procure a SDD correspondente em `docs/sdd/`. Se não existir SDD
+`approved`, avise o usuário em vez de implementar às cegas. Ao criar uma
+SDD nova, use `templates/sdd.template.md`, gere o próximo id sequencial
+(consulte `docs/sdd/registry.yaml`), preencha `source_docs` com
+`{id, url}` para cada PRD/TS/ADR de origem, e atualize o registry local
+no mesmo diff.
+
+## Fluxo e gate de decisão (contexto — acontece no repositório central)
+`Strategy Doc → RFC → [gate: exige ADR?] → (sim: ADR → PRD+TS → SDD) |
+(não: PRD+TS → SDD)`. Gate: `requires_adr = true` se QUALQUER for
+verdadeiro: (1) novo padrão arquitetural; (2) decisão de alto
+custo/difícil reversão; (3) trade-off técnico relevante entre
+alternativas; (4) impacto cross-team; (5) troca/introdução de
+tecnologia/vendor relevante. RFC rejeitada → `archived`, sem downstream.
+
+## Status
+`draft → in_review → approved → implemented|rejected|superseded →
+archived` para todos os tipos, exceto INC (`open → mitigated → resolved
+→ closed`). ADR `approved` é imutável.
+
+## Onboarding de projeto já existente
+Se este repositório de código nunca usou o framework antes, não invente
+um processo — use `_framework/prompts/onboarding-bootstrap.md` no
+repositório central primeiro (gera BASE + ADRs reconstruídos). Só depois
+disso a primeira SDD deste projeto é criada aqui.
+
+## Regras de comportamento neste editor
+- Nunca crie STRAT/RFC/ADR/PRD/TS localmente — esses tipos pertencem ao
+  repositório central. Se o usuário pedir um deles aqui, avise que o
+  lugar certo é o repositório central.
+- Nunca pule o gate RFC→ADR nem invente critério fora dos 5 listados.
+- Front-matter e `docs/sdd/registry.yaml` nunca podem divergir.

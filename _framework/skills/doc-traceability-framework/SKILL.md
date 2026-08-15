@@ -1,0 +1,187 @@
+---
+name: doc-traceability-framework
+description: >
+  Gerencia o fluxo de documentos de decisão de um projeto — Strategy Doc,
+  RFC, ADR, PRD, Tech Spec e SDD — com IDs, front-matter e um registry
+  central para rastreabilidade completa, incluindo onboarding de projetos
+  já existentes (Baseline + ADRs reconstruídos) e o fluxo separado de
+  incidentes/postmortem. Use sempre que o usuário pedir para criar,
+  avaliar, avançar status, rastrear ou validar qualquer um desses
+  documentos, mesmo sem dizer o nome exato ("cria uma RFC pra isso",
+  "essa proposta precisa de ADR?", "monta a spec pra IA implementar", "de
+  onde veio essa decisão?", "esse projeto antigo precisa entrar no
+  framework", "abre um incidente", "registra esse postmortem"). Também
+  use para rastreabilidade de documentação técnica/produto, gate RFC→ADR,
+  trazer projeto legado para documentação, ou severidade/postmortem de
+  incidentes. Aplicável a qualquer projeto, não específico de uma stack.
+---
+
+# Framework de Documentação & Rastreabilidade para IA
+
+Este framework resolve um problema comum: decisões técnicas e de produto
+ficam espalhadas em conversas, docs soltos e memória de time, sem elo
+entre "por que decidimos isso" e "o que foi construído". Ele define um
+fluxo com portas de decisão explícitas e um registro central que permite,
+a qualquer momento, perguntar "de onde veio X" ou "o que depende de Y" e
+obter uma resposta confiável — inclusive para projetos que já existiam
+antes deste framework, e para o que acontece quando algo quebra em
+produção.
+
+A fonte canônica e completa das regras está em
+`references/workflow-rules.yaml` — leia esse arquivo quando precisar do
+detalhe exato de algum campo, transição de status ou critério do gate.
+Este SKILL.md resume o suficiente para operar no dia a dia.
+
+## Modelo de dois repositórios — confirme onde você está antes de agir
+
+- **Repositório central**: guarda `docs/{PROJECT_CODE}/` de todos os
+  projetos, mas só os tipos STRAT, RFC, ADR, PRD, TS, BASE, INC, PM. É o
+  histórico institucional completo, de todos os projetos, para sempre.
+- **Repositório de cada projeto** (o repositório de código): guarda
+  apenas `docs/sdd/` — as SDDs desse projeto nascem e vivem ali, porque é
+  o único documento pensado para uma IA ler no momento de implementar.
+
+Se não souber em qual repositório você está operando, pergunte antes de
+criar qualquer documento — criar o tipo errado no repositório errado
+quebra o modelo inteiro.
+
+## Os 9 tipos de documento
+
+| Tipo | Quando usar | Repositório | Pasta |
+|---|---|---|---|
+| STRAT (Strategy Doc) | Uma ideia/direção ainda pouco amadurecida | central | `docs/{PROJETO}/00-strategy/` |
+| RFC | Antes de decisões relevantes: mudança transversal, custo alto, risco técnico, nova tecnologia, alteração de contrato | central | `docs/{PROJETO}/01-rfc/` |
+| ADR | Registro atômico e imutável de UMA decisão de arquitetura | central | `docs/{PROJETO}/02-adr/` |
+| PRD | Requisitos de produto a construir | central | `docs/{PROJETO}/03-prd/` |
+| TS (Tech Spec) | Desenho executável: contratos técnicos, plano de rollout | central | `docs/{PROJETO}/04-tech-spec/` |
+| SDD (Spec Driven Design) | Compilado de PRD+TS(+ADR), pronto para uma IA implementar código | **projeto** | `docs/sdd/` |
+| BASE (Baseline) | Retrato do estado atual, só no onboarding de projeto já existente | central | `docs/{PROJETO}/06-baseline/` |
+| INC (Incidente) | Evento em produção, do início ao fechamento | central | `docs/{PROJETO}/07-incidents/` |
+| PM (Postmortem) | Análise pós-incidente e action items | central | `docs/{PROJETO}/08-postmortems/` |
+
+Templates prontos (com front-matter) estão em `templates/*.template.md` —
+sempre parta de um template, nunca escreva um documento do zero.
+
+## O fluxo principal e o gate de decisão RFC → ADR
+
+```
+Strategy Doc -> RFC -> [GATE: exige ADR?]
+    -> SIM -> ADR -> PRD + Tech Spec -> SDD (repositório do projeto)
+    -> NÃO ------------> PRD + Tech Spec -> SDD (repositório do projeto)
+SDD -> input direto para a IA que vai implementar o código
+```
+
+Nem toda RFC aprovada precisa gerar um ADR. Depois que uma RFC é
+aprovada, avalie o gate perguntando se QUALQUER um destes critérios é
+verdadeiro: (1) introduz ou altera um padrão arquitetural; (2) decisão de
+alto custo ou difícil reversão; (3) trade-off técnico relevante entre
+alternativas viáveis; (4) impacto cross-team; (5) troca ou introdução de
+tecnologia/vendor/dependência externa relevante. Se algum for verdadeiro,
+crie um ADR antes de PRD/Tech Spec; se nenhum for, pule direto para
+PRD/Tech Spec. RFC rejeitada → `archived`, sem downstream. Registre
+sempre `decision_gate_criteria_met` no front-matter da RFC.
+
+Quando PRD e Tech Spec (e o ADR, se existir) estiverem `approved`,
+compile a SDD **no repositório do projeto** a partir deles — nunca
+escreva a SDD do zero. `source_docs` é uma lista de `{id, url}`, porque
+os documentos de origem estão no repositório central, não no do projeto.
+
+## Ciclo de vida de status
+
+`draft → in_review → approved → implemented|rejected|superseded →
+archived` para STRAT, RFC, ADR, PRD, TS, SDD, BASE e PM. Um ADR
+`approved` é imutável — mudança de entendimento gera um **novo** ADR.
+
+INC é a exceção: usa `open → mitigated → resolved → closed`, porque é um
+evento operacional, não uma decisão para aprovar.
+
+## Onboarding de projeto já existente
+
+Se o pedido envolver um projeto com código já em produção que nunca usou
+este framework, **não invente um processo — use `prompts/onboarding-bootstrap.md`**,
+que está bundlado nesta skill. Resumo: uma IA lê o repositório de código,
+gera um único `BASE` (retrato do estado atual) e propõe ADRs
+reconstruídos (`provenance: reconstructed`, sempre começando em
+`in_review`, nunca `approved` sem revisão humana). Só depois dessa
+revisão o projeto passa a operar no fluxo normal, com a primeira RFC
+começando em `-0001`. Não reconstrua PRD ou Tech Spec do passado — o
+código já é a especificação do que existe.
+
+## Incidentes e postmortem
+
+Fluxo separado do funil principal — nunca abra uma RFC para tratar um
+incidente em andamento.
+
+1. Crie um `INC` com severidade objetiva: SEV1 (indisponibilidade
+   total/crítica, perda de dados, incidente de segurança) e SEV2
+   (degradação relevante sem workaround) exigem postmortem completo;
+   SEV3 (impacto limitado, workaround existe) exige postmortem leve;
+   SEV4 (impacto mínimo) tem postmortem opcional.
+2. Regra de recorrência: se a mesma causa raiz (`root_cause_key`) se
+   repetir em até 90 dias, o postmortem passa a ser obrigatório mesmo em
+   SEV4 — um problema pequeno que se repete é, na prática, estrutural.
+3. Ao fechar o incidente, crie o `PM` (`source_incident` aponta para o
+   INC) com os action items.
+4. Triagem de cada action item: ajuste pontual sem nenhum critério do
+   gate → PRD/Tech Spec direto, sem RFC; mudança estrutural (atenderia a
+   algum critério do gate RFC→ADR) → nova RFC (`relates_to` aponta para
+   o PM), seguindo o fluxo normal a partir daí.
+
+## IDs, front-matter e registry
+
+- ID: `{TYPE}-{PROJECT_CODE}-{SEQ4}` (ex.: `RFC-CHECKOUT-0007`),
+  sequencial por tipo dentro do projeto, nunca reutilizado.
+- Front-matter comum: `id, type, title, status, project, owner, created,
+  updated, relates_to, supersedes, superseded_by, tags`, mais campos
+  específicos do tipo — ver seção 8 de `references/workflow-rules.yaml`.
+- Repositório central: `docs/{PROJECT_CODE}/registry.yaml` (fonte da
+  verdade) + `docs/{PROJECT_CODE}/registry.md` (gerado). Repositório de
+  projeto: `docs/sdd/registry.yaml` + `docs/sdd/registry.md`. Regenere
+  a visão legível com `python3 scripts/generate_registry_md.py <docs_dir>`.
+- Duas ferramentas prontas em `scripts/registry_tools.py`: `validate`
+  (detecta ids órfãos, referências quebradas, status inválidos) e
+  `trace <ID>` (imprime a cadeia completa de rastreabilidade).
+- Regra inegociável: ao criar ou alterar qualquer documento, atualize o
+  front-matter DO documento e a entrada correspondente no registry certo
+  (central ou de projeto) na mesma resposta/tarefa.
+
+## O que fazer em cada pedido comum
+
+**"Cria uma RFC/ADR/PRD/Tech Spec/SDD/Strategy Doc"** — abra o template
+do tipo no repositório certo, gere o próximo ID disponível (consultando
+o registry), preencha front-matter e conteúdo, devolva a entrada nova
+para o registry.
+
+**"Essa RFC precisa de ADR?"** — aplique o gate, mostre quais critérios
+se aplicaram e por quê, diga o próximo documento a criar.
+
+**"Muda o status de X"** — valide contra o ciclo de vida certo (padrão
+ou o de INC), atualize documento e registry juntos.
+
+**"Monta a SDD de X"** — confirme PRD/Tech Spec (e ADR, se houver)
+`approved`, compile no repositório do projeto, preencha `source_docs`
+com id+url.
+
+**"Esse projeto antigo precisa entrar no framework"** — use
+`prompts/onboarding-bootstrap.md`, não invente um atalho.
+
+**"Abre um incidente" / "registra esse postmortem"** — siga a seção de
+incidentes acima.
+
+**"De onde veio X" / "rastreia X"** — percorra `relates_to`,
+`parent_*` e `source_docs` (seguindo a `url` quando a cadeia atravessar
+repositórios), mostre a cadeia completa.
+
+**"Valida o registry"** — rode `scripts/registry_tools.py validate` ou
+aponte manualmente ids órfãos, referências quebradas, status inválido ou
+divergência front-matter/registry.
+
+## Aplicando isto a um novo projeto
+
+O framework não muda entre projetos — apenas o `PROJECT_CODE`, o
+repositório de projeto e o conteúdo dos documentos. `_framework/` existe
+em cópia única, no repositório central. Não invente critérios, status ou
+campos novos "só para este projeto" — trate como proposta de evolução do
+framework e sinalize que `references/workflow-rules.yaml` deveria ser
+atualizado primeiro, para não divergir do prompt universal, Cursor e
+Copilot, que seguem a mesma fonte.
