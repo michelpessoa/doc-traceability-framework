@@ -95,6 +95,20 @@ momento, passa a seguir o processo normal para qualquer trabalho novo.
 Ou seja: o passado é resumido honestamente uma vez; o futuro segue o
 processo completo.
 
+## E quando alguém esquece de documentar?
+
+Na prática, nem todo mundo vai lembrar de ligar cada mudança a um
+documento o tempo todo — isso é esperado, não uma falha grave. Em vez de
+tentar impedir isso com regras rígidas que travam o trabalho, o framework
+tem uma checagem periódica (feita sob demanda, não toda hora) que compara
+o que realmente foi feito no código com o que está documentado. O que
+encontra um "por quê" registrado fica marcado como coberto; o que não
+encontra vira um item para alguém olhar — se for algo relevante o
+suficiente, o time reconstrói o registro depois (do mesmo jeito que faz
+para um projeto antigo que está entrando no framework, ver seção acima);
+se for algo pequeno, não vira trabalho nenhum. Ninguém fica bloqueado
+esperando essa checagem.
+
 ## Incidentes e o que isso tem a ver com o roadmap
 
 Quando algo quebra em produção, isso segue um processo separado e mais

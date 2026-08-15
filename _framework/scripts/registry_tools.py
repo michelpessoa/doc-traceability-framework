@@ -9,17 +9,30 @@ _framework/rules/workflow-rules.yaml (seção 8).
 Uso:
     python3 registry_tools.py validate <caminho_para_docs>
     python3 registry_tools.py trace <caminho_para_docs> <ID>
+    python3 registry_tools.py audit <git_log_file> <docs_dir_1> [<docs_dir_2> ...]
 
 validate: procura ids duplicados, referências quebradas em relates_to/
           parent_* e status inválidos.
 trace:    imprime a cadeia completa de um id (ancestrais e descendentes),
           percorrendo relates_to recursivamente.
+audit:    implementa a seção 11 (audit) de workflow-rules.yaml — cruza um
+          histórico de commits com os ids conhecidos em um ou mais
+          registries e classifica cada commit em coberto / referência
+          quebrada / não documentado. Não bloqueia nada, é só relatório.
+          Gere o arquivo de log com:
+            git log --pretty=format:'%H%n%s%n%b%n===END===' > gitlog.txt
 
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
+import re
 import sys
 from pathlib import Path
 import yaml
+
+# Mesmos tipos de id_scheme (workflow-rules.yaml, seção 7): {TYPE}-{PROJECT_CODE}-{SEQ4}
+ID_PATTERN = re.compile(
+    r"\b(?:STRAT|RFC|ADR|PRD|TS|SDD|BASE|INC|PM)-[A-Z0-9]+-\d{4}\b"
+)
 
 VALID_STATUSES = {
     "draft", "in_review", "approved", "rejected",
@@ -126,19 +139,95 @@ def cmd_trace(docs_dir: Path, target_id: str) -> int:
     return 0
 
 
+def parse_git_log(path: Path):
+    """
+    Espera um arquivo gerado com:
+      git log --pretty=format:'%H%n%s%n%b%n===END===' > gitlog.txt
+    Retorna uma lista de dicts {sha, subject, message}.
+    """
+    if not path.exists():
+        raise SystemExit(f"Não encontrado: {path}")
+    text = path.read_text(encoding="utf-8")
+    commits = []
+    for chunk in text.split("===END==="):
+        chunk = chunk.strip("\n")
+        if not chunk.strip():
+            continue
+        lines = chunk.split("\n")
+        sha = lines[0].strip() if lines else ""
+        subject = lines[1].strip() if len(lines) > 1 else ""
+        body = "\n".join(lines[2:]).strip()
+        commits.append({"sha": sha, "subject": subject, "message": f"{subject}\n{body}"})
+    return commits
+
+
+def cmd_audit(git_log_path: Path, docs_dirs) -> int:
+    known_ids = set()
+    for dd in docs_dirs:
+        _, docs = load(dd)
+        known_ids |= set(docs.keys())
+
+    commits = parse_git_log(git_log_path)
+    covered, broken, undocumented = [], [], []
+
+    for c in commits:
+        ids_found = set(ID_PATTERN.findall(c["message"]))
+        if not ids_found:
+            undocumented.append(c)
+            continue
+        valid = ids_found & known_ids
+        invalid = ids_found - known_ids
+        if valid:
+            covered.append((c, valid))
+        if invalid:
+            broken.append((c, invalid))
+
+    print(
+        f"Auditoria de {len(commits)} commit(s) contra {len(known_ids)} "
+        f"id(s) conhecido(s) em {len(docs_dirs)} registry(ies).\n"
+    )
+
+    print(f"✅ Cobertos (referência válida): {len(covered)}")
+    for c, ids in covered:
+        print(f"  - {c['sha'][:8]} {c['subject']}  [{', '.join(sorted(ids))}]")
+
+    print(f"\n⚠️  Referência quebrada (id citado não existe em nenhum registry): {len(broken)}")
+    for c, ids in broken:
+        print(f"  - {c['sha'][:8]} {c['subject']}  [{', '.join(sorted(ids))}]")
+
+    print(f"\n❓ Sem referência (nenhum id encontrado na mensagem): {len(undocumented)}")
+    for c in undocumented:
+        print(f"  - {c['sha'][:8]} {c['subject']}")
+
+    print(
+        "\nPróximo passo (audit.procedure, step 4): para cada commit sem "
+        "referência, aplique os 5 critérios de decision_gates.rfc_to_adr — "
+        "se algum se aplica, proponha um ADR reconstruído (provenance: "
+        "reconstructed, status: in_review, tags: [audit]) referenciando o "
+        "commit; se nenhum se aplica, não é necessário nenhum documento."
+    )
+    return 0
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
         sys.exit(1)
     action = sys.argv[1]
-    docs_dir = Path(sys.argv[2])
     if action == "validate":
-        sys.exit(cmd_validate(docs_dir))
+        sys.exit(cmd_validate(Path(sys.argv[2])))
     elif action == "trace":
         if len(sys.argv) < 4:
             print("Uso: registry_tools.py trace <docs_dir> <ID>")
             sys.exit(1)
-        sys.exit(cmd_trace(docs_dir, sys.argv[3]))
+        sys.exit(cmd_trace(Path(sys.argv[2]), sys.argv[3]))
+    elif action == "audit":
+        if len(sys.argv) < 4:
+            print("Uso: registry_tools.py audit <git_log_file> <docs_dir_1> [<docs_dir_2> ...]")
+            sys.exit(1)
+        git_log_path = Path(sys.argv[2])
+        docs_dirs = [Path(p) for p in sys.argv[3:]]
+        sys.exit(cmd_audit(git_log_path, docs_dirs))
     else:
         print(f"Ação desconhecida: {action}")
         sys.exit(1)

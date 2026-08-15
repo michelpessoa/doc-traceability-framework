@@ -147,7 +147,39 @@ próprio prompt):
 Não reconstrua PRD ou Tech Spec do que já foi construído — não vale o
 esforço, o código já é a especificação do que existe.
 
-## 9. Incidentes e postmortem
+## 9. Auditoria de aderência (commits/PRs x registry)
+
+A adesão de todo o time a referenciar documentos em commits/PRs nunca
+pode ser garantida — sempre vai ter commit avulso, hotfix de incidente
+feito sob pressão, ou simplesmente alguém que esqueceu. Por isso este
+framework não tenta impor isso com CI ou bloqueio de merge: em vez de um
+gate, existe uma auditoria periódica e sob demanda, que assume que vai
+haver desvio e o transforma em achado revisável — reaproveitando o mesmo
+mecanismo de reconstrução do onboarding (seção 8), só que contínuo em vez
+de único.
+
+Use `_framework/prompts/framework-audit.md` quando quiser rodar:
+
+1. Gere o log de commits desde a última auditoria:
+   ```bash
+   git log --since="<data>" --pretty=format:'%H%n%s%n%b%n===END===' > gitlog.txt
+   ```
+2. Cruze com o(s) registry(ies) conhecidos:
+   ```bash
+   python3 _framework/scripts/registry_tools.py audit gitlog.txt docs/{PROJECT_CODE} docs/sdd
+   ```
+3. O relatório separa commits em cobertos, referência quebrada (id citado
+   não existe) e não documentados. Para os não documentados, aplique os 5
+   critérios do gate RFC→ADR (seção 5): se algum se aplica, proponha um
+   ADR reconstruído (`provenance: reconstructed`, `status: in_review`,
+   `tags: [audit]`); se nenhum se aplica, não crie documento nenhum.
+4. Nenhum ADR reconstruído por auditoria é aprovado sem revisão humana —
+   mesma regra do onboarding.
+
+Não é CI, não bloqueia PR, não exige disciplina perfeita de commit — só
+torna visível o que já é verdade sobre o repositório.
+
+## 10. Incidentes e postmortem
 
 INC tem ciclo de vida próprio: `open → mitigated → resolved → closed`
 (não é `draft/review/approved`, é operacional).
@@ -168,7 +200,7 @@ Cada action item do postmortem é triado: ajuste pontual → PRD/Tech Spec
 direto; mudança estrutural (bateria em algum critério do gate) → nova
 RFC, com `relates_to` apontando para o PM de origem.
 
-## 10. Configurando as ferramentas de IA
+## 11. Configurando as ferramentas de IA
 
 - **Qualquer chat de IA (ChatGPT, Gemini, Claude):** cole
   `_framework/prompts/universal.md` no início da conversa.
@@ -182,7 +214,7 @@ RFC, com `relates_to` apontando para o PM de origem.
 - **Claude / Cowork:** instale a skill `doc-traceability-framework.skill`
   — ela já embute templates, regra canônica e scripts.
 
-## 11. Erros comuns a evitar
+## 12. Erros comuns a evitar
 
 - Criar STRAT/RFC/ADR/PRD/TS dentro do repositório de projeto (esses
   tipos são sempre do repositório central).
@@ -190,4 +222,6 @@ RFC, com `relates_to` apontando para o PM de origem.
 - Editar um ADR `approved` no lugar em vez de criar um novo e marcar o
   antigo como `superseded`.
 - Esquecer de atualizar o `registry.yaml` junto com o documento.
-- Reconstruir PRD/Tech Spec retroativos durante onboarding.
+- Reconstruir PRD/Tech Spec retroativos durante onboarding ou auditoria.
+- Transformar a auditoria de aderência em gate de CI ou bloqueio de PR —
+  ela é diagnóstico sob demanda, não um portão obrigatório.

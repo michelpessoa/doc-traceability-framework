@@ -5,8 +5,10 @@ Strategy Doc, RFC, ADR, PRD, Tech Spec e SDD — de forma consistente entre
 projetos diferentes e entre ferramentas de IA diferentes (Claude, Cursor,
 Copilot, ChatGPT, Gemini). Inclui um gate de decisão objetivo entre RFC e
 ADR, um procedimento de onboarding para projetos que já existiam antes do
-framework, e um fluxo apartado (mas rastreável) para incidentes e
-postmortem.
+framework, um fluxo apartado (mas rastreável) para incidentes e
+postmortem, e uma auditoria de aderência sob demanda para quando nem todo
+commit/PR referencia um documento (e a adesão de todo o time nunca pode
+ser garantida).
 
 Este repositório é o **kit genérico**, feito para ser copiado/forkado por
 qualquer pessoa ou time. Se você está montando o seu próprio repositório
@@ -35,7 +37,7 @@ SDD -> input direto para a IA que vai implementar o código
 Veja o diagrama completo em
 [`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png)
 e a especificação completa em
-[`Framework_Documentacao_Rastreabilidade_v1.1.md`](Framework_Documentacao_Rastreabilidade_v1.1.md).
+[`Framework_Documentacao_Rastreabilidade_v1.2.md`](Framework_Documentacao_Rastreabilidade_v1.2.md).
 
 ## Estrutura deste repositório
 
@@ -46,12 +48,13 @@ _framework/
   prompts/
     universal.md                 — cole em qualquer chat de IA
     onboarding-bootstrap.md      — uso único, projeto já existente
+    framework-audit.md           — uso periódico, sob demanda
     cursor/doc-framework.mdc     — regra para Cursor/Windsurf
     copilot/copilot-instructions.md
   skills/doc-traceability-framework/  — Claude Skill completa
   scripts/
     generate_registry_md.py      — gera a tabela legível do registry
-    registry_tools.py            — validate / trace
+    registry_tools.py            — validate / trace / audit
   guides/
     guia-tecnico.md
     guia-nao-tecnico.md

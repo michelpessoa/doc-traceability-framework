@@ -10,10 +10,10 @@ description: >
   documentos, mesmo sem dizer o nome exato ("cria uma RFC pra isso",
   "essa proposta precisa de ADR?", "monta a spec pra IA implementar", "de
   onde veio essa decisão?", "esse projeto antigo precisa entrar no
-  framework", "abre um incidente", "registra esse postmortem"). Também
-  use para rastreabilidade de documentação técnica/produto, gate RFC→ADR,
-  trazer projeto legado para documentação, ou severidade/postmortem de
-  incidentes. Aplicável a qualquer projeto, não específico de uma stack.
+  framework", "abre um incidente", "registra esse postmortem", "audita se
+  os commits têm documento por trás"). Também use para gate RFC→ADR,
+  legado, severidade/postmortem de incidentes, ou auditoria periódica de
+  aderência entre commits/PRs e o registry. Aplicável a qualquer projeto.
 ---
 
 # Framework de Documentação & Rastreabilidade para IA
@@ -127,6 +127,21 @@ incidente em andamento.
    algum critério do gate RFC→ADR) → nova RFC (`relates_to` aponta para
    o PM), seguindo o fluxo normal a partir daí.
 
+## Auditoria de aderência (commits/PRs x registry)
+
+A adesão de todo o time a documentar tudo NUNCA pode ser garantida —
+sempre vai haver commit/PR avulso ou hotfix de incidente que muda código
+antes de qualquer documento existir. Em vez de tentar impor isso com CI
+ou bloqueio de merge, use `prompts/framework-audit.md` **periodicamente,
+sob demanda** (não é um gate): ele cruza o histórico de commits do
+repositório do projeto com os registries conhecidos, classifica cada
+commit em coberto / referência quebrada / não documentado, e para os não
+documentados aplica os mesmos 5 critérios do gate RFC→ADR — se algum se
+aplica, propõe um ADR reconstruído (igual ao onboarding, nunca aprovado
+sem revisão humana, com `tags: [audit]`); se nenhum se aplica, não gera
+documento algum. `scripts/registry_tools.py audit` automatiza o
+cruzamento a partir de um log de commits.
+
 ## IDs, front-matter e registry
 
 - ID: `{TYPE}-{PROJECT_CODE}-{SEQ4}` (ex.: `RFC-CHECKOUT-0007`),
@@ -138,9 +153,10 @@ incidente em andamento.
   verdade) + `docs/{PROJECT_CODE}/registry.md` (gerado). Repositório de
   projeto: `docs/sdd/registry.yaml` + `docs/sdd/registry.md`. Regenere
   a visão legível com `python3 scripts/generate_registry_md.py <docs_dir>`.
-- Duas ferramentas prontas em `scripts/registry_tools.py`: `validate`
-  (detecta ids órfãos, referências quebradas, status inválidos) e
-  `trace <ID>` (imprime a cadeia completa de rastreabilidade).
+- Três ferramentas prontas em `scripts/registry_tools.py`: `validate`
+  (detecta ids órfãos, referências quebradas, status inválidos), `trace
+  <ID>` (imprime a cadeia completa de rastreabilidade) e `audit
+  <git_log_file> <docs_dir...>` (cruza commits com os registries).
 - Regra inegociável: ao criar ou alterar qualquer documento, atualize o
   front-matter DO documento e a entrada correspondente no registry certo
   (central ou de projeto) na mesma resposta/tarefa.

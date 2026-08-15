@@ -1,4 +1,4 @@
-# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v1.1.0)
+# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v1.2.0)
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
 IA (ChatGPT, Gemini, Claude, etc.) antes de pedir para criar, avaliar ou
@@ -125,12 +125,38 @@ incidente em andamento.
    nova RFC (`relates_to` aponta para o PM) e segue o fluxo normal da
    seção 4 a partir daí.
 
-## 8. Esquema de ID
+## 8. Auditoria de aderência (commits/PRs x registry)
+A adesão de todo o time à convenção de referenciar documentos em
+commits/PRs NUNCA pode ser garantida — sempre vai haver commit avulso ou
+hotfix de incidente que muda código antes de qualquer documento existir.
+Por isso este framework não tenta impor isso com CI ou bloqueio de merge:
+oferece uma auditoria periódica, sob demanda, que assume que vai haver
+desvio e o transforma em achado revisável.
+
+Use `prompts/framework-audit.md` quando alguém pedir para auditar,
+verificar aderência, ou "ver se os commits têm documento por trás":
+
+1. Reúna o histórico de commits do repositório do projeto desde a última
+   auditoria (script pronto: `scripts/registry_tools.py audit
+   <git_log_file> <docs_dir...>`).
+2. Classifique cada commit/PR: coberto (cita um id existente), referência
+   quebrada (cita um id que não existe em nenhum registry) ou não
+   documentado (nenhum id na mensagem).
+3. Para os não documentados, aplique os 5 critérios do gate RFC→ADR
+   (seção 4): se algum se aplica, proponha um ADR reconstruído
+   (`provenance: reconstructed`, `status: in_review`, `tags: [audit]`) —
+   nunca aprovado sem revisão humana, mesma regra do onboarding. Se
+   nenhum se aplica, não crie documento nenhum.
+4. Apresente o relatório completo (cobertos / referência quebrada / não
+   documentados / ADRs propostos) para revisão humana antes de registrar
+   qualquer coisa.
+
+## 9. Esquema de ID
 `{TYPE}-{PROJECT_CODE}-{SEQ}`, `SEQ` sequencial de 4 dígitos por tipo
 dentro do projeto (ex.: `RFC-CHECKOUT-0007`). Nunca reutilize um id.
 Pergunte o `PROJECT_CODE` se ainda não souber qual é.
 
-## 9. Front-matter obrigatório (YAML no topo de todo documento)
+## 10. Front-matter obrigatório (YAML no topo de todo documento)
 Campos comuns: `id, type, title, status, project, owner, created,
 updated, relates_to, supersedes, superseded_by, tags`.
 
@@ -143,7 +169,7 @@ ADR: `parent_rfc`, `strategic_impact`, `decision`, `provenance`
 `severity`, `detected_at`, `impact_summary`, `root_cause_key`; PM:
 `source_incident`, `severity_inherited`, `action_items`.
 
-## 10. Registry (rastreabilidade)
+## 11. Registry (rastreabilidade)
 Repositório central: `docs/{PROJECT_CODE}/registry.yaml` (fonte da
 verdade de STRAT/RFC/ADR/PRD/TS/BASE/INC/PM desse projeto) e
 `docs/{PROJECT_CODE}/registry.md` (gerado, nunca editado à mão).
@@ -154,7 +180,7 @@ atualiza o front-matter DO documento E a entrada correspondente no
 registry certo (central ou de projeto, conforme o tipo) na mesma
 resposta. Front-matter e registry nunca podem divergir.
 
-## 11. O que fazer quando o usuário pedir para...
+## 12. O que fazer quando o usuário pedir para...
 
 **"Criar uma RFC/ADR/PRD/Tech Spec/SDD/Strategy Doc/Incidente/Postmortem"**
 → use o template do tipo, no repositório certo, gere o próximo id
@@ -177,6 +203,10 @@ use `prompts/onboarding-bootstrap.md` (seção 6).
 
 **"Abre um incidente" / "registra esse postmortem"** → siga a seção 7.
 
+**"Audita os commits" / "os commits têm documento por trás?" / "verifica
+aderência"** → pare e use `prompts/framework-audit.md` (seção 8). Não
+bloqueia nada, é diagnóstico.
+
 **"Rastreia o histórico de X" / "de onde veio X"** → percorra
 `relates_to`/`parent_*`/`source_docs` recursivamente (usando a `url`
 quando a cadeia atravessar do repositório de projeto para o central), e
@@ -186,7 +216,7 @@ mostre a cadeia completa.
 documentos sem status válido, ou divergência entre front-matter e
 registry.
 
-## 12. Reuso em outro projeto
+## 13. Reuso em outro projeto
 Este mesmo prompt e as mesmas regras se aplicam a qualquer projeto — só
 o `PROJECT_CODE`, o repositório de projeto e o conteúdo dos documentos
 mudam. `_framework/` existe em cópia única, dentro do repositório

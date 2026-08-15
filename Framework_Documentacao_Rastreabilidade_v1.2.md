@@ -1,18 +1,14 @@
 # Framework de Documentação & Rastreabilidade para IA
 
-**Especificação v1.1.0**
+**Especificação v1.2.0**
 
 Projeto: Framework de uso de IA · 15 de agosto de 2026
 
-## 1. Objetivo e o que mudou desde a v1.0.0
+## 1. Objetivo e o que mudou desde a v1.1.0
 
-Este documento define a versão 1.1.0 do framework para criar, registrar e rastrear os documentos de decisão de um projeto, reaplicável a projetos diferentes e com skills/prompts que produzem o mesmo resultado em qualquer ferramenta de IA. A v1.0.0 corrigiu o gap original (gate de decisão entre RFC e ADR) e definiu a SDD como input de implementação para IA. A v1.1.0 incorpora três evoluções discutidas e validadas em conjunto:
+Este documento define a versão 1.2.0 do framework para criar, registrar e rastrear os documentos de decisão de um projeto, reaplicável a projetos diferentes e com skills/prompts que produzem o mesmo resultado em qualquer ferramenta de IA. A v1.0.0 corrigiu o gap original (gate de decisão entre RFC e ADR) e definiu a SDD como input de implementação para IA. A v1.1.0 trouxe o modelo de dois repositórios, o onboarding de projetos já existentes e o fluxo de incidentes/postmortem. A v1.2.0 fecha um gap identificado na prática: a adesão de todo o time à disciplina de referenciar documentos em commits/PRs nunca pode ser garantida, e o framework precisava de uma resposta a isso além de "confiar que todo mundo vai lembrar".
 
-- Um modelo explícito de dois repositórios (central + por projeto), em vez de assumir um único repositório.
-- Um procedimento de onboarding para projetos que já existiam antes deste framework.
-- Um fluxo apartado, mas rastreável, para incidentes e postmortem.
-
-Também foram entregues dois guias de uso — um técnico e um sem jargão para pessoas não técnicas — para reduzir a fricção de adoção.
+- Uma **auditoria de aderência**, sob demanda e sem automação de CI, que cruza o histórico real de commits/PRs de um repositório de projeto com os registries conhecidos e reaproveita o mesmo mecanismo de reconstrução do onboarding para o que for significativo.
 
 ## 2. Modelo de dois repositórios
 
@@ -65,7 +61,15 @@ Regra de recorrência: independentemente da severidade individual, se a mesma ca
 
 O Postmortem (PM) segue o ciclo de vida padrão do framework (é um documento analítico, não operacional) e cada action item é triado: um ajuste pontual sem nenhum critério do gate aplicável vira PRD/Tech Spec direto; uma mudança estrutural (que atenderia a algum critério do gate RFC→ADR) vira uma nova RFC, referenciando o postmortem de origem, e segue o fluxo normal a partir daí — reaproveitando a mesma régua de decisão em vez de criar uma nova.
 
-## 6. Exemplo ponta a ponta (validado)
+## 6. Auditoria de aderência (commits/PRs x registry) — novo na v1.2.0
+
+O framework nunca assumiu que todo código nasce de um documento aprovado — na prática sempre existem commits e PRs avulsos (hotfix fora de incidente, ajuste de dependência, refactor pontual) e correções feitas durante um incidente, onde o código muda antes de qualquer documento existir. Como a adesão de todo o time à convenção de referenciar documentos em commits/PRs **não pode ser garantida**, a resposta não é impor isso com CI ou bloqueio de merge — é assumir que vai haver desvio e transformá-lo em achado revisável, sem travar ninguém.
+
+A auditoria é sob demanda (não é gate, não roda em CI): lê o histórico de commits/PRs do repositório do projeto desde a última auditoria, cruza cada mensagem com os ids conhecidos nos registries relevantes, e classifica em três grupos — **coberto** (referencia um id existente), **referência quebrada** (cita um id que não existe em nenhum registry, provável erro de digitação) e **não documentado** (nenhum id na mensagem). Para os não documentados, aplica os mesmos 5 critérios do gate RFC→ADR da seção 3: se algum se aplica, propõe um ADR reconstruído — mesmas regras do onboarding, `provenance: reconstructed`, `status: in_review`, nunca aprovado sem revisão humana, com `tags: [audit]` no registry para distinguir de um bootstrap inicial. Se nenhum critério se aplica, não gera documento algum.
+
+O script `_framework/scripts/registry_tools.py audit <git_log_file> <docs_dir...>` automatiza o cruzamento entre um log de commits e um ou mais registries, e o prompt `_framework/prompts/framework-audit.md` implementa o procedimento completo para uso com qualquer ferramenta de IA.
+
+## 7. Exemplo ponta a ponta (validado)
 
 O kit inclui três cenários de exemplo, todos validados com `registry_tools.py validate` e `trace`:
 

@@ -4,10 +4,17 @@ Este projeto segue versionamento semântico. Ver `framework.version` em
 `_framework/rules/workflow-rules.yaml` como fonte da verdade da versão
 atual.
 
-## [Unreleased]
-- Especificação convertida de `.docx` para
-  `Framework_Documentacao_Rastreabilidade_v1.1.md` (documento nativo do
-  repositório, sem dependência de Word).
+## [1.2.0] - 2026-08-15
+- Auditoria de aderência (commits/PRs x registry): como a adesão de todo
+  o time à convenção de referenciar documentos em commits nunca pode ser
+  garantida, o framework passa a oferecer uma auditoria sob demanda (sem
+  CI, sem bloqueio de merge) que cruza o histórico do repositório do
+  projeto com os registries conhecidos e reaproveita o mecanismo de
+  reconstrução do onboarding para o que for arquiteturalmente
+  significativo. Novo prompt `prompts/framework-audit.md` e novo comando
+  `registry_tools.py audit`.
+- Especificação convertida de `.docx` para Markdown nativo do
+  repositório (`Framework_Documentacao_Rastreabilidade_v1.2.md`).
 
 ## [1.1.0] - 2026-08-15
 - Modelo explícito de dois repositórios (central + por projeto); SDD

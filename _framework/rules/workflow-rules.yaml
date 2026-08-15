@@ -14,7 +14,7 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.1.0"
+  version: "1.2.0"
   last_updated: "2026-08-15"
   changelog:
     - version: "1.0.0"
@@ -25,6 +25,16 @@ framework:
         SDD vive no repo do projeto); onboarding de projeto já existente
         (tipo BASE + ADRs reconstruídos); fluxo de incidentes e postmortem
         (tipos INC/PM, severidade, regra de recorrência).
+    - version: "1.2.0"
+      summary: >
+        Auditoria de aderência (seção 11): como a adesão de todo o time à
+        convenção de referenciar documentos em commits/PRs não pode ser
+        garantida, o framework passa a oferecer uma auditoria periódica e
+        sob demanda (sem CI, sem bloqueio de merge) que cruza o histórico
+        do repositório do projeto com os registries, classifica commits em
+        coberto/referência quebrada/não documentado, e reaproveita o
+        mecanismo de reconstrução do onboarding para propor ADRs quando o
+        commit não documentado for arquiteturalmente significativo.
 
 ##############################################################################
 # 1. TOPOLOGIA DE REPOSITÓRIOS (MODELO MULTI-REPO)
@@ -514,7 +524,63 @@ multi_project:
     propagação manual entre projetos.
 
 ##############################################################################
-# 11. CAPACIDADES QUE QUALQUER FERRAMENTA DE IA (CLAUDE, CURSOR, COPILOT,
+# 11. AUDITORIA DE ADERÊNCIA (COMMITS/PRS x REGISTRY)
+##############################################################################
+# O framework NUNCA assume que todo commit/PR nasce de um documento
+# aprovado — na prática sempre existem commits e PRs avulsos (hotfix fora
+# de incidente, ajuste de dependência, refactor pontual) e correções feitas
+# durante um INC, onde o código muda antes de qualquer documento existir.
+# Como a adesão de todo o time à convenção de referência NÃO pode ser
+# garantida, este framework não tenta impor isso com automação/CI — em vez
+# disso, oferece uma auditoria periódica, sob demanda, que assume que vai
+# haver desvio e o transforma em achado revisável, reaproveitando o MESMO
+# mecanismo de reconstrução do onboarding (seção 4) em vez de criar um
+# processo novo.
+audit:
+  purpose: >
+    Detectar, depois do fato, quais commits/PRs do repositório de um
+    projeto não têm nenhum documento do framework por trás — sem travar
+    merge, sem exigir disciplina perfeita de commit.
+  trigger: "Sob demanda, quando alguém decide rodar — não é um gate de CI nem bloqueia PR. Cadência sugerida (não obrigatória): a cada ciclo de RFC ou periodicamente (ex.: mensal)."
+  commit_reference_convention:
+    description: >
+      Convenção recomendada, não obrigatória: mencionar o id do documento
+      relacionado na mensagem de commit ou descrição da PR (ex.: "Refs:
+      SDD-{PROJECT}-0001" ou "Refs: INC-{PROJECT}-0002"). A auditoria
+      funciona mesmo que ninguém siga a convenção — ela só facilita achar
+      o vínculo quando alguém segue.
+    enforcement: "nenhuma — não há gate de CI; a auditoria é a rede de segurança para quando a convenção não é seguida."
+  procedure:
+    - step: 1
+      action: "Ler o histórico de commits/PRs do repositório do projeto desde a última auditoria (ou desde o início, na primeira vez)."
+    - step: 2
+      action: "Extrair de cada mensagem qualquer id no formato de id_scheme (seção 7) e cruzar com os ids conhecidos nos registries relevantes (central do projeto + docs/sdd/registry.yaml do próprio repositório)."
+    - step: 3
+      action: "Classificar cada commit/PR em: coberto (referencia ao menos um id existente), referência quebrada (cita um id que não existe em nenhum registry — provável erro de digitação) ou não documentado (nenhum id encontrado na mensagem)."
+    - step: 4
+      action: >
+        Para cada commit/PR não documentado, aplicar os mesmos 5 critérios
+        de decision_gates.rfc_to_adr: se algum critério se aplica
+        (mudança arquitetural, alto custo de reversão, trade-off técnico
+        relevante, impacto cross-team, troca de tecnologia/vendor), propor
+        um ADR reconstruído — mesmas regras do onboarding
+        (provenance=reconstructed, status=in_review, parent_rfc não se
+        aplica; use parent_strategy ou deixe em branco com a justificativa
+        no corpo), referenciando o(s) commit(s)/PR(s) de origem. Se nenhum
+        critério se aplica, não gera nenhum documento — só entra no
+        relatório como "sem documento, sem necessidade aparente".
+    - step: 5
+      action: "Apresentar o relatório (cobertos / referência quebrada / não documentados / ADRs reconstruídos propostos) para revisão humana — igual ao onboarding, nenhum ADR reconstruído é aprovado sem confirmação de uma pessoa do time."
+    - step: 6
+      action: "Documentos aprovados a partir da auditoria ganham tags=[audit] no registry (em vez de tags=[onboarding], para distinguir descoberta contínua de bootstrap inicial)."
+  output: "Relatório de auditoria (texto ou arquivo) — não é um novo tipo de documento formal, não bloqueia nada, não precisa de aprovação para existir; só os ADRs reconstruídos que ele eventualmente propõe seguem o ciclo de aprovação normal."
+  non_goals:
+    - "Não bloquear commit, PR ou merge."
+    - "Não exigir que todo commit tenha referência — a auditoria mede e reporta, não força adesão."
+    - "Não reconstruir PRD/Tech Spec de commits passados, pela mesma razão do onboarding (o código já é a especificação do 'como')."
+
+##############################################################################
+# 12. CAPACIDADES QUE QUALQUER FERRAMENTA DE IA (CLAUDE, CURSOR, COPILOT,
 #     CHATGPT, GEMINI) DEVE OFERECER AO EXECUTAR ESTE FRAMEWORK
 ##############################################################################
 capabilities:
@@ -538,3 +604,5 @@ capabilities:
     description: "Aplicar postmortem_policy (por severidade + recurrence_rule) a um INC para decidir se o postmortem é obrigatório completo, obrigatório leve ou opcional."
   - id: triage_postmortem_action_items
     description: "Aplicar action_item_triage a cada action item de um PM, decidindo se vira PRD/TS direto ou uma nova RFC."
+  - id: audit_repo_adherence
+    description: "Executar audit (seção 11): cruzar commits/PRs do repositório do projeto com os registries conhecidos, classificar em coberto/referência quebrada/não documentado, e propor ADRs reconstruídos para o que for arquiteturalmente significativo, sem bloquear nada e sem exigir adesão perfeita à convenção de referência."

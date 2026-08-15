@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v1.1.0)
+# Framework de Documentação & Rastreabilidade para IA (v1.2.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
@@ -43,6 +43,15 @@ decisão RFC→ADR (5 critérios objetivos — ver
 que nunca usou o framework antes, o processo é outro (onboarding, ver
 `_framework/prompts/onboarding-bootstrap.md` no repositório central) —
 não invente um atalho aqui.
+
+## Auditoria de aderência (commits/PRs x registry)
+A adesão de todo o time a referenciar documentos em commits/PRs nunca
+pode ser garantida — este repositório vai acumular commits sem nenhum id
+do framework, e isso é esperado, não uma falha a corrigir com CI. Se
+pedirem para auditar aderência ou "ver se os commits têm documento por
+trás", use `_framework/prompts/framework-audit.md` (repositório central)
+— é diagnóstico sob demanda, nunca um gate de merge. Script de apoio:
+`_framework/scripts/registry_tools.py audit <git_log_file> <docs_dir...>`.
 
 Regras completas: `_framework/rules/workflow-rules.yaml` (repositório
 central).
