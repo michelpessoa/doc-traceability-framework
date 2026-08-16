@@ -118,6 +118,11 @@ Todos os três passam em `registry_tools.py validate` e `trace`.
 4. Se for um projeto que já existe, use
    `_framework/prompts/onboarding-bootstrap.md` uma única vez antes de
    seguir o fluxo normal.
+5. Periodicamente (sob demanda, não é CI), rode
+   `_framework/prompts/framework-audit.md` para ver se os commits/PRs do
+   repositório de projeto têm documento por trás — a adesão de todo o
+   time nunca é garantida, então isso funciona como rede de segurança,
+   não como bloqueio.
 
 Guias completos: [`guia-tecnico.md`](_framework/guides/guia-tecnico.md)
 (para quem cria documentos e roda os scripts) e
