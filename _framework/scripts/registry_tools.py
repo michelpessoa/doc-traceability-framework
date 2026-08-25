@@ -106,6 +106,17 @@ def cmd_validate(docs_dir: Path) -> int:
             if sid not in docs and not is_expected_external(sid):
                 problems.append(f"{did}: source_docs aponta para id inexistente '{sid}'")
 
+    warnings = []
+    if mode == "central" and not data.get("repository"):
+        warnings.append(
+            "registry.yaml não tem o campo `repository` (URL do repositório "
+            "de código do projeto) — a auditoria vai precisar perguntar antes "
+            "de rodar."
+        )
+
+    for w in warnings:
+        print(f"⚠️  {w}")
+
     if problems:
         print(f"❌ {len(problems)} problema(s) encontrado(s):")
         for p in problems:

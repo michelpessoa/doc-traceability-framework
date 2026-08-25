@@ -1,4 +1,4 @@
-# Prompt de Auditoria de Aderência (v1.2.0)
+# Prompt de Auditoria de Aderência (v1.3.0)
 
 Use este prompt **periodicamente, sob demanda** — não é um gate de CI, não
 bloqueia PR nem merge, e não presume que o time seguiu qualquer convenção
@@ -19,6 +19,14 @@ Você vai auditar se os commits/PRs recentes deste repositório têm um
 documento do framework por trás, ou se são código que apareceu sem
 rastro. Isto NÃO é uma cobrança de disciplina — é um levantamento
 honesto do estado real.
+
+## Passo 0 — Descubra qual repositório auditar
+
+Leia o campo `repository` de `docs/{PROJECT_CODE}/registry.yaml` no
+repositório central — é ele que diz qual repositório de código
+inspecionar. **Nunca assuma ou adivinhe** essa URL. Se o campo estiver
+ausente ou vazio, pergunte a URL ao usuário e grave-a nesse campo antes de
+continuar para o Passo 1.
 
 ## Passo 1 — Reúna o histórico
 

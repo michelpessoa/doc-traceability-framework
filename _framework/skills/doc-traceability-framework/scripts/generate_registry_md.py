@@ -67,6 +67,9 @@ def main():
         f"{datetime.now():%Y-%m-%d %H:%M}. Não editar manualmente. "
         f"Framework v{fw_version}._\n"
     )
+    repository = data.get("repository")
+    if repository:
+        lines.append(f"Repositório de código: {repository}\n")
     total = len(documents)
     lines.append(f"Total de documentos: **{total}**\n")
 

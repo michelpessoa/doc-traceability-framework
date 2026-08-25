@@ -14,9 +14,19 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.2.0"
-  last_updated: "2026-08-15"
+  version: "1.3.0"
+  last_updated: "2026-08-24"
   changelog:
+    - version: "1.3.0"
+      summary: >
+        Corrige gap: nem onboarding nem auditoria registravam a URL do
+        repositório de código do projeto em lugar nenhum, então rodar uma
+        auditoria dependia de alguém lembrar de informar o link toda vez.
+        Agora todo registry central (docs/{PROJECT_CODE}/registry.yaml)
+        carrega um campo `repository` de nível de projeto com a URL do
+        repositório de código; onboarding passa a gravá-lo na Fase 1, e
+        auditoria passa a lê-lo primeiro em vez de assumir que já foi
+        informado.
     - version: "1.0.0"
       summary: "Fluxo Strategy->RFC->[gate]->ADR->PRD/TS->SDD, registry, IDs, kit multi-projeto."
     - version: "1.1.0"
@@ -80,6 +90,14 @@ repository_topology:
       a rastreabilidade quebra ao atravessar repositórios. Ver
       frontmatter_schema.type_specific_fields.SDD.source_docs.
     format: "{ id: 'PRD-CHECKOUT-0002', url: 'https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-prd/PRD-CHECKOUT-0002.md' }"
+  project_repo_url:
+    description: >
+      A URL do repositório de código de cada projeto (o project_repo desta
+      seção) fica registrada no campo `repository`, no topo do
+      docs/{PROJECT_CODE}/registry.yaml do repositório central — não em
+      nenhum documento individual. É a única fonte que a auditoria (seção
+      11) consulta para saber qual repositório ler; nunca deve ser
+      adivinhada. Ver registry.central_registry.repository_field.
 
 ##############################################################################
 # 2. TIPOS DE DOCUMENTO
@@ -289,6 +307,14 @@ onboarding:
         action: "IA lê o repositório de código do projeto (stack, estrutura, integrações, dívidas técnicas visíveis)."
       - step: 2
         action: "IA cria um único documento BASE-{PROJECT_CODE}-0001 no repositório central, resumindo o estado atual."
+      - step: 2.1
+        action: >
+          IA grava (ou confirma, se já existir) a URL do repositório de
+          código do projeto no campo `repository` do
+          docs/{PROJECT_CODE}/registry.yaml do repositório central. Se a
+          IA não souber a URL, pergunta ao usuário antes de seguir — nunca
+          adivinha. Este campo é o que a auditoria (seção 11) lerá no
+          futuro para saber qual repositório inspecionar.
       - step: 3
         action: >
           Para cada decisão de arquitetura que a IA consegue inferir do
@@ -488,6 +514,19 @@ registry:
     path: "docs/{PROJECT_CODE}/registry.yaml"
     human_readable_view: "docs/{PROJECT_CODE}/registry.md"   # gerado, nunca editado à mão
     scope: "STRAT, RFC, ADR, PRD, TS, BASE, INC, PM deste projeto"
+    repository_field:
+      field: "repository"
+      level: "topo do arquivo (nível de projeto, não por documento) — ao lado de `project` e `framework_version`"
+      description: >
+        URL do repositório de código do projeto (o project_repo de
+        repository_topology). É o dado que a auditoria (seção 11) precisa
+        para saber qual repositório ler; sem ele, a auditoria não sabe
+        onde procurar commits/PRs.
+      populated_when: >
+        Preenchido no onboarding (phase_1_baseline, step 2.1) ou, para
+        projeto novo, na criação do registry.yaml (ver multi_project).
+        Nunca deve ser inferido/adivinhado pela IA — se ausente, pergunta
+        ao usuário.
   project_registry:
     path: "docs/sdd/registry.yaml"
     human_readable_view: "docs/sdd/registry.md"
@@ -513,10 +552,13 @@ multi_project:
     _framework/ existe em UMA cópia só, dentro do repositório central.
     Para adicionar um projeto novo: criar docs/{PROJECT_CODE}/ no
     repositório central com as subpastas de document_types (exceto SDD) e
-    um registry.yaml vazio; e, no repositório de código do projeto, criar
-    docs/sdd/ com seu próprio registry.yaml vazio. As regras de negócio
-    (gate, lifecycle, schema, severidade) NÃO mudam entre projetos —
-    apenas o PROJECT_CODE e o conteúdo dos documentos.
+    um registry.yaml com o campo `repository` já preenchido com a URL do
+    repositório de código do projeto (perguntar ao usuário se não for
+    informada — nunca adivinhar, ver registry.central_registry.repository_field);
+    e, no repositório de código do projeto, criar docs/sdd/ com seu
+    próprio registry.yaml vazio. As regras de negócio (gate, lifecycle,
+    schema, severidade) NÃO mudam entre projetos — apenas o PROJECT_CODE e
+    o conteúdo dos documentos.
   versioning: >
     Mudanças no framework são feitas uma única vez em
     _framework/rules/workflow-rules.yaml (fonte canônica) e versionadas em
@@ -552,12 +594,19 @@ audit:
     enforcement: "nenhuma — não há gate de CI; a auditoria é a rede de segurança para quando a convenção não é seguida."
   procedure:
     - step: 1
-      action: "Ler o histórico de commits/PRs do repositório do projeto desde a última auditoria (ou desde o início, na primeira vez)."
+      action: >
+        Ler o campo `repository` do docs/{PROJECT_CODE}/registry.yaml do
+        repositório central para saber qual repositório de código
+        inspecionar. Se o campo estiver ausente ou vazio, perguntar a URL
+        ao usuário e gravá-la nesse campo antes de continuar — nunca
+        assumir ou adivinhar o repositório.
     - step: 2
-      action: "Extrair de cada mensagem qualquer id no formato de id_scheme (seção 7) e cruzar com os ids conhecidos nos registries relevantes (central do projeto + docs/sdd/registry.yaml do próprio repositório)."
+      action: "Ler o histórico de commits/PRs do repositório do projeto desde a última auditoria (ou desde o início, na primeira vez)."
     - step: 3
-      action: "Classificar cada commit/PR em: coberto (referencia ao menos um id existente), referência quebrada (cita um id que não existe em nenhum registry — provável erro de digitação) ou não documentado (nenhum id encontrado na mensagem)."
+      action: "Extrair de cada mensagem qualquer id no formato de id_scheme (seção 7) e cruzar com os ids conhecidos nos registries relevantes (central do projeto + docs/sdd/registry.yaml do próprio repositório)."
     - step: 4
+      action: "Classificar cada commit/PR em: coberto (referencia ao menos um id existente), referência quebrada (cita um id que não existe em nenhum registry — provável erro de digitação) ou não documentado (nenhum id encontrado na mensagem)."
+    - step: 5
       action: >
         Para cada commit/PR não documentado, aplicar os mesmos 5 critérios
         de decision_gates.rfc_to_adr: se algum critério se aplica
@@ -569,9 +618,9 @@ audit:
         no corpo), referenciando o(s) commit(s)/PR(s) de origem. Se nenhum
         critério se aplica, não gera nenhum documento — só entra no
         relatório como "sem documento, sem necessidade aparente".
-    - step: 5
-      action: "Apresentar o relatório (cobertos / referência quebrada / não documentados / ADRs reconstruídos propostos) para revisão humana — igual ao onboarding, nenhum ADR reconstruído é aprovado sem confirmação de uma pessoa do time."
     - step: 6
+      action: "Apresentar o relatório (cobertos / referência quebrada / não documentados / ADRs reconstruídos propostos) para revisão humana — igual ao onboarding, nenhum ADR reconstruído é aprovado sem confirmação de uma pessoa do time."
+    - step: 7
       action: "Documentos aprovados a partir da auditoria ganham tags=[audit] no registry (em vez de tags=[onboarding], para distinguir descoberta contínua de bootstrap inicial)."
   output: "Relatório de auditoria (texto ou arquivo) — não é um novo tipo de documento formal, não bloqueia nada, não precisa de aprovação para existir; só os ADRs reconstruídos que ele eventualmente propõe seguem o ciclo de aprovação normal."
   non_goals:

@@ -1,4 +1,4 @@
-# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.1.0)
+# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.2.0)
 
 Use este prompt **uma única vez por projeto**, no dia em que um projeto
 que já tem código em produção (mas nunca usou este framework) vai passar
@@ -26,6 +26,14 @@ dependências externas existem (bancos de dados, filas, APIs de
 terceiros, outros serviços internos), e qualquer dívida técnica visível
 no próprio código (TODOs, workarounds documentados, versões
 desatualizadas críticas).
+
+**Passo 1.1 — Grave a URL do repositório de código no registry.**
+Antes de escrever o BASE, confirme (ou pergunte ao usuário, se não
+souber) a URL do repositório de código deste projeto, e grave-a no campo
+`repository` de `docs/{PROJECT_CODE}/registry.yaml` no repositório
+central. Nunca adivinhe essa URL. Este campo é o que a auditoria de
+aderência (`prompts/framework-audit.md`) vai ler no futuro para saber
+qual repositório inspecionar — sem ele, a auditoria não tem como rodar.
 
 **Passo 2 — Escreva UM documento BASE.**
 Use `templates/base.template.md`. Id: `BASE-{PROJECT_CODE}-0001` (pergunte
@@ -89,3 +97,5 @@ como em um projeto que nasceu dentro do framework.
 - [ ] `docs/{PROJECT_CODE}/registry.yaml` tem entradas para todos os
       documentos desta fase, com `tags: [onboarding]`
 - [ ] Nenhum PRD ou Tech Spec retroativo foi criado
+- [ ] Campo `repository` em `docs/{PROJECT_CODE}/registry.yaml` está
+      preenchido com a URL do repositório de código do projeto

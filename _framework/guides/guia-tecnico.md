@@ -62,7 +62,14 @@ docs/
 
 1. No repositório central, crie `docs/{PROJECT_CODE}/` com as subpastas
    acima e um `registry.yaml` vazio (`project`, `framework_version`,
-   `documents: []`).
+   `repository`, `documents: []`) — pergunte a URL do repositório de
+   código do projeto se ainda não souber, nunca adivinhe:
+   ```yaml
+   project: "{PROJECT_CODE}"
+   framework_version: "1.3.0"
+   repository: "https://github.com/{ORG}/{PROJECT_CODE}"
+   documents: []
+   ```
 2. No repositório de código do projeto, crie `docs/sdd/` com seu próprio
    `registry.yaml` vazio.
 3. Escolha o `PROJECT_CODE` (curto, maiúsculo, sem espaços) — ele é usado
