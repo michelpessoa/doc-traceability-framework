@@ -13,7 +13,12 @@ description: >
   framework", "abre um incidente", "registra esse postmortem", "audita se
   os commits têm documento por trás"). Também use para gate RFC→ADR,
   legado, severidade/postmortem de incidentes, ou auditoria periódica de
-  aderência entre commits/PRs e o registry. Aplicável a qualquer projeto.
+  aderência entre commits/PRs e o registry. USE TAMBÉM antes de
+  implementar qualquer código a partir de uma decisão já aprovada neste
+  framework ("implementa o que já foi decidido", "desenvolve esse ADR",
+  "bota pra rodar essa RFC") — há um gate obrigatório (PRD/TS/SDD antes
+  de código) que precisa ser checado primeiro. Aplicável a qualquer
+  projeto.
 ---
 
 # Framework de Documentação & Rastreabilidade para IA
@@ -85,6 +90,33 @@ Quando PRD e Tech Spec (e o ADR, se existir) estiverem `approved`,
 compile a SDD **no repositório do projeto** a partir deles — nunca
 escreva a SDD do zero. `source_docs` é uma lista de `{id, url}`, porque
 os documentos de origem estão no repositório central, não no do projeto.
+
+## Gate obrigatório: nunca implemente antes de PRD/TS/SDD existirem
+
+Regra não-opcional, adicionada depois de um incidente real de uso deste
+framework: um ADR foi aprovado e a implementação foi direto para o
+código, tratando a seção "Consequências" do ADR como spec suficiente —
+PRD, Tech Spec e SDD só foram escritos depois, retroativamente. Ver
+`gate_implementation_before_code` em `references/workflow-rules.yaml`
+(seção 13).
+
+Se o pedido for "implementa/desenvolve o que já foi decidido" a partir
+de um RFC/ADR `approved`, **pare antes de tocar em código**:
+1. PRD e/ou Tech Spec aplicáveis existem no repositório central? Se não,
+   crie-os primeiro.
+2. A SDD correspondente já foi compilada no repositório do projeto? Se
+   não, compile-a primeiro.
+3. Só então escreva código.
+
+Um ADR sozinho nunca é suficiente, mesmo detalhado. Isto não é um gate
+de tempo — pode ser tudo feito na mesma sessão — é um gate de **ordem**.
+Se o usuário pedir para pular direto pro código, não obedeça em
+silêncio: avise que isso viola o gate e peça confirmação explícita
+antes de implementar sem os documentos. Diferente da auditoria (abaixo),
+que tolera desvio de terceiros e descobre depois sem bloquear nada, este
+gate vale para você mesma — pular a ordem aqui é erro a evitar, não
+desvio a tolerar. Única exceção: incidente ativo (`INC` em
+`open`/`mitigated`).
 
 ## Ciclo de vida de status
 
@@ -170,6 +202,11 @@ para o registry.
 
 **"Essa RFC precisa de ADR?"** — aplique o gate, mostre quais critérios
 se aplicaram e por quê, diga o próximo documento a criar.
+
+**"Implementa/desenvolve o que já foi decidido"** (a partir de RFC/ADR
+`approved`) — pare antes de código: confirme PRD/TS existem (crie se
+faltarem), confirme SDD compilada no repositório do projeto (compile se
+faltar), só então implemente. Ver "Gate obrigatório" acima.
 
 **"Muda o status de X"** — valide contra o ciclo de vida certo (padrão
 ou o de INC), atualize documento e registry juntos.

@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v1.2.0)
+# Framework de Documentação & Rastreabilidade para IA (v1.5.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
@@ -28,10 +28,20 @@ IA no momento de implementar.
   criação ou mudança de status — front-matter e registry nunca podem
   divergir.
 
-## Antes de gerar código
-Verifique se existe uma SDD `approved` em `docs/sdd/` para a feature em
-questão. Se não existir, avise o usuário em vez de implementar sem
-spec. Se a SDD referenciar um ADR/PRD/Tech Spec e você precisar de mais
+## Antes de gerar código (gate obrigatório, não opcional)
+Verifique se existe uma SDD `approved`/`implemented` em `docs/sdd/` para
+a feature em questão. **Se não existir, NÃO implemente** — mesmo que
+você consiga ver um ADR ou PRD/Tech Spec referenciado em outro lugar,
+ou até o próprio pedido pareça claro o suficiente para começar. Avise o
+usuário que falta a SDD (e, se for o caso, o PRD/Tech Spec de origem no
+repositório central) e peça para ela ser criada/compilada primeiro — um
+ADR com "Consequências" detalhada não é especificação suficiente (ver
+`_framework/rules/workflow-rules.yaml`, seção 13,
+`gate_implementation_before_code`). Só prossiga sem SDD se o usuário
+confirmar explicitamente que quer pular o gate, sabendo que está
+violando a regra.
+
+Se a SDD referenciar um ADR/PRD/Tech Spec e você precisar de mais
 contexto, siga a `url` em `source_docs` até o repositório central — não
 tente adivinhar o conteúdo.
 
