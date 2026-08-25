@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v1.5.0)
+# Framework de Documentação & Rastreabilidade para IA (v1.6.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
@@ -44,6 +44,22 @@ violando a regra.
 Se a SDD referenciar um ADR/PRD/Tech Spec e você precisar de mais
 contexto, siga a `url` em `source_docs` até o repositório central — não
 tente adivinhar o conteúdo.
+
+## Antes de commitar código (gate obrigatório, não opcional)
+Nunca commite implementação direto na branch main/master deste
+repositório. Antes do primeiro commit:
+1. Se a branch atual for main/master, crie uma branch nova a partir dela
+   (nome rastreável ao id do documento, ex.:
+   `feat/ADR-EVM-0011-controle-estoque`, `sdd/SDD-EVM-0009`).
+2. Commite nessa branch, nunca em main.
+3. Leve o resultado a main por PR, referenciando os ids relacionados
+   (RFC/ADR/PRD/TS/SDD) no corpo — não faça merge do PR sozinho sem
+   sinal do humano responsável, salvo instrução explícita em contrário.
+
+Ver `_framework/rules/workflow-rules.yaml`, seção 14,
+`gate_branch_before_commit`. Só commite direto em main se o usuário
+confirmar explicitamente que quer pular o gate, sabendo que está
+violando a regra (reduz revisão e quebra o uso de CI/CD).
 
 ## O que NÃO fazer aqui
 Não crie Strategy Doc, RFC, ADR, PRD ou Tech Spec neste repositório —

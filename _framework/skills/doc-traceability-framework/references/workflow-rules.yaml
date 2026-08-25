@@ -14,9 +14,21 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.5.0"
+  version: "1.6.0"
   last_updated: "2026-08-25"
   changelog:
+    - version: "1.6.0"
+      summary: >
+        Corrige segundo gap do mesmo incidente EVM: mesmo com PRD/TS/SDD
+        no lugar (gate da seção 13 respeitado), a implementação foi
+        commitada direto na branch main do repositório de projeto, sem
+        branch dedicada nem PR — fere o princípio de desenvolvimento
+        isolado que sustenta qualquer pipeline de CI/CD (revisão antes de
+        integrar, checks obrigatórios, histórico limpo por decisão). Nova
+        seção 14 (gate_branch_before_commit) torna obrigatório que toda
+        implementação de código coberta por este framework nasça em
+        branch própria e vá a main via PR, nunca commit direto. Nova
+        capability `enforce_branch_before_commit`.
     - version: "1.5.0"
       summary: >
         Corrige gap crítico: uma sessão de IA implementou 3 ADRs aprovados
@@ -680,6 +692,8 @@ capabilities:
     description: "Executar audit (seção 11): cruzar commits/PRs do repositório do projeto com os registries conhecidos, classificar em coberto/referência quebrada/não documentado, e propor ADRs reconstruídos para o que for arquiteturalmente significativo, sem bloquear nada e sem exigir adesão perfeita à convenção de referência."
   - id: enforce_implementation_gate
     description: "Antes de escrever ou alterar qualquer código de implementação para uma decisão coberta por este framework, verificar gate_implementation_before_code (seção 13): garantir que PRD/TS/SDD aplicáveis existam (criando-os primeiro, na mesma resposta, se faltarem) antes de tocar em código — nunca implementar primeiro e documentar depois."
+  - id: enforce_branch_before_commit
+    description: "Antes de criar o primeiro commit de implementação de uma SDD/PRD/TS/ADR no repositório de projeto, verificar gate_branch_before_commit (seção 14): garantir que existe (ou criar) uma branch dedicada a partir de main e que o commit vai para essa branch — nunca commitar implementação direto em main. Ao final, abrir PR para main em vez de mergear localmente sem revisão."
 
 ##############################################################################
 # 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD
@@ -749,3 +763,63 @@ gate_implementation_before_code:
     exceção explícita — mitigação de um incidente em produção pode exigir
     mudança de código antes de qualquer documento, pela própria natureza
     de incident_lifecycle (seção 5). Fora desse contexto, não há exceção.
+
+##############################################################################
+# 14. GATE OBRIGATÓRIO: NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN
+##############################################################################
+# Motivação (registrado para não se perder): mesmo incidente EVM da seção
+# 13 — depois que o gate de documentação foi corrigido (PRD/TS/SDD
+# passaram a existir antes do código), o código dos ADRs 0009/0010/0011
+# ainda foi commitado direto na branch main do repositório de projeto,
+# sem branch dedicada nem PR. Ter especificação não substitui isolamento
+# de desenvolvimento: sem branch própria, não há checks de CI, não há
+# janela de revisão antes de integrar, e um commit ruim já nasce em main.
+# Este gate cobre a parte do fluxo que o gate da seção 13 não cobre — não
+# "o que documentar antes de codificar", mas "como o código chega em
+# main".
+gate_branch_before_commit:
+  applies_to: >
+    Qualquer ferramenta de IA (ou pessoa) operando sob este framework que
+    tenha acesso de escrita ao repositório de projeto (seção 1,
+    project_repo) para implementar uma SDD/PRD/TS/ADR já compilada.
+  rule: >
+    OBRIGATÓRIO, não é sugestão. Antes do primeiro commit de implementação
+    de uma decisão coberta por este framework, a IA DEVE:
+      1. Confirmar que a branch de trabalho atual não é a branch padrão
+         do repositório (main/master) — se for, criar uma branch nova a
+         partir dela antes de qualquer commit.
+      2. Nomear a branch de forma rastreável ao id do documento que a
+         originou (ex.: `feat/ADR-EVM-0011-controle-estoque`,
+         `sdd/SDD-EVM-0009`) — mesmo espírito do id_scheme (seção 7):
+         rastreio pelo nome, não só pela mensagem de commit.
+      3. Levar essa branch a main por PR (pull request / merge request),
+         nunca por merge local direto nem push --force em main. A IA
+         pode abrir o PR, mas não deve mergeá-lo sozinha sem sinal do
+         humano responsável, salvo instrução explícita em contrário.
+      4. Referenciar no corpo do PR os ids relacionados (RFC/ADR/PRD/TS/
+         SDD), no mesmo padrão de referência usado na auditoria (seção
+         11), para que o PR funcione como o commit/PR "coberto" que essa
+         auditoria espera encontrar.
+  not_sufficient_alone: >
+    Ter PRD/TS/SDD prontos (gate da seção 13) não dispensa este gate —
+    são dois problemas independentes: um é "existe especificação antes do
+    código?", outro é "o código passa por revisão isolada antes de
+    integrar?". Um projeto pode cumprir a seção 13 inteira e ainda violar
+    este gate se o commit for direto em main.
+  if_user_asks_to_skip: >
+    Se o usuário pedir explicitamente para "commitar direto em main" ou
+    "pular a branch/PR", a IA NÃO deve obedecer silenciosamente: deve
+    avisar que isso viola o gate obrigatório deste framework (reduz
+    revisão e quebra o uso de CI/CD) e pedir confirmação explícita antes
+    de commitar direto em main.
+  exception: >
+    Incidentes ativos (INC em estado `open`/`mitigated`) podem justificar
+    um hotfix mais direto, mas mesmo aí a branch dedicada (ex.:
+    `hotfix/INC-EVM-0003`) é preferível a commit direto em main — a
+    exceção da seção 13 é sobre pular documento, não sobre pular branch.
+    Fora de incidente ativo, não há exceção.
+  relationship_with_gate_13: >
+    Seção 13 garante que existe especificação antes do código. Seção 14
+    garante que, mesmo com especificação pronta, o código entra em main
+    pelo caminho de revisão — não em sequência, mas em paralelo: ambos
+    valem para a mesma sessão de implementação.

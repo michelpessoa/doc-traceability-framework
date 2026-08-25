@@ -16,8 +16,9 @@ description: >
   aderência entre commits/PRs e o registry. USE TAMBÉM antes de
   implementar qualquer código a partir de uma decisão já aprovada neste
   framework ("implementa o que já foi decidido", "desenvolve esse ADR",
-  "bota pra rodar essa RFC") — há um gate obrigatório (PRD/TS/SDD antes
-  de código) que precisa ser checado primeiro. Aplicável a qualquer
+  "bota pra rodar essa RFC") — há dois gates obrigatórios (PRD/TS/SDD
+  antes de código, e branch dedicada + PR em vez de commit direto em
+  main) que precisam ser checados primeiro. Aplicável a qualquer
   projeto.
 ---
 
@@ -117,6 +118,28 @@ que tolera desvio de terceiros e descobre depois sem bloquear nada, este
 gate vale para você mesma — pular a ordem aqui é erro a evitar, não
 desvio a tolerar. Única exceção: incidente ativo (`INC` em
 `open`/`mitigated`).
+
+## Gate obrigatório: implementação nasce em branch, nunca direto em main
+
+Segundo gap do mesmo incidente: mesmo com PRD/TS/SDD prontos, o código
+foi commitado direto na branch main do repositório de projeto, sem
+branch dedicada nem PR. Ver `gate_branch_before_commit` em
+`references/workflow-rules.yaml` (seção 14).
+
+Antes do primeiro commit de implementação de uma decisão coberta pelo
+framework:
+1. Se a branch atual for main/master, crie uma branch nova a partir
+   dela, nomeada de forma rastreável ao id de origem (ex.:
+   `feat/ADR-EVM-0011-controle-estoque`, `sdd/SDD-EVM-0009`).
+2. Commite nessa branch, nunca em main.
+3. Leve o resultado a main por PR, referenciando os ids relacionados no
+   corpo — não faça merge sozinha sem sinal do humano responsável.
+
+Independente do gate acima (documento antes de código): pode-se cumprir
+um e violar o outro. Se o usuário pedir para commitar direto em main,
+não obedeça em silêncio: avise que viola o gate e peça confirmação
+explícita. Única exceção: incidente ativo, e mesmo aí prefira branch
+dedicada (ex.: `hotfix/INC-EVM-0003`) a commit direto em main.
 
 ## Ciclo de vida de status
 
