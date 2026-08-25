@@ -14,9 +14,18 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.2.0"
-  last_updated: "2026-08-15"
+  version: "1.3.0"
+  last_updated: "2026-08-24"
   changelog:
+    - version: "1.3.0"
+      summary: >
+        Guia opcional de paralelização por trilhas de negócio
+        (_framework/guides/paralelizacao-trilhas.md): padrão de
+        organização (uma skill por trilha, uma sessão de IA/pessoa por
+        trilha, grafo de dependências) para projetos com módulos
+        independentes que podem ser implementados em paralelo. Não
+        altera o fluxo principal de documentos nem cria tipo novo — é
+        um padrão de execução, não de decisão.
     - version: "1.0.0"
       summary: "Fluxo Strategy->RFC->[gate]->ADR->PRD/TS->SDD, registry, IDs, kit multi-projeto."
     - version: "1.1.0"

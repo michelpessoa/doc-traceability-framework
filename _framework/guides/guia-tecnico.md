@@ -214,7 +214,16 @@ RFC, com `relates_to` apontando para o PM de origem.
 - **Claude / Cowork:** instale a skill `doc-traceability-framework.skill`
   — ela já embute templates, regra canônica e scripts.
 
-## 12. Erros comuns a evitar
+## 12. Paralelização por trilhas de negócio (opcional)
+
+Para projetos com módulos de negócio razoavelmente independentes, existe
+um padrão opcional de organização — uma skill por trilha, uma sessão de
+IA (ou pessoa) por trilha, grafo de dependências entre trilhas — em
+`paralelizacao-trilhas.md`. Não é obrigatório e não altera o fluxo
+principal de documentos; é um padrão de execução de código, não de
+decisão. Veja o exemplo real em `docs/EVM/`.
+
+## 13. Erros comuns a evitar
 
 - Criar STRAT/RFC/ADR/PRD/TS dentro do repositório de projeto (esses
   tipos são sempre do repositório central).
