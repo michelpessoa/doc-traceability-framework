@@ -374,6 +374,25 @@ legacy_document_types:
     can_originate: ["SDD"]
 
 
+
+##############################################################################
+# 3c. ARTEFATOS OPERACIONAIS — arquivos que o framework manda criar e que
+#     NÃO são documentos do fluxo
+#
+# Vivem nas mesmas pastas dos documentos, mas não têm front-matter, id nem
+# entrada no registry. Os validadores precisam saber disso: sem esta lista,
+# o framework reprova os arquivos que ele mesmo exige (descoberto ao
+# registrar a primeira lição do projeto DTF, ver SPEC-DTF-0005).
+##############################################################################
+
+operational_artifacts:
+  LESSONS.md:
+    purpose: "Lições locais de execução, acumuladas. O histórico é o valor."
+    declared_in: "lessons_policy.artifact"
+  HANDOFF.md:
+    purpose: "Passagem de contexto entre sessões. Sobrescreve no lugar, é descartável."
+    declared_in: "handover_protocol"
+
 decision_gates:
   rfc_to_adr:
     description: >
