@@ -99,7 +99,7 @@ framework:
     - version: "1.3.0"
       summary: >
         Guia opcional de paralelização por trilhas de negócio
-        (_framework/guides/paralelizacao-trilhas.md): padrão de
+        (docs/guias/paralelizacao-trilhas.md): padrão de
         organização (uma skill por trilha, uma sessão de IA/pessoa por
         trilha, grafo de dependências) para projetos com módulos
         independentes que podem ser implementados em paralelo. Não

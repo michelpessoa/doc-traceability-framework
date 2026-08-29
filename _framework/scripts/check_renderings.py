@@ -28,12 +28,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from framework_lib import find_rules_file, load_rules, report  # noqa: E402
 
 # Renderizações que devem concordar com o YAML, relativas à raiz de _framework.
+LINK = re.compile(r"\]\(([^)\s]+)\)")
+
 RENDERINGS = [
     "skills/doc-traceability-framework/SKILL.md",
     "prompts/universal.md",
     "prompts/cursor/doc-framework.mdc",
     "prompts/copilot/copilot-instructions.md",
 ]
+
+
+def check_links(root: Path) -> list:
+    """Links relativos que não resolvem em disco.
+
+    Reorganizar documentação quebra referência em silêncio: o markdown
+    continua renderizando, só leva a lugar nenhum. Varre a raiz do
+    repositório (root.parent), não a de _framework.
+    """
+    problems = []
+    repo = root.parent
+    skip = {".git", "node_modules", "__pycache__", "examples"}
+    for md in sorted(repo.rglob("*.md")):
+        if skip & set(md.parts):
+            continue
+        for target in LINK.findall(md.read_text(encoding="utf-8")):
+            if target.startswith(("http://", "https://", "#", "mailto:")):
+                continue
+            if not (md.parent / target.split("#")[0]).resolve().exists():
+                problems.append(
+                    f"{md.relative_to(repo)}: link relativo quebrado → '{target}'"
+                )
+    return problems
 
 
 def framework_root() -> Path:
@@ -50,7 +75,11 @@ def main() -> int:
 
     types = rules.get("document_types") or {}
     active_types = [k for k, v in types.items() if not (v or {}).get("deprecated_since")]
-    legacy_types = [k for k, v in types.items() if (v or {}).get("deprecated_since")]
+    # Desde a v2.1.0 os legados moram em chave própria; antes disso eram
+    # entradas de document_types marcadas com deprecated_since.
+    legacy_types = list((rules.get("legacy_document_types") or {}).keys()) or [
+        k for k, v in types.items() if (v or {}).get("deprecated_since")
+    ]
     sizing = [lvl["id"] for lvl in (rules.get("sizing") or {}).get("levels") or []]
 
     iron_laws = {
@@ -60,6 +89,7 @@ def main() -> int:
     }
 
     problems, warnings = [], []
+    problems += check_links(root)
 
     for rel in RENDERINGS:
         path = root / rel

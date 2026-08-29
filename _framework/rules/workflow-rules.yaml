@@ -14,9 +14,23 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.0.0"
+  version: "2.1.0"
   last_updated: "2026-08-29"
   changelog:
+    - version: "2.1.0"
+      summary: >
+        Primeira etapa da neutralização de fornecedor (SPEC-DTF-0001,
+        ADR-DTF-0001): o framework deixa de depender de prompt colado para
+        ser usado. `AGENTS.md` na raiz do repositório passa a ser o alvo
+        canônico das renderizações — lido nativamente por Codex, Cursor,
+        Gemini CLI, Copilot e Aider — acompanhado de um `QUICKSTART.md` de
+        uma página; ambos são gerados por render_prompts.py, nunca
+        escritos à mão, e o CI barra divergência. PRD e TS saem de
+        `document_types` para a chave nova `legacy_document_types`: somem
+        do caminho oferecido a trabalho novo sem perder validade nem
+        rastreabilidade de id nos projetos já mapeados. Mudança de
+        superfície e de empacotamento, não de regra: fluxo, gates, sizing
+        e ciclo de vida seguem idênticos.
     - version: "2.0.0"
       summary: >
         BREAKING. Três mudanças de desenho, todas para cortar volume sem
@@ -99,7 +113,7 @@ framework:
     - version: "1.3.0"
       summary: >
         Guia opcional de paralelização por trilhas de negócio
-        (_framework/guides/paralelizacao-trilhas.md): padrão de
+        (docs/guias/paralelizacao-trilhas.md): padrão de
         organização (uma skill por trilha, uma sessão de IA/pessoa por
         trilha, grafo de dependências) para projetos com módulos
         independentes que podem ser implementados em paralelo. Não
@@ -249,36 +263,6 @@ document_types:
     can_originate: ["SDD"]
     replaces: ["PRD", "TS"]
 
-  PRD:
-    name: "Product Requirements Document (legado)"
-    purpose: "Detalha o requisito de produto a ser construído."
-    deprecated_since: "2.0.0"
-    deprecation_note: >
-      Fundido em SPEC na v2.0.0. Documentos PRD existentes seguem válidos e
-      não são migrados — projeto mapeado sob 1.x continua operando sob 1.x
-      (lessons_policy.non_retroactive). Trabalho novo usa SPEC.
-    repo: central
-    folder: "docs/{PROJECT_CODE}/03-prd"
-    template: "templates/prd.template.md"
-    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
-    can_originate: ["SDD"]
-
-  TS:
-    name: "Tech Spec (legado)"
-    deprecated_since: "2.0.0"
-    deprecation_note: >
-      Fundido em SPEC na v2.0.0. Mesma regra de não-retroatividade do PRD.
-    purpose: >
-      Transforma uma decisão em desenho executável: detalha implementação,
-      explicita contratos técnicos, alinha times consumidores, reduz
-      ambiguidade de execução, antecipa riscos operacionais e conecta
-      arquitetura, código e rollout. É fonte final para SDD's.
-    repo: central
-    folder: "docs/{PROJECT_CODE}/04-tech-spec"
-    template: "templates/tech-spec.template.md"
-    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
-    can_originate: ["SDD"]
-
   SDD:
     name: "Spec Driven Design"
     purpose: >
@@ -344,6 +328,70 @@ document_types:
 #
 # Este foi o GAP corrigido na v1.0: antes, TODA RFC aprovada exigia ADR
 # antes de PRD/Tech Spec. Agora existe um gate explícito.
+
+
+##############################################################################
+# 3b. TIPOS LEGADOS — não fazem parte do fluxo, mas continuam válidos
+#
+# PRD e TS saíram de `document_types` na v2.1.0: não são mais caminho
+# possível para trabalho novo, e nenhuma renderização deve oferecê-los.
+# Continuam declarados aqui porque projeto mapeado sob 1.x segue operando
+# sob 1.x (lessons_policy.non_retroactive) e porque os validadores
+# precisam reconhecer ids `PRD-*` e `TS-*` já emitidos — ver
+# framework_lib._derive_constants, que monta DOC_TYPES pela união das duas
+# chaves.
+##############################################################################
+
+legacy_document_types:
+  PRD:
+    name: "Product Requirements Document (legado)"
+    purpose: "Detalha o requisito de produto a ser construído."
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Documentos PRD existentes seguem válidos e
+      não são migrados — projeto mapeado sob 1.x continua operando sob 1.x
+      (lessons_policy.non_retroactive). Trabalho novo usa SPEC.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/03-prd"
+    template: "templates/prd.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
+  TS:
+    name: "Tech Spec (legado)"
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Mesma regra de não-retroatividade do PRD.
+    purpose: >
+      Transforma uma decisão em desenho executável: detalha implementação,
+      explicita contratos técnicos, alinha times consumidores, reduz
+      ambiguidade de execução, antecipa riscos operacionais e conecta
+      arquitetura, código e rollout. É fonte final para SDD's.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/04-tech-spec"
+    template: "templates/tech-spec.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
+
+
+##############################################################################
+# 3c. ARTEFATOS OPERACIONAIS — arquivos que o framework manda criar e que
+#     NÃO são documentos do fluxo
+#
+# Vivem nas mesmas pastas dos documentos, mas não têm front-matter, id nem
+# entrada no registry. Os validadores precisam saber disso: sem esta lista,
+# o framework reprova os arquivos que ele mesmo exige (descoberto ao
+# registrar a primeira lição do projeto DTF, ver SPEC-DTF-0005).
+##############################################################################
+
+operational_artifacts:
+  LESSONS.md:
+    purpose: "Lições locais de execução, acumuladas. O histórico é o valor."
+    declared_in: "lessons_policy.artifact"
+  HANDOFF.md:
+    purpose: "Passagem de contexto entre sessões. Sobrescreve no lugar, é descartável."
+    declared_in: "handover_protocol"
 
 decision_gates:
   rfc_to_adr:
@@ -636,7 +684,28 @@ registry:
         Preenchido no onboarding (phase_1_baseline, step 2.1) ou, para
         projeto novo, na criação do registry.yaml (ver multi_project).
         Nunca deve ser inferido/adivinhado pela IA — se ausente, pergunta
-        ao usuário.
+        ao usuário. Desde a v2.1.0 a ausência tem dois motivos diferentes,
+        distinguidos pelo campo `repository_status`: o repositório de
+        código ainda não existe (modo greenfield, estado legítimo e
+        permanente enquanto durar), ou existe e ninguém preencheu (lacuna
+        a corrigir). Sem `repository_status` declarado, a ausência é
+        tratada como greenfield ASSUMIDO — e o aviso diz que foi
+        assumido, não declarado.
+      states:
+        active: >
+          O repositório de código existe e sua URL está em `repository`.
+          É o estado normal.
+        none_yet: >
+          Modo greenfield: o projeto ainda não tem repositório de código.
+          O fluxo de decisão (STRAT, RFC, ADR, SPEC) roda inteiro no
+          repositório central. SDD não pode ser criada enquanto durar,
+          porque SDD vive em docs/sdd/ do repositório de projeto — e isso
+          não dispensa gate_implementation_before_code: sem repositório
+          não há código a escrever.
+      leaving_greenfield: >
+        Dois passos, um único ato: (1) preencher `repository` com a URL e
+        `repository_status: active` no registry central; (2) criar
+        docs/sdd/registry.yaml vazio no repositório novo.
   project_registry:
     path: "docs/sdd/registry.yaml"
     human_readable_view: "docs/sdd/registry.md"
@@ -660,15 +729,21 @@ multi_project:
   approach: "kit de templates versionado + repositório central único"
   instructions: >
     _framework/ existe em UMA cópia só, dentro do repositório central.
-    Para adicionar um projeto novo: criar docs/{PROJECT_CODE}/ no
-    repositório central com as subpastas de document_types (exceto SDD) e
-    um registry.yaml com o campo `repository` já preenchido com a URL do
-    repositório de código do projeto (perguntar ao usuário se não for
-    informada — nunca adivinhar, ver registry.central_registry.repository_field);
-    e, no repositório de código do projeto, criar docs/sdd/ com seu
-    próprio registry.yaml vazio. As regras de negócio (gate, lifecycle,
-    schema, severidade) NÃO mudam entre projetos — apenas o PROJECT_CODE e
-    o conteúdo dos documentos.
+    Para adicionar um projeto novo, em duas etapas — a segunda é
+    CONDICIONAL, e não ter repositório de código não impede começar.
+    Etapa 1 (sempre): criar docs/{PROJECT_CODE}/ no repositório central
+    com as subpastas de document_types (exceto SDD) e um registry.yaml.
+    Se o repositório de código já existir, preencher `repository` com a
+    URL e `repository_status: active` (perguntar ao usuário se não for
+    informada — nunca adivinhar, ver
+    registry.central_registry.repository_field); se ainda não existir,
+    declarar `repository_status: none_yet` e seguir — o fluxo STRAT, RFC,
+    ADR e SPEC roda inteiro sem ele.
+    Etapa 2 (condicional, quando o repositório de código existir): criar
+    docs/sdd/ com seu próprio registry.yaml vazio, e atualizar o registry
+    central conforme registry.central_registry.repository_field.leaving_greenfield.
+    As regras de negócio (gate, lifecycle, schema, severidade) NÃO mudam
+    entre projetos — apenas o PROJECT_CODE e o conteúdo dos documentos.
   versioning: >
     Mudanças no framework são feitas uma única vez em
     _framework/rules/workflow-rules.yaml (fonte canônica) e versionadas em
@@ -689,6 +764,13 @@ multi_project:
 # mecanismo de reconstrução do onboarding (seção 4) em vez de criar um
 # processo novo.
 audit:
+  precondition: >
+    A auditoria lê o campo `repository` do registry central para saber
+    qual repositório varrer. Se ele estiver ausente, a IA DECLARA que o
+    projeto não tem repositório de código registrado e PARA, perguntando
+    ao usuário — nunca infere, adivinha ou deduz a URL a partir do nome do
+    projeto. Quando `repository_status: none_yet`, não há o que auditar:
+    o projeto está em modo greenfield e ainda não produziu commit algum.
   purpose: >
     Detectar, depois do fato, quais commits/PRs do repositório de um
     projeto não têm nenhum documento do framework por trás — sem travar

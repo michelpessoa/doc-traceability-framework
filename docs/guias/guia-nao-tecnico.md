@@ -1,5 +1,9 @@
 # Guia de Uso — Framework de Documentação & Rastreabilidade (Sem Jargão Técnico)
 
+> Guia narrativo, escrito à mão. A regra canônica vive em
+> `_framework/rules/workflow-rules.yaml`; em caso de divergência, o YAML
+> manda. A mesma regra em prosa gerada está em `docs/especificacao.md`.
+
 Este guia explica o framework para quem participa das decisões de
 produto/negócio mas não vai mexer em código, YAML ou scripts. O objetivo
 é você entender o que cada documento significa, quando pedir um, e como

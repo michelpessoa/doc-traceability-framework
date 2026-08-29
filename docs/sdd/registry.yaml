@@ -1,0 +1,53 @@
+project: "DTF"
+framework_version: "2.0.0"
+documents:
+  - id: SDD-DTF-0001
+    type: SDD
+    title: "Superfície de entrada: AGENTS.md, QUICKSTART.md e expurgo de PRD/TS"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0001.md"
+    tags: [adocao, neutralidade]
+  - id: SDD-DTF-0002
+    type: SDD
+    title: "Modo greenfield: registry sem repositório de código e textos de entrada"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0002, SDD-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0002.md"
+    tags: [adocao, greenfield]
+  - id: SDD-DTF-0003
+    type: SDD
+    title: "Datação das exigências do gate 16 em validate_state.py"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0003]
+    path: "docs/sdd/SDD-DTF-0003.md"
+    tags: [nao-retroatividade, validadores]
+  - id: SDD-DTF-0004
+    type: SDD
+    title: "Exclusão de artefatos operacionais na varredura de documentos"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0005]
+    path: "docs/sdd/SDD-DTF-0004.md"
+    tags: [validadores, artefatos]
+  - id: SDD-DTF-0005
+    type: SDD
+    title: "Porta de entrada única e documentação gerada"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0004, ADR-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0005.md"
+    tags: [adocao, documentacao]

@@ -1,162 +1,52 @@
 # Changelog
 
-Este projeto segue versionamento semântico. Ver `framework.version` em
-`_framework/rules/workflow-rules.yaml` como fonte da verdade da versão
-atual.
+Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
+`framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
+edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-## [2.0.0] - 2026-08-29
+Versão corrente: **2.1.0** (`2026-08-29`).
 
-**BREAKING.** Primeira versão em que o framework corta processo em vez de
-acrescentar. As três mudanças de desenho vêm de um diagnóstico com
-evidência do uso real (projeto EVM: 42 documentos, 10 `implemented`, uma
-pessoa) e de comparação com GitHub Spec Kit, AWS Kiro, obra/superpowers e
-tech-leads-club/agent-skills.
+## 2.1.0
 
-### Mecanização dos gates (o que faltava)
-- Novos validators em `_framework/scripts/`: `validate_doc.py` (seção 15),
-  `validate_state.py` (seção 16), `check_commit.py`, `framework_check.py`
-  e a base comum `framework_lib.py`.
-- `registry_tools.py validate` passa a abrir os `.md` e cruzar
-  front-matter com o registry — a checagem que a capability
-  `validate_registry` prometia desde a v1.0.0 e nunca executou, porque o
-  script só lia `registry.yaml`.
-- Hook de pre-commit/commit-msg e workflow de CI no repositório central,
-  em `--report-only` até a base histórica ser tratada.
-- Motivo: os gates 15 e 16 eram autorrevisão da própria IA. Sem sinal
-  externo não pegavam — 11 de 11 PRDs do EVM estão sem RF-ID desde a
-  v1.7.0, e 5 SDDs estão `implemented` sem uma linha de evidência.
+Primeira etapa da neutralização de fornecedor (SPEC-DTF-0001, ADR-DTF-0001): o framework deixa de depender de prompt colado para ser usado. `AGENTS.md` na raiz do repositório passa a ser o alvo canônico das renderizações — lido nativamente por Codex, Cursor, Gemini CLI, Copilot e Aider — acompanhado de um `QUICKSTART.md` de uma página; ambos são gerados por render_prompts.py, nunca escritos à mão, e o CI barra divergência. PRD e TS saem de `document_types` para a chave nova `legacy_document_types`: somem do caminho oferecido a trabalho novo sem perder validade nem rastreabilidade de id nos projetos já mapeados. Mudança de superfície e de empacotamento, não de regra: fluxo, gates, sizing e ciclo de vida seguem idênticos.
 
-### Iron Law e red flags (seção 18 nova)
-- Cada gate (13-16) ganha uma Iron Law de uma linha e uma tabela de red
-  flags com as racionalizações literais já observadas.
-- `lessons_policy`: falha de execução vira entrada em `LESSONS.md` do
-  projeto, não seção nova neste arquivo. Uma lição só vira regra global se
-  aparecer em dois projetos, tiver checagem mecânica possível e couber
-  como red flag ou item de validator.
-- `core_freeze`: entre 1.4.0 e 1.7.0, cada falha de agente virou seção
-  obrigatória nova; o arquivo dobrou e a taxa de falha não caiu.
+## 2.0.0
 
-### PRD + Tech Spec fundem-se em SPEC
-- Novo tipo `SPEC` (`docs/{PROJETO}/03-spec/`, `spec.template.md`): Parte 1
-  requisito, Parte 2 desenho. Eram dois documentos com o mesmo autor, o
-  mesmo parent e às vezes o mesmo título, revisados sempre juntos.
-- `PRD` e `TS` seguem válidos como tipos legados. Projeto já mapeado NÃO
-  migra — `framework_version` no registry declara sob qual versão ele
-  opera, e ficar para trás é estado válido.
+BREAKING. Três mudanças de desenho, todas para cortar volume sem perder rastreabilidade. (1) PRD e Tech Spec fundem-se no tipo SPEC: eram dois documentos com o mesmo autor, o mesmo parent e às vezes o mesmo título, revisados juntos e nunca separadamente — nenhuma referência de mercado (GitHub Spec Kit, AWS Kiro, tlc-spec-driven) os separa em arquivos de repositórios diferentes. PRD e TS seguem válidos como tipos legados: projeto já mapeado não migra (lessons_policy.non_retroactive). (2) Nova seção 19 (sizing): a profundidade do fluxo passa a ser função do blast radius da mudança, não fixa — mudança de ≤3 arquivos sem critério de gate vai direto a SDD, e a ausência do artefato É o registro de que a fase foi pulada. Corrige o custo observado de ~620 linhas de documento para configurar ESLint e CI. (3) STRAT deixa de ser tipo obrigatório do funil e vira seção opcional da RFC — em uso real, nenhum STRAT chegou a `approved`. Acompanha o congelamento do núcleo declarado na seção 18: daqui em diante, versão nova é para mudança de desenho, não para reagir a violação de agente.
 
-### Sizing por blast radius (seção 19 nova)
-- A profundidade do fluxo passa a ser função do tamanho da mudança:
-  `small` (≤3 arquivos, nenhum critério do gate) vai direto a SDD;
-  `medium` acrescenta SPEC; `large` acrescenta RFC e ADR; `complex`
-  acrescenta STRAT. A ausência do artefato É o registro da fase pulada.
-- Reaproveita os 5 critérios do gate RFC→ADR — não cria régua nova.
-- Custo que motivou: ~620 linhas de documento para configurar ESLint,
-  Prettier, husky e CI num projeto de uma pessoa.
+## 1.7.0
 
-### STRAT vira opcional
-- Sai do caminho obrigatório e vira seção da RFC ou documento avulso para
-  direção sem RFC associada. Em uso real, nenhum STRAT chegou a
-  `approved`.
+Corrige gap de qualidade (não de ordem): os gates 13/14 garantiam que PRD/TS/SDD existissem antes do código e que o código nascesse em branch — mas nada garantia que o CONTEÚDO desses documentos fosse específico o suficiente para implementação sem ambiguidade, nem que a SDD, ao virar `implemented`, tivesse sido de fato verificada contra evidência (não memória) e não tivesse crescido além do que foi pedido. Templates de PRD/Tech Spec/SDD ganham estrutura granular (requisito↔critério 1:1, contratos com Consumes/Produces e "onde" exato, casos de borda explícitos), marcador `NEEDS CLARIFICATION` para não inventar silenciosamente, autorrevisão obrigatória antes de `in_review`, e a SDD ganha seção de evidência de verificação e checklist de escopo (nada a mais, nada a menos) antes de `implemented`. Novas seções 15 (gate_content_quality) e 16 (gate_scope_verification). Inspirado em práticas de github.com/obra/superpowers (self-review contra placeholder, "Iron Law" de evidência antes de afirmar conclusão) — adaptado, não copiado, pois este framework opera em dois repositórios e por documentos versionados, não por sessão única. Nova skill `handover` (par com `pickup`, seção 17) para transferir contexto de quem planejou (PRD/TS/SDD) para quem implementa sem herdar a sessão inteira — pensada para manter o agente implementador abaixo de ~45% de uso de contexto da sessão.
 
-## [1.7.0] - 2026-08-29
-- Gate de qualidade de conteúdo (seção 15 de `workflow-rules.yaml`): os
-  gates anteriores garantiam ORDEM (documento antes de código, branch
-  antes de commit), nenhum garantia que o CONTEÚDO de PRD/Tech Spec/SDD
-  fosse específico o bastante para implementação sem ambiguidade.
-  Templates de PRD e Tech Spec ganham granularidade (requisito↔critério
-  1:1 com RF-ID, contratos com Consumes/Produces e arquivo/módulo exato,
-  casos de borda explícitos), marcador `NEEDS CLARIFICATION` para não
-  supor em silêncio, e autorrevisão obrigatória antes de `in_review`.
-- Gate de verificação de escopo (seção 16): antes de uma SDD virar
-  `implemented`, é obrigatório conferir que todo requisito consolidado
-  tem código, que todo arquivo tocado está listado na SDD (nada a mais,
-  nada a menos), e preencher a tabela de evidência com comando + saída
-  reais da sessão — checklist marcado de memória não conta.
-- Protocolo de handover/pickup (seção 17) e duas skills novas
-  (`_framework/skills/handover/`, `_framework/skills/pickup/`): passagem
-  de contexto padronizada entre a sessão que planeja (PRD/TS/SDD) e a
-  que implementa, via `HANDOFF.md` de seções fixas que referencia ids do
-  framework em vez de reescrever conteúdo. Pensado para manter o agente
-  implementador abaixo de ~45% de uso de contexto da sessão.
-- Inspirações externas creditadas: autorrevisão contra placeholder e
-  "evidência antes de afirmar conclusão" de github.com/obra/superpowers;
-  formato de passagem de sessão de github.com/vmihalis/claude-handover —
-  ambos adaptados ao modelo de dois repositórios deste framework, não
-  copiados.
-- Especificação narrada consolidada em um único
-  `Framework_Documentacao_Rastreabilidade.md`, sem versão no nome, sempre
-  na versão atual do framework: as cópias `_v1.1.md` e `_v1.2.md` foram
-  removidas (paravam na v1.2.0 e nunca cobriram 1.3.0–1.7.0, então
-  descreviam um framework que já não existia). O histórico de versões
-  passa a viver só neste CHANGELOG, e o detalhe canônico de cada regra só
-  em `workflow-rules.yaml`.
+## 1.6.0
 
-## [1.6.0] - 2026-08-25
-- Gate obrigatório de branch antes de commit (seção 14 de
-  `workflow-rules.yaml`): mesmo com PRD/TS/SDD no lugar, a implementação
-  de um incidente real foi commitada direto em main, sem branch dedicada
-  nem PR. Toda implementação coberta pelo framework passa a nascer em
-  branch própria, com nome rastreável ao id de origem, e chega a main por
-  PR referenciando os ids relacionados. Nova capability
-  `enforce_branch_before_commit`.
+Corrige segundo gap do mesmo incidente EVM: mesmo com PRD/TS/SDD no lugar (gate da seção 13 respeitado), a implementação foi commitada direto na branch main do repositório de projeto, sem branch dedicada nem PR — fere o princípio de desenvolvimento isolado que sustenta qualquer pipeline de CI/CD (revisão antes de integrar, checks obrigatórios, histórico limpo por decisão). Nova seção 14 (gate_branch_before_commit) torna obrigatório que toda implementação de código coberta por este framework nasça em branch própria e vá a main via PR, nunca commit direto. Nova capability `enforce_branch_before_commit`.
 
-## [1.5.0] - 2026-08-25
-- Gate obrigatório de implementação (seção 13 de `workflow-rules.yaml`):
-  corrige gap crítico em que uma sessão de IA implementou ADRs aprovados
-  indo direto para o código, tratando "Consequências" do ADR como
-  especificação suficiente — PRD/Tech Spec/SDD escritos depois,
-  retroativamente. Nenhuma implementação pode começar antes de PRD/TS
-  (central) e SDD (projeto) existirem. É gate de ordem, não de tempo.
-  Nova capability `enforce_implementation_gate`.
+## 1.5.0
 
-## [1.4.0] - 2026-08-15
-- Campo `repository` de nível de projeto no registry central
-  (`docs/{PROJECT_CODE}/registry.yaml`), com a URL do repositório de
-  código: antes, rodar uma auditoria dependia de alguém lembrar de
-  informar o link toda vez. Onboarding passa a gravá-lo na Fase 1, e a
-  auditoria passa a lê-lo primeiro em vez de assumir que foi informado.
+Corrige gap crítico: uma sessão de IA implementou 3 ADRs aprovados do projeto EVM indo direto pro código, sem PRD/Tech Spec/SDD — documentos escritos só depois, retroativamente, quando o dono do projeto percebeu a lacuna. Nova seção 13 (gate_implementation_before_code) torna explícito e OBRIGATÓRIO que nenhuma implementação pode começar antes de PRD/TS (central) e SDD (projeto) existirem — um ADR com "Consequências" detalhada não é especificação suficiente. Diferente da auditoria (seção 11, que tolera desvio de terceiros e descobre depois), este gate vale para a própria IA operando sob o framework: pular a ordem é erro a evitar, não desvio a tolerar. Nova capability `enforce_implementation_gate`.
 
-## [1.3.0] - 2026-08-15
-- Guia opcional de paralelização por trilhas de negócio
-  (`_framework/guides/paralelizacao-trilhas.md`): uma skill por trilha,
-  uma sessão de IA/pessoa por trilha, grafo de dependências entre
-  trilhas. Não altera o fluxo principal nem cria tipo novo — é padrão de
-  execução, não de decisão.
+## 1.4.0
 
-## [1.2.0] - 2026-08-15
-- Auditoria de aderência (commits/PRs x registry): como a adesão de todo
-  o time à convenção de referenciar documentos em commits nunca pode ser
-  garantida, o framework passa a oferecer uma auditoria sob demanda (sem
-  CI, sem bloqueio de merge) que cruza o histórico do repositório do
-  projeto com os registries conhecidos e reaproveita o mecanismo de
-  reconstrução do onboarding para o que for arquiteturalmente
-  significativo. Novo prompt `prompts/framework-audit.md` e novo comando
-  `registry_tools.py audit`.
-- Especificação convertida de `.docx` para Markdown nativo do
-  repositório (`Framework_Documentacao_Rastreabilidade_v1.2.md` — desde a
-  v1.7.0 consolidada em `Framework_Documentacao_Rastreabilidade.md`, sem
-  versão no nome).
+Corrige gap: nem onboarding nem auditoria registravam a URL do repositório de código do projeto em lugar nenhum, então rodar uma auditoria dependia de alguém lembrar de informar o link toda vez. Agora todo registry central (docs/{PROJECT_CODE}/registry.yaml) carrega um campo `repository` de nível de projeto com a URL do repositório de código; onboarding passa a gravá-lo na Fase 1, e auditoria passa a lê-lo primeiro em vez de assumir que já foi informado.
 
-## [1.1.0] - 2026-08-15
-- Modelo explícito de dois repositórios (central + por projeto); SDD
-  passa a viver no repositório do projeto, com `source_docs` carregando
-  `{id, url}` para atravessar repositórios.
-- Onboarding de projeto já existente: tipo `BASE` + ADRs reconstruídos
-  (`provenance: reconstructed`), com revisão humana obrigatória.
-- Fluxo de incidentes e postmortem: tipos `INC`/`PM`, ciclo de vida
-  operacional próprio para incidentes, escala de severidade SEV1–SEV4,
-  regra de recorrência de 90 dias, triagem de action items reaproveitando
-  o gate RFC→ADR.
-- Dois guias de uso adicionados (técnico e não técnico).
+## 1.3.0
 
-## [1.0.0] - 2026-08-15
-- Fluxo Strategy Doc → RFC → [gate] → ADR (condicional) → PRD + Tech
-  Spec → SDD.
-- Gate de decisão RFC→ADR com 5 critérios objetivos (corrige o fluxo
-  original, que exigia ADR sempre).
-- SDD definida como artefato de input para ferramentas de IA de
-  implementação.
-- Esquema de ID, front-matter e registry central para rastreabilidade.
-- Kit de templates versionado para reuso multi-projeto.
-- Prompt universal + variantes Cursor/Copilot + Claude Skill, todos
-  derivados da mesma fonte canônica (`workflow-rules.yaml`).
+Guia opcional de paralelização por trilhas de negócio (docs/guias/paralelizacao-trilhas.md): padrão de organização (uma skill por trilha, uma sessão de IA/pessoa por trilha, grafo de dependências) para projetos com módulos independentes que podem ser implementados em paralelo. Não altera o fluxo principal de documentos nem cria tipo novo — é um padrão de execução, não de decisão.
+
+## 1.2.0
+
+Auditoria de aderência (seção 11): como a adesão de todo o time à convenção de referenciar documentos em commits/PRs não pode ser garantida, o framework passa a oferecer uma auditoria periódica e sob demanda (sem CI, sem bloqueio de merge) que cruza o histórico do repositório do projeto com os registries, classifica commits em coberto/referência quebrada/não documentado, e reaproveita o mecanismo de reconstrução do onboarding para propor ADRs quando o commit não documentado for arquiteturalmente significativo.
+
+## 1.1.0
+
+Modelo multi-repositório explícito (repo central + repo por projeto, SDD vive no repo do projeto); onboarding de projeto já existente (tipo BASE + ADRs reconstruídos); fluxo de incidentes e postmortem (tipos INC/PM, severidade, regra de recorrência).
+
+## 1.0.0
+
+Fluxo Strategy->RFC->[gate]->ADR->PRD/TS->SDD, registry, IDs, kit multi-projeto.
+
+## Histórico anterior ao changelog canônico
+
+As versões 1.0.0 a 1.3.0 existiram antes de `framework.changelog` virar a
+fonte de verdade. O registro delas vive no histórico do git.
