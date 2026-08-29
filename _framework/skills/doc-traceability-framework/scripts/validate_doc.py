@@ -31,9 +31,22 @@ from framework_lib import (  # noqa: E402
     INCIDENT_STATUSES,
     VALID_STATUSES,
     iter_documents,
+    project_version,
     read_frontmatter,
     report,
+    rule_applies,
 )
+
+# Em que versão cada exigência entrou. Regra não vale retroativamente:
+# projeto mapeado sob 1.6.0 não é reprovado por regra da 1.7.0
+# (lessons_policy.non_retroactive).
+RULE_SINCE = {
+    "placeholders": "1.7.0",
+    "needs_clarification": "1.7.0",
+    "rf_id": "1.7.0",
+    "contract_where": "1.7.0",
+    "ears": "2.0.0",
+}
 
 # gate_content_quality item 4: termos que descrevem o que fazer sem mostrar
 # como. A busca é literal e case-insensitive, igual ao "scan de placeholder"
@@ -58,6 +71,13 @@ NEEDS_CLARIFICATION = re.compile(r"NEEDS CLARIFICATION", re.IGNORECASE)
 # Status a partir dos quais o documento é tratado como decidido — daí em
 # diante placeholder e ambiguidade pendente deixam de ser tolerados.
 DECIDED_STATUSES = {"approved", "implemented"}
+
+# gate_content_quality.applies_to é explícito: "PRD, Tech Spec e SDD"
+# (mais SPEC, que os substitui). Um RFC que difere um detalhe para a Tech
+# Spec — "(a definir na Tech Spec)" — está fazendo exatamente o que uma
+# RFC deve fazer, e reprovar isso é o validator sendo mais estrito que a
+# regra que ele mecaniza. Falso positivo desgasta o gate inteiro.
+CONTENT_GATE_TYPES = {"SPEC", "PRD", "TS", "SDD"}
 
 REQUIRED_FRONTMATTER = ["id", "type", "title", "status", "project", "owner", "created", "updated"]
 
@@ -124,8 +144,13 @@ def section_body(body: str, heading: str) -> str | None:
     return m.group(1) if m else None
 
 
-def check_document(path: Path) -> tuple[list, list]:
+def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     problems, warnings = [], []
+    if version is None:
+        version = project_version(path)
+
+    def applies(rule: str) -> bool:
+        return rule_applies(RULE_SINCE[rule], version)
 
     try:
         fm, body = read_frontmatter(path)
@@ -149,7 +174,8 @@ def check_document(path: Path) -> tuple[list, list]:
 
     prose = scannable(body)
     lowered = prose.lower()
-    for term in BANNED_PLACEHOLDERS:
+    scan_placeholders = doc_type in CONTENT_GATE_TYPES and applies("placeholders")
+    for term in BANNED_PLACEHOLDERS if scan_placeholders else []:
         if term in lowered:
             line = next(
                 (i for i, ln in enumerate(body.splitlines(), 1)
@@ -160,7 +186,7 @@ def check_document(path: Path) -> tuple[list, list]:
             msg = f"{doc_id}: placeholder banido '{term}'{where} — gate_content_quality item 4."
             (problems if status in DECIDED_STATUSES else warnings).append(msg)
 
-    if NEEDS_CLARIFICATION.search(prose):
+    if doc_type in CONTENT_GATE_TYPES and applies("needs_clarification") and NEEDS_CLARIFICATION.search(prose):
         msg = (
             f"{doc_id}: tem `NEEDS CLARIFICATION` pendente — "
             "gate_content_quality item 5 proíbe avançar para approved assim."
@@ -173,7 +199,7 @@ def check_document(path: Path) -> tuple[list, list]:
 
     if doc_type in ("PRD", "SPEC"):
         reqs = section_body(body, "Requisitos funcionais")
-        if reqs and not RF_ID.search(reqs):
+        if reqs and applies("rf_id") and not RF_ID.search(reqs):
             problems.append(
                 f"{doc_id}: 'Requisitos funcionais' sem RF-ID próprio "
                 "(gate_content_quality item 1) — lista numerada não é id."
@@ -183,12 +209,12 @@ def check_document(path: Path) -> tuple[list, list]:
         # Rigor de EARS vale para SPEC (tipo novo). Em PRD legado é aviso:
         # projeto mapeado sob 1.x não migra (lessons_policy.non_retroactive).
         strict = doc_type == "SPEC"
-        for problem in check_ears(doc_id, section_body(body, "Requisitos funcionais")):
+        for problem in (check_ears if applies("ears") else lambda *_: [])(doc_id, section_body(body, "Requisitos funcionais")):
             (problems if strict else warnings).append(problem)
 
     if doc_type in ("TS", "SPEC"):
         contracts = section_body(body, "Contratos técnicos")
-        if contracts and not FILE_HINT.search(contracts):
+        if contracts and applies("contract_where") and not FILE_HINT.search(contracts):
             warnings.append(
                 f"{doc_id}: 'Contratos técnicos' não aponta nenhum arquivo/módulo "
                 "('onde' do gate_content_quality item 2)."
