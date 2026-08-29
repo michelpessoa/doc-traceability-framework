@@ -76,12 +76,21 @@ tanto quanto SDD estourada são falha:
       foi pedido por nenhum requisito consolidado ("já que estava ali").
 
 ## Evidência de verificação (preencher antes de status `implemented`)
-Para cada critério da tabela acima, comando rodado de fato nesta sessão e
-saída real — não "deve passar" nem resultado de memória. Sem isto, status
-não pode avançar para `implemented`.
+Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
+quem escreveu o código tem o resultado como conclusão desejada. Para cada
+critério da tabela acima: comando rodado de fato nesta sessão e saída real,
+nunca "deve passar" nem resultado de memória.
 
-| # | Comando rodado | Saída (resumo) | Passou? |
-|---|---|---|---|
+**Verificador independente:** {sim | não — mesma sessão que implementou}
+
+A coluna "Sensor" registra o sensor de discriminação: falha de
+comportamento introduzida em espaço descartável, teste tem que FALHAR, e
+volta ao normal depois. Teste que passa com a implementação quebrada é
+ruído verde. Critério sem teste automatizado: escreva "sem teste", nunca
+marque como verificado por leitura de código.
+
+| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
 
 ## Rastreabilidade
 | Campo | Valor |

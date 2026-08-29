@@ -90,3 +90,61 @@ decisions, Open threads/blockers, Next step, Don't do), referenciando ids
   lugar certo é o repositório central.
 - Nunca pule o gate RFC→ADR nem invente critério fora dos 5 listados.
 - Front-matter e `docs/sdd/registry.yaml` nunca podem divergir.
+
+<!-- BEGIN GENERATED: núcleo do framework — não edite à mão -->
+
+## Núcleo canônico (framework 2.0.0)
+
+Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
+divergência com qualquer texto abaixo ou acima, o YAML manda.
+
+### Leis inegociáveis
+
+- **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.** (`gate_implementation_before_code`)
+- **NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN.** (`gate_branch_before_commit`)
+- **NENHUM DOCUMENTO VAI A in_review COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.** (`gate_content_quality`)
+- **NENHUM implemented SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL.** (`gate_scope_verification`)
+- **FALHA DE EXECUÇÃO VIRA LIÇÃO LOCAL, NÃO VERSÃO NOVA DO FRAMEWORK.** (`lessons_policy`)
+- **TAMANHO DECIDE QUAIS DOCUMENTOS, NUNCA SE A ORDEM VALE.** (`sizing`)
+
+### Tipos de documento
+
+| Tipo | Repositório | Pasta | Situação |
+|---|---|---|---|
+| STRAT | central | `docs/{PROJECT_CODE}/00-strategy` | opcional |
+| RFC | central | `docs/{PROJECT_CODE}/01-rfc` | ativo |
+| ADR | central | `docs/{PROJECT_CODE}/02-adr` | ativo |
+| SPEC | central | `docs/{PROJECT_CODE}/03-spec` | ativo |
+| PRD | central | `docs/{PROJECT_CODE}/03-prd` | legado desde 2.0.0 |
+| TS | central | `docs/{PROJECT_CODE}/04-tech-spec` | legado desde 2.0.0 |
+| SDD | project | `docs/sdd` | ativo |
+| BASE | central | `docs/{PROJECT_CODE}/06-baseline` | ativo |
+| INC | central | `docs/{PROJECT_CODE}/07-incidents` | ativo |
+| PM | central | `docs/{PROJECT_CODE}/08-postmortems` | ativo |
+
+### Sizing — quais documentos a mudança exige
+
+| Nível | Critério | Documentos |
+|---|---|---|
+| small | Toca ~3 arquivos ou menos, nenhum critério de decision_gates.rfc_to_adr se aplica, e o comportamento externo do produto não muda (ajuste de config, correção pontual, tooling). | SDD |
+| medium | Feature contida em um domínio, nenhum critério do gate rfc_to_adr se aplica. | SPEC, SDD |
+| large | Pelo menos 1 critério de decision_gates.rfc_to_adr se aplica. | RFC, ADR, SPEC, SDD |
+| complex | Vários critérios do gate se aplicam, ou a mudança é cross-team, ou precisa de direção estratégica que ainda não existe em nenhuma RFC. | STRAT (opcional), RFC, ADR, SPEC, SDD |
+
+### Ciclo de vida de status
+
+`draft` → `in_review` → `approved` → `rejected` → `implemented`
+
+Transições válidas: draft → in_review, archived; in_review → approved, rejected, draft; approved → implemented, superseded, archived; rejected → archived; implemented → superseded, archived; superseded → archived.
+
+INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
+
+### Critérios do gate RFC → ADR (qualquer um verdadeiro exige ADR)
+
+- **novo_padrao_arquitetural** — Introduz ou altera um padrão arquitetural (novo componente estrutural, novo serviço, mudança de topologia).
+- **alto_custo_reversao** — Decisão de alto custo ou difícil reversão (rollback caro, lento ou impossível).
+- **trade_off_tecnico_relevante** — Existe mais de uma alternativa técnica viável cujos prós/contras precisam ficar registrados para não serem rediscutidos.
+- **impacto_cross_team** — Mais de um time/domínio é diretamente afetado pela decisão.
+- **troca_tecnologia_vendor** — Introduz ou troca tecnologia, vendor ou dependência externa relevante (banco de dados, provedor cloud, linguagem, lib crítica).
+
+<!-- END GENERATED -->

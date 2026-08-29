@@ -4,6 +4,60 @@ Este projeto segue versionamento semântico. Ver `framework.version` em
 `_framework/rules/workflow-rules.yaml` como fonte da verdade da versão
 atual.
 
+## [2.0.0] - 2026-08-29
+
+**BREAKING.** Primeira versão em que o framework corta processo em vez de
+acrescentar. As três mudanças de desenho vêm de um diagnóstico com
+evidência do uso real (projeto EVM: 42 documentos, 10 `implemented`, uma
+pessoa) e de comparação com GitHub Spec Kit, AWS Kiro, obra/superpowers e
+tech-leads-club/agent-skills.
+
+### Mecanização dos gates (o que faltava)
+- Novos validators em `_framework/scripts/`: `validate_doc.py` (seção 15),
+  `validate_state.py` (seção 16), `check_commit.py`, `framework_check.py`
+  e a base comum `framework_lib.py`.
+- `registry_tools.py validate` passa a abrir os `.md` e cruzar
+  front-matter com o registry — a checagem que a capability
+  `validate_registry` prometia desde a v1.0.0 e nunca executou, porque o
+  script só lia `registry.yaml`.
+- Hook de pre-commit/commit-msg e workflow de CI no repositório central,
+  em `--report-only` até a base histórica ser tratada.
+- Motivo: os gates 15 e 16 eram autorrevisão da própria IA. Sem sinal
+  externo não pegavam — 11 de 11 PRDs do EVM estão sem RF-ID desde a
+  v1.7.0, e 5 SDDs estão `implemented` sem uma linha de evidência.
+
+### Iron Law e red flags (seção 18 nova)
+- Cada gate (13-16) ganha uma Iron Law de uma linha e uma tabela de red
+  flags com as racionalizações literais já observadas.
+- `lessons_policy`: falha de execução vira entrada em `LESSONS.md` do
+  projeto, não seção nova neste arquivo. Uma lição só vira regra global se
+  aparecer em dois projetos, tiver checagem mecânica possível e couber
+  como red flag ou item de validator.
+- `core_freeze`: entre 1.4.0 e 1.7.0, cada falha de agente virou seção
+  obrigatória nova; o arquivo dobrou e a taxa de falha não caiu.
+
+### PRD + Tech Spec fundem-se em SPEC
+- Novo tipo `SPEC` (`docs/{PROJETO}/03-spec/`, `spec.template.md`): Parte 1
+  requisito, Parte 2 desenho. Eram dois documentos com o mesmo autor, o
+  mesmo parent e às vezes o mesmo título, revisados sempre juntos.
+- `PRD` e `TS` seguem válidos como tipos legados. Projeto já mapeado NÃO
+  migra — `framework_version` no registry declara sob qual versão ele
+  opera, e ficar para trás é estado válido.
+
+### Sizing por blast radius (seção 19 nova)
+- A profundidade do fluxo passa a ser função do tamanho da mudança:
+  `small` (≤3 arquivos, nenhum critério do gate) vai direto a SDD;
+  `medium` acrescenta SPEC; `large` acrescenta RFC e ADR; `complex`
+  acrescenta STRAT. A ausência do artefato É o registro da fase pulada.
+- Reaproveita os 5 critérios do gate RFC→ADR — não cria régua nova.
+- Custo que motivou: ~620 linhas de documento para configurar ESLint,
+  Prettier, husky e CI num projeto de uma pessoa.
+
+### STRAT vira opcional
+- Sai do caminho obrigatório e vira seção da RFC ou documento avulso para
+  direção sem RFC associada. Em uso real, nenhum STRAT chegou a
+  `approved`.
+
 ## [1.7.0] - 2026-08-29
 - Gate de qualidade de conteúdo (seção 15 de `workflow-rules.yaml`): os
   gates anteriores garantiam ORDEM (documento antes de código, branch
