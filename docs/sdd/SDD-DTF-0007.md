@@ -2,7 +2,7 @@
 id: SDD-DTF-0007
 type: SDD
 title: "Adaptadores por fornecedor gerados integralmente"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
@@ -158,17 +158,26 @@ correção e passar depois, nas duas pontas.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não preenchido — a preencher em sessão
-separada da que implementou.
+**Verificador independente:** sim — sessão separada, sem ler o histórico
+da sessão implementadora. 7/7 critérios PASS nos dois repositórios,
+nenhum descompasso. Tabela completa e sensores dos critérios 3/4 em
+`docs/sdd/validation.md`. Resumo:
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | contagem dos 3 builders novos em `render_prompts.py` | `6` nos dois repos | — | sim |
+| 2 | diff de `universal.md`/`doc-framework.mdc`/`copilot-instructions.md` entre commits | única mudança é a versão no título (`v1.7.0`→`v2.1.0`) | — | sim |
+| 3 | edição manual em `universal.md`, `--check`, regenerar, `--check` | `exit 1` com edição, `exit 0` depois de regenerar | **sensor**: falhou/voltou a passar de verdade | sim |
+| 4 | `doc-framework.mdc` renomeado, `--check`, restaurado, `--check` | `exit 1` ausente, `exit 0` restaurado | **sensor** | sim |
+| 5 | `grep -c "^TARGETS = \|^def apply("` | `0` nos dois | — | sim |
+| 6 | `framework_check.py --auto`, `check_renderings.py` | exit 0 nos dois, sem regressão | — | sim |
+| 7 | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída | — | sim |
 
 ## Rastreabilidade
 

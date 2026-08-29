@@ -64,7 +64,7 @@ documents:
   - id: SDD-DTF-0007
     type: SDD
     title: "Adaptadores por fornecedor gerados integralmente"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-08-29"
     updated: "2026-08-29"
