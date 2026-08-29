@@ -8,8 +8,15 @@ name: framework-check
 # versão entrou (validate_doc.RULE_SINCE) e só vale para projeto cujo
 # registry declara framework_version igual ou posterior.
 #
-# Marque `validate` como check obrigatório na branch protection para que
-# reprovar aqui realmente bloqueie o merge.
+# NÃO está marcado como check obrigatório na branch protection: o evento
+# `pull_request` falha em disparar o workflow com frequência alta o
+# bastante (~60% dos PRs em 2026-08-29) para travar merge sem nunca
+# reportar status — sem workaround possível do lado do repositório
+# (workflow_dispatch manual na mesma SHA não satisfaz o required check,
+# só um check-suite nascido do próprio evento pull_request conta). O
+# gate real é local: hook pre-commit (revalida a cada commit) e hook
+# pre-push (bloqueia push direto em main). Este workflow roda mesmo
+# assim, quando o evento chega, para visibilidade — só não bloqueia.
 
 on:
   pull_request:
