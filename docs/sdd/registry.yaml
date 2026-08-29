@@ -71,3 +71,13 @@ documents:
     relates_to: [SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006]
     path: "docs/sdd/SDD-DTF-0007.md"
     tags: [neutralidade, adocao, geracao]
+  - id: SDD-DTF-0008
+    type: SDD
+    title: "Fim da duplicação manual e cobertura de renderizações"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006, SDD-DTF-0007]
+    path: "docs/sdd/SDD-DTF-0008.md"
+    tags: [neutralidade, adocao, limpeza]
