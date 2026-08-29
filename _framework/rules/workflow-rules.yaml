@@ -392,6 +392,9 @@ operational_artifacts:
   HANDOFF.md:
     purpose: "Passagem de contexto entre sessões. Sobrescreve no lugar, é descartável."
     declared_in: "handover_protocol"
+  validation.md:
+    purpose: "Veredito da verificação independente de uma SDD, ao lado dela. Sem front-matter, mesmo formato de artefato descartável que HANDOFF.md e LESSONS.md."
+    declared_in: "capabilities.verify_sdd_independently"
 
 decision_gates:
   rfc_to_adr:

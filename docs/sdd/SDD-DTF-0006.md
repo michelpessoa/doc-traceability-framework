@@ -2,7 +2,7 @@
 id: SDD-DTF-0006
 type: SDD
 title: "Memória portável: procedimentos neutros e capacidades por contrato"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
@@ -148,6 +148,15 @@ alterado nos dois repositórios (`doc-traceability-framework` e
 `doc-traceability-central/_framework`), na mesma branch de trabalho,
 antes do PR.
 
+**Artefato derivado tocado como efeito colateral:** `docs/especificacao.md`
+é regenerado por `render_prompts.py` sempre que `workflow-rules.yaml`
+muda — a alteração da seção 12/17 nesta etapa o inclui no diff nos dois
+repositórios, sem edição manual. Não é escopo de código desta SDD, é
+consequência mecânica já coberta por `SDD-DTF-0005`; registrado aqui
+para que "todo arquivo do diff aparece na SDD" não exija julgamento
+extra do verificador. (Acrescentado após a verificação independente —
+ver `validation.md`, "Descompassos encontrados".)
+
 ## Critérios de aceite / definição de pronto
 
 | # | Critério (origem: RF-ID) | Comando de verificação | Resultado esperado |
@@ -197,18 +206,31 @@ campos do contrato e reexecutar — deve falhar com `AssertionError`.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada"
+      (`docs/especificacao.md` acrescentado após o descompasso encontrado
+      na verificação — ver acima).
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não preenchido — a preencher pela skill
-`verify-sdd`/procedimento `verify-sdd.md`, em sessão separada da que
-implementou.
+**Verificador independente:** sim — subagente separado, sem leitura do
+histórico da sessão implementadora. Tabela completa e sensor de
+discriminação registrados em `docs/sdd/validation.md`; veredito **PASS**.
+Resumo:
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `ls _framework/procedures/{handover,pickup,verify-sdd}.md` (kit e central) | 3 arquivos nos dois repos | estático | sim |
+| 2 | `head -1 procedures/handover.md \| grep -c '^---$'` | `0` nos dois | estático | sim |
+| 3 | diff do bloco `Template` entre `SKILL.md` (base) e `procedures/handover.md` | sem saída (diff vazio) nos dois | comparação textual | sim |
+| 4 | parse do contrato (`trigger`/`produces`/`invariants`/`procedure`) em `write_handover` | exit 0 | **sensor**: campo renomeado via `Edit` → `AssertionError`; desfeito → exit 0 de novo | sim |
+| 5 | grep por nome de fornecedor nos campos de contrato | sem saída nos dois | estático | sim |
+| 6 | contagem de linhas de corpo dos 3 stubs | `5, 5, 7` (≤25) nos dois repos | estático | sim |
+| 7 | grep por seção normativa própria nos stubs | `0` nos 3, nos dois repos | estático | sim |
+| 8 | grep por referência a `procedures/` nos stubs | `3` nos dois | sem sensor previsto | sim |
+| 9 | `framework_check.py --auto` | exit 0 nos dois repos | sem sensor previsto | sim |
+| 10 | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída | sem sensor previsto | sim |
 
 ## Rastreabilidade
 
