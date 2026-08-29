@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v1.7.0)
+# Framework de Documentação & Rastreabilidade para IA (v2.1.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
