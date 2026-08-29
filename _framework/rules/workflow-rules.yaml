@@ -791,7 +791,7 @@ capabilities:
 # seja o que efetivamente guia o código. Uma IA que pula essa ordem está,
 # na prática, tratando o framework como decorativo.
 gate_implementation_before_code:
-  iron_law: "NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM."
+  iron_law: "NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM."
   red_flags:
     description: >
       Racionalizações que a IA usa para escapar deste gate. Se você se ouvir

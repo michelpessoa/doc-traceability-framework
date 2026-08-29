@@ -69,7 +69,9 @@ def main() -> int:
         raw = path.read_text(encoding="utf-8")
         # Ênfase markdown não muda o fato declarado — `implemented` e
         # implemented são a mesma palavra para efeito de concordância.
-        text = re.sub(r"[`*_]", "", raw)
+        # Underscore NÃO entra aqui: removê-lo transformaria `in_review`
+        # em "inreview" e faria a lei nunca casar.
+        text = re.sub(r"[`*]", "", raw)
 
         for t in active_types:
             if not re.search(rf"\b{re.escape(t)}\b", text):
@@ -79,11 +81,14 @@ def main() -> int:
             if level not in text:
                 warnings.append(f"{rel}: não menciona o nível de sizing '{level}'.")
 
-        # Iron Law: procura pelas 3 primeiras palavras significativas da lei.
+        # Iron Law: a lei inteira, normalizada. Comparar só o começo deixa
+        # passar divergência no resto — foi assim que uma lei ficou falando
+        # de PRD/TS depois de o tipo virar SPEC.
+        norm_text = " ".join(text.lower().split())
         for key, law in iron_laws.items():
-            core = " ".join(law.replace(".", "").split()[:3])
-            if core.lower() not in text.lower():
-                warnings.append(f"{rel}: Iron Law de `{key}` sem correspondência ('{core}...').")
+            norm_law = " ".join(law.replace(".", "").lower().split())
+            if norm_law not in norm_text:
+                problems.append(f"{rel}: Iron Law de `{key}` diverge ou ausente: \"{law}\"")
 
         for t in legacy_types:
             if re.search(rf"\b{re.escape(t)}\b", text) and "legad" not in text.lower():

@@ -17,7 +17,7 @@ antes de criar qualquer documento:
 - **Repositório central** (`framework-central`, ou o nome que vocês
   derem): guarda `_framework/` (cópia única do kit) e
   `docs/{PROJECT_CODE}/` de **todos** os projetos, mas só os tipos
-  STRAT, RFC, ADR, PRD, TS, BASE, INC, PM.
+  STRAT, RFC, ADR, SPEC, BASE, INC, PM.
 - **Repositório de cada projeto** (o repositório de código): guarda só
   `docs/sdd/` — as SDDs desse projeto específico.
 
@@ -36,15 +36,19 @@ _framework/
             cursor/, copilot/)
   skills/doc-traceability-framework/   (skill principal)
   skills/handover/  skills/pickup/     (passagem de contexto entre sessões)
-  scripts/ (generate_registry_md.py, registry_tools.py)
+  skills/verify-sdd/                   (verificação independente)
+  scripts/ (framework_check.py, registry_tools.py, validate_doc.py,
+            validate_state.py, check_commit.py, check_renderings.py,
+            render_prompts.py, generate_registry_md.py, framework_lib.py)
   guides/ (guia-tecnico.md, guia-nao-tecnico.md, paralelizacao-trilhas.md)
 docs/
   {PROJECT_CODE}/
     00-strategy/
     01-rfc/
     02-adr/
-    03-prd/
-    04-tech-spec/
+    03-spec/
+    # 03-prd/ e 04-tech-spec/ só existem em projeto mapeado sob 1.x —
+    # foram fundidos em 03-spec/ na v2.0.0 e não são migrados
     # 05 é reservado para SDD, que não fica aqui — vive no repositório
     # do projeto, em docs/sdd/ (ver seção 1)
     06-baseline/
@@ -94,6 +98,25 @@ docs/
 5. Rode `python3 _framework/scripts/generate_registry_md.py docs/{PROJECT_CODE}`
    (ou `docs/sdd` no repo de projeto) para regenerar a tabela legível.
 
+## 4.1 Antes de tudo: qual o tamanho da mudança
+
+O funil não é fixo desde a v2.0.0. Antes de criar qualquer documento,
+decida o nível e declare-o no campo `sizing` do front-matter:
+
+| Nível | Critério | Documentos |
+|---|---|---|
+| `small` | ~3 arquivos, nenhum critério do gate RFC→ADR, comportamento externo inalterado | SDD |
+| `medium` | Feature num domínio só, nenhum critério do gate | SPEC + SDD |
+| `large` | Pelo menos 1 critério do gate se aplica | RFC + ADR + SPEC + SDD |
+| `complex` | Vários critérios, cross-team, ou direção estratégica inexistente | STRAT + RFC + ADR + SPEC + SDD |
+
+Não crie documento para registrar que outro documento não era necessário
+— a ausência do arquivo é o registro. Descer de nível exige justificativa
+escrita no documento; subir, não.
+
+Tamanho decide **quais** documentos existem, nunca se os gates valem.
+`small` tem menos documento, não menos gate.
+
 ## 5. O gate RFC → ADR na prática
 
 Depois que uma RFC é aprovada, responda objetivamente:
@@ -106,8 +129,8 @@ Depois que uma RFC é aprovada, responda objetivamente:
 [ ] Troca ou introdução de tecnologia/vendor/dependência externa relevante?
 ```
 
-Qualquer `[x]` → crie um ADR antes de PRD/Tech Spec. Nenhum marcado →
-pule direto para PRD/Tech Spec. Registre o resultado em
+Qualquer `[x]` → crie um ADR antes da SPEC. Nenhum marcado → pule direto
+para a SPEC. Registre o resultado em
 `requires_adr` e `decision_gate_criteria_met` no front-matter da RFC —
 isso é o que torna a decisão auditável depois.
 
@@ -115,20 +138,20 @@ isso é o que torna a decisão auditável depois.
 
 A SDD nasce no repositório do projeto, não no central. Regras práticas:
 
-- Só compile quando PRD e Tech Spec (e o ADR, se existir) estiverem
+- Só compile quando a SPEC (e o ADR, se existir) estiver
   `approved`.
-- Não escreva conteúdo novo — consolide o que já está em PRD/Tech
+- Não escreva conteúdo novo — consolide o que já está na SPEC
   Spec/ADR. A regra vale nas duas direções: a SDD também não pode
-  empobrecer o que o PRD/TS já detalhavam.
+  empobrecer o que a SPEC já detalhava.
 - `source_docs` é uma lista de `{id, url}`: a `url` é a URL completa do
   arquivo no repositório central (ex.:
-  `https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-prd/PRD-CHECKOUT-0002.md`).
+  `https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-spec/SPEC-CHECKOUT-0002.md`).
   Sem essa URL, quem olhar a SDD depois não consegue chegar à origem.
 
-A qualidade da SDD é herdada: SDD genérica quase sempre é sintoma de PRD
-ou Tech Spec vagos, não de erro na compilação. Por isso o PRD precisa
+A qualidade da SDD é herdada: SDD genérica quase sempre é sintoma de SPEC
+vaga, não de erro na compilação. Por isso a Parte 1 da SPEC precisa
 entregar o **o quê** (cada RF com id próprio e critério de aceite
-verificável) e o Tech Spec o **como** e o **onde** (assinatura/schema
+em EARS) e a Parte 2 o **como** e o **onde** (assinatura/schema
 exato de cada contrato, arquivo/módulo onde vive, casos de erro
 explícitos) — ver seção 7.
 
@@ -138,7 +161,7 @@ Quatro gates, todos não-opcionais, todos verificados pela IA (ou pessoa)
 que opera o framework — nenhum é imposto por CI:
 
 **Gate de implementação** (`gate_implementation_before_code`, seção 13
-do YAML). Nenhuma linha de código de implementação antes de PRD/Tech Spec
+do YAML). Nenhuma linha de código de implementação antes da SPEC
 (central) e SDD (projeto) existirem. Um ADR aprovado, mesmo com
 "Consequências" detalhada, não é especificação suficiente. É gate de
 ORDEM, não de tempo — tudo pode acontecer na mesma sessão.
@@ -150,12 +173,12 @@ e chegada a main por PR referenciando os ids relacionados. Independente
 do gate anterior — dá para cumprir um e violar o outro.
 
 **Gate de qualidade de conteúdo** (`gate_content_quality`, seção 15).
-Antes de mover PRD/Tech Spec/SDD de `draft` para `in_review`, rode a
+Antes de mover SPEC/SDD de `draft` para `in_review`, rode a
 autorrevisão que está no rodapé de cada template:
 
 ```
-[ ] Todo RF do PRD tem RF-ID e critério de aceite verificável próprio
-[ ] Todo contrato do Tech Spec tem assinatura/schema exato + arquivo/módulo
+[ ] Todo RF da SPEC tem RF-ID e critério de aceite em EARS
+[ ] Todo contrato da SPEC tem assinatura/schema exato + arquivo/módulo
 [ ] Casos de borda e erro listados explicitamente (não "tratar erros")
 [ ] Nenhum placeholder: "TBD", "definir depois", "ajustar conforme
     necessário", "seguir o padrão do projeto" sem nomear o arquivo
@@ -190,7 +213,7 @@ a SDD ou remover o código fora de escopo — a decisão é dele.
 
 ## 8. Passagem de contexto entre sessões (handover/pickup)
 
-O fluxo separa com frequência quem planeja (compila PRD/TS/SDD) de quem
+O fluxo separa com frequência quem planeja (compila SPEC/SDD) de quem
 implementa — inclusive quando é a mesma pessoa, em sessões de IA
 diferentes para não estourar o orçamento de contexto de uma sessão só.
 Para isso existem duas skills:
@@ -205,7 +228,7 @@ Para isso existem duas skills:
   o status real dos ids citados (não confia no que o HANDOFF anotou),
   relê do disco os arquivos que vai alterar, e executa o "Next step".
 
-Regra central: o HANDOFF **referencia ids** (SDD-X, TS-X, PRD-X), não
+Regra central: o HANDOFF **referencia ids** (SDD-X, SPEC-X, ADR-X), não
 copia o conteúdo desses documentos — quem retoma lê o original quando
 precisar de detalhe. Local: raiz do repositório de projeto para handover
 de implementação; `docs/{PROJECT_CODE}/` no central para handover entre
@@ -220,19 +243,86 @@ quantas sessões passaram no meio.
 ## 9. Scripts disponíveis
 
 ```bash
-# Regenerar a tabela legível (registry.md) a partir do registry.yaml
-python3 _framework/scripts/generate_registry_md.py docs/{PROJECT_CODE}
+# Tudo de uma vez — é o que o hook de pre-commit e o CI chamam
+python3 _framework/scripts/framework_check.py --auto
 
-# Validar consistência do registry (ids órfãos, referências quebradas, status inválido)
+# Registry x front-matter: ids órfãos, referências quebradas, status
+# inválido, `path` que não resolve, url de source_docs, framework_version
 python3 _framework/scripts/registry_tools.py validate docs/{PROJECT_CODE}
 
-# Rastrear a cadeia completa de um documento (ancestrais e descendentes)
+# Gate de qualidade de conteúdo (seção 15): placeholder, ambiguidade
+# pendente, seções obrigatórias, RF-ID, EARS, "onde" dos contratos
+python3 _framework/scripts/validate_doc.py docs/{PROJECT_CODE}
+
+# Gate de verificação de escopo (seção 16): SDD `implemented` precisa de
+# tabela de evidência preenchida, uma linha por critério, sem "deve passar"
+python3 _framework/scripts/validate_state.py docs/sdd
+
+# Conventional Commits + referência a id do framework
+python3 _framework/scripts/check_commit.py --range main..HEAD
+
+# Prompts e skill ainda concordam com o YAML canônico
+python3 _framework/scripts/check_renderings.py
+python3 _framework/scripts/render_prompts.py --check
+
+# Rastrear a cadeia completa de um documento
 python3 _framework/scripts/registry_tools.py trace docs/{PROJECT_CODE} RFC-CHECKOUT-0001
+
+# Regenerar a tabela legível (registry.md)
+python3 _framework/scripts/generate_registry_md.py docs/{PROJECT_CODE}
 ```
 
-Rode `validate` como parte do PR/CI sempre que `docs/` mudar — é a
-melhor forma de pegar divergência entre front-matter e registry antes
-que ela vire hábito.
+Todos aceitam `--report-only` para listar sem falhar.
+
+**Ligue isso no seu repositório central**, não deixe como comando manual:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+O hook de pre-commit valida os documentos tocados pelo commit; o de
+commit-msg checa a mensagem; e o workflow em `.github/workflows/` roda
+tudo em PR e push. A recusa do framework a usar CI (seção 11 do YAML) é
+sobre commits de terceiros nos repositórios de código — no seu próprio
+repositório de documentação não há custo nenhum em bloquear.
+
+**Regra nova não reprova documento antigo.** Cada exigência declara em que
+versão entrou (`validate_doc.RULE_SINCE`) e só vale para projeto cujo
+`registry.yaml` declara `framework_version` igual ou posterior. É a
+não-retroatividade deixando de ser texto e virando comportamento.
+
+## 9.1 Verificação independente antes de `implemented`
+
+Não marque uma SDD como `implemented` na mesma sessão que a implementou.
+Rode a skill `verify-sdd` em sessão ou subagente separado — quem escreveu
+o código tem o resultado como conclusão desejada.
+
+Ela faz três coisas que o validator sozinho não faz:
+
+1. Confere requisito↔código nas **duas** direções: requisito sem código é
+   SDD parcial (mantenha `approved`); arquivo tocado fora da SDD é escopo
+   não registrado ou scope creep.
+2. Roda cada critério de aceite **nesta sessão** e registra a saída real.
+3. Aplica o **sensor de discriminação**: quebra o comportamento em espaço
+   descartável (stash, cópia, worktree — nunca commit), confirma que o
+   teste falha, e desfaz. Teste que passa com a implementação quebrada não
+   verifica o critério.
+
+O resultado vai para um `validation.md` ao lado da SDD, com veredito
+PASS/FAIL, evidência por critério e resultado do sensor. `FAIL` não avança
+status.
+
+## 9.2 Quando um gate for violado
+
+Registre no `LESSONS.md` do projeto — data, o que falhou com o id ou sha
+concreto, a red flag que teria pegado antes, e a correção. **Não** proponha
+mudar `workflow-rules.yaml` por causa de uma violação isolada: uma lição só
+vira regra global se aparecer em dois projetos diferentes, tiver checagem
+mecânica possível, e couber como red flag ou item de validator existente.
+
+Entre a v1.4.0 e a v1.7.0 cada falha de agente virou seção obrigatória
+nova; o arquivo de regras dobrou e a taxa de falha não caiu. É o padrão que
+esta regra existe para quebrar.
 
 ## 10. Onboarding de um projeto já existente
 
@@ -249,7 +339,7 @@ próprio prompt):
 5. A partir daí, o projeto segue o fluxo normal — a próxima RFC real é
    `RFC-{PROJECT_CODE}-0001`.
 
-Não reconstrua PRD ou Tech Spec do que já foi construído — não vale o
+Não reconstrua SPEC do que já foi construído — não vale o
 esforço, o código já é a especificação do que existe.
 
 ## 11. Auditoria de aderência (commits/PRs x registry)
@@ -301,7 +391,7 @@ Severidade e obrigatoriedade de postmortem:
 Regra de recorrência: 2ª ocorrência da mesma `root_cause_key` em ≤ 90
 dias torna o postmortem obrigatório mesmo em SEV4.
 
-Cada action item do postmortem é triado: ajuste pontual → PRD/Tech Spec
+Cada action item do postmortem é triado: ajuste pontual → SPEC
 direto; mudança estrutural (bateria em algum critério do gate) → nova
 RFC, com `relates_to` apontando para o PM de origem.
 
@@ -334,16 +424,16 @@ carregar a sessão inteira adiante.
 
 ## 15. Erros comuns a evitar
 
-- Criar STRAT/RFC/ADR/PRD/TS dentro do repositório de projeto (esses
+- Criar STRAT/RFC/ADR/SPEC dentro do repositório de projeto (esses
   tipos são sempre do repositório central).
 - Aprovar um ADR reconstruído sem revisão humana.
 - Editar um ADR `approved` no lugar em vez de criar um novo e marcar o
   antigo como `superseded`.
 - Esquecer de atualizar o `registry.yaml` junto com o documento.
-- Reconstruir PRD/Tech Spec retroativos durante onboarding ou auditoria.
+- Reconstruir SPEC retroativa durante onboarding ou auditoria.
 - Transformar a auditoria de aderência em gate de CI ou bloqueio de PR —
   ela é diagnóstico sob demanda, não um portão obrigatório.
-- Aprovar PRD/Tech Spec com placeholder ("TBD", "tratar erros
+- Aprovar SPEC com placeholder ("TBD", "tratar erros
   apropriadamente") ou com `NEEDS CLARIFICATION` pendente — a SDD
   compilada a partir disso vai sair genérica, e o custo aparece só na
   implementação (seção 7).
@@ -353,5 +443,5 @@ carregar a sessão inteira adiante.
 - Deixar a implementação tocar arquivos que não estão na SDD sem
   resolver: ou a SDD está incompleta, ou é escopo a mais. Nunca as duas
   coisas em silêncio.
-- Reescrever no `HANDOFF.md` o conteúdo que já está no PRD/TS/SDD em vez
+- Reescrever no `HANDOFF.md` o conteúdo que já está na SPEC/SDD em vez
   de referenciar os ids — handover é mapa, não cópia (seção 8).

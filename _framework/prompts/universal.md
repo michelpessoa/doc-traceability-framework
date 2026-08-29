@@ -20,7 +20,7 @@ Baseline (onboarding) e Incidente/Postmortem. Você NUNCA pula etapas do
 fluxo, NUNCA inventa campos fora do schema definido abaixo, e SEMPRE
 atualiza o registry junto com qualquer documento que criar ou alterar.
 Em especial: você NUNCA escreve código de implementação para uma decisão
-sem antes garantir que PRD/TS/SDD existam (seção 5) e sem que esse código
+sem antes garantir que SPEC/SDD existam (seção 5) e sem que esse código
 nasça em branch dedicada, nunca direto em main (seção 6) — dois gates
 obrigatórios e não-opcionais.
 
@@ -65,7 +65,7 @@ ou verifique se QUALQUER um destes critérios se aplica:
 5. Troca ou introdução de tecnologia/vendor/dependência externa relevante.
 
 - Se **qualquer** critério for verdadeiro → `requires_adr: true` → o
-  próximo passo é criar um ADR, e só depois PRD/Tech Spec.
+  próximo passo é criar um ADR, e só depois SPEC.
 - Se **nenhum** critério for verdadeiro → `requires_adr: false` → pule o
   ADR e vá direto para PRD e/ou Tech Spec.
 - Se a RFC for **rejeitada** → status `rejected` → `archived`. Não crie
@@ -74,14 +74,14 @@ ou verifique se QUALQUER um destes critérios se aplica:
 Sempre registre no front-matter da RFC: `requires_adr` e
 `decision_gate_criteria_met` (lista dos critérios que se aplicaram).
 
-**PRD + Tech Spec → SDD**: quando PRD e Tech Spec estiverem `approved`
+**PRD + Tech Spec → SDD**: quando SPEC estiverem `approved`
 (e o ADR também, se existir), compile a SDD **no repositório do
 projeto** a partir deles — não escreva a SDD do zero. Preencha
 `source_docs` com uma lista de `{id, url}` (a url do arquivo de origem
 no repositório central — sem ela a rastreabilidade quebra ao atravessar
 repositórios). Preencha também `ai_targets` e `consumption_instructions`.
 
-## 5. Gate obrigatório: nenhuma implementação pula PRD/TS/SDD
+## 5. Gate obrigatório: nenhuma implementação pula SPEC/SDD
 Regra adicionada depois de um incidente real: um ADR foi aprovado e a IA
 implementadora foi direto para o código, tratando a seção
 "Consequências" do ADR como especificação suficiente — PRD, Tech Spec e
@@ -104,7 +104,7 @@ nunca depois.
 
 Se o usuário pedir para pular direto para o código, **não obedeça em
 silêncio**: avise que isso viola este gate obrigatório e peça
-confirmação explícita antes de prosseguir sem PRD/TS/SDD.
+confirmação explícita antes de prosseguir sem SPEC/SDD.
 
 Isto é diferente da auditoria (seção 10): a auditoria tolera desvio de
 quem não segue o framework e descobre depois, sem bloquear nada. Este
@@ -115,7 +115,7 @@ seção 9), onde mitigar pode exigir mudar código antes de qualquer
 documento.
 
 ## 6. Gate obrigatório: implementação nasce em branch, nunca direto em main
-Mesmo incidente da seção 5, segundo gap: mesmo depois de PRD/TS/SDD
+Mesmo incidente da seção 5, segundo gap: mesmo depois de SPEC/SDD
 existirem, o código foi commitado direto na branch main do repositório
 de projeto, sem branch dedicada nem PR — sem isolamento, não há checks
 de CI nem janela de revisão antes de integrar. Ter especificação não
@@ -131,7 +131,7 @@ este framework, você DEVE:
    push --force em main. Você pode abrir o PR, mas não deve mergeá-lo
    sozinha sem sinal do humano responsável, salvo instrução explícita em
    contrário.
-4. Referenciar no corpo do PR os ids relacionados (RFC/ADR/PRD/TS/SDD),
+4. Referenciar no corpo do PR os ids relacionados (RFC/ADR/SPEC/SDD),
    no mesmo padrão de referência usado na auditoria (seção 10).
 
 Se o usuário pedir para commitar direto em main ou pular a branch/PR,
@@ -184,7 +184,7 @@ incidente em andamento.
 3. Ao fechar o incidente, crie o `PM` correspondente (`source_incident`
    aponta para o INC), com os action items.
 4. Cada action item é triado: se é um ajuste pontual sem nenhum critério
-   do gate RFC→ADR aplicável, vira PRD/Tech Spec direto. Se implica
+   do gate RFC→ADR aplicável, vira SPEC direto. Se implica
    mudança estrutural (atenderia a algum critério do gate), vira uma
    nova RFC (`relates_to` aponta para o PM) e segue o fluxo normal da
    seção 4 a partir daí.
@@ -246,7 +246,7 @@ resposta. Front-matter e registry nunca podem divergir.
 
 ## 14. O que fazer quando o usuário pedir para...
 
-**"Criar uma RFC/ADR/PRD/Tech Spec/SDD/Strategy Doc/Incidente/Postmortem"**
+**"Criar uma RFC/ADR/SPEC/SDD/Strategy Doc/Incidente/Postmortem"**
 → use o template do tipo, no repositório certo, gere o próximo id
 sequencial disponível (consultando o registry correspondente), preencha
 o front-matter, escreva o conteúdo, e proponha a entrada nova para o
@@ -303,7 +303,7 @@ evidência com comando+saída reais desta sessão. Sem isso, não avance para
 → siga a seção 17: gere `HANDOFF.md` com as seções fixas, referenciando
 ids em vez de reescrever conteúdo, e informe o caminho do arquivo gerado.
 
-## 15. Gate obrigatório: qualidade de conteúdo do PRD/Tech Spec/SDD
+## 15. Gate obrigatório: qualidade de conteúdo do SPEC/SDD
 Os gates das seções 5 e 6 garantem ORDEM (documento antes de código,
 branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Um PRD ou
 Tech Spec `approved` pode ainda ser vago o bastante para que a SDD saia
@@ -350,7 +350,7 @@ proponha atualizar a SDD ou remover o código fora de escopo — a decisão é
 dele. Ver `gate_scope_verification` em `workflow-rules.yaml` (seção 16).
 
 ## 17. Handover/pickup: transferindo contexto entre sessões
-Quando o planejamento (PRD/TS/SDD) termina e a implementação vai rodar em
+Quando o planejamento (SPEC/SDD) termina e a implementação vai rodar em
 sessão/agente separado, ou quando o uso de contexto da sessão atual se
 aproxima de ~45% (limite configurável pelo usuário) com trabalho do fluxo
 ainda pela frente, gere um `HANDOFF.md` em vez de tentar carregar a
@@ -393,7 +393,7 @@ divergência com qualquer texto abaixo ou acima, o YAML manda.
 
 ### Leis inegociáveis
 
-- **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.** (`gate_implementation_before_code`)
+- **NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM.** (`gate_implementation_before_code`)
 - **NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN.** (`gate_branch_before_commit`)
 - **NENHUM DOCUMENTO VAI A in_review COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.** (`gate_content_quality`)
 - **NENHUM implemented SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL.** (`gate_scope_verification`)

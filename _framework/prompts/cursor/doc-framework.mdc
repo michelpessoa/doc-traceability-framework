@@ -1,5 +1,5 @@
 ---
-description: Framework de Documentação & Rastreabilidade para IA — SDD local + Strategy/RFC/ADR/PRD/TechSpec no repositório central
+description: Framework de Documentação & Rastreabilidade para IA — SDD local + Strategy/RFC/ADR/SPEC no repositório central
 globs: ["docs/sdd/**/*.md", "docs/sdd/registry.yaml"]
 alwaysApply: true
 ---
@@ -12,7 +12,7 @@ Qualquer alteração de regra é feita lá primeiro e replicada aqui — nunca
 o contrário.
 
 ## Modelo de dois repositórios
-STRAT, RFC, ADR, PRD, Tech Spec, BASE, INC e PM vivem no repositório
+STRAT, RFC, ADR, SPEC, BASE, INC e PM vivem no repositório
 central, em `docs/{PROJECT_CODE}/`. **Só a SDD vive aqui**, em
 `docs/sdd/`, porque é o único documento pensado para você (IA) ler no
 momento de implementar. Se precisar do "porquê" por trás de uma SDD,
@@ -23,7 +23,7 @@ arquivo real no repositório central, que você não tem localmente.
 Antes de gerar código para uma feature coberta por este framework,
 procure a SDD correspondente em `docs/sdd/`. Se não existir SDD
 `approved`, avise o usuário em vez de implementar às cegas — e note que
-a SDD só pode ser compilada a partir de PRD e Tech Spec `approved` no
+a SDD só pode ser compilada a partir de uma SPEC `approved` no
 repositório central; um ADR sozinho, mesmo detalhado, não é
 especificação suficiente (`gate_implementation_before_code`, seção 13 de
 `_framework/rules/workflow-rules.yaml`). Ao criar uma SDD nova, use
@@ -100,7 +100,7 @@ divergência com qualquer texto abaixo ou acima, o YAML manda.
 
 ### Leis inegociáveis
 
-- **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.** (`gate_implementation_before_code`)
+- **NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM.** (`gate_implementation_before_code`)
 - **NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN.** (`gate_branch_before_commit`)
 - **NENHUM DOCUMENTO VAI A in_review COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.** (`gate_content_quality`)
 - **NENHUM implemented SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL.** (`gate_scope_verification`)

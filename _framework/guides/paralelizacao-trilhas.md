@@ -25,12 +25,12 @@ aí o overhead de organizar trilhas/skills não se paga.
 
 ## O que NÃO muda
 
-O fluxo de documentação (Strategy → RFC → gate → ADR → PRD/TS → SDD),
+O fluxo de documentação (Strategy → RFC → gate → ADR → SPEC → SDD),
 os tipos de documento, o registry e os IDs continuam exatamente como
 descritos em `workflow-rules.yaml`. Paralelização é sobre como o
 **código** é implementado depois que a decisão já está documentada e
 aprovada — não sobre paralelizar aprovação de documentos (a cadeia
-RFC→ADR→PRD/TS é sequencial por natureza: cada etapa depende do
+RFC→ADR→SPEC é sequencial por natureza: cada etapa depende do
 resultado da anterior).
 
 O que pode ser paralelizado dentro do próprio fluxo de documentação,
@@ -96,7 +96,7 @@ quando fizer sentido:
 ## Onde isso se conecta ao framework
 
 - Cada trilha, ao iniciar implementação real, segue o fluxo normal:
-  RFC (se a mudança justificar) → gate → PRD/Tech Spec → SDD no
+  RFC (se a mudança justificar) → gate → SPEC → SDD no
   repositório do projeto. A skill da trilha não substitui a SDD — a
   skill é contexto de execução; a SDD é o documento rastreável que
   origina o código.

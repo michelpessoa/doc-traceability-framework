@@ -37,21 +37,42 @@ Registra o que foi decidido e por quê, de forma permanente — depois de
 aprovado, esse documento não é mais editado, porque ele é a "ata" de uma
 decisão que já aconteceu.
 
-**PRD** — o requisito de produto: o que vai ser construído, para quem,
-com que critérios de sucesso. Cada requisito precisa vir com o seu
-próprio critério de aceite, escrito de forma que dê para verificar
-objetivamente depois ("o sistema recusa o cadastro sem CPF" serve;
+**SPEC** — o documento de construção, em duas partes. A Parte 1 é o
+requisito de produto: o que vai ser construído, para quem, com que
+critérios de sucesso. Cada requisito vem com o seu próprio critério de
+aceite, escrito num formato padronizado que force verificação objetiva
+("Quando o CPF estiver ausente, o sistema deve recusar o cadastro" serve;
 "funciona bem" não serve). Se algo ainda depende de uma definição sua, o
 documento marca isso explicitamente em vez de o time supor — e nada é
 aprovado com essa marcação pendente.
 
-**Tech Spec** — a tradução da decisão em plano de execução técnico. Você
-normalmente não vai escrever este, mas pode ser convidado a validar se
-ele reflete corretamente o que foi combinado no PRD.
+A Parte 2 é a tradução disso em plano de execução técnico. Você
+normalmente não vai escrever nenhuma das duas, mas pode ser convidado a
+validar se a Parte 1 reflete o que foi combinado.
+
+(Até 2026 estas eram duas coisas separadas, chamadas PRD e Tech Spec.
+Foram unificadas porque na prática eram sempre escritas e revisadas
+juntas. Documentos antigos ainda usam os nomes velhos.)
 
 **SDD** — o documento final, feito para a inteligência artificial ler
 antes de programar. Você não precisa interagir com ele diretamente; ele
 é a consolidação de tudo que veio antes, pronta para virar código.
+
+## Nem toda mudança gera todos esses documentos
+
+Uma correção pequena não atravessa a fila inteira. Antes de começar, o
+time classifica o tamanho da mudança, e o tamanho decide quantos
+documentos existem:
+
+- **Pequena** (mexe em pouca coisa, não muda nada que você perceba como
+  usuário): vai direto para o documento final de implementação.
+- **Média** (uma funcionalidade contida): ganha uma SPEC.
+- **Grande** (mexe em como o sistema é montado, é cara de desfazer, afeta
+  vários times, ou troca uma tecnologia): ganha RFC e ADR antes.
+
+O que **não** muda com o tamanho: a ordem (documento antes de código) e a
+exigência de evidência antes de dizer que ficou pronto. Mudança pequena
+tem menos documento, não menos rigor.
 
 ## Como saber se sua proposta precisa de uma discussão mais profunda
 
@@ -84,13 +105,21 @@ Uma observação sobre **implementado**: esse status não é uma opinião de
 quem fez o trabalho. Para um documento chegar lá, é obrigatório que cada
 critério de aceite tenha sido de fato testado, com o resultado registrado
 no próprio documento — e que nada tenha sido construído além do que foi
-pedido. Se você ler "implementado", pode confiar que existe evidência por
-trás, não só a impressão de que ficou pronto.
+pedido.
+
+Mais que isso: quem confere **não pode ser quem fez**. A conferência roda
+separada, e inclui um teste do próprio teste — quebra-se o sistema de
+propósito, numa cópia descartável, para confirmar que a verificação
+realmente acusa o erro. Um teste que passa mesmo com o sistema quebrado
+não estava verificando nada.
+
+Se você ler "implementado", pode confiar que existe evidência por trás,
+não só a impressão de que ficou pronto.
 
 ## Rastreabilidade — o que isso significa na prática para você
 
 Cada documento aponta para os documentos que o originaram e para os que
-ele gerou. Isso significa que, dado qualquer PRD ou funcionalidade
+ele gerou. Isso significa que, dada qualquer SPEC ou funcionalidade
 entregue, dá para caminhar para trás e responder: "que RFC motivou isso?
 Teve alguma decisão de arquitetura por trás? Isso veio de uma direção
 estratégica específica, ou de um problema que tivemos em produção?" — e
