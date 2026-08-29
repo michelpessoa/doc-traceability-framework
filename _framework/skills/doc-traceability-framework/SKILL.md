@@ -1,25 +1,20 @@
 ---
 name: doc-traceability-framework
 description: >
-  Gerencia o fluxo de documentos de decisão de um projeto — Strategy Doc,
-  RFC, ADR, PRD, Tech Spec e SDD — com IDs, front-matter e um registry
-  central para rastreabilidade completa, incluindo onboarding de projetos
-  já existentes (Baseline + ADRs reconstruídos) e o fluxo separado de
-  incidentes/postmortem. Use sempre que o usuário pedir para criar,
-  avaliar, avançar status, rastrear ou validar qualquer um desses
-  documentos, mesmo sem dizer o nome exato ("cria uma RFC pra isso",
-  "essa proposta precisa de ADR?", "monta a spec pra IA implementar", "de
-  onde veio essa decisão?", "esse projeto antigo precisa entrar no
-  framework", "abre um incidente", "registra esse postmortem", "audita se
-  os commits têm documento por trás"). Também use para gate RFC→ADR,
-  legado, severidade/postmortem de incidentes, ou auditoria periódica de
-  aderência entre commits/PRs e o registry. USE TAMBÉM antes de
-  implementar qualquer código a partir de uma decisão já aprovada neste
-  framework ("implementa o que já foi decidido", "desenvolve esse ADR",
-  "bota pra rodar essa RFC") — há dois gates obrigatórios (PRD/TS/SDD
-  antes de código, e branch dedicada + PR em vez de commit direto em
-  main) que precisam ser checados primeiro. Aplicável a qualquer
-  projeto.
+  Gerencia os documentos de decisão de um projeto — Strategy Doc, RFC, ADR,
+  SPEC (requisito + desenho) e SDD — com ids, front-matter e registry
+  central para rastreabilidade completa, incluindo onboarding de projeto
+  legado e o fluxo de incidentes/postmortem. Use when o usuário pedir para
+  criar, avaliar, avançar status, rastrear ou validar esses documentos
+  ("cria uma RFC pra isso", "precisa de ADR?", "monta a spec pra IA
+  implementar", "de onde veio essa decisão?", "abre um incidente", "audita
+  os commits"), e SEMPRE antes de implementar código a partir de decisão já
+  aprovada ("implementa o que foi decidido", "desenvolve esse ADR") — há
+  gates obrigatórios a checar primeiro, e o sizing decide quantos
+  documentos a mudança exige. Do NOT use for verificar SDD implementada
+  (use `verify-sdd`), passar contexto entre sessões (`handover`/`pickup`),
+  nem para documentação de API, README ou changelog, que não são documentos
+  de decisão deste framework.
 ---
 
 # Framework de Documentação & Rastreabilidade para IA

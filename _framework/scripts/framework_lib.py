@@ -18,64 +18,6 @@ from pathlib import Path
 import yaml
 
 # ---------------------------------------------------------------------------
-# Constantes canônicas (fallback — a fonte real é workflow-rules.yaml)
-# ---------------------------------------------------------------------------
-
-# SPEC (v2.0.0) substitui o par PRD+TS; PRD e TS seguem reconhecidos
-# porque projeto mapeado sob 1.x não migra (lessons_policy.non_retroactive).
-DOC_TYPES = ["STRAT", "RFC", "ADR", "SPEC", "PRD", "TS", "SDD", "BASE", "INC", "PM"]
-
-ID_PATTERN = re.compile(r"\b(?:" + "|".join(DOC_TYPES) + r")-[A-Z0-9]+-\d{4}\b")
-
-VALID_STATUSES = {
-    "draft", "in_review", "approved", "rejected",
-    "implemented", "superseded", "archived",
-}
-# INC não usa o ciclo de vida padrão (workflow-rules.yaml, incident_lifecycle)
-INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
-
-FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
-
-
-# ---------------------------------------------------------------------------
-# Front-matter
-# ---------------------------------------------------------------------------
-
-def read_frontmatter(path: Path):
-    """
-    Retorna (frontmatter_dict, corpo_markdown).
-
-    Documento sem bloco de front-matter retorna ({}, texto_inteiro) — quem
-    chama decide se isso é erro no contexto dele.
-    """
-    text = path.read_text(encoding="utf-8")
-    m = FRONTMATTER_RE.match(text)
-    if not m:
-        return {}, text
-    try:
-        fm = yaml.safe_load(m.group(1)) or {}
-    except yaml.YAMLError as exc:
-        raise ValueError(f"{path}: front-matter não é YAML válido — {exc}") from exc
-    if not isinstance(fm, dict):
-        raise ValueError(f"{path}: front-matter não é um mapa YAML")
-    return fm, text[m.end():]
-
-
-def iter_documents(docs_dir: Path):
-    """
-    Percorre os .md de documento sob docs_dir, ignorando registry.md e
-    qualquer arquivo dentro de templates/ (templates têm placeholder por
-    desenho — validar template como documento é falso positivo garantido).
-    """
-    for path in sorted(docs_dir.rglob("*.md")):
-        if path.name == "registry.md":
-            continue
-        if "templates" in path.parts:
-            continue
-        yield path
-
-
-# ---------------------------------------------------------------------------
 # Regras canônicas
 # ---------------------------------------------------------------------------
 
@@ -132,6 +74,99 @@ def version_key(v: str) -> tuple:
     while len(parts) < 3:
         parts.append(0)
     return tuple(parts[:3])
+
+
+FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+
+# ---------------------------------------------------------------------------
+# Constantes canônicas
+# ---------------------------------------------------------------------------
+# Estas constantes são DERIVADAS de workflow-rules.yaml no import, não
+# redeclaradas aqui. Até a v1.7.0 o YAML se chamava "fonte única de verdade"
+# mas nenhum programa o lia — os tipos e status viviam hardcoded no script,
+# e as duas cópias só não divergiram por sorte.
+#
+# Os valores abaixo são fallback para uso fora do repositório (script
+# copiado solto, kit não encontrado). Se o YAML for achado, ele vence.
+
+_FALLBACK_DOC_TYPES = ["STRAT", "RFC", "ADR", "SPEC", "PRD", "TS", "SDD", "BASE", "INC", "PM"]
+_FALLBACK_STATUSES = {
+    "draft", "in_review", "approved", "rejected",
+    "implemented", "superseded", "archived",
+}
+_FALLBACK_INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
+
+
+def _derive_constants():
+    """Lê workflow-rules.yaml e devolve (tipos, status, status de incidente)."""
+    try:
+        rules = load_rules()
+    except Exception:
+        rules = {}
+
+    types = list((rules.get("document_types") or {}).keys()) or _FALLBACK_DOC_TYPES
+    statuses = set((rules.get("status_lifecycle") or {}).get("states") or ()) or _FALLBACK_STATUSES
+    incident = set((rules.get("incident_lifecycle") or {}).get("states") or ()) or _FALLBACK_INCIDENT_STATUSES
+    return types, statuses, incident
+
+
+DOC_TYPES, VALID_STATUSES, INCIDENT_STATUSES = _derive_constants()
+
+# Tipos ordenados por tamanho decrescente: sem isso a alternância do regex
+# casaria "TS" dentro de um id que começa com outro prefixo mais longo.
+ID_PATTERN = re.compile(
+    r"\b(?:" + "|".join(sorted(DOC_TYPES, key=len, reverse=True)) + r")-[A-Z0-9]+-\d{4}\b"
+)
+
+
+def allowed_transitions(doc_type: str = None) -> dict:
+    """Transições de status válidas, lidas do YAML (vazio se não achado)."""
+    rules = load_rules()
+    key = "incident_lifecycle" if doc_type == "INC" else "status_lifecycle"
+    return (rules.get(key) or {}).get("allowed_transitions") or {}
+
+
+def sizing_levels() -> list:
+    """Níveis de sizing (seção 19), lidos do YAML."""
+    return (load_rules().get("sizing") or {}).get("levels") or []
+
+
+# ---------------------------------------------------------------------------
+# Front-matter
+# ---------------------------------------------------------------------------
+
+def read_frontmatter(path: Path):
+    """
+    Retorna (frontmatter_dict, corpo_markdown).
+
+    Documento sem bloco de front-matter retorna ({}, texto_inteiro) — quem
+    chama decide se isso é erro no contexto dele.
+    """
+    text = path.read_text(encoding="utf-8")
+    m = FRONTMATTER_RE.match(text)
+    if not m:
+        return {}, text
+    try:
+        fm = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError as exc:
+        raise ValueError(f"{path}: front-matter não é YAML válido — {exc}") from exc
+    if not isinstance(fm, dict):
+        raise ValueError(f"{path}: front-matter não é um mapa YAML")
+    return fm, text[m.end():]
+
+
+def iter_documents(docs_dir: Path):
+    """
+    Percorre os .md de documento sob docs_dir, ignorando registry.md e
+    qualquer arquivo dentro de templates/ (templates têm placeholder por
+    desenho — validar template como documento é falso positivo garantido).
+    """
+    for path in sorted(docs_dir.rglob("*.md")):
+        if path.name == "registry.md":
+            continue
+        if "templates" in path.parts:
+            continue
+        yield path
 
 
 # ---------------------------------------------------------------------------

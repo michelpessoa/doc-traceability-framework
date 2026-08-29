@@ -1,18 +1,16 @@
 ---
 name: handover
 description: >
-  Gera HANDOFF.md para transferir contexto entre sessões/agentes do
-  Framework de Documentação & Rastreabilidade — tipicamente de quem
-  planejou (PRD/Tech Spec/SDD) para quem vai implementar, ou entre
-  agentes de implementação no meio do trabalho. Use ao terminar
-  planejamento antes de outra sessão implementar, quando o uso de
-  contexto da sessão atual se aproxima de ~45% (limite configurável pelo
-  usuário) com trabalho do fluxo ainda pela frente, ou quando o usuário
-  pedir para "fazer o handover", "passar isso pro próximo", "documentar
-  onde parei". Sempre referencia ids do framework (SDD-X, TS-X, PRD-X)
-  em vez de reescrever o conteúdo desses documentos. Complementa (não
-  substitui) os gates do Framework de Documentação & Rastreabilidade —
-  ver `_framework/rules/workflow-rules.yaml`, seção 17.
+  Gera HANDOFF.md para transferir contexto entre sessões ou agentes do
+  framework de rastreabilidade, referenciando ids dos documentos em vez de
+  reescrever o conteúdo deles. Use when o planejamento terminou e outra
+  sessão vai implementar, quando o uso de contexto da sessão atual passa de
+  ~45% com trabalho ainda pela frente, ou quando o usuário pedir para
+  "fazer o handover", "passar isso pro próximo", "documentar onde parei".
+  Do NOT use for retomar um handoff já existente (use `pickup`), para
+  gerar documentação permanente do projeto — HANDOFF.md é descartável e
+  sobrescreve em lugar —, nem como substituto de qualquer gate: a SDD
+  continua precisando estar approved antes de implementar.
 ---
 
 # Handover
