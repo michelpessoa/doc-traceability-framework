@@ -35,7 +35,19 @@ RENDERINGS = [
     "prompts/universal.md",
     "prompts/cursor/doc-framework.mdc",
     "prompts/copilot/copilot-instructions.md",
+    "../AGENTS.md",
 ]
+# QUICKSTART.md fica de fora deste laço de propósito: é uma página só,
+# sem o bloco de Iron Laws nem a tabela de sizing por desenho
+# (build_quickstart não chama core_facts) — exigir cobertura total ali
+# reprovaria sempre, não é uma divergência real.
+
+# Capacidades de continuidade (SDD-DTF-0006) apontam para procedures/*.md
+# via capabilities.<id>.procedure. Não entram em RENDERINGS: um stub de
+# poucas linhas ou um procedimento de handover/pickup não tem por que
+# citar todo tipo de documento ativo, e o laço de RENDERINGS exige isso
+# — incluí-los ali reprovaria sempre, falso positivo estrutural. A
+# checagem certa para eles é existência do arquivo referenciado.
 
 
 def check_links(root: Path) -> list:
@@ -58,6 +70,20 @@ def check_links(root: Path) -> list:
                 problems.append(
                     f"{md.relative_to(repo)}: link relativo quebrado → '{target}'"
                 )
+    return problems
+
+
+def check_capability_procedures(rules: dict, root: Path) -> list:
+    """Toda capacidade com campo `procedure` tem que apontar para arquivo
+    que existe de fato — sem isso, capabilities.<id>.procedure é uma
+    promessa não verificada."""
+    problems = []
+    for cap in rules.get("capabilities") or []:
+        procedure = cap.get("procedure")
+        if not procedure:
+            continue
+        if not (root / procedure).is_file():
+            problems.append(f"{cap.get('id')}: procedure aponta para {procedure} (não existe).")
     return problems
 
 
@@ -90,6 +116,7 @@ def main() -> int:
 
     problems, warnings = [], []
     problems += check_links(root)
+    problems += check_capability_procedures(rules, root)
 
     for rel in RENDERINGS:
         path = root / rel

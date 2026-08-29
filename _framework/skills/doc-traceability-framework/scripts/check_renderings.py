@@ -28,12 +28,63 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from framework_lib import find_rules_file, load_rules, report  # noqa: E402
 
 # Renderizações que devem concordar com o YAML, relativas à raiz de _framework.
+LINK = re.compile(r"\]\(([^)\s]+)\)")
+
 RENDERINGS = [
     "skills/doc-traceability-framework/SKILL.md",
     "prompts/universal.md",
     "prompts/cursor/doc-framework.mdc",
     "prompts/copilot/copilot-instructions.md",
+    "../AGENTS.md",
 ]
+# QUICKSTART.md fica de fora deste laço de propósito: é uma página só,
+# sem o bloco de Iron Laws nem a tabela de sizing por desenho
+# (build_quickstart não chama core_facts) — exigir cobertura total ali
+# reprovaria sempre, não é uma divergência real.
+
+# Capacidades de continuidade (SDD-DTF-0006) apontam para procedures/*.md
+# via capabilities.<id>.procedure. Não entram em RENDERINGS: um stub de
+# poucas linhas ou um procedimento de handover/pickup não tem por que
+# citar todo tipo de documento ativo, e o laço de RENDERINGS exige isso
+# — incluí-los ali reprovaria sempre, falso positivo estrutural. A
+# checagem certa para eles é existência do arquivo referenciado.
+
+
+def check_links(root: Path) -> list:
+    """Links relativos que não resolvem em disco.
+
+    Reorganizar documentação quebra referência em silêncio: o markdown
+    continua renderizando, só leva a lugar nenhum. Varre a raiz do
+    repositório (root.parent), não a de _framework.
+    """
+    problems = []
+    repo = root.parent
+    skip = {".git", "node_modules", "__pycache__", "examples"}
+    for md in sorted(repo.rglob("*.md")):
+        if skip & set(md.parts):
+            continue
+        for target in LINK.findall(md.read_text(encoding="utf-8")):
+            if target.startswith(("http://", "https://", "#", "mailto:")):
+                continue
+            if not (md.parent / target.split("#")[0]).resolve().exists():
+                problems.append(
+                    f"{md.relative_to(repo)}: link relativo quebrado → '{target}'"
+                )
+    return problems
+
+
+def check_capability_procedures(rules: dict, root: Path) -> list:
+    """Toda capacidade com campo `procedure` tem que apontar para arquivo
+    que existe de fato — sem isso, capabilities.<id>.procedure é uma
+    promessa não verificada."""
+    problems = []
+    for cap in rules.get("capabilities") or []:
+        procedure = cap.get("procedure")
+        if not procedure:
+            continue
+        if not (root / procedure).is_file():
+            problems.append(f"{cap.get('id')}: procedure aponta para {procedure} (não existe).")
+    return problems
 
 
 def framework_root() -> Path:
@@ -50,7 +101,11 @@ def main() -> int:
 
     types = rules.get("document_types") or {}
     active_types = [k for k, v in types.items() if not (v or {}).get("deprecated_since")]
-    legacy_types = [k for k, v in types.items() if (v or {}).get("deprecated_since")]
+    # Desde a v2.1.0 os legados moram em chave própria; antes disso eram
+    # entradas de document_types marcadas com deprecated_since.
+    legacy_types = list((rules.get("legacy_document_types") or {}).keys()) or [
+        k for k, v in types.items() if (v or {}).get("deprecated_since")
+    ]
     sizing = [lvl["id"] for lvl in (rules.get("sizing") or {}).get("levels") or []]
 
     iron_laws = {
@@ -60,6 +115,8 @@ def main() -> int:
     }
 
     problems, warnings = [], []
+    problems += check_links(root)
+    problems += check_capability_procedures(rules, root)
 
     for rel in RENDERINGS:
         path = root / rel

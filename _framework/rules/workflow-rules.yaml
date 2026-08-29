@@ -652,7 +652,6 @@ frontmatter_schema:
         originaram esta SDD. url é obrigatório porque esses documentos
         vivem no repositório central, não no repositório do projeto onde
         a SDD está (ver repository_topology.cross_repo_reference).
-      ai_targets: "lista de ferramentas de IA para as quais este documento é preparado (ex: ['claude-code', 'cursor'])"
       consumption_instructions: "texto curto — como uma IA deve usar este documento antes de implementar"
     BASE:
       scan_date: "data em que o levantamento foi feito"
