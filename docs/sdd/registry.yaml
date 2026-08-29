@@ -51,3 +51,13 @@ documents:
     relates_to: [SPEC-DTF-0004, ADR-DTF-0001]
     path: "docs/sdd/SDD-DTF-0005.md"
     tags: [adocao, documentacao]
+  - id: SDD-DTF-0006
+    type: SDD
+    title: "Memória portável: procedimentos neutros e capacidades por contrato"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0006.md"
+    tags: [neutralidade, memoria, adocao]
