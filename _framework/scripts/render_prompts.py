@@ -102,6 +102,7 @@ def apply(path: Path, block: str, check: bool) -> bool:
         end = text.index(END) + len(END)
         current = text[start:end]
         if current == block:
+            print(f"✅ {path}: bloco em dia.")
             return True
         if check:
             print(f"❌ {path}: bloco gerado desatualizado.")
