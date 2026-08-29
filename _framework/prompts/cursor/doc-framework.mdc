@@ -3,7 +3,7 @@ description: Framework de Documentação & Rastreabilidade para IA — SDD local
 globs: ["docs/sdd/**/*.md", "docs/sdd/registry.yaml"]
 alwaysApply: true
 ---
-# Framework de Documentação & Rastreabilidade (v1.7.0)
+# Framework de Documentação & Rastreabilidade (v2.1.0)
 
 Este arquivo roda no **repositório do projeto** (onde o código vive) e
 implementa as MESMAS regras de `_framework/rules/workflow-rules.yaml` e
