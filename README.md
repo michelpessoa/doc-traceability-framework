@@ -65,3 +65,4 @@ central — veja o modo greenfield no `QUICKSTART.md`.
 ## Licença
 
 MIT — veja [`LICENSE`](LICENSE).
+
