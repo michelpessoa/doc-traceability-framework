@@ -91,7 +91,7 @@ existir), compile a SDD **no repositório do projeto** a partir dela — não
 escreva a SDD do zero. Preencha
 `source_docs` com uma lista de `{id, url}` (a url do arquivo de origem
 no repositório central — sem ela a rastreabilidade quebra ao atravessar
-repositórios). Preencha também `ai_targets` e `consumption_instructions`.
+repositórios). Preencha também `consumption_instructions`.
 
 ## 5. Gate obrigatório: nenhuma implementação pula SPEC/SDD
 Regra adicionada depois de um incidente real: um ADR foi aprovado e a IA
@@ -240,7 +240,7 @@ Campos adicionais por tipo — RFC: `requires_adr`,
 `decision_gate_criteria_met`, `parent_strategy`, `parent_postmortem`;
 ADR: `parent_rfc`, `strategic_impact`, `decision`, `provenance`
 (`authored|reconstructed`); SPEC: `parent_rfc`, `parent_adr`, `sizing`; SDD:
-`source_docs` (lista de `{id, url}`), `ai_targets`,
+`source_docs` (lista de `{id, url}`),
 `consumption_instructions`; BASE: `scan_date`, `known_gaps`; INC:
 `severity`, `detected_at`, `impact_summary`, `root_cause_key`; PM:
 `source_incident`, `severity_inherited`, `action_items`.

@@ -21,7 +21,7 @@ IA no momento de implementar.
   created, updated, relates_to, supersedes, superseded_by, tags`, mais
   `source_docs` (lista de `{id, url}` apontando para a SPEC/ADR de
   origem no repositório central — a url é obrigatória, pois esses
-  documentos não estão neste repositório), `ai_targets` e
+  documentos não estão neste repositório) e
   `consumption_instructions`.
 - Status: `draft → in_review → approved → implemented|rejected|superseded
   → archived`. Atualize `docs/sdd/registry.yaml` junto com qualquer

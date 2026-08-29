@@ -53,9 +53,10 @@ Da Parte 1 de `SPEC-DTF-0001`:
   para `skills/doc-traceability-framework/{scripts,references}/`; com
   `--check` deve sair 1 se alguma cópia divergir da origem.
 - **RF09** — `check_renderings.py` cobre todos os adaptadores e
-  procedimentos. `RENDERINGS` deve incluir todo adaptador gerado e todo
-  arquivo de `procedures/`, e sair 1 se qualquer um citar tipo ou status
-  inexistente no YAML.
+  procedimentos. `RENDERINGS` deve incluir todo adaptador gerado, e todo
+  arquivo de `procedures/` deve ser coberto por alguma checagem
+  automática — não necessariamente o mesmo laço de `RENDERINGS` (ver
+  "Especificação técnica consolidada" para o porquê).
 - **RF10** — `ai_targets` sai do schema de SDD. O sistema não deve exigir
   nem documentar `ai_targets` no schema de SDD nem no `sdd.template.md`;
   documento já emitido com o campo é aceito sem erro.
@@ -98,18 +99,35 @@ não como mecanismo novo.
 
 **`_framework/scripts/check_renderings.py`:**
 
-- `RENDERINGS` ganha: `"../AGENTS.md"`, `"../QUICKSTART.md"`,
-  `"skills/handover/SKILL.md"`, `"skills/pickup/SKILL.md"`,
-  `"skills/verify-sdd/SKILL.md"`, `"procedures/handover.md"`,
-  `"procedures/pickup.md"`, `"procedures/verify-sdd.md"` — além da
-  entrada já existente `"skills/doc-traceability-framework/SKILL.md"` e
-  dos três adaptadores já cobertos (`universal.md`,
-  `doc-framework.mdc`, `copilot-instructions.md`).
+- `RENDERINGS` ganha só `"../AGENTS.md"` — cita todo tipo ativo
+  (confirmado: `core_facts` já lista os 8), passa pelo mesmo laço de
+  cobertura total que já vale para os três adaptadores.
+  **Não** entram nesse laço, apesar de a intenção original desta SDD
+  incluir mais candidatos — descoberto durante a implementação que o
+  laço de `RENDERINGS` exige que a renderização cite **todo** tipo ativo
+  e **toda** Iron Law, e três casos reais não satisfazem isso por
+  desenho, não por defeito:
+  - `../QUICKSTART.md` — deliberadamente uma página, sem o bloco de
+    Iron Laws nem a tabela de sizing (`build_quickstart` não chama
+    `core_facts`).
+  - `skills/{handover,pickup,verify-sdd}/SKILL.md` — stub de 5-7 linhas,
+    não tem por que citar tipo de documento.
+  - `procedures/*.md` — procedimento de continuidade, mesmo motivo.
+  Incluir qualquer um desses no laço reprovaria sempre — falso positivo
+  estrutural, não divergência real. A cobertura desses arquivos vem de
+  duas checagens já corretas para o que cada um é: `check_links` (já
+  escaneia todo `.md` do repositório, cobre link quebrado nos quatro) e
+  `check_capability_procedures` (abaixo, cobre existência do arquivo que
+  cada `procedure` referencia).
 - `check_capability_procedures(rules: dict, root: Path) -> list` —
   itera `rules["capabilities"]`; para cada entrada que tiver a chave
-  `procedure`, resolve `root / "_framework" / procedure` e, se o arquivo
+  `procedure`, resolve `root / procedure` (`root` já é `_framework/`
+  neste script — mesma convenção de `framework_root()`) e, se o arquivo
   não existir, acrescenta a string `"<id>: procedure aponta para
-  <caminho> (não existe)."` à lista devolvida.
+  <caminho> (não existe)."` à lista devolvida. Isto cobre
+  `procedures/handover.md`, `procedures/pickup.md` e
+  `procedures/verify-sdd.md` (as três capacidades que ganharam o campo
+  em `SDD-DTF-0006`) sem duplicar o laço de cobertura de tipos.
 - `main()` chama `check_capability_procedures` depois de `check_links`,
   imprime cada problema com `❌`, e conta para o código de saída (sai 1
   se a lista não for vazia).
@@ -143,7 +161,7 @@ mantendo `consumption_instructions`), replicada nos dois repositórios.
 |---|---|---|---|
 | 1 | RF08 — cópias sincronizadas | `render_prompts.py && diff -rq _framework/scripts _framework/skills/doc-traceability-framework/scripts --exclude=__pycache__ && diff _framework/rules/workflow-rules.yaml _framework/skills/doc-traceability-framework/references/workflow-rules.yaml` | sem saída de diff |
 | 2 | RF08 (sensor) — cópia editada à mão reprova | Alterar `skills/doc-traceability-framework/scripts/framework_lib.py`, rodar `--check`, regenerar | exit 1, depois exit 0 |
-| 3 | RF09 — `RENDERINGS` ampliada | `grep -c "AGENTS.md\|QUICKSTART.md\|procedures/handover.md\|skills/handover/SKILL.md" _framework/scripts/check_renderings.py` | ≥ 4 |
+| 3 | RF09 — `RENDERINGS` ganha AGENTS.md e `check_capability_procedures` cobre `procedures/` | `grep -c '"\.\./AGENTS.md"' _framework/scripts/check_renderings.py` e `grep -c "def check_capability_procedures" _framework/scripts/check_renderings.py` | `1` e `1` |
 | 4 | RF09 (sensor) — `procedure` inexistente reprova | Apontar `capabilities` → `write_handover.procedure` para caminho inexistente, rodar `check_renderings.py`, reverter | exit 1 nomeando `write_handover`, depois exit 0 |
 | 5 | RF10 — `ai_targets` fora do template e do YAML | `grep -c "ai_targets" _framework/templates/sdd.template.md _framework/rules/workflow-rules.yaml` | `0` nos dois |
 | 6 | RF10 — documento já emitido com `ai_targets` continua válido | `framework_check.py --auto` sobre um documento fixture com `ai_targets` no front-matter (`docs/sdd/SDD-DTF-0001.md`, que já tem o campo) | exit 0, sem erro relacionado a `ai_targets` |

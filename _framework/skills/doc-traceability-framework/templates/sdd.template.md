@@ -18,7 +18,6 @@ source_docs:
     url: "{URL completa do arquivo no repositório central}"
   - id: "{ex: ADR-PROJETO-0001}"
     url: "{URL completa do arquivo no repositório central}"
-ai_targets: []            # ex: [claude-code, cursor, copilot]
 consumption_instructions: "{como uma IA deve usar este documento antes de implementar}"
 supersedes: null
 superseded_by: null
@@ -97,4 +96,3 @@ marque como verificado por leitura de código.
 | Campo | Valor |
 |---|---|
 | source_docs | {lista de ids} |
-| ai_targets | {lista de ferramentas} |
