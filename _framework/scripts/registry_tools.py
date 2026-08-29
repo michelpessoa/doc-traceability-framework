@@ -12,7 +12,11 @@ Uso:
     python3 registry_tools.py audit <git_log_file> <docs_dir_1> [<docs_dir_2> ...]
 
 validate: procura ids duplicados, referências quebradas em relates_to/
-          parent_* e status inválidos.
+          parent_*, status inválidos, divergência entre o front-matter do
+          .md e a entrada do registry, documento em disco fora do registry,
+          `path` que não resolve, `framework_version` desconhecida e
+          `source_docs` sem url utilizável.
+          Aceita --report-only para listar sem falhar (exit 0).
 trace:    imprime a cadeia completa de um id (ancestrais e descendentes),
           percorrendo relates_to recursivamente.
 audit:    implementa a seção 11 (audit) de workflow-rules.yaml — cruza um
@@ -24,47 +28,38 @@ audit:    implementa a seção 11 (audit) de workflow-rules.yaml — cruza um
 
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
-import re
 import sys
 from pathlib import Path
-import yaml
 
-# Mesmos tipos de id_scheme (workflow-rules.yaml, seção 7): {TYPE}-{PROJECT_CODE}-{SEQ4}
-ID_PATTERN = re.compile(
-    r"\b(?:STRAT|RFC|ADR|PRD|TS|SDD|BASE|INC|PM)-[A-Z0-9]+-\d{4}\b"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from framework_lib import (  # noqa: E402
+    ID_PATTERN,
+    INCIDENT_STATUSES,
+    VALID_STATUSES,
+    framework_versions,
+    iter_documents,
+    load_registry,
+    load_rules,
+    read_frontmatter,
+    registry_mode,
+    report,
+    version_key,
 )
 
-VALID_STATUSES = {
-    "draft", "in_review", "approved", "rejected",
-    "implemented", "superseded", "archived",
-}
-# INC não usa o ciclo de vida padrão (ver workflow-rules.yaml, incident_lifecycle)
-INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
+# Campos presentes tanto no registry quanto no front-matter do documento.
+# Por registry.update_rule (workflow-rules.yaml, seção 9) eles NUNCA podem
+# divergir — era exatamente o que este validator prometia checar e não
+# checava, porque nunca abria o .md.
+MIRRORED_FIELDS = ["type", "title", "status", "owner", "created", "updated"]
 
 
 def load(docs_dir: Path):
-    path = docs_dir / "registry.yaml"
-    if not path.exists():
-        raise SystemExit(f"Não encontrado: {path}")
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    docs = {d["id"]: d for d in data.get("documents", [])}
-    return data, docs
+    """Mantido por compatibilidade — delega para framework_lib."""
+    return load_registry(docs_dir)
 
 
-def registry_mode(data):
-    """
-    'project'  -> registry só contém SDD (repositório de projeto)
-    'central'  -> qualquer outro caso (repositório central)
-    Usado para decidir quais referências cruzando repositório são
-    esperadas (externas) em vez de um erro de consistência.
-    """
-    types = {d.get("type") for d in data.get("documents", [])}
-    if types and types <= {"SDD"}:
-        return "project"
-    return "central"
-
-
-def cmd_validate(docs_dir: Path) -> int:
+def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
     data, docs = load(docs_dir)
     problems = []
     mode = registry_mode(data)
@@ -114,17 +109,156 @@ def cmd_validate(docs_dir: Path) -> int:
             "de rodar."
         )
 
-    for w in warnings:
-        print(f"⚠️  {w}")
+    problems += check_framework_version(data, docs_dir, warnings)
+    problems += check_documents_on_disk(docs_dir, data, docs, warnings)
 
-    if problems:
-        print(f"❌ {len(problems)} problema(s) encontrado(s):")
-        for p in problems:
-            print(f"  - {p}")
-        return 1
+    return report(
+        problems,
+        warnings,
+        f"✅ registry.yaml e documentos consistentes ({len(docs)} documentos, "
+        "nenhum problema encontrado).",
+        report_only=report_only,
+    )
 
-    print(f"✅ registry.yaml consistente ({len(docs)} documentos, nenhum problema encontrado).")
-    return 0
+
+def check_framework_version(data: dict, docs_dir: Path, warnings: list) -> list:
+    """
+    `framework_version` do registry declara sob QUAL versão do framework o
+    projeto opera — não é um espelho automático da versão atual do kit. Um
+    projeto mapeado sob 1.6.0 continua legitimamente em 1.6.0 depois de o
+    kit ir para 2.0.0 (evolução do framework não é retroativa).
+
+    Logo o que se valida é: o campo existe, tem uma versão CONHECIDA do
+    framework, e não é do futuro. Ficar para trás é aviso, não erro.
+    """
+    problems = []
+    declared = data.get("framework_version")
+    rules = load_rules(docs_dir)
+    current, known = framework_versions(rules)
+
+    if not declared:
+        problems.append(
+            "registry.yaml não declara `framework_version` — sem isso não dá "
+            "para saber sob quais regras este projeto foi mapeado."
+        )
+        return problems
+
+    declared = str(declared)
+    if known and declared not in known:
+        problems.append(
+            f"`framework_version: {declared}` não é uma versão conhecida do "
+            f"framework (conhecidas: {', '.join(known)})."
+        )
+    elif current and version_key(declared) > version_key(current):
+        problems.append(
+            f"`framework_version: {declared}` é posterior à versão atual do "
+            f"kit ({current}) — registry aponta para uma versão que não existe."
+        )
+    elif current and declared != current:
+        warnings.append(
+            f"projeto opera sob framework {declared}; kit atual é {current}. "
+            "Isso é válido (evolução do framework não é retroativa) — migre "
+            "só quando decidir remapear o projeto."
+        )
+    return problems
+
+
+def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: list) -> list:
+    """
+    Cruza cada entrada do registry com o .md correspondente em disco, nas
+    duas direções. É a checagem que a capability `validate_registry` sempre
+    prometeu ("front-matter divergente do registry") e nunca fez, porque
+    este script nunca abria um documento.
+    """
+    problems = []
+    registered_paths = set()
+
+    for did, entry in docs.items():
+        rel_path = entry.get("path")
+        if not rel_path:
+            problems.append(f"{did}: entrada do registry sem campo `path`.")
+            continue
+
+        doc_path = resolve_doc_path(docs_dir, rel_path)
+        if doc_path is None:
+            problems.append(f"{did}: `path: {rel_path}` não resolve para nenhum arquivo existente.")
+            continue
+        registered_paths.add(doc_path.resolve())
+
+        try:
+            fm, _ = read_frontmatter(doc_path)
+        except ValueError as exc:
+            problems.append(str(exc))
+            continue
+
+        if not fm:
+            problems.append(f"{did}: {rel_path} não tem bloco de front-matter.")
+            continue
+
+        if fm.get("id") != did:
+            problems.append(
+                f"{did}: front-matter declara id '{fm.get('id')}', registry diz '{did}'."
+            )
+
+        for field in MIRRORED_FIELDS:
+            doc_value = fm.get(field)
+            reg_value = entry.get(field)
+            if isinstance(doc_value, str) and isinstance(reg_value, str):
+                if doc_value.strip() == reg_value.strip():
+                    continue
+            elif str(doc_value) == str(reg_value):
+                continue
+            problems.append(
+                f"{did}: `{field}` diverge — documento: '{doc_value}', "
+                f"registry: '{reg_value}'."
+            )
+
+        problems += check_source_docs_urls(did, fm)
+
+    for path in iter_documents(docs_dir):
+        if path.resolve() not in registered_paths:
+            warnings.append(
+                f"{path} existe em disco mas não está em nenhuma entrada do "
+                "registry (documento não registrado, ou `path` errado)."
+            )
+
+    return problems
+
+
+def check_source_docs_urls(did: str, fm: dict) -> list:
+    """
+    SDD vive no repositório do projeto e aponta para PRD/TS/ADR do central,
+    então cada source_doc precisa de url utilizável — sem ela a cadeia
+    quebra ao atravessar repositórios (repository_topology.cross_repo_reference).
+    """
+    problems = []
+    for sd in fm.get("source_docs") or []:
+        if not isinstance(sd, dict):
+            problems.append(f"{did}: source_docs tem entrada sem id+url ('{sd}').")
+            continue
+        sid, url = sd.get("id"), sd.get("url")
+        if not sid:
+            problems.append(f"{did}: source_docs tem entrada sem `id`.")
+        if not url:
+            problems.append(f"{did}: source_docs '{sid}' não tem `url` — obrigatória (cross-repo).")
+        elif not str(url).startswith(("http://", "https://")):
+            problems.append(f"{did}: source_docs '{sid}' tem url não resolvível: '{url}'.")
+    return problems
+
+
+def resolve_doc_path(docs_dir: Path, rel_path: str) -> Path | None:
+    """
+    `path` no registry é relativo à raiz do repositório (ex.:
+    'docs/EVM/01-rfc/RFC-EVM-0001.md'), mas o validator é chamado apontando
+    para docs_dir. Sobe procurando a raiz em que o caminho resolve.
+    """
+    candidates = [Path.cwd(), docs_dir, *docs_dir.resolve().parents]
+    for root in candidates:
+        candidate = root / rel_path
+        if candidate.is_file():
+            return candidate
+    tail = (docs_dir / Path(rel_path).name)
+    return tail if tail.is_file() else None
 
 
 def cmd_trace(docs_dir: Path, target_id: str) -> int:
@@ -221,12 +355,15 @@ def cmd_audit(git_log_path: Path, docs_dirs) -> int:
 
 
 def main():
-    if len(sys.argv) < 3:
+    args = [a for a in sys.argv[1:] if a != "--report-only"]
+    report_only = "--report-only" in sys.argv
+    if len(args) < 2:
         print(__doc__)
         sys.exit(1)
-    action = sys.argv[1]
+    action = args[0]
+    sys.argv = [sys.argv[0], *args]
     if action == "validate":
-        sys.exit(cmd_validate(Path(sys.argv[2])))
+        sys.exit(cmd_validate(Path(args[1]), report_only=report_only))
     elif action == "trace":
         if len(sys.argv) < 4:
             print("Uso: registry_tools.py trace <docs_dir> <ID>")
