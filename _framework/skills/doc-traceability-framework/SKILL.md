@@ -94,10 +94,22 @@ os documentos de origem estão no repositório central, não no do projeto.
 
 ## Gate obrigatório: nunca implemente antes de PRD/TS/SDD existirem
 
-Regra não-opcional, adicionada depois de um incidente real de uso deste
-framework: um ADR foi aprovado e a implementação foi direto para o
-código, tratando a seção "Consequências" do ADR como spec suficiente —
-PRD, Tech Spec e SDD só foram escritos depois, retroativamente. Ver
+> **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.**
+
+Red flags — se você se ouvir pensando qualquer uma destas, o gate está
+sendo violado agora:
+
+| Racionalização | Realidade |
+|---|---|
+| "O ADR tem Consequências detalhada, é spec suficiente" | Foi exatamente a falha que originou este gate |
+| "Escrevo o documento depois, o código sai igual" | Documento retroativo não guiou nada |
+| "É pequeno, não compensa o overhead" | Tamanho decide *quais* documentos, nunca se a ordem vale |
+| "O usuário pediu para ir direto" | Avise e peça confirmação explícita — nunca obedeça em silêncio |
+| "Já entendi o que fazer, documentar é burocracia" | A próxima sessão não herda o seu entendimento |
+
+Origem: um ADR foi aprovado e a implementação foi direto para o código,
+tratando a seção "Consequências" do ADR como spec suficiente — PRD, Tech
+Spec e SDD só foram escritos depois, retroativamente. Ver
 `gate_implementation_before_code` em `references/workflow-rules.yaml`
 (seção 13).
 
@@ -121,8 +133,18 @@ desvio a tolerar. Única exceção: incidente ativo (`INC` em
 
 ## Gate obrigatório: implementação nasce em branch, nunca direto em main
 
-Segundo gap do mesmo incidente: mesmo com PRD/TS/SDD prontos, o código
-foi commitado direto na branch main do repositório de projeto, sem
+> **NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN.**
+
+| Racionalização | Realidade |
+|---|---|
+| "É um commit só, branch é cerimônia" | Sem branch não há CI nem janela de revisão |
+| "Estou sozinho, não tem quem revisar" | O PR é onde os checks rodam e os ids ficam vinculados |
+| "Já tenho PRD/TS/SDD, o gate está cumprido" | Gates 13 e 14 são independentes |
+| "Faço o merge local e abro o PR depois" | Depois do merge não existe PR a abrir |
+| "Abri o PR, então posso mergear" | Mergear precisa de sinal do humano responsável |
+
+Origem: segundo gap do mesmo incidente — mesmo com PRD/TS/SDD prontos, o
+código foi commitado direto na branch main do repositório de projeto, sem
 branch dedicada nem PR. Ver `gate_branch_before_commit` em
 `references/workflow-rules.yaml` (seção 14).
 
@@ -260,6 +282,20 @@ gate de verificação de escopo antes de mudar o status (seção acima).
 
 ## Gate obrigatório: qualidade de conteúdo do PRD/Tech Spec/SDD
 
+> **NENHUM DOCUMENTO VAI A `in_review` COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.**
+
+| Racionalização | Realidade |
+|---|---|
+| "'Seguir o padrão do projeto' basta" | Só se você nomear o arquivo que é o padrão |
+| "'Tratar erros apropriadamente' cobre as bordas" | É a definição de placeholder |
+| "Deixo TBD e preencho quando souber" | Vira TBD esquecido em documento aprovado |
+| "A ambiguidade é pequena, decido por conta" | É o que `NEEDS CLARIFICATION` existe para impedir |
+| "Critérios juntos no fim dá no mesmo" | Bucket solto não permite verificar cobertura 1:1 |
+| "Rodei a checklist mentalmente" | O scan é busca literal. Rode `validate_doc.py` |
+
+Mecanizado por `_framework/scripts/validate_doc.py` — a autorrevisão
+continua sua, mas deixou de ser a única checagem.
+
 Os gates de ordem (acima) não garantem qualidade de conteúdo — um PRD/TS
 `approved` pode ser vago o bastante pra SDD sair genérica. Antes de mover
 PRD, Tech Spec ou SDD de `draft` para `in_review`, rode autorrevisão:
@@ -274,6 +310,19 @@ empobrece o que está em `source_docs`. Ver `gate_content_quality` em
 `references/workflow-rules.yaml` (seção 15).
 
 ## Gate obrigatório: verificação de escopo antes de SDD "implemented"
+
+> **NENHUM `implemented` SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL.**
+
+| Racionalização | Realidade |
+|---|---|
+| "Rodei há pouco, deve estar passando" | Sem saída desta sessão, você não tem evidência |
+| "Passou de primeira, está tudo certo" | Teste que nunca falhou pode não testar nada |
+| "Já que eu estava ali, refatorei" | Código sem requisito é scope creep. Remova |
+| "Toquei o arquivo mas é detalhe" | Ou é escopo não registrado, ou é scope creep |
+| "Faltou um requisito pequeno, completo depois" | Faltando = parcial. Mantenha `approved` |
+| "O subagente relatou que passou" | Relato próprio não substitui verificação independente |
+
+Mecanizado por `_framework/scripts/validate_state.py`.
 
 Antes de mover SDD de `approved` para `implemented`: todo requisito
 consolidado tem código correspondente (senão mantenha `approved`); todo
@@ -299,6 +348,21 @@ poucas linhas, e segue direto pro "Next step". Não substitui nenhum gate
 — SDD `approved`, branch dedicada e verificação de escopo continuam
 obrigatórios. Ver `handover_protocol` em `references/workflow-rules.yaml`
 (seção 17).
+
+## Falha de execução vira lição local, não versão nova do framework
+
+> **FALHA DE EXECUÇÃO VIRA LIÇÃO LOCAL, NÃO VERSÃO NOVA DO FRAMEWORK.**
+
+Quando um gate for violado — por você ou por outra sessão — registre em
+`LESSONS.md` (repositório do projeto para falha de implementação, central
+para falha de documentação): data, o que falhou com o id/sha concreto, a
+red flag que teria pegado antes, e a correção. Acumula, não sobrescreve.
+
+Não proponha mudar `workflow-rules.yaml` por causa de uma violação. Uma
+lição só vira regra global quando as três valerem juntas: aparece em pelo
+menos dois projetos, existe checagem mecânica possível, e cabe como red
+flag ou item de validator sem criar seção nova. Ver `lessons_policy` em
+`references/workflow-rules.yaml` (seção 18).
 
 ## Aplicando isto a um novo projeto
 

@@ -739,6 +739,24 @@ capabilities:
 # seja o que efetivamente guia o código. Uma IA que pula essa ordem está,
 # na prática, tratando o framework como decorativo.
 gate_implementation_before_code:
+  iron_law: "NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM."
+  red_flags:
+    description: >
+      Racionalizações que a IA usa para escapar deste gate. Se você se ouvir
+      pensando qualquer uma delas, o gate está sendo violado NESTE momento —
+      não depois. Reconhecer a frase é a checagem; ela não precisa de
+      julgamento adicional.
+    patterns:
+      - flag: "O ADR tem uma seção Consequências detalhada, é especificação suficiente."
+        reality: "Foi exatamente a falha que originou este gate (v1.5.0). ADR é o porquê, nunca o o quê nem o como."
+      - flag: "Escrevo o documento depois, o código sai igual."
+        reality: "Documento retroativo não guiou nada. Ele registra o que já foi feito, e o gate existe para o oposto."
+      - flag: "É uma mudança pequena, não compensa o overhead."
+        reality: "Tamanho decide QUAIS documentos (ver sizing), nunca se a ordem vale."
+      - flag: "O usuário está com pressa / pediu para ir direto."
+        reality: "Ver if_user_asks_to_skip: avisar e pedir confirmação explícita, nunca obedecer em silêncio."
+      - flag: "Já entendi o que precisa ser feito, o documento seria burocracia."
+        reality: "Entender não é registrar. A próxima sessão não herda o seu entendimento."
   applies_to: >
     Qualquer ferramenta de IA (ou pessoa) operando sob este framework que
     tenha a capacidade de tanto ler/escrever os documentos (repositório
@@ -808,6 +826,19 @@ gate_implementation_before_code:
 # "o que documentar antes de codificar", mas "como o código chega em
 # main".
 gate_branch_before_commit:
+  iron_law: "NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN."
+  red_flags:
+    patterns:
+      - flag: "É um commit só / mudança trivial, branch é cerimônia."
+        reality: "Sem branch não há check de CI nem janela de revisão. Um commit ruim já nasce integrado."
+      - flag: "Estou sozinho no projeto, não tem quem revisar."
+        reality: "O PR não existe só para revisão humana — é onde os status checks rodam e onde os ids ficam vinculados."
+      - flag: "Já tenho PRD/TS/SDD prontos, o gate está cumprido."
+        reality: "Gate 13 e gate 14 são independentes. Cumprir um não dispensa o outro."
+      - flag: "Faço o merge local agora e abro o PR depois."
+        reality: "Depois do merge não existe mais PR a abrir. A ordem é o gate."
+      - flag: "Abri o PR, então posso mergear."
+        reality: "A IA pode abrir o PR; mergear precisa de sinal do humano responsável."
   applies_to: >
     Qualquer ferramenta de IA (ou pessoa) operando sob este framework que
     tenha acesso de escrita ao repositório de projeto (seção 1,
@@ -866,6 +897,25 @@ gate_branch_before_commit:
 # framework — o que significa que não é reprodutível. Este gate torna
 # essa disciplina obrigatória e verificável.
 gate_content_quality:
+  iron_law: "NENHUM DOCUMENTO VAI A in_review COM PLACEHOLDER OU AMBIGUIDADE PENDENTE."
+  red_flags:
+    patterns:
+      - flag: "'Seguir o padrão do projeto' é específico o bastante."
+        reality: "Só se você nomear o arquivo que é o padrão. Sem o nome, é placeholder."
+      - flag: "'Tratar erros apropriadamente' cobre os casos de borda."
+        reality: "É a definição de placeholder: descreve o que fazer sem mostrar como."
+      - flag: "Deixo TBD e preencho quando souber."
+        reality: "TBD em documento que avança de status vira TBD esquecido em documento aprovado."
+      - flag: "A ambiguidade é pequena, decido por conta e sigo."
+        reality: "Suposição silenciosa da IA é o que NEEDS CLARIFICATION existe para impedir."
+      - flag: "Os critérios de aceite estão listados juntos no fim, dá no mesmo."
+        reality: "Bucket de critérios desconectado dos requisitos não permite verificar cobertura 1:1."
+      - flag: "Rodei a checklist mentalmente, está tudo certo."
+        reality: "O scan de placeholder é busca literal pelos termos banidos, não impressão. Rode validate_doc.py."
+  mechanized_by: >
+    _framework/scripts/validate_doc.py — a autorrevisão continua sendo
+    responsabilidade de quem redige, mas deixou de ser a única checagem:
+    o script é o sinal externo, e roda em hook e CI.
   applies_to: >
     PRD, Tech Spec e SDD, nesta ordem — a qualidade de uma SDD depende
     diretamente da qualidade do PRD/TS de onde foi compilada.
@@ -923,6 +973,25 @@ gate_content_quality:
 # sem ninguém perceber). "Implemented" também não podia ser confiado sem
 # evidência: um checklist marcado `[x]` de memória não prova nada.
 gate_scope_verification:
+  iron_law: "NENHUM implemented SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL."
+  red_flags:
+    patterns:
+      - flag: "Rodei esse teste há pouco, deve estar passando."
+        reality: "Se você não tem a saída desta sessão, você não tem evidência. Rode de novo."
+      - flag: "O teste passou de primeira, então está tudo certo."
+        reality: "Teste que nunca falhou pode não estar testando nada. Confirme que ele reprova a implementação errada."
+      - flag: "Já que eu estava ali, aproveitei e refatorei/abstraí."
+        reality: "Código sem requisito correspondente é scope creep. Remova antes do commit."
+      - flag: "Esse arquivo eu toquei mas é detalhe, não precisa entrar na SDD."
+        reality: "Arquivo fora da lista é escopo não registrado ou scope creep — nunca uma terceira coisa silenciosa."
+      - flag: "Faltou um requisito pequeno, marco implemented e completo depois."
+        reality: "Requisito faltando significa parcial. Mantenha approved."
+      - flag: "O subagente relatou que passou."
+        reality: "Relato de outro agente sobre o próprio trabalho não substitui verificação independente."
+  mechanized_by: >
+    _framework/scripts/validate_state.py — checa o que dá para checar de
+    fora: tabela de evidência preenchida, uma linha por critério de aceite,
+    sem resultado assumido, checklist de escopo toda marcada.
   applies_to: "SDD, no momento da transição approved -> implemented."
   rule: >
     OBRIGATÓRIO antes de mover uma SDD para `implemented`:
@@ -1013,3 +1082,50 @@ handover_protocol:
     dedicada ainda é obrigatória antes do commit (seção 14), e a
     verificação de escopo (seção 16) ainda roda antes de `implemented`,
     independente de quantas sessões/handoffs aconteceram no meio.
+
+##############################################################################
+# 18. LIÇÕES LOCAIS E CONGELAMENTO DO NÚCLEO
+##############################################################################
+# Motivação: entre a v1.4.0 e a v1.7.0 — duas semanas — cada falha de
+# execução de um agente virou uma seção nova e obrigatória deste arquivo,
+# válida para todos os projetos, para sempre. Uma falha local produziu lei
+# global quatro vezes seguidas, e o arquivo dobrou de tamanho sem que a
+# taxa de falha caísse. O problema não era a ausência da regra seguinte:
+# era não existir lugar para uma lição morar sem virar regra.
+lessons_policy:
+  iron_law: "FALHA DE EXECUÇÃO VIRA LIÇÃO LOCAL, NÃO VERSÃO NOVA DO FRAMEWORK."
+  artifact:
+    name: "LESSONS.md"
+    location: >
+      Repositório de projeto (junto de docs/sdd/) para lições de
+      implementação; repositório central, em docs/{PROJECT_CODE}/, para
+      lições de documentação. Acumula — diferente do HANDOFF.md, que
+      sobrescreve, aqui o histórico É o valor.
+    entry_format: >
+      Uma entrada por lição, com: data, o que falhou concretamente (com o
+      id do documento ou o sha do commit), a red flag que teria pegado a
+      falha antes, e a correção adotada. Sem entrada genérica do tipo
+      "ter mais atenção" — se não dá para transformar em red flag ou em
+      checagem de script, não é lição, é lamento.
+  when_a_lesson_becomes_a_rule: >
+    Uma lição só sobe para este arquivo (virando regra global) se as três
+    condições valerem juntas:
+      1. A mesma falha aparece no LESSONS.md de pelo menos DOIS projetos
+         diferentes — uma ocorrência é acidente, duas é padrão.
+      2. Existe uma checagem mecânica possível (script, hook ou CI) — se a
+         única forma de impor é pedir boa-fé em prosa, a evidência é de
+         que já não funcionou.
+      3. A regra cabe como red flag ou como item de validator existente,
+         sem criar seção nova. Seção nova é o último recurso, não o
+         primeiro.
+  core_freeze: >
+    A partir da v2.0.0, este arquivo é tratado como núcleo estável. Bump de
+    versão por tropeço pontual de agente não é mais o caminho previsto: o
+    caminho é red flag (seções 13-16) ou LESSONS.md do projeto. Evolução do
+    framework segue existindo para mudança de desenho — tipo novo, fluxo
+    novo, mecanização nova —, não para reagir a cada violação observada.
+  non_retroactive: >
+    Consequência já valia e agora fica explícita: evoluir o framework nunca
+    altera projeto já mapeado. `framework_version` no registry declara sob
+    qual versão o projeto opera, e ficar para trás é estado válido, não
+    dívida (ver registry_tools.py, check_framework_version).
