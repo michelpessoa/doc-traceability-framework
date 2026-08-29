@@ -173,6 +173,13 @@ def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: li
     problems = []
     registered_paths = set()
 
+    # Registry de demonstração (examples/): traz as entradas que ilustram um
+    # cenário, com `path` apontando para onde o documento ficaria num
+    # repositório real, sem incluir os .md. Sem esta marca, todo exemplo
+    # reprovaria por "path não resolve" — que é exatamente o que ele quer
+    # demonstrar.
+    demo = bool(data.get("demo"))
+
     for did, entry in docs.items():
         rel_path = entry.get("path")
         if not rel_path:
@@ -181,6 +188,8 @@ def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: li
 
         doc_path = resolve_doc_path(docs_dir, rel_path)
         if doc_path is None:
+            if demo:
+                continue  # registry de demonstração não carrega os .md
             problems.append(f"{did}: `path: {rel_path}` não resolve para nenhum arquivo existente.")
             continue
         registered_paths.add(doc_path.resolve())
@@ -215,7 +224,7 @@ def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: li
 
         problems += check_source_docs_urls(did, fm)
 
-    for path in iter_documents(docs_dir):
+    for path in iter_documents(docs_dir) if not demo else []:
         if path.resolve() not in registered_paths:
             warnings.append(
                 f"{path} existe em disco mas não está em nenhuma entrada do "

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Hook de pre-commit do repositório central de documentação.
+#
+# Roda os validators do framework sobre os documentos alterados neste
+# commit, em modo bloqueante. Regra nova não reprova documento antigo:
+# a não-retroatividade é mecânica (validate_doc.RULE_SINCE cruzado com o
+# framework_version do registry do projeto).
+#
+# Instalar: git config core.hooksPath .githooks
+# Pular pontualmente: git commit --no-verify
+set -euo pipefail
+
+SCRIPTS="_framework/scripts"
+MODE="${FRAMEWORK_CHECK_MODE:-}"
+
+if [ ! -f "$SCRIPTS/framework_check.py" ]; then
+  echo "pre-commit: $SCRIPTS/framework_check.py não encontrado — pulando."
+  exit 0
+fi
+
+# Diretórios de documento tocados por este commit (os que têm registry.yaml).
+mapfile -t CHANGED < <(git diff --cached --name-only --diff-filter=ACM | grep -E '^(docs|examples)/.*\.(md|yaml)$' || true)
+if [ ${#CHANGED[@]} -eq 0 ]; then
+  exit 0
+fi
+
+DIRS=$(printf '%s\n' "${CHANGED[@]}" | cut -d/ -f1-2 | sort -u)
+
+echo "pre-commit: validando framework ($MODE)"
+for dir in $DIRS; do
+  [ -f "$dir/registry.yaml" ] || continue
+  # $MODE vazio não pode virar argumento: framework_check trataria a
+  # string vazia como um diretório (Path("") == ".").
+  python3 "$SCRIPTS/framework_check.py" "$dir" ${MODE:+"$MODE"}
+done
