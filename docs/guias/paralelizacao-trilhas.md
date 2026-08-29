@@ -1,5 +1,9 @@
 # Guia — Paralelização por Trilhas de Negócio
 
+> Guia narrativo, escrito à mão. A regra canônica vive em
+> `_framework/rules/workflow-rules.yaml`; em caso de divergência, o YAML
+> manda. A mesma regra em prosa gerada está em `docs/especificacao.md`.
+
 Este guia é opcional e complementar ao `guia-tecnico.md`. Ele descreve
 um padrão de organização para projetos cujo escopo se divide em módulos
 de negócio relativamente independentes, permitindo que múltiplas
