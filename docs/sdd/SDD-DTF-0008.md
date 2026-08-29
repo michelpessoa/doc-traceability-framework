@@ -190,8 +190,9 @@ comando tem que falhar antes da correção e voltar a passar depois.
 - **NÃO** alterar `templates/` além das duas linhas de `ai_targets` em
   `sdd.template.md` — sem reescrever outras seções do template "já que
   estava ali".
-- **NÃO** remover `ai_targets` de SDDs já emitidas
-  (`SDD-DTF-0001.md`, que tem o campo) — não-retroatividade,
+- **NÃO** varrer SDDs já emitidas procurando `ai_targets` para remover —
+  nenhuma tem hoje o campo de fato no front-matter (confirmado por
+  `grep`), mas se alguma vier a ter, o princípio é não-retroatividade:
   `RULE_SINCE` não existe aqui porque nunca houve regra de código
   exigindo o campo, só documentação a apagar.
 - Ao editar as strings-prefixo de `build_universal` e
