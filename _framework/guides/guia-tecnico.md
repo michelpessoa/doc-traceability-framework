@@ -32,9 +32,12 @@ precisa estar perto do código, os outros tipos não.
 _framework/
   rules/workflow-rules.yaml       (fonte canônica)
   templates/*.template.md
-  prompts/ (universal.md, onboarding-bootstrap.md, cursor/, copilot/)
-  skills/doc-traceability-framework/
+  prompts/ (universal.md, onboarding-bootstrap.md, framework-audit.md,
+            cursor/, copilot/)
+  skills/doc-traceability-framework/   (skill principal)
+  skills/handover/  skills/pickup/     (passagem de contexto entre sessões)
   scripts/ (generate_registry_md.py, registry_tools.py)
+  guides/ (guia-tecnico.md, guia-nao-tecnico.md, paralelizacao-trilhas.md)
 docs/
   {PROJECT_CODE}/
     00-strategy/
@@ -42,6 +45,8 @@ docs/
     02-adr/
     03-prd/
     04-tech-spec/
+    # 05 é reservado para SDD, que não fica aqui — vive no repositório
+    # do projeto, em docs/sdd/ (ver seção 1)
     06-baseline/
     07-incidents/
     08-postmortems/
@@ -66,7 +71,7 @@ docs/
    código do projeto se ainda não souber, nunca adivinhe:
    ```yaml
    project: "{PROJECT_CODE}"
-   framework_version: "1.3.0"
+   framework_version: "1.7.0"   # use o framework.version do workflow-rules.yaml
    repository: "https://github.com/{ORG}/{PROJECT_CODE}"
    documents: []
    ```
@@ -113,13 +118,106 @@ A SDD nasce no repositório do projeto, não no central. Regras práticas:
 - Só compile quando PRD e Tech Spec (e o ADR, se existir) estiverem
   `approved`.
 - Não escreva conteúdo novo — consolide o que já está em PRD/Tech
-  Spec/ADR.
+  Spec/ADR. A regra vale nas duas direções: a SDD também não pode
+  empobrecer o que o PRD/TS já detalhavam.
 - `source_docs` é uma lista de `{id, url}`: a `url` é a URL completa do
   arquivo no repositório central (ex.:
   `https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-prd/PRD-CHECKOUT-0002.md`).
   Sem essa URL, quem olhar a SDD depois não consegue chegar à origem.
 
-## 7. Scripts disponíveis
+A qualidade da SDD é herdada: SDD genérica quase sempre é sintoma de PRD
+ou Tech Spec vagos, não de erro na compilação. Por isso o PRD precisa
+entregar o **o quê** (cada RF com id próprio e critério de aceite
+verificável) e o Tech Spec o **como** e o **onde** (assinatura/schema
+exato de cada contrato, arquivo/módulo onde vive, casos de erro
+explícitos) — ver seção 7.
+
+## 7. Os gates obrigatórios
+
+Quatro gates, todos não-opcionais, todos verificados pela IA (ou pessoa)
+que opera o framework — nenhum é imposto por CI:
+
+**Gate de implementação** (`gate_implementation_before_code`, seção 13
+do YAML). Nenhuma linha de código de implementação antes de PRD/Tech Spec
+(central) e SDD (projeto) existirem. Um ADR aprovado, mesmo com
+"Consequências" detalhada, não é especificação suficiente. É gate de
+ORDEM, não de tempo — tudo pode acontecer na mesma sessão.
+
+**Gate de branch** (`gate_branch_before_commit`, seção 14). Nenhum commit
+de implementação direto em main: branch dedicada com nome rastreável ao
+id de origem (`feat/ADR-EVM-0011-controle-estoque`, `sdd/SDD-EVM-0009`),
+e chegada a main por PR referenciando os ids relacionados. Independente
+do gate anterior — dá para cumprir um e violar o outro.
+
+**Gate de qualidade de conteúdo** (`gate_content_quality`, seção 15).
+Antes de mover PRD/Tech Spec/SDD de `draft` para `in_review`, rode a
+autorrevisão que está no rodapé de cada template:
+
+```
+[ ] Todo RF do PRD tem RF-ID e critério de aceite verificável próprio
+[ ] Todo contrato do Tech Spec tem assinatura/schema exato + arquivo/módulo
+[ ] Casos de borda e erro listados explicitamente (não "tratar erros")
+[ ] Nenhum placeholder: "TBD", "definir depois", "ajustar conforme
+    necessário", "seguir o padrão do projeto" sem nomear o arquivo
+[ ] Ambiguidade real marcada como NEEDS CLARIFICATION, não suposta
+[ ] Nomes consistentes entre seções (criarPedido != criarNovoPedido)
+```
+
+Documento não vai para `approved` com `NEEDS CLARIFICATION` pendente —
+até `in_review` sim, sinalizado ao revisor humano.
+
+**Gate de verificação de escopo** (`gate_scope_verification`, seção 16).
+Antes de mover uma SDD de `approved` para `implemented`:
+
+```
+[ ] Todo requisito consolidado da SDD tem código correspondente
+    (faltou algum? a SDD está parcial — mantenha approved)
+[ ] Todo arquivo tocado pela implementação está listado na SDD
+    (fora da lista = escopo não registrado -> atualize a SDD,
+     ou scope creep -> remova antes do commit; nunca em silêncio)
+[ ] Nenhuma abstração/dependência/flag extra sem requisito na SDD
+[ ] Tabela "Evidência de verificação" preenchida com o comando rodado
+    NESTA sessão e a saída real de cada critério de aceite
+```
+
+O último item é o que separa `implemented` de "acho que terminei":
+checklist marcado de memória não é evidência. Se não lembra de quando
+rodou o comando pela última vez, rode de novo.
+
+Descompasso encontrado (requisito sem código, ou código sem requisito)
+não avança status em silêncio: relate ao responsável e proponha atualizar
+a SDD ou remover o código fora de escopo — a decisão é dele.
+
+## 8. Passagem de contexto entre sessões (handover/pickup)
+
+O fluxo separa com frequência quem planeja (compila PRD/TS/SDD) de quem
+implementa — inclusive quando é a mesma pessoa, em sessões de IA
+diferentes para não estourar o orçamento de contexto de uma sessão só.
+Para isso existem duas skills:
+
+- `_framework/skills/handover/` — gera um `HANDOFF.md` de seções fixas
+  (Goal, Status, Ids relacionados, Files touched, Key decisions, Open
+  threads/blockers, Next step, Don't do). Use ao terminar o planejamento
+  antes de outra sessão implementar, ou quando o uso de contexto da
+  sessão atual se aproximar do limite que você adotar (~45% é um bom
+  padrão) com trabalho ainda pela frente.
+- `_framework/skills/pickup/` — a sessão seguinte lê o HANDOFF, confirma
+  o status real dos ids citados (não confia no que o HANDOFF anotou),
+  relê do disco os arquivos que vai alterar, e executa o "Next step".
+
+Regra central: o HANDOFF **referencia ids** (SDD-X, TS-X, PRD-X), não
+copia o conteúdo desses documentos — quem retoma lê o original quando
+precisar de detalhe. Local: raiz do repositório de projeto para handover
+de implementação; `docs/{PROJECT_CODE}/` no central para handover entre
+etapas de documentação. Sobrescreve no lugar — o histórico real são os
+documentos versionados e os PRs, não uma pilha de HANDOFFs antigos.
+
+Handover não pula nenhum gate da seção 7: SDD ainda precisa estar
+`approved` antes de implementar, branch dedicada continua obrigatória, e
+a verificação de escopo roda antes de `implemented`, independente de
+quantas sessões passaram no meio.
+
+## 9. Scripts disponíveis
 
 ```bash
 # Regenerar a tabela legível (registry.md) a partir do registry.yaml
@@ -136,7 +234,7 @@ Rode `validate` como parte do PR/CI sempre que `docs/` mudar — é a
 melhor forma de pegar divergência entre front-matter e registry antes
 que ela vire hábito.
 
-## 8. Onboarding de um projeto já existente
+## 10. Onboarding de um projeto já existente
 
 Use `_framework/prompts/onboarding-bootstrap.md` — não improvise um
 processo alternativo. Resumo do que acontece (detalhes completos no
@@ -154,7 +252,7 @@ próprio prompt):
 Não reconstrua PRD ou Tech Spec do que já foi construído — não vale o
 esforço, o código já é a especificação do que existe.
 
-## 9. Auditoria de aderência (commits/PRs x registry)
+## 11. Auditoria de aderência (commits/PRs x registry)
 
 A adesão de todo o time a referenciar documentos em commits/PRs nunca
 pode ser garantida — sempre vai ter commit avulso, hotfix de incidente
@@ -162,7 +260,7 @@ feito sob pressão, ou simplesmente alguém que esqueceu. Por isso este
 framework não tenta impor isso com CI ou bloqueio de merge: em vez de um
 gate, existe uma auditoria periódica e sob demanda, que assume que vai
 haver desvio e o transforma em achado revisável — reaproveitando o mesmo
-mecanismo de reconstrução do onboarding (seção 8), só que contínuo em vez
+mecanismo de reconstrução do onboarding (seção 10), só que contínuo em vez
 de único.
 
 Use `_framework/prompts/framework-audit.md` quando quiser rodar:
@@ -186,7 +284,7 @@ Use `_framework/prompts/framework-audit.md` quando quiser rodar:
 Não é CI, não bloqueia PR, não exige disciplina perfeita de commit — só
 torna visível o que já é verdade sobre o repositório.
 
-## 10. Incidentes e postmortem
+## 12. Incidentes e postmortem
 
 INC tem ciclo de vida próprio: `open → mitigated → resolved → closed`
 (não é `draft/review/approved`, é operacional).
@@ -207,7 +305,7 @@ Cada action item do postmortem é triado: ajuste pontual → PRD/Tech Spec
 direto; mudança estrutural (bateria em algum critério do gate) → nova
 RFC, com `relates_to` apontando para o PM de origem.
 
-## 11. Configurando as ferramentas de IA
+## 13. Configurando as ferramentas de IA
 
 - **Qualquer chat de IA (ChatGPT, Gemini, Claude):** cole
   `_framework/prompts/universal.md` no início da conversa.
@@ -219,18 +317,22 @@ RFC, com `relates_to` apontando para o PM de origem.
   `_framework/prompts/copilot/copilot-instructions.md` para
   `.github/copilot-instructions.md` **no repositório do projeto**.
 - **Claude / Cowork:** instale a skill `doc-traceability-framework.skill`
-  — ela já embute templates, regra canônica e scripts.
+  — ela já embute templates, regra canônica e scripts. Para o ciclo
+  planejamento → implementação em sessões separadas, instale também
+  `_framework/skills/handover/` e `_framework/skills/pickup/` (seção 8).
 
-## 12. Paralelização por trilhas de negócio (opcional)
+## 14. Paralelização por trilhas de negócio (opcional)
 
 Para projetos com módulos de negócio razoavelmente independentes, existe
 um padrão opcional de organização — uma skill por trilha, uma sessão de
 IA (ou pessoa) por trilha, grafo de dependências entre trilhas — em
 `paralelizacao-trilhas.md`. Não é obrigatório e não altera o fluxo
 principal de documentos; é um padrão de execução de código, não de
-decisão. Veja o exemplo real em `docs/EVM/`.
+decisão. Combina bem com handover/pickup (seção 8): cada troca de sessão
+dentro de uma trilha passa o bastão por um `HANDOFF.md` em vez de
+carregar a sessão inteira adiante.
 
-## 13. Erros comuns a evitar
+## 15. Erros comuns a evitar
 
 - Criar STRAT/RFC/ADR/PRD/TS dentro do repositório de projeto (esses
   tipos são sempre do repositório central).
@@ -241,3 +343,15 @@ decisão. Veja o exemplo real em `docs/EVM/`.
 - Reconstruir PRD/Tech Spec retroativos durante onboarding ou auditoria.
 - Transformar a auditoria de aderência em gate de CI ou bloqueio de PR —
   ela é diagnóstico sob demanda, não um portão obrigatório.
+- Aprovar PRD/Tech Spec com placeholder ("TBD", "tratar erros
+  apropriadamente") ou com `NEEDS CLARIFICATION` pendente — a SDD
+  compilada a partir disso vai sair genérica, e o custo aparece só na
+  implementação (seção 7).
+- Marcar uma SDD como `implemented` sem preencher a tabela de evidência
+  com comando e saída reais — checklist marcado de memória não prova
+  nada (seção 7).
+- Deixar a implementação tocar arquivos que não estão na SDD sem
+  resolver: ou a SDD está incompleta, ou é escopo a mais. Nunca as duas
+  coisas em silêncio.
+- Reescrever no `HANDOFF.md` o conteúdo que já está no PRD/TS/SDD em vez
+  de referenciar os ids — handover é mapa, não cópia (seção 8).

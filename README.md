@@ -35,9 +35,15 @@ SDD -> input direto para a IA que vai implementar o código
 ```
 
 Veja o diagrama completo em
-[`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png)
-e a especificação completa em
-[`Framework_Documentacao_Rastreabilidade_v1.2.md`](Framework_Documentacao_Rastreabilidade_v1.2.md).
+[`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png).
+
+A **fonte canônica e sempre atual** das regras é
+[`_framework/rules/workflow-rules.yaml`](_framework/rules/workflow-rules.yaml)
+— em caso de divergência com qualquer prompt, guia ou skill, o YAML manda.
+Os arquivos `Framework_Documentacao_Rastreabilidade_v1.x.md` na raiz são
+instantâneos históricos das especificações 1.1 e 1.2, mantidos por
+registro, e não refletem mais o estado atual. O histórico de evolução está
+em [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Estrutura deste repositório
 
@@ -52,12 +58,15 @@ _framework/
     cursor/doc-framework.mdc     — regra para Cursor/Windsurf
     copilot/copilot-instructions.md
   skills/doc-traceability-framework/  — Claude Skill completa
+  skills/handover/                    — gera HANDOFF.md entre sessões/agentes
+  skills/pickup/                      — retoma sessão a partir de um HANDOFF.md
   scripts/
     generate_registry_md.py      — gera a tabela legível do registry
     registry_tools.py            — validate / trace / audit
   guides/
     guia-tecnico.md
     guia-nao-tecnico.md
+    paralelizacao-trilhas.md     — padrão opcional de execução paralela
 examples/                        — dois cenários validados (ver abaixo)
 ```
 
@@ -75,6 +84,24 @@ Este framework assume **dois tipos de repositório**, nunca um só:
 
 Veja o diagrama em
 [`_framework/guides/assets/topology_diagram.png`](_framework/guides/assets/topology_diagram.png).
+
+## Os gates obrigatórios
+
+Quatro portas que a IA (ou pessoa) operando o framework precisa atravessar
+— nenhuma delas é imposta por CI; todas são verificadas no momento em que
+o trabalho acontece:
+
+| Gate | Quando | O que exige |
+|---|---|---|
+| Implementação | Antes da 1ª linha de código | PRD/Tech Spec (central) e SDD (projeto) já existem. ADR sozinho não basta. |
+| Branch | Antes do 1º commit | Branch dedicada com nome rastreável ao id; chegada a main por PR. |
+| Qualidade de conteúdo | `draft` → `in_review` | Requisito com critério verificável próprio, contrato com assinatura e arquivo exatos, casos de erro explícitos, zero placeholder. |
+| Verificação de escopo | `approved` → `implemented` | Todo requisito virou código, todo arquivo tocado está na SDD (nada a mais, nada a menos), e cada critério tem comando + saída reais registrados. |
+
+Quando o trabalho atravessa mais de uma sessão de IA — o caso comum entre
+planejar e implementar — as skills `handover`/`pickup` passam o contexto
+por um `HANDOFF.md` curto que referencia ids em vez de recarregar a sessão
+inteira. Nenhum gate acima é pulado por causa disso.
 
 ## Os 9 tipos de documento
 
@@ -100,7 +127,12 @@ Veja o diagrama em
   onboarding (Baseline + ADR reconstruído), um incidente com postmortem,
   e o cutover para o fluxo normal.
 
-Todos os três passam em `registry_tools.py validate` e `trace`.
+Os exemplos são **registries de demonstração**: trazem as entradas
+(`registry.yaml` + `registry.md` gerado) que representam cada cenário, com
+o campo `path` apontando para onde os documentos ficariam num repositório
+real — os arquivos `.md` de cada documento não estão incluídos, para o kit
+não carregar conteúdo fictício. Todos os três passam em
+`registry_tools.py validate` e `trace`.
 
 ## Como adotar em um projeto
 
@@ -114,7 +146,9 @@ Todos os três passam em `registry_tools.py validate` e `trace`.
    num chat, copie `_framework/prompts/cursor/doc-framework.mdc` para
    `.cursor/rules/` no repositório de projeto, `copilot-instructions.md`
    para `.github/`, ou instale a Claude Skill
-   (`_framework/skills/doc-traceability-framework/`).
+   (`_framework/skills/doc-traceability-framework/`). Para o ciclo
+   planejar → implementar em sessões separadas, instale também
+   `_framework/skills/handover/` e `_framework/skills/pickup/`.
 4. Se for um projeto que já existe, use
    `_framework/prompts/onboarding-bootstrap.md` uma única vez antes de
    seguir o fluxo normal.

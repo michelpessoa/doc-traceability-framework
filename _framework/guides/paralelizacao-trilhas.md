@@ -105,12 +105,25 @@ quando fizer sentido:
   critério `impacto_cross_team` do gate), registre-a em um ADR próprio,
   com `parent_rfc` apontando para a RFC de fundação do projeto.
 
+## Troca de sessão dentro de uma trilha
+
+Uma trilha raramente cabe em uma sessão de IA só. Quando a sessão atual
+se aproxima do limite de contexto que você adotar (~45% é um bom padrão),
+ou quando o planejamento termina e a implementação vai rodar em outra
+sessão, use as skills `handover`/`pickup` (`_framework/skills/handover/`,
+`_framework/skills/pickup/`) em vez de carregar a sessão inteira adiante:
+o `HANDOFF.md` referencia os ids da trilha (SDD-X, TS-X) e o próximo
+passo literal, e a sessão seguinte retoma a partir dele. Isso é o
+equivalente, dentro de uma trilha, ao que a skill da trilha faz entre
+trilhas: contexto suficiente, não contexto inteiro.
+
 ## Exemplo real
 
-O projeto EVM (`docs/EVM/` neste repositório) usa este padrão: Fase 0
-(Fundação) bloqueia o resto; Pacientes e Funcionários & Escalas
-iniciam em paralelo assim que a Fundação expõe schema/contratos; as
-quatro trilhas seguintes dependem só do schema de Paciente e rodam
-paralelas entre si; a trilha de Relatórios fecha o grafo por último. Ver
-`RFC-EVM-0001` (`docs/EVM/01-rfc/RFC-EVM-0001.md`) e o `PLANO_TECNICO.md`
-do repositório de código do projeto.
+Um projeto usando este padrão tem, tipicamente: Fase 0 (Fundação)
+bloqueando o resto; duas trilhas de domínio iniciando em paralelo assim
+que a Fundação expõe schema/contratos; trilhas seguintes dependendo só do
+schema de uma entidade central e rodando paralelas entre si; e uma trilha
+de consolidação (ex.: Relatórios) fechando o grafo por último. O registro
+dessa organização vive na RFC de fundação do projeto
+(`docs/{PROJECT_CODE}/01-rfc/RFC-{PROJECT_CODE}-0001.md`, no repositório
+central) e no `PLANO_TECNICO.md` do repositório de código.

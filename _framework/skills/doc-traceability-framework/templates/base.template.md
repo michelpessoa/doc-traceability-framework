@@ -10,6 +10,11 @@ updated: "{YYYY-MM-DD}"
 relates_to: []
 scan_date: "{YYYY-MM-DD}"
 known_gaps: []
+# Um novo levantamento (após uma reescrita grande, por exemplo) não edita
+# este arquivo: cria um BASE novo, marca este como `superseded` e liga os
+# dois por estes campos.
+supersedes: null
+superseded_by: null
 tags: [onboarding]
 ---
 

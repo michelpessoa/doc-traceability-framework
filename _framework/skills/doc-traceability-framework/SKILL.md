@@ -252,6 +252,54 @@ repositórios), mostre a cadeia completa.
 aponte manualmente ids órfãos, referências quebradas, status inválido ou
 divergência front-matter/registry.
 
+**"Marca a SDD como implementada" / "terminei de implementar"** — rode o
+gate de verificação de escopo antes de mudar o status (seção acima).
+
+**"Faz o handover" / "passa isso pro próximo agente"** — use a skill
+`handover` (seção acima).
+
+## Gate obrigatório: qualidade de conteúdo do PRD/Tech Spec/SDD
+
+Os gates de ordem (acima) não garantem qualidade de conteúdo — um PRD/TS
+`approved` pode ser vago o bastante pra SDD sair genérica. Antes de mover
+PRD, Tech Spec ou SDD de `draft` para `in_review`, rode autorrevisão:
+todo requisito (PRD) tem RF-ID + critério de aceite verificável próprio;
+todo contrato técnico (TS) tem assinatura/schema exato + arquivo/módulo
+onde vive; casos de borda/erro listados explicitamente, não "tratar
+apropriadamente"; nenhum placeholder ("TBD", "definir depois", "seguir
+padrão" sem nomear o arquivo); ambiguidade real vira `NEEDS
+CLARIFICATION: <pergunta>` em vez de suposição silenciosa — documento não
+vai a `approved` com isso pendente; a SDD compilada não adiciona nem
+empobrece o que está em `source_docs`. Ver `gate_content_quality` em
+`references/workflow-rules.yaml` (seção 15).
+
+## Gate obrigatório: verificação de escopo antes de SDD "implemented"
+
+Antes de mover SDD de `approved` para `implemented`: todo requisito
+consolidado tem código correspondente (senão mantenha `approved`); todo
+arquivo tocado pela implementação está listado na SDD (senão é escopo não
+registrado — atualize a SDD — ou scope creep — remova antes do commit);
+nenhuma abstração/dependência/flag extra sem requisito na SDD; a tabela
+"Evidência de verificação" preenchida com comando+saída reais desta
+sessão para cada critério — nunca "deve passar" de memória. Descompasso
+encontrado não avança status silenciosamente: relate ao humano e proponha
+atualizar a SDD ou remover o código fora de escopo. Ver
+`gate_scope_verification` em `references/workflow-rules.yaml` (seção 16).
+
+## Handover/pickup: transferindo contexto entre sessões
+
+Ao terminar planejamento (SDD compilada) antes de implementação rodar em
+sessão/agente separado, ou perto de ~45% de uso de contexto com trabalho
+pela frente, use a skill `handover` para gerar `HANDOFF.md` (seções
+fixas: Goal, Status, Ids relacionados, Files touched, Key decisions, Open
+threads/blockers, Next step, Don't do) — referenciando ids do framework
+em vez de reescrever conteúdo. A sessão seguinte usa `pickup`: relê do
+disco os arquivos de "Files touched" antes de alterar, reconhece em
+poucas linhas, e segue direto pro "Next step". Não substitui nenhum gate
+— SDD `approved`, branch dedicada e verificação de escopo continuam
+obrigatórios. Ver `handover_protocol` em `references/workflow-rules.yaml`
+(seção 17).
+
 ## Aplicando isto a um novo projeto
 
 O framework não muda entre projetos — apenas o `PROJECT_CODE`, o
