@@ -29,6 +29,13 @@ atual.
   formato de passagem de sessão de github.com/vmihalis/claude-handover —
   ambos adaptados ao modelo de dois repositórios deste framework, não
   copiados.
+- Especificação narrada consolidada em um único
+  `Framework_Documentacao_Rastreabilidade.md`, sem versão no nome, sempre
+  na versão atual do framework: as cópias `_v1.1.md` e `_v1.2.md` foram
+  removidas (paravam na v1.2.0 e nunca cobriram 1.3.0–1.7.0, então
+  descreviam um framework que já não existia). O histórico de versões
+  passa a viver só neste CHANGELOG, e o detalhe canônico de cada regra só
+  em `workflow-rules.yaml`.
 
 ## [1.6.0] - 2026-08-25
 - Gate obrigatório de branch antes de commit (seção 14 de
@@ -72,7 +79,9 @@ atual.
   significativo. Novo prompt `prompts/framework-audit.md` e novo comando
   `registry_tools.py audit`.
 - Especificação convertida de `.docx` para Markdown nativo do
-  repositório (`Framework_Documentacao_Rastreabilidade_v1.2.md`).
+  repositório (`Framework_Documentacao_Rastreabilidade_v1.2.md` — desde a
+  v1.7.0 consolidada em `Framework_Documentacao_Rastreabilidade.md`, sem
+  versão no nome).
 
 ## [1.1.0] - 2026-08-15
 - Modelo explícito de dois repositórios (central + por projeto); SDD
