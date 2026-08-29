@@ -6,6 +6,9 @@
 
 project: "EXEMPLO"
 framework_version: "1.7.0"
+# Registry de demonstração: as entradas representam o cenário, mas os .md
+# não fazem parte do kit (ver README, "Exemplos incluídos").
+demo: true
 
 documents:
   - id: SDD-EXEMPLO-0001

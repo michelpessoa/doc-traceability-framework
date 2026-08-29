@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Hook de commit-msg: Conventional Commits + referência a id do framework.
+#
+# Sem --require-refs: commit sem id vira aviso, não erro — a convenção de
+# referência segue recomendada e não obrigatória (workflow-rules.yaml,
+# seção 11, audit.commit_reference_convention.enforcement: nenhuma).
+set -euo pipefail
+
+SCRIPTS="_framework/scripts"
+MODE="${FRAMEWORK_CHECK_MODE:-}"
+
+[ -f "$SCRIPTS/check_commit.py" ] || exit 0
+
+python3 "$SCRIPTS/check_commit.py" "$1" ${MODE:+"$MODE"}

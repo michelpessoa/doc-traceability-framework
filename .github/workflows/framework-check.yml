@@ -1,0 +1,59 @@
+name: framework-check
+
+# Roda os validators do framework sobre os registries de demonstração do
+# kit, em modo bloqueante, mais os testes de equivalência entre o YAML
+# canônico e suas renderizações (prompts e skill).
+#
+# Regra nova não reprova documento antigo: cada exigência declara em que
+# versão entrou (validate_doc.RULE_SINCE) e só vale para projeto cujo
+# registry declara framework_version igual ou posterior.
+#
+# Marque `validate` como check obrigatório na branch protection para que
+# reprovar aqui realmente bloqueie o merge.
+
+on:
+  pull_request:
+    paths:
+      - "examples/**"
+      - "_framework/**"
+      - ".github/workflows/framework-check.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REPORT_ONLY: ""
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Histórico completo: o check de mensagens de commit compara
+          # origin/<base>..HEAD e precisa dos dois lados.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install pyyaml
+
+      - name: Validar registries e documentos
+        run: python3 _framework/scripts/framework_check.py --auto $REPORT_ONLY
+
+      - name: Renderizações concordam com o núcleo canônico
+        run: |
+          python3 _framework/scripts/render_prompts.py --check
+          python3 _framework/scripts/check_renderings.py $REPORT_ONLY
+
+      - name: Validar mensagens de commit do PR
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 _framework/scripts/check_commit.py \
+            --range "origin/${{ github.base_ref }}..HEAD" $REPORT_ONLY
+        env:
+          REPORT_ONLY: ${{ env.REPORT_ONLY }}
