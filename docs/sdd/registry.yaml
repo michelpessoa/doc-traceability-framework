@@ -1,0 +1,13 @@
+project: "DTF"
+framework_version: "2.0.0"
+documents:
+  - id: SDD-DTF-0001
+    type: SDD
+    title: "Superfície de entrada: AGENTS.md, QUICKSTART.md e expurgo de PRD/TS"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0001.md"
+    tags: [adocao, neutralidade]

@@ -50,7 +50,11 @@ def main() -> int:
 
     types = rules.get("document_types") or {}
     active_types = [k for k, v in types.items() if not (v or {}).get("deprecated_since")]
-    legacy_types = [k for k, v in types.items() if (v or {}).get("deprecated_since")]
+    # Desde a v2.1.0 os legados moram em chave própria; antes disso eram
+    # entradas de document_types marcadas com deprecated_since.
+    legacy_types = list((rules.get("legacy_document_types") or {}).keys()) or [
+        k for k, v in types.items() if (v or {}).get("deprecated_since")
+    ]
     sizing = [lvl["id"] for lvl in (rules.get("sizing") or {}).get("levels") or []]
 
     iron_laws = {
