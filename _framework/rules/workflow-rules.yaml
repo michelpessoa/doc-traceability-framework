@@ -14,9 +14,28 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.7.0"
+  version: "2.0.0"
   last_updated: "2026-08-29"
   changelog:
+    - version: "2.0.0"
+      summary: >
+        BREAKING. Três mudanças de desenho, todas para cortar volume sem
+        perder rastreabilidade. (1) PRD e Tech Spec fundem-se no tipo SPEC:
+        eram dois documentos com o mesmo autor, o mesmo parent e às vezes o
+        mesmo título, revisados juntos e nunca separadamente — nenhuma
+        referência de mercado (GitHub Spec Kit, AWS Kiro, tlc-spec-driven)
+        os separa em arquivos de repositórios diferentes. PRD e TS seguem
+        válidos como tipos legados: projeto já mapeado não migra
+        (lessons_policy.non_retroactive). (2) Nova seção 19 (sizing): a
+        profundidade do fluxo passa a ser função do blast radius da mudança,
+        não fixa — mudança de ≤3 arquivos sem critério de gate vai direto a
+        SDD, e a ausência do artefato É o registro de que a fase foi pulada.
+        Corrige o custo observado de ~620 linhas de documento para
+        configurar ESLint e CI. (3) STRAT deixa de ser tipo obrigatório do
+        funil e vira seção opcional da RFC — em uso real, nenhum STRAT
+        chegou a `approved`. Acompanha o congelamento do núcleo declarado
+        na seção 18: daqui em diante, versão nova é para mudança de
+        desenho, não para reagir a violação de agente.
     - version: "1.7.0"
       summary: >
         Corrige gap de qualidade (não de ordem): os gates 13/14 garantiam
@@ -163,8 +182,16 @@ repository_topology:
 ##############################################################################
 document_types:
   STRAT:
-    name: "Strategy Doc"
-    purpose: "Registra uma ideia/direção estratégica antes de virar trabalho concreto."
+    name: "Strategy Doc (opcional)"
+    purpose: >
+      Registra uma ideia/direção estratégica antes de virar trabalho
+      concreto. Desde a v2.0.0 é OPCIONAL e não faz parte do caminho
+      obrigatório: use uma seção "Contexto estratégico" dentro da própria
+      RFC, e crie um STRAT separado só quando a direção precisar existir
+      sem nenhuma RFC associada (ex.: direção anual, tese de produto). Em
+      uso real, nenhum STRAT criado chegou a `approved` — o conteúdo
+      pertencia à RFC que veio depois.
+    optional: true
     repo: central
     folder: "docs/{PROJECT_CODE}/00-strategy"
     template: "templates/strategy.template.md"
@@ -207,9 +234,28 @@ document_types:
     parent_types: ["RFC", "BASE"]   # BASE = origem quando o ADR é reconstruído no onboarding
     can_originate: ["PRD", "TS"]
 
+  SPEC:
+    name: "Specification (requisito + desenho)"
+    purpose: >
+      Documento único que substitui o par PRD + Tech Spec: a Parte 1
+      registra o requisito (o QUÊ, com RF-ID e critério de aceite próprio)
+      e a Parte 2 registra o desenho executável (o COMO e o ONDE, com
+      contratos assinados e arquivo/módulo exato). Fonte da SDD.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/03-spec"
+    template: "templates/spec.template.md"
+    parent_types: ["RFC", "ADR"]   # ambos opcionais, dependem de sizing e do gate
+    can_originate: ["SDD"]
+    replaces: ["PRD", "TS"]
+
   PRD:
-    name: "Product Requirements Document"
+    name: "Product Requirements Document (legado)"
     purpose: "Detalha o requisito de produto a ser construído."
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Documentos PRD existentes seguem válidos e
+      não são migrados — projeto mapeado sob 1.x continua operando sob 1.x
+      (lessons_policy.non_retroactive). Trabalho novo usa SPEC.
     repo: central
     folder: "docs/{PROJECT_CODE}/03-prd"
     template: "templates/prd.template.md"
@@ -217,7 +263,10 @@ document_types:
     can_originate: ["SDD"]
 
   TS:
-    name: "Tech Spec"
+    name: "Tech Spec (legado)"
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Mesma regra de não-retroatividade do PRD.
     purpose: >
       Transforma uma decisão em desenho executável: detalha implementação,
       explicita contratos técnicos, alinha times consumidores, reduz
@@ -240,7 +289,7 @@ document_types:
     repo: project      # única exceção: vive no repositório do projeto, não no central
     folder: "docs/sdd"
     template: "templates/sdd.template.md"
-    parent_types: ["PRD", "TS", "ADR"]   # todos vivem no repo central — ver cross_repo_reference
+    parent_types: ["SPEC", "PRD", "TS", "ADR"]   # todos vivem no repo central — ver cross_repo_reference
     ai_input: true   # marca este tipo como artefato de entrada para ferramentas de IA
 
   BASE:
@@ -325,13 +374,14 @@ decision_gates:
       description: "Se a RFC for rejeitada, o fluxo encerra: status = rejected -> archived. Nenhum documento downstream é criado."
       next_types: []
 
-  prd_ts_to_sdd:
+  spec_to_sdd:
     description: >
-      PRD e Tech Spec (e o ADR, se existir) alimentam a SDD, que compila
-      tudo em um único artefato pronto para ser usado como input de IA.
-      A SDD é criada no repositório do PROJETO, não no central.
-    trigger: "PRD.status == approved AND TS.status == approved"
-    next_step: "Compilar SDD a partir de PRD + Tech Spec (+ ADR se houver) no repositório do projeto"
+      A SPEC (e o ADR, se existir) alimenta a SDD, que compila tudo em um
+      único artefato pronto para ser usado como input de IA. A SDD é criada
+      no repositório do PROJETO, não no central. Em projeto legado ainda
+      sob 1.x, o par PRD + Tech Spec ocupa o lugar da SPEC — mesma regra.
+    trigger: "SPEC.status == approved (ou, em projeto legado, PRD.status == approved AND TS.status == approved)"
+    next_step: "Compilar SDD a partir da SPEC (+ ADR se houver) no repositório do projeto"
     next_types: ["SDD"]
     note: >
       A SDD NÃO deve ser escrita do zero: seu conteúdo é derivado/consolidado
@@ -815,16 +865,13 @@ gate_implementation_before_code:
 ##############################################################################
 # 14. GATE OBRIGATÓRIO: NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN
 ##############################################################################
-# Motivação (registrado para não se perder): mesmo incidente EVM da seção
-# 13 — depois que o gate de documentação foi corrigido (PRD/TS/SDD
-# passaram a existir antes do código), o código dos ADRs 0009/0010/0011
-# ainda foi commitado direto na branch main do repositório de projeto,
-# sem branch dedicada nem PR. Ter especificação não substitui isolamento
-# de desenvolvimento: sem branch própria, não há checks de CI, não há
-# janela de revisão antes de integrar, e um commit ruim já nasce em main.
-# Este gate cobre a parte do fluxo que o gate da seção 13 não cobre — não
-# "o que documentar antes de codificar", mas "como o código chega em
-# main".
+# Origem: mesmo incidente EVM da seção 13 — com PRD/TS/SDD já no lugar, o
+# código ainda foi commitado direto em main, sem branch nem PR. Ter
+# especificação não substitui isolamento de desenvolvimento.
+#
+# Enforcement real deste gate é branch protection no repositório, não este
+# texto. O que fica aqui é a Iron Law e as red flags; a regra mecânica mora
+# na configuração do repo (ver capabilities.enforce_branch_before_commit).
 gate_branch_before_commit:
   iron_law: "NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN."
   red_flags:
@@ -861,12 +908,6 @@ gate_branch_before_commit:
          SDD), no mesmo padrão de referência usado na auditoria (seção
          11), para que o PR funcione como o commit/PR "coberto" que essa
          auditoria espera encontrar.
-  not_sufficient_alone: >
-    Ter PRD/TS/SDD prontos (gate da seção 13) não dispensa este gate —
-    são dois problemas independentes: um é "existe especificação antes do
-    código?", outro é "o código passa por revisão isolada antes de
-    integrar?". Um projeto pode cumprir a seção 13 inteira e ainda violar
-    este gate se o commit for direto em main.
   if_user_asks_to_skip: >
     Se o usuário pedir explicitamente para "commitar direto em main" ou
     "pular a branch/PR", a IA NÃO deve obedecer silenciosamente: deve
@@ -879,11 +920,6 @@ gate_branch_before_commit:
     `hotfix/INC-EVM-0003`) é preferível a commit direto em main — a
     exceção da seção 13 é sobre pular documento, não sobre pular branch.
     Fora de incidente ativo, não há exceção.
-  relationship_with_gate_13: >
-    Seção 13 garante que existe especificação antes do código. Seção 14
-    garante que, mesmo com especificação pronta, o código entra em main
-    pelo caminho de revisão — não em sequência, mas em paralelo: ambos
-    valem para a mesma sessão de implementação.
 
 ##############################################################################
 # 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DO PRD/TECH SPEC/SDD
@@ -1129,3 +1165,64 @@ lessons_policy:
     altera projeto já mapeado. `framework_version` no registry declara sob
     qual versão o projeto opera, e ficar para trás é estado válido, não
     dívida (ver registry_tools.py, check_framework_version).
+
+##############################################################################
+# 19. SIZING: A PROFUNDIDADE DO FLUXO É FUNÇÃO DO BLAST RADIUS
+##############################################################################
+# Motivação: até a v1.7.0 o funil era fixo — toda mudança atravessava
+# STRAT, RFC, ADR, PRD, TS e SDD. O custo real observado: ~620 linhas de
+# documento (RFC 293 + PRD 137 + TS 190) para configurar ESLint, Prettier,
+# husky e um workflow de CI num projeto de uma pessoa. Documento que não é
+# lido por ninguém não é rastreabilidade, é cerimônia — e cerimônia
+# desacredita o framework inteiro, inclusive nas partes onde ele paga.
+#
+# A régua de tamanho NÃO é uma nova régua: reaproveita os 5 critérios de
+# decision_gates.rfc_to_adr, que já são o teste de significância do
+# framework. O que muda é que agora eles decidem também QUANTOS documentos
+# existem, não só se um ADR é necessário.
+sizing:
+  iron_law: "TAMANHO DECIDE QUAIS DOCUMENTOS, NUNCA SE A ORDEM VALE."
+  principle: >
+    A ausência de um artefato É o registro de que a fase foi pulada
+    deliberadamente — não se cria documento para declarar que outro
+    documento não era necessário. Quem quiser auditar o porquê lê o campo
+    `sizing` no front-matter da SPEC ou da SDD.
+  levels:
+    - id: small
+      criteria: >
+        Toca ~3 arquivos ou menos, nenhum critério de
+        decision_gates.rfc_to_adr se aplica, e o comportamento externo do
+        produto não muda (ajuste de config, correção pontual, tooling).
+      documents: ["SDD"]
+      note: >
+        A SDD carrega o requisito e o desenho no próprio corpo. O vínculo
+        com o código é o `Refs:` no commit/PR. Nenhuma SPEC, nenhuma RFC.
+    - id: medium
+      criteria: "Feature contida em um domínio, nenhum critério do gate rfc_to_adr se aplica."
+      documents: ["SPEC", "SDD"]
+    - id: large
+      criteria: "Pelo menos 1 critério de decision_gates.rfc_to_adr se aplica."
+      documents: ["RFC", "ADR", "SPEC", "SDD"]
+    - id: complex
+      criteria: >
+        Vários critérios do gate se aplicam, ou a mudança é cross-team, ou
+        precisa de direção estratégica que ainda não existe em nenhuma RFC.
+      documents: ["STRAT (opcional)", "RFC", "ADR", "SPEC", "SDD"]
+  who_decides: >
+    A IA propõe o nível aplicando os critérios acima e DECLARA qual usou,
+    no campo `sizing` do front-matter. O humano pode subir o nível a
+    qualquer momento; descer exige justificativa registrada no documento.
+  what_never_changes: >
+    Sizing decide QUAIS documentos existem. Nunca dispensa: a ordem
+    documento→código (seção 13), a branch dedicada (seção 14), a qualidade
+    de conteúdo do que for escrito (seção 15), nem a verificação de escopo
+    com evidência antes de `implemented` (seção 16). Uma mudança `small`
+    tem menos documento, não menos gate.
+  red_flags:
+    patterns:
+      - flag: "É simples, pulo a SDD também."
+        reality: "small já é o piso. Abaixo da SDD não existe nível — existe código sem especificação."
+      - flag: "Classifico como small para ir mais rápido."
+        reality: "O critério é objetivo: ~3 arquivos, nenhum critério do gate, sem mudança de comportamento externo. Se falhar em um, não é small."
+      - flag: "É large, mas a RFC eu escrevo depois."
+        reality: "Documento retroativo é a violação da seção 13 com outro nome."

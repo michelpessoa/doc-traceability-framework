@@ -55,11 +55,11 @@ quebra o modelo inteiro.
 
 | Tipo | Quando usar | Repositório | Pasta |
 |---|---|---|---|
-| STRAT (Strategy Doc) | Uma ideia/direção ainda pouco amadurecida | central | `docs/{PROJETO}/00-strategy/` |
+| STRAT (Strategy Doc) | **Opcional.** Direção que precisa existir sem RFC associada | central | `docs/{PROJETO}/00-strategy/` |
 | RFC | Antes de decisões relevantes: mudança transversal, custo alto, risco técnico, nova tecnologia, alteração de contrato | central | `docs/{PROJETO}/01-rfc/` |
 | ADR | Registro atômico e imutável de UMA decisão de arquitetura | central | `docs/{PROJETO}/02-adr/` |
-| PRD | Requisitos de produto a construir | central | `docs/{PROJETO}/03-prd/` |
-| TS (Tech Spec) | Desenho executável: contratos técnicos, plano de rollout | central | `docs/{PROJETO}/04-tech-spec/` |
+| SPEC | Requisito (o QUÊ) + desenho executável (o COMO/ONDE) num arquivo só | central | `docs/{PROJETO}/03-spec/` |
+| PRD, TS | **Legados** (fundidos em SPEC na v2.0.0). Só em projeto mapeado sob 1.x | central | `03-prd/`, `04-tech-spec/` |
 | SDD (Spec Driven Design) | Compilado de PRD+TS(+ADR), pronto para uma IA implementar código | **projeto** | `docs/sdd/` |
 | BASE (Baseline) | Retrato do estado atual, só no onboarding de projeto já existente | central | `docs/{PROJETO}/06-baseline/` |
 | INC (Incidente) | Evento em produção, do início ao fechamento | central | `docs/{PROJETO}/07-incidents/` |
@@ -71,11 +71,25 @@ sempre parta de um template, nunca escreva um documento do zero.
 ## O fluxo principal e o gate de decisão RFC → ADR
 
 ```
-Strategy Doc -> RFC -> [GATE: exige ADR?]
-    -> SIM -> ADR -> PRD + Tech Spec -> SDD (repositório do projeto)
-    -> NÃO ------------> PRD + Tech Spec -> SDD (repositório do projeto)
-SDD -> input direto para a IA que vai implementar o código
+[SIZING: qual o blast radius?]
+  small   ->                                      SDD
+  medium  ->                             SPEC ->  SDD
+  large   ->        RFC -> [gate] -> ADR -> SPEC ->  SDD
+  complex -> STRAT -> RFC -> [gate] -> ADR -> SPEC ->  SDD
+SDD (repositório do projeto) -> input direto para a IA implementar
 ```
+
+**Antes de qualquer coisa, declare o sizing.** `small` = toca ~3 arquivos,
+nenhum critério do gate se aplica, comportamento externo não muda → vai
+direto para SDD, e o `Refs:` no commit é o vínculo. Um nível acima em
+qualquer critério sobe o nível inteiro. A ausência do documento **é** o
+registro de que a fase foi pulada — não crie documento para dizer que
+outro não era necessário. Declare o nível usado no campo `sizing` do
+front-matter. Ver `sizing` em `references/workflow-rules.yaml` (seção 19).
+
+> **TAMANHO DECIDE QUAIS DOCUMENTOS, NUNCA SE A ORDEM VALE.** Uma mudança
+> `small` tem menos documento, não menos gate: ordem, branch, qualidade de
+> conteúdo e verificação de escopo continuam valendo integralmente.
 
 Nem toda RFC aprovada precisa gerar um ADR. Depois que uma RFC é
 aprovada, avalie o gate perguntando se QUALQUER um destes critérios é
@@ -87,14 +101,14 @@ crie um ADR antes de PRD/Tech Spec; se nenhum for, pule direto para
 PRD/Tech Spec. RFC rejeitada → `archived`, sem downstream. Registre
 sempre `decision_gate_criteria_met` no front-matter da RFC.
 
-Quando PRD e Tech Spec (e o ADR, se existir) estiverem `approved`,
-compile a SDD **no repositório do projeto** a partir deles — nunca
+Quando a SPEC (e o ADR, se existir) estiver `approved`, compile a SDD
+**no repositório do projeto** a partir dela — nunca
 escreva a SDD do zero. `source_docs` é uma lista de `{id, url}`, porque
 os documentos de origem estão no repositório central, não no do projeto.
 
-## Gate obrigatório: nunca implemente antes de PRD/TS/SDD existirem
+## Gate obrigatório: nunca implemente antes de SPEC/SDD existirem
 
-> **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.**
+> **NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM.**
 
 Red flags — se você se ouvir pensando qualquer uma destas, o gate está
 sendo violado agora:
@@ -115,8 +129,8 @@ Spec e SDD só foram escritos depois, retroativamente. Ver
 
 Se o pedido for "implementa/desenvolve o que já foi decidido" a partir
 de um RFC/ADR `approved`, **pare antes de tocar em código**:
-1. PRD e/ou Tech Spec aplicáveis existem no repositório central? Se não,
-   crie-os primeiro.
+1. A SPEC aplicável existe no repositório central (ou o par PRD+TS, em
+   projeto legado)? Se não, crie-a primeiro — no nível que o sizing pedir.
 2. A SDD correspondente já foi compilada no repositório do projeto? Se
    não, compile-a primeiro.
 3. Só então escreva código.
@@ -280,7 +294,7 @@ gate de verificação de escopo antes de mudar o status (seção acima).
 **"Faz o handover" / "passa isso pro próximo agente"** — use a skill
 `handover` (seção acima).
 
-## Gate obrigatório: qualidade de conteúdo do PRD/Tech Spec/SDD
+## Gate obrigatório: qualidade de conteúdo da SPEC/SDD
 
 > **NENHUM DOCUMENTO VAI A `in_review` COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.**
 

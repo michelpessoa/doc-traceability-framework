@@ -21,7 +21,9 @@ import yaml
 # Constantes canônicas (fallback — a fonte real é workflow-rules.yaml)
 # ---------------------------------------------------------------------------
 
-DOC_TYPES = ["STRAT", "RFC", "ADR", "PRD", "TS", "SDD", "BASE", "INC", "PM"]
+# SPEC (v2.0.0) substitui o par PRD+TS; PRD e TS seguem reconhecidos
+# porque projeto mapeado sob 1.x não migra (lessons_policy.non_retroactive).
+DOC_TYPES = ["STRAT", "RFC", "ADR", "SPEC", "PRD", "TS", "SDD", "BASE", "INC", "PM"]
 
 ID_PATTERN = re.compile(r"\b(?:" + "|".join(DOC_TYPES) + r")-[A-Z0-9]+-\d{4}\b")
 

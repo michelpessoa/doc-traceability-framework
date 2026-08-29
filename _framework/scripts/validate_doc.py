@@ -63,6 +63,13 @@ REQUIRED_FRONTMATTER = ["id", "type", "title", "status", "project", "owner", "cr
 REQUIRED_SECTIONS = {
     "RFC": ["Contexto", "Problema", "Objetivos", "Alternativas", "Proposta", "Riscos"],
     "ADR": ["Contexto", "Decisão", "Consequências"],
+    "SPEC": [
+        "Objetivo",
+        "Requisitos funcionais",
+        "Contratos técnicos",
+        "Estratégia de teste",
+        "Fora de escopo",
+    ],
     "PRD": ["Objetivo", "Requisitos funcionais", "Critérios de aceite"],
     "TS": ["Contratos técnicos"],
     "SDD": ["Requisitos consolidados", "Critérios de aceite"],
@@ -71,10 +78,22 @@ REQUIRED_SECTIONS = {
 # Um RF-ID é o identificador próprio de um requisito funcional, exigido
 # pelo item 1 do gate. "1." numerado não serve: não sobrevive a reordenação
 # e não dá para referenciar de um critério de aceite.
-RF_ID = re.compile(r"\bRF-\d+\b")
+RF_ID = re.compile(r"\bRF-?\d+\b")
 
 # "onde" de um contrato: caminho de arquivo com extensão, ou módulo com barra.
 FILE_HINT = re.compile(r"[\w./-]+\.(?:ts|tsx|js|jsx|py|go|rs|java|kt|rb|sql|yaml|yml|json|prisma|mjs)\b")
+
+
+def scannable(body: str) -> str:
+    """
+    Corpo sem as linhas de instrução do template (blockquote `>`).
+
+    A prosa que ENSINA a regra cita os termos banidos por definição — o
+    template diz "proibido usar TBD". Escanear essas linhas faria todo
+    documento reprovar pela instrução que ele carrega, não pelo conteúdo
+    que o autor escreveu.
+    """
+    return "\n".join(ln for ln in body.splitlines() if not ln.lstrip().startswith(">"))
 
 
 def section_body(body: str, heading: str) -> str | None:
@@ -110,18 +129,20 @@ def check_document(path: Path) -> tuple[list, list]:
     if status and status not in allowed:
         problems.append(f"{doc_id}: status inválido '{status}'.")
 
-    lowered = body.lower()
+    prose = scannable(body)
+    lowered = prose.lower()
     for term in BANNED_PLACEHOLDERS:
         if term in lowered:
             line = next(
-                (i for i, ln in enumerate(body.splitlines(), 1) if term in ln.lower()),
+                (i for i, ln in enumerate(body.splitlines(), 1)
+                 if term in ln.lower() and not ln.lstrip().startswith(">")),
                 None,
             )
             where = f" (linha {line})" if line else ""
             msg = f"{doc_id}: placeholder banido '{term}'{where} — gate_content_quality item 4."
             (problems if status in DECIDED_STATUSES else warnings).append(msg)
 
-    if NEEDS_CLARIFICATION.search(body):
+    if NEEDS_CLARIFICATION.search(prose):
         msg = (
             f"{doc_id}: tem `NEEDS CLARIFICATION` pendente — "
             "gate_content_quality item 5 proíbe avançar para approved assim."
@@ -132,7 +153,7 @@ def check_document(path: Path) -> tuple[list, list]:
         if section_body(body, heading) is None:
             problems.append(f"{doc_id}: seção obrigatória ausente: '{heading}'.")
 
-    if doc_type == "PRD":
+    if doc_type in ("PRD", "SPEC"):
         reqs = section_body(body, "Requisitos funcionais")
         if reqs and not RF_ID.search(reqs):
             problems.append(
@@ -140,7 +161,7 @@ def check_document(path: Path) -> tuple[list, list]:
                 "(gate_content_quality item 1) — lista numerada não é id."
             )
 
-    if doc_type == "TS":
+    if doc_type in ("TS", "SPEC"):
         contracts = section_body(body, "Contratos técnicos")
         if contracts and not FILE_HINT.search(contracts):
             warnings.append(
