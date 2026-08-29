@@ -21,3 +21,13 @@ documents:
     relates_to: [SPEC-DTF-0002, SDD-DTF-0001]
     path: "docs/sdd/SDD-DTF-0002.md"
     tags: [adocao, greenfield]
+  - id: SDD-DTF-0003
+    type: SDD
+    title: "Datação das exigências do gate 16 em validate_state.py"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0003]
+    path: "docs/sdd/SDD-DTF-0003.md"
+    tags: [nao-retroatividade, validadores]
