@@ -44,7 +44,17 @@ TARGETS = [
 FULL_TARGETS = [
     ("../AGENTS.md", "build_agents"),
     ("../QUICKSTART.md", "build_quickstart"),
+    ("../docs/especificacao.md", "build_spec_doc"),
+    ("../CHANGELOG.md", "build_changelog"),
 ]
+
+# Versões anteriores ao changelog canônico do YAML, que começa na 1.4.0.
+# Preservado literalmente para a geração não apagar histórico.
+LEGACY_CHANGELOG = """## Histórico anterior ao changelog canônico
+
+As versões 1.0.0 a 1.3.0 existiram antes de `framework.changelog` virar a
+fonte de verdade. O registro delas vive no histórico do git.
+"""
 
 
 def build_block(rules: dict) -> str:
@@ -256,8 +266,121 @@ def build_quickstart(rules: dict) -> str:
     ])
 
 
+def _wrap(text) -> str:
+    """Normaliza as quebras arbitrárias do YAML em parágrafo único."""
+    return " ".join(str(text or "").split())
+
+
+def build_spec_doc(rules: dict) -> str:
+    """docs/especificacao.md — a regra do framework em prosa, gerada.
+
+    Substitui Framework_Documentacao_Rastreabilidade.md, que era cópia
+    humana do YAML mantida à mão. Aqui não há cópia: o que muda no YAML
+    aparece na próxima geração.
+    """
+    fw = rules.get("framework") or {}
+    out = [
+        f"# Especificação do framework (v{fw.get('version')})",
+        "",
+        "Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de",
+        "`_framework/rules/workflow-rules.yaml`. Não edite à mão — o CI reprova.",
+        "Para narrativa e exemplos, veja `docs/guias/`. Para começar a usar,",
+        "`QUICKSTART.md`. Para operar como IA, `AGENTS.md`.",
+        "",
+        "## Modelo de dois repositórios",
+        "",
+    ]
+    topo = rules.get("repository_topology") or {}
+    for key in ("central_repo", "project_repo"):
+        block = topo.get(key) or {}
+        out += [f"**`{key}`** — {_wrap(block.get('role'))}", ""]
+        for item in block.get("contains") or []:
+            out.append(f"- {item}")
+        if block.get("registry"):
+            out.append(f"- registry: `{block['registry']}`")
+        out.append("")
+    ref = (topo.get("cross_repo_reference") or {}).get("description")
+    if ref:
+        out += [f"**Referência entre repositórios** — {_wrap(ref)}", ""]
+
+    out += [core_facts(rules), "", "## As leis inegociáveis, uma a uma", ""]
+    for key, value in rules.items():
+        if not (isinstance(value, dict) and value.get("iron_law")):
+            continue
+        out += [f"### {key}", "", f"**{value['iron_law']}**", ""]
+        for field in ("rule", "principle"):
+            if value.get(field):
+                out += [_wrap(value[field]), ""]
+        flags = ((value.get("red_flags") or {}).get("patterns")) or []
+        if flags:
+            out += ["Racionalizações que denunciam a violação acontecendo agora:", "",
+                    "| Se você pensar | A realidade |", "|---|---|"]
+            for f in flags:
+                out.append(f"| {_wrap(f.get('flag'))} | {_wrap(f.get('reality'))} |")
+            out.append("")
+
+    for key, title in (("registry", "Registry"),
+                       ("audit", "Auditoria de aderência"),
+                       ("handover_protocol", "Passagem de contexto entre sessões"),
+                       ("onboarding", "Onboarding de projeto existente"),
+                       ("incident_lifecycle", "Ciclo de vida de incidente")):
+        block = rules.get(key)
+        if not isinstance(block, dict):
+            continue
+        out += [f"## {title}", ""]
+        for field in ("purpose", "description", "principle", "trigger"):
+            if block.get(field):
+                out += [_wrap(block[field]), ""]
+        for sub, subval in block.items():
+            if sub in ("purpose", "description", "principle", "trigger"):
+                continue
+            if isinstance(subval, str):
+                out.append(f"- **{sub}**: {_wrap(subval)}")
+            elif isinstance(subval, list) and all(isinstance(i, str) for i in subval):
+                out.append(f"- **{sub}**: {', '.join(subval)}")
+            elif isinstance(subval, dict) and subval.get("description"):
+                out.append(f"- **{sub}**: {_wrap(subval['description'])}")
+        out.append("")
+
+    return "\n".join(out) + "\n"
+
+
+def build_changelog(rules: dict) -> str:
+    """CHANGELOG.md gerado de framework.changelog.
+
+    A cópia mantida à mão já tinha divergido: parava na 2.0.0 enquanto o
+    YAML declarava 2.1.0.
+    """
+    fw = rules.get("framework") or {}
+    out = [
+        "# Changelog",
+        "",
+        "Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de",
+        "`framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não",
+        "edite à mão — para registrar uma versão, acrescente a entrada no YAML.",
+        "",
+        f"Versão corrente: **{fw.get('version')}** (`{fw.get('last_updated')}`).",
+        "",
+    ]
+    entries = sorted(
+        fw.get("changelog") or [],
+        key=lambda e: [int(x) for x in str(e.get("version", "0")).split(".")],
+        reverse=True,
+    )
+    for entry in entries:
+        out += [f"## {entry.get('version')}", ""]
+        if entry.get("summary"):
+            out += [_wrap(entry["summary"]), ""]
+        else:
+            out += ["_Entrada sem `summary` no YAML — resumo ausente._", ""]
+    out.append(LEGACY_CHANGELOG)
+    return "\n".join(out)
+
+
 def write_full(path: Path, content: str, check: bool) -> bool:
     """Escreve (ou confere) um adaptador gerado por inteiro."""
+    if not check:
+        path.parent.mkdir(parents=True, exist_ok=True)
     if path.is_file() and path.read_text(encoding="utf-8") == content:
         print(f"✅ {path.name}: em dia.")
         return True

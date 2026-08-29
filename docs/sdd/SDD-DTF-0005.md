@@ -162,10 +162,23 @@ de projeto é alterado, nenhum dado migrado.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** não — mesma sessão que implementou. Não
+substitui a verificação independente exigida antes de `implemented`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `wc -l < README.md` | `67` (teto 90; antes eram 280) | medição direta | sim |
+| 2 | `grep -c` dos três caminhos no README | `5` ocorrências dos três alvos | medição direta | sim |
+| 3 | `render_prompts.py` e `render_prompts.py --check` | `especificacao.md: gerado` (195 linhas), `CHANGELOG.md: gerado` (52); `--check` exit 0 | ver #4 | sim |
+| 4 | linha intrusa em `docs/especificacao.md`, `--check`, regenerar | `exit=1` | **é o sensor**: edição manual do gerado reprova | sim |
+| 5 | `grep -c "Iron Law\|red flag\|sizing\|handover" docs/especificacao.md` | `4` (mínimo 4) | medição direta | sim |
+| 6 | `test ! -f Framework_Documentacao_Rastreabilidade.md` | removido no kit e no central | ausência é o sinal | sim |
+| 7 | `grep -c "2.1.0" CHANGELOG.md` | `2` — a cópia à mão parava na 2.0.0 | comparação com o estado anterior | sim |
+| 8 | `ls docs/guias/` e `grep -l "regra canônica"` | 3 arquivos, os 3 com o aviso | inspeção direta | sim |
+| 9 | `check_renderings.py` nos dois repositórios | `0` linhas "quebrado" | ver #10 | sim |
+| 10 | link para `docs/nao-existe.md` acrescentado ao README; check; removido com `sed` | `1` quebrado, depois `0`; README segue com 67 linhas | **é o sensor**. `sed` em vez de `git checkout`, conforme a instrução — na primeira tentativa o `git checkout` apagou o README novo | sim |
+| 11 | `framework_check.py --auto` nos dois repositórios | `✅ Todas as verificações do framework passaram` | validador é o teste | sim |
+| 12 | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída | diff vazio é o sinal | sim |
 
 ## Rastreabilidade
 
