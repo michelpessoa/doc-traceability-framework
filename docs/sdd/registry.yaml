@@ -61,3 +61,13 @@ documents:
     relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
     path: "docs/sdd/SDD-DTF-0006.md"
     tags: [neutralidade, memoria, adocao]
+  - id: SDD-DTF-0007
+    type: SDD
+    title: "Adaptadores por fornecedor gerados integralmente"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006]
+    path: "docs/sdd/SDD-DTF-0007.md"
+    tags: [neutralidade, adocao, geracao]
