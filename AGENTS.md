@@ -89,6 +89,17 @@ INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
    de fato, com o comando e a saída real registrados na SDD. Nunca
    "deve passar", nunca resultado de memória.
 
+## Ainda não tenho repositório de código
+
+Modo greenfield: STRAT, RFC, ADR e SPEC rodam inteiros no repositório
+central. Declare `repository_status: none_yet` no `registry.yaml` do
+projeto — sem isso o estado é assumido, não registrado. SDD fica
+bloqueada enquanto durar, porque SDD vive em `docs/sdd/` do repositório
+de projeto; isso não dispensa gate algum, apenas não há código ainda.
+Ao criar o repositório, num único ato: preencha `repository` com a URL
+e `repository_status: active` no central, e crie `docs/sdd/registry.yaml`
+vazio no repositório novo.
+
 `large` e `complex` acrescentam RFC e ADR antes da SPEC — leia
 `_framework/rules/workflow-rules.yaml` (seções `decision_gates` e
 `sizing`) antes de conduzir um desses.

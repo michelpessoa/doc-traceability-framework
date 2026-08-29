@@ -22,7 +22,22 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import iter_documents, read_frontmatter, report  # noqa: E402
+from framework_lib import (  # noqa: E402
+    iter_documents,
+    project_version,
+    read_frontmatter,
+    report,
+    rule_applies,
+)
+
+# Em que versão cada exigência do gate 16 entrou. Mesma mecânica de
+# validate_doc.RULE_SINCE: regra não vale retroativamente, projeto mapeado
+# sob 1.6.0 não é reprovado por regra da 1.7.0
+# (lessons_policy.non_retroactive). As duas nasceram com a seção 16.
+RULE_SINCE = {
+    "evidence_required": "1.7.0",
+    "scope_checklist": "1.7.0",
+}
 
 # Frases que denunciam evidência de memória em vez de execução — o
 # evidence_standard da seção 16 rejeita exatamente isto.
@@ -68,8 +83,13 @@ def section_body(body: str, heading: str) -> str | None:
     return m.group(1) if m else None
 
 
-def check_sdd(path: Path) -> tuple[list, list]:
+def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
     problems, warnings = [], []
+    if version is None:
+        version = project_version(path)
+
+    def applies(rule: str) -> bool:
+        return rule_applies(RULE_SINCE[rule], version)
 
     try:
         fm, body = read_frontmatter(path)
@@ -93,21 +113,35 @@ def check_sdd(path: Path) -> tuple[list, list]:
     if status != "implemented":
         # Antes de `implemented` a evidência ainda pode estar vazia — o que
         # não pode é a SDD nem ter as seções que o gate vai exigir depois.
-        if evidence is None:
+        if evidence is None and applies("evidence_required"):
             warnings.append(f"{doc_id}: sem seção 'Evidência de verificação' (será exigida em implemented).")
-        if scope is None:
+        if scope is None and applies("scope_checklist"):
             warnings.append(f"{doc_id}: sem seção 'Verificação de escopo' (será exigida em implemented).")
         return problems, warnings
 
-    # --- daqui para baixo: status == implemented, o gate vale integralmente ---
+    # --- daqui para baixo: status == implemented ---
+    # O gate vale integralmente, mas só a partir da versão em que cada
+    # exigência entrou: projeto mapeado antes dela não é reprovado.
 
+    if applies("evidence_required"):
+        problems += check_evidence(doc_id, evidence, n_criteria)
+
+    if applies("scope_checklist"):
+        problems += check_scope(doc_id, scope)
+
+    return problems, warnings
+
+
+def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
+    """gate_scope_verification item 4: a tabela existe, cobre cada critério
+    e cita comando rodado — não resultado assumido."""
     if evidence is None:
-        problems.append(
+        return [
             f"{doc_id}: status `implemented` sem seção 'Evidência de verificação' "
             "— gate_scope_verification item 4."
-        )
-        return problems, warnings
+        ]
 
+    problems = []
     rows = table_rows(evidence)
     if not rows:
         problems.append(
@@ -132,18 +166,23 @@ def check_sdd(path: Path) -> tuple[list, list]:
         if len(row) >= 2 and not row[1].strip():
             problems.append(f"{doc_id}: linha de evidência sem comando rodado.")
 
+    return problems
+
+
+def check_scope(doc_id: str, scope: str | None) -> list:
+    """gate_scope_verification itens 1-3: a checklist existe e está toda
+    marcada."""
     if scope is None:
-        problems.append(
+        return [
             f"{doc_id}: status `implemented` sem seção 'Verificação de escopo' "
             "— gate_scope_verification itens 1-3."
-        )
-    elif CHECKBOX_UNCHECKED.search(scope):
-        problems.append(
+        ]
+    if CHECKBOX_UNCHECKED.search(scope):
+        return [
             f"{doc_id}: 'Verificação de escopo' tem item não marcado e o status "
             "é `implemented`."
-        )
-
-    return problems, warnings
+        ]
+    return []
 
 
 def collect(targets) -> list[Path]:
