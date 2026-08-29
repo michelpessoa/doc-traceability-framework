@@ -95,10 +95,14 @@ _FALLBACK_STATUSES = {
     "implemented", "superseded", "archived",
 }
 _FALLBACK_INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
+# Arquivos que o framework manda criar dentro das pastas de documento mas
+# que não são documento: sem front-matter, sem id, fora do registry.
+_FALLBACK_OPERATIONAL_ARTIFACTS = ("LESSONS.md", "HANDOFF.md")
 
 
 def _derive_constants():
-    """Lê workflow-rules.yaml e devolve (tipos, status, status de incidente)."""
+    """Lê workflow-rules.yaml e devolve (tipos, status, status de incidente,
+    artefatos operacionais)."""
     try:
         rules = load_rules()
     except Exception:
@@ -112,10 +116,11 @@ def _derive_constants():
     types = active + [t for t in legacy if t not in active] or _FALLBACK_DOC_TYPES
     statuses = set((rules.get("status_lifecycle") or {}).get("states") or ()) or _FALLBACK_STATUSES
     incident = set((rules.get("incident_lifecycle") or {}).get("states") or ()) or _FALLBACK_INCIDENT_STATUSES
-    return types, statuses, incident
+    artifacts = tuple(rules.get("operational_artifacts") or ()) or _FALLBACK_OPERATIONAL_ARTIFACTS
+    return types, statuses, incident, artifacts
 
 
-DOC_TYPES, VALID_STATUSES, INCIDENT_STATUSES = _derive_constants()
+DOC_TYPES, VALID_STATUSES, INCIDENT_STATUSES, OPERATIONAL_ARTIFACTS = _derive_constants()
 
 # Tipos ordenados por tamanho decrescente: sem isso a alternância do regex
 # casaria "TS" dentro de um id que começa com outro prefixo mais longo.
@@ -162,12 +167,14 @@ def read_frontmatter(path: Path):
 
 def iter_documents(docs_dir: Path):
     """
-    Percorre os .md de documento sob docs_dir, ignorando registry.md e
+    Percorre os .md de documento sob docs_dir, ignorando registry.md,
     qualquer arquivo dentro de templates/ (templates têm placeholder por
-    desenho — validar template como documento é falso positivo garantido).
+    desenho — validar template como documento é falso positivo garantido)
+    e os artefatos operacionais (LESSONS.md, HANDOFF.md), que o framework
+    manda criar sem front-matter.
     """
     for path in sorted(docs_dir.rglob("*.md")):
-        if path.name == "registry.md":
+        if path.name == "registry.md" or path.name in OPERATIONAL_ARTIFACTS:
             continue
         if "templates" in path.parts:
             continue
