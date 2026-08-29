@@ -336,7 +336,15 @@ empobrece o que está em `source_docs`. Ver `gate_content_quality` em
 | "Faltou um requisito pequeno, completo depois" | Faltando = parcial. Mantenha `approved` |
 | "O subagente relatou que passou" | Relato próprio não substitui verificação independente |
 
-Mecanizado por `_framework/scripts/validate_state.py`.
+> **QUEM IMPLEMENTOU NÃO VERIFICA.**
+
+Rode a skill `verify-sdd` numa sessão ou subagente separado da que
+implementou: ela confere requisito↔código nas duas direções, roda cada
+critério registrando comando e saída reais, e aplica o **sensor de
+discriminação** — quebrar o comportamento em espaço descartável e
+confirmar que o teste falha. Teste que passa com a implementação quebrada
+é ruído verde. Complemento mecânico:
+`_framework/scripts/validate_state.py`.
 
 Antes de mover SDD de `approved` para `implemented`: todo requisito
 consolidado tem código correspondente (senão mantenha `approved`); todo

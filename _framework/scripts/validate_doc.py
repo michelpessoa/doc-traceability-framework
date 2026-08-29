@@ -15,8 +15,9 @@ Checa, por documento:
   2. Nenhum placeholder banido ("TBD", "definir depois", ...).
   3. `NEEDS CLARIFICATION` pendente não passa de in_review.
   4. Seções obrigatórias do tipo presentes.
-  5. PRD: todo requisito funcional tem RF-ID próprio.
-  6. TS: a seção de contratos aponta arquivo/módulo ("onde"), não só prosa.
+  5. SPEC/PRD: todo requisito funcional tem RF-ID próprio.
+  6. SPEC/PRD: todo critério de aceite está em notação EARS.
+  7. SPEC/TS: a seção de contratos aponta arquivo/módulo ("onde").
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
@@ -79,6 +80,23 @@ REQUIRED_SECTIONS = {
 # pelo item 1 do gate. "1." numerado não serve: não sobrevive a reordenação
 # e não dá para referenciar de um critério de aceite.
 RF_ID = re.compile(r"\bRF-?\d+\b")
+
+# EARS (Easy Approach to Requirements Syntax) — mesma notação adotada por
+# AWS Kiro e por tlc-spec-driven. Um critério de aceite precisa dizer, em
+# forma verificável, QUANDO vale e O QUE o sistema faz. As cinco formas:
+#
+#   ubíqua      "O sistema deve <resposta>"
+#   dirigida a evento   "Quando <gatilho>, o sistema deve <resposta>"
+#   dirigida a estado   "Enquanto <estado>, o sistema deve <resposta>"
+#   indesejada  "Se <condição>, então o sistema deve <resposta>"
+#   opcional    "Onde <capacidade>, o sistema deve <resposta>"
+#
+# A checagem é deliberadamente rasa: exige o verbo de obrigação (a
+# "resposta") e reconhece o gatilho quando existe. Não tenta interpretar
+# semântica — um validator que erra e reprova critério bom é pior que
+# nenhum.
+EARS_RESPONSE = re.compile(r"\b(deve|deverá|devem|deverão)\b", re.IGNORECASE)
+EARS_TRIGGER = re.compile(r"^\s*(quando|enquanto|se|onde|ao|após|dado que)\b", re.IGNORECASE)
 
 # "onde" de um contrato: caminho de arquivo com extensão, ou módulo com barra.
 FILE_HINT = re.compile(r"[\w./-]+\.(?:ts|tsx|js|jsx|py|go|rs|java|kt|rb|sql|yaml|yml|json|prisma|mjs)\b")
@@ -161,6 +179,13 @@ def check_document(path: Path) -> tuple[list, list]:
                 "(gate_content_quality item 1) — lista numerada não é id."
             )
 
+    if doc_type in ("PRD", "SPEC"):
+        # Rigor de EARS vale para SPEC (tipo novo). Em PRD legado é aviso:
+        # projeto mapeado sob 1.x não migra (lessons_policy.non_retroactive).
+        strict = doc_type == "SPEC"
+        for problem in check_ears(doc_id, section_body(body, "Requisitos funcionais")):
+            (problems if strict else warnings).append(problem)
+
     if doc_type in ("TS", "SPEC"):
         contracts = section_body(body, "Contratos técnicos")
         if contracts and not FILE_HINT.search(contracts):
@@ -170,6 +195,39 @@ def check_document(path: Path) -> tuple[list, list]:
             )
 
     return problems, warnings
+
+
+def check_ears(doc_id: str, section: str | None) -> list:
+    """
+    Checa a coluna "Critério de aceite" da tabela de requisitos funcionais
+    contra a notação EARS. Linha sem RF-ID ou sem critério preenchido é
+    ignorada — isso é trabalho do check de RF-ID, não deste.
+    """
+    if not section:
+        return []
+    problems = []
+    for line in section.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        rf_id, criterion = cells[0], cells[-1]
+        if not RF_ID.search(rf_id) or not criterion:
+            continue
+        if not EARS_RESPONSE.search(criterion):
+            problems.append(
+                f"{doc_id}: critério de {rf_id} não está em EARS — falta o verbo "
+                f"de obrigação ('deve'): '{criterion[:60]}'."
+            )
+        elif not EARS_TRIGGER.match(criterion) and not criterion.lower().startswith("o "):
+            problems.append(
+                f"{doc_id}: critério de {rf_id} não abre com gatilho EARS "
+                "(Quando/Enquanto/Se/Onde) nem com a forma ubíqua ('O sistema "
+                f"deve...'): '{criterion[:60]}'."
+            )
+    return problems
 
 
 def collect(targets) -> list[Path]:

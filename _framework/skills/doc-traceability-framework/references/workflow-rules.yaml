@@ -772,6 +772,8 @@ capabilities:
     description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
   - id: enforce_scope_verification
     description: "Antes de mover uma SDD para implemented, rodar gate_scope_verification (seção 16): confirmar que todo requisito consolidado foi implementado, que todo arquivo tocado está listado na SDD, que não há código extra sem requisito correspondente, e preencher a tabela de evidência de verificação com comando+saída reais desta sessão — nunca marcar critério como passado de memória."
+  - id: verify_sdd_independently
+    description: "Executar a skill `verify-sdd` antes de mover uma SDD para implemented: conferir requisito↔código nas duas direções, rodar cada critério de aceite registrando comando e saída reais desta sessão, aplicar o sensor de discriminação a cada critério com teste automatizado, e escrever validation.md com veredito PASS/FAIL. Quem implementou não verifica."
   - id: write_handover
     description: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso), gerar um HANDOFF.md (skill handover, seção 17) no repositório correto, com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer — para que a sessão seguinte (skill pickup) retome sem herdar o histórico completo."
 
@@ -957,10 +959,17 @@ gate_content_quality:
     diretamente da qualidade do PRD/TS de onde foi compilada.
   rule: >
     OBRIGATÓRIO antes de mover PRD/TS/SDD de `draft` para `in_review`:
-      1. Todo requisito funcional (PRD) tem RF-ID próprio e critério de
-         aceite verificável objetivamente (número, condição, valor
-         esperado) — não um bucket solto de critérios desconectado dos
-         requisitos.
+      1. Todo requisito funcional (SPEC, Parte 1) tem RF-ID próprio e
+         critério de aceite em notação EARS — não um bucket solto de
+         critérios desconectado dos requisitos. EARS dá a gramática que
+         "verificável objetivamente" não dava sozinho, e é a mesma notação
+         de AWS Kiro e tlc-spec-driven:
+           ubíqua            "O sistema deve <resposta>"
+           dirigida a evento "Quando <gatilho>, o sistema deve <resposta>"
+           dirigida a estado "Enquanto <estado>, o sistema deve <resposta>"
+           indesejada        "Se <condição>, então o sistema deve <resposta>"
+           opcional          "Onde <capacidade>, o sistema deve <resposta>"
+         Em PRD legado (projeto sob 1.x) isto é aviso, não erro.
       2. Todo contrato técnico (Tech Spec) tem assinatura/schema exato e
          aponta o arquivo/módulo onde vive ("onde") — não descrição em
          prosa livre do tipo "no serviço de X".
@@ -1052,6 +1061,24 @@ gate_scope_verification:
          evidência correspondente. "Deve passar" ou resultado assumido de
          memória não satisfaz este item; rode o comando de novo se não
          tiver certeza de quando rodou pela última vez.
+      5. A verificação é feita por quem NÃO implementou (skill
+         `verify-sdd`, sessão ou subagente separado, sem herdar o
+         histórico da sessão de implementação). Quem escreveu o código tem
+         o resultado como conclusão desejada. Quando for inevitável ser a
+         mesma sessão, isso é declarado na tabela — verificação não
+         independente é dado mais fraco, e o humano precisa saber.
+      6. Todo critério com teste automatizado passa pelo sensor de
+         discriminação: introduzir uma falha de comportamento real em
+         espaço descartável (stash/cópia/worktree, nunca commit), confirmar
+         que o teste FALHA, e desfazer. Teste que passa com a implementação
+         quebrada não verifica nada — é ruído verde. Critério sem teste
+         automatizado é declarado como tal, nunca marcado como verificado
+         por leitura de código.
+  mechanized_by: >
+    _framework/scripts/validate_state.py para o que é checável de fora
+    (tabela preenchida, uma linha por critério, sem resultado assumido) e
+    a skill `verify-sdd` para o que exige julgamento (conformidade nas duas
+    direções, execução dos comandos, sensor de discriminação).
   evidence_standard: >
     Mesmo padrão de rigor de "evidência antes de afirmação" — nenhuma
     reivindicação de conclusão (`implemented`, "critério atendido",

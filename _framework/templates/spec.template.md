@@ -39,11 +39,19 @@ tags: []
 # Parte 1 — Requisito (o QUÊ)
 
 ## Requisitos funcionais
-Cada requisito tem **RF-ID próprio** e critério de aceite verificável
-objetivamente (número, condição, valor esperado) — não "deve funcionar
-bem", e não um bucket solto de critérios no fim do documento.
+Cada requisito tem **RF-ID próprio** e critério de aceite em **notação
+EARS** — não "deve funcionar bem", e não um bucket solto de critérios no
+fim do documento. As cinco formas:
 
-| RF-ID | Requisito | Critério de aceite |
+| Forma | Molde |
+|---|---|
+| ubíqua | O sistema deve `<resposta>` |
+| dirigida a evento | Quando `<gatilho>`, o sistema deve `<resposta>` |
+| dirigida a estado | Enquanto `<estado>`, o sistema deve `<resposta>` |
+| indesejada | Se `<condição>`, então o sistema deve `<resposta>` |
+| opcional | Onde `<capacidade>`, o sistema deve `<resposta>` |
+
+| RF-ID | Requisito | Critério de aceite (EARS) |
 |---|---|---|
 | RF01 | | |
 
@@ -121,7 +129,7 @@ dependência operacional (acesso, ambiente, terceiro).
 Rode como último passo antes de propor a mudança de status. Checagem
 mecânica equivalente: `python3 _framework/scripts/validate_doc.py <este arquivo>`.
 
-- [ ] Todo requisito tem RF-ID próprio e critério de aceite verificável.
+- [ ] Todo requisito tem RF-ID próprio e critério de aceite em EARS.
 - [ ] Todo contrato tem assinatura/schema exato e arquivo/módulo (onde).
 - [ ] Todo RF tem tratamento de erro mapeado na Parte 2.
 - [ ] Todo critério de aceite tem teste correspondente na estratégia de teste.
