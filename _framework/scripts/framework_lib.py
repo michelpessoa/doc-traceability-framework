@@ -173,6 +173,35 @@ def iter_documents(docs_dir: Path):
 # Registry
 # ---------------------------------------------------------------------------
 
+def project_version(path: Path) -> str | None:
+    """
+    Versão do framework sob a qual o projeto DONO deste arquivo opera —
+    campo `framework_version` do registry.yaml mais próximo subindo a
+    árvore. É o que torna a não-retroatividade mecânica: uma regra
+    introduzida na 1.7.0 não pode reprovar documento de projeto mapeado
+    sob 1.6.0.
+    """
+    for parent in [path if path.is_dir() else path.parent, *path.resolve().parents]:
+        registry = parent / "registry.yaml"
+        if registry.is_file():
+            data = yaml.safe_load(registry.read_text(encoding="utf-8")) or {}
+            version = data.get("framework_version")
+            return str(version) if version else None
+    return None
+
+
+def rule_applies(rule_since: str, project: str | None) -> bool:
+    """
+    Uma regra vale para um documento se o projeto opera sob uma versão
+    igual ou posterior à que introduziu a regra. Projeto sem versão
+    declarada é tratado como atual — declarar é responsabilidade do
+    registry, e o validator já reclama da ausência.
+    """
+    if not project:
+        return True
+    return version_key(project) >= version_key(rule_since)
+
+
 def load_registry(docs_dir: Path):
     """Retorna (dados_do_registry, {id: entrada})."""
     path = docs_dir / "registry.yaml"

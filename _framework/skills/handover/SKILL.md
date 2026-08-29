@@ -21,7 +21,7 @@ novo — só o necessário para continuar.
 
 ## Quando usar
 
-- Planejamento terminou (PRD/Tech Spec/SDD compilados e no status
+- Planejamento terminou (SPEC/SDD compilados e no status
   correto) e a implementação vai rodar em sessão ou agente separado.
 - Uso de contexto da sessão atual está perto do limite que o usuário
   configurou (padrão sugerido: ~45%) e ainda há trabalho do fluxo pela
@@ -42,7 +42,7 @@ seção 1) — o local do handover segue a mesma regra:
    código): escreva em `<repo_do_projeto>/HANDOFF.md`, junto de
    `docs/sdd/`.
 2. **Handover entre etapas de documentação** (ex.: RFC/ADR redigidos,
-   PRD/Tech Spec ainda pendentes): escreva em
+   SPEC ainda pendentes): escreva em
    `<repo_central>/docs/{PROJECT_CODE}/HANDOFF.md`.
 
 Sempre sobrescreva no lugar — não acumule versões antigas de HANDOFF. O
@@ -68,8 +68,7 @@ _Escopo: <repo central | repo do projeto: nome>_
 
 ## Ids relacionados
 - SDD-{PROJECT_CODE}-{SEQ} — <status atual>
-- TS-{PROJECT_CODE}-{SEQ} — <status atual>
-- PRD-{PROJECT_CODE}-{SEQ} — <status atual>
+- SPEC-{PROJECT_CODE}-{SEQ} — <status atual>
 (Referencie por id, não copie o conteúdo do documento — quem retomar lê
 o original quando precisar de detalhe.)
 

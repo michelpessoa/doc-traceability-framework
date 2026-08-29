@@ -8,7 +8,7 @@
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
-Doc, RFC, ADR, PRD e Tech Spec de todos os projetos (histórico
+Doc, RFC, ADR e SPEC de todos os projetos (histórico
 institucional de decisões); este repositório de projeto guarda apenas as
 SDDs, em `docs/sdd/`, porque é o único documento pensado para orientar a
 IA no momento de implementar.
@@ -19,7 +19,7 @@ IA no momento de implementar.
   (ex.: `SDD-CHECKOUT-0003`), sequenciais dentro deste repositório.
 - Front-matter obrigatório: `id, type, title, status, project, owner,
   created, updated, relates_to, supersedes, superseded_by, tags`, mais
-  `source_docs` (lista de `{id, url}` apontando para o PRD/TS/ADR de
+  `source_docs` (lista de `{id, url}` apontando para a SPEC/ADR de
   origem no repositório central — a url é obrigatória, pois esses
   documentos não estão neste repositório), `ai_targets` e
   `consumption_instructions`.
@@ -39,9 +39,9 @@ IA no momento de implementar.
 ## Antes de gerar código (gate obrigatório, não opcional)
 Verifique se existe uma SDD `approved`/`implemented` em `docs/sdd/` para
 a feature em questão. **Se não existir, NÃO implemente** — mesmo que
-você consiga ver um ADR ou PRD/Tech Spec referenciado em outro lugar,
+você consiga ver um ADR ou SPEC referenciado em outro lugar,
 ou até o próprio pedido pareça claro o suficiente para começar. Avise o
-usuário que falta a SDD (e, se for o caso, o PRD/Tech Spec de origem no
+usuário que falta a SDD (e, se for o caso, a SPEC de origem no
 repositório central) e peça para ela ser criada/compilada primeiro — um
 ADR com "Consequências" detalhada não é especificação suficiente (ver
 `_framework/rules/workflow-rules.yaml`, seção 13,
@@ -49,7 +49,7 @@ ADR com "Consequências" detalhada não é especificação suficiente (ver
 confirmar explicitamente que quer pular o gate, sabendo que está
 violando a regra.
 
-Se a SDD referenciar um ADR/PRD/Tech Spec e você precisar de mais
+Se a SDD referenciar um ADR ou SPEC e você precisar de mais
 contexto, siga a `url` em `source_docs` até o repositório central — não
 tente adivinhar o conteúdo.
 
@@ -61,7 +61,7 @@ repositório. Antes do primeiro commit:
    `feat/ADR-EVM-0011-controle-estoque`, `sdd/SDD-EVM-0009`).
 2. Commite nessa branch, nunca em main.
 3. Leve o resultado a main por PR, referenciando os ids relacionados
-   (RFC/ADR/PRD/TS/SDD) no corpo — não faça merge do PR sozinho sem
+   (RFC/ADR/SPEC/SDD) no corpo — não faça merge do PR sozinho sem
    sinal do humano responsável, salvo instrução explícita em contrário.
 
 Ver `_framework/rules/workflow-rules.yaml`, seção 14,
@@ -84,13 +84,13 @@ Ao terminar o planejamento antes de outra sessão implementar, ou perto de
 ~45% de uso de contexto com trabalho pela frente: gere `HANDOFF.md` na
 raiz deste repositório (seções fixas: Goal, Status, Ids relacionados,
 Files touched, Key decisions, Open threads/blockers, Next step, Don't
-do), referenciando ids (SDD-X, TS-X, PRD-X) em vez de reescrever
+do), referenciando ids (SDD-X, SPEC-X, ADR-X) em vez de reescrever
 conteúdo — a próxima sessão lê os documentos originais quando precisar de
 detalhe. Ver `handover_protocol`, `_framework/rules/workflow-rules.yaml`
 seção 17.
 
 ## O que NÃO fazer aqui
-Não crie Strategy Doc, RFC, ADR, PRD ou Tech Spec neste repositório —
+Não crie Strategy Doc, RFC, ADR ou SPEC neste repositório —
 esses tipos pertencem ao repositório central, onde passam pelo gate de
 decisão RFC→ADR (5 critérios objetivos — ver
 `_framework/rules/workflow-rules.yaml`). Se o pedido for para um projeto
@@ -119,7 +119,7 @@ divergência com qualquer texto abaixo ou acima, o YAML manda.
 
 ### Leis inegociáveis
 
-- **NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM.** (`gate_implementation_before_code`)
+- **NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM.** (`gate_implementation_before_code`)
 - **NENHUM COMMIT DE IMPLEMENTAÇÃO DIRETO EM MAIN.** (`gate_branch_before_commit`)
 - **NENHUM DOCUMENTO VAI A in_review COM PLACEHOLDER OU AMBIGUIDADE PENDENTE.** (`gate_content_quality`)
 - **NENHUM implemented SEM COMANDO RODADO NESTA SESSÃO E SAÍDA REAL.** (`gate_scope_verification`)
