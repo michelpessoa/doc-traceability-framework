@@ -48,7 +48,8 @@ gerados. Desta etapa decorrem duas consequências diretas:
 Da Parte 1 de `SPEC-DTF-0001`, apenas os RFs da etapa 0:
 
 - **RF01** — `AGENTS.md` gerado na raiz cobre o caminho `small` e
-  `medium` completo: tipos de documento ativos, as quatro Iron Laws, os
+  `medium` completo: tipos de documento ativos, todas as Iron Laws
+  declaradas no YAML (seis na v2.1.0), os
   níveis de sizing e o ciclo de status, em no máximo 120 linhas.
 - **RF02** — `QUICKSTART.md` de no máximo 80 linhas, citando `AGENTS.md`,
   o comando de validação e o fluxo `small`, sem citar tipo ou status
@@ -119,7 +120,7 @@ remoção de `ai_targets`.
 |---|---|---|---|
 | 1 | RF01 — `AGENTS.md` gerado e em dia | `python3 _framework/scripts/render_prompts.py && python3 _framework/scripts/render_prompts.py --check` | Sai 0 nas duas execuções |
 | 2 | RF01 — limite de tamanho | `wc -l < AGENTS.md` | Valor ≤ 120 |
-| 3 | RF01 — conteúdo do caminho comum | `grep -c -E "small\|medium\|SDD\|SPEC" AGENTS.md` | ≥ 4 ocorrências, e leitura confirma as quatro Iron Laws presentes |
+| 3 | RF01 — conteúdo do caminho comum | `grep -c -E "small\|medium\|SDD\|SPEC" AGENTS.md` | ≥ 4 ocorrências, e `check_renderings.py` confirma todas as Iron Laws do YAML presentes |
 | 4 | RF02 — `QUICKSTART.md` dentro do limite | `wc -l < QUICKSTART.md` | Valor ≤ 80 |
 | 5 | RF02 — não cita tipo/status inexistente | `python3 _framework/scripts/check_renderings.py` | Sai 0 |
 | 6 | RF03 — PRD e TS fora do schema | `python3 -c "import yaml;d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml'))['document_types'];assert 'PRD' not in d and 'TS' not in d"` | Sai 0, sem AssertionError |
