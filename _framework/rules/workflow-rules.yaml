@@ -665,7 +665,28 @@ registry:
         Preenchido no onboarding (phase_1_baseline, step 2.1) ou, para
         projeto novo, na criação do registry.yaml (ver multi_project).
         Nunca deve ser inferido/adivinhado pela IA — se ausente, pergunta
-        ao usuário.
+        ao usuário. Desde a v2.1.0 a ausência tem dois motivos diferentes,
+        distinguidos pelo campo `repository_status`: o repositório de
+        código ainda não existe (modo greenfield, estado legítimo e
+        permanente enquanto durar), ou existe e ninguém preencheu (lacuna
+        a corrigir). Sem `repository_status` declarado, a ausência é
+        tratada como greenfield ASSUMIDO — e o aviso diz que foi
+        assumido, não declarado.
+      states:
+        active: >
+          O repositório de código existe e sua URL está em `repository`.
+          É o estado normal.
+        none_yet: >
+          Modo greenfield: o projeto ainda não tem repositório de código.
+          O fluxo de decisão (STRAT, RFC, ADR, SPEC) roda inteiro no
+          repositório central. SDD não pode ser criada enquanto durar,
+          porque SDD vive em docs/sdd/ do repositório de projeto — e isso
+          não dispensa gate_implementation_before_code: sem repositório
+          não há código a escrever.
+      leaving_greenfield: >
+        Dois passos, um único ato: (1) preencher `repository` com a URL e
+        `repository_status: active` no registry central; (2) criar
+        docs/sdd/registry.yaml vazio no repositório novo.
   project_registry:
     path: "docs/sdd/registry.yaml"
     human_readable_view: "docs/sdd/registry.md"
@@ -689,15 +710,21 @@ multi_project:
   approach: "kit de templates versionado + repositório central único"
   instructions: >
     _framework/ existe em UMA cópia só, dentro do repositório central.
-    Para adicionar um projeto novo: criar docs/{PROJECT_CODE}/ no
-    repositório central com as subpastas de document_types (exceto SDD) e
-    um registry.yaml com o campo `repository` já preenchido com a URL do
-    repositório de código do projeto (perguntar ao usuário se não for
-    informada — nunca adivinhar, ver registry.central_registry.repository_field);
-    e, no repositório de código do projeto, criar docs/sdd/ com seu
-    próprio registry.yaml vazio. As regras de negócio (gate, lifecycle,
-    schema, severidade) NÃO mudam entre projetos — apenas o PROJECT_CODE e
-    o conteúdo dos documentos.
+    Para adicionar um projeto novo, em duas etapas — a segunda é
+    CONDICIONAL, e não ter repositório de código não impede começar.
+    Etapa 1 (sempre): criar docs/{PROJECT_CODE}/ no repositório central
+    com as subpastas de document_types (exceto SDD) e um registry.yaml.
+    Se o repositório de código já existir, preencher `repository` com a
+    URL e `repository_status: active` (perguntar ao usuário se não for
+    informada — nunca adivinhar, ver
+    registry.central_registry.repository_field); se ainda não existir,
+    declarar `repository_status: none_yet` e seguir — o fluxo STRAT, RFC,
+    ADR e SPEC roda inteiro sem ele.
+    Etapa 2 (condicional, quando o repositório de código existir): criar
+    docs/sdd/ com seu próprio registry.yaml vazio, e atualizar o registry
+    central conforme registry.central_registry.repository_field.leaving_greenfield.
+    As regras de negócio (gate, lifecycle, schema, severidade) NÃO mudam
+    entre projetos — apenas o PROJECT_CODE e o conteúdo dos documentos.
   versioning: >
     Mudanças no framework são feitas uma única vez em
     _framework/rules/workflow-rules.yaml (fonte canônica) e versionadas em
@@ -718,6 +745,13 @@ multi_project:
 # mecanismo de reconstrução do onboarding (seção 4) em vez de criar um
 # processo novo.
 audit:
+  precondition: >
+    A auditoria lê o campo `repository` do registry central para saber
+    qual repositório varrer. Se ele estiver ausente, a IA DECLARA que o
+    projeto não tem repositório de código registrado e PARA, perguntando
+    ao usuário — nunca infere, adivinha ou deduz a URL a partir do nome do
+    projeto. Quando `repository_status: none_yet`, não há o que auditar:
+    o projeto está em modo greenfield e ainda não produziu commit algum.
   purpose: >
     Detectar, depois do fato, quais commits/PRs do repositório de um
     projeto não têm nenhum documento do framework por trás — sem travar

@@ -102,12 +102,10 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
                 problems.append(f"{did}: source_docs aponta para id inexistente '{sid}'")
 
     warnings = []
-    if mode == "central" and not data.get("repository"):
-        warnings.append(
-            "registry.yaml não tem o campo `repository` (URL do repositório "
-            "de código do projeto) — a auditoria vai precisar perguntar antes "
-            "de rodar."
-        )
+    if mode == "central":
+        rp, rw = check_repository_state(data)
+        problems += rp
+        warnings += rw
 
     problems += check_framework_version(data, docs_dir, warnings)
     problems += check_documents_on_disk(docs_dir, data, docs, warnings)
@@ -119,6 +117,55 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
         "nenhum problema encontrado).",
         report_only=report_only,
     )
+
+
+REPOSITORY_STATES = ("active", "none_yet")
+
+
+def check_repository_state(data: dict) -> tuple[list, list]:
+    """Estado do repositório de código declarado no registry central.
+
+    Função pura: recebe o registry já carregado, não lê disco. Desde a
+    v2.1.0 a ausência de `repository` tem dois motivos distintos — o
+    repositório ainda não existe (modo greenfield, legítimo) ou existe e
+    ninguém preencheu — e o aviso precisa dizer qual dos dois está
+    registrado, em vez de tratar os dois como a mesma lacuna.
+    """
+    problems, warnings = [], []
+    url = (data.get("repository") or "").strip() if isinstance(data.get("repository"), str) else data.get("repository")
+    status = data.get("repository_status")
+
+    if status is not None and status not in REPOSITORY_STATES:
+        problems.append(
+            f"registry.yaml: `repository_status` com valor inválido '{status}' — "
+            f"aceitos: {', '.join(REPOSITORY_STATES)}."
+        )
+        return problems, warnings
+
+    if url:
+        if status == "none_yet":
+            problems.append(
+                "registry.yaml: `repository_status: none_yet` contradiz o campo "
+                "`repository`, que está preenchido. Corrija um dos dois — se o "
+                "repositório existe, use `repository_status: active`."
+            )
+        return problems, warnings
+
+    if status == "none_yet":
+        warnings.append(
+            "registry.yaml sem `repository`: modo greenfield DECLARADO "
+            "(`repository_status: none_yet`) — o projeto ainda não tem "
+            "repositório de código. SDD não pode ser criada enquanto durar."
+        )
+    else:
+        warnings.append(
+            "registry.yaml não tem o campo `repository` (URL do repositório "
+            "de código do projeto) e não declara `repository_status` — modo "
+            "greenfield ASSUMIDO, não declarado. Se o repositório já existe, "
+            "preencha `repository`; se ainda não existe, declare "
+            "`repository_status: none_yet`."
+        )
+    return problems, warnings
 
 
 def check_framework_version(data: dict, docs_dir: Path, warnings: list) -> list:

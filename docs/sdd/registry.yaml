@@ -11,3 +11,13 @@ documents:
     relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
     path: "docs/sdd/SDD-DTF-0001.md"
     tags: [adocao, neutralidade]
+  - id: SDD-DTF-0002
+    type: SDD
+    title: "Modo greenfield: registry sem repositório de código e textos de entrada"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-08-29"
+    updated: "2026-08-29"
+    relates_to: [SPEC-DTF-0002, SDD-DTF-0001]
+    path: "docs/sdd/SDD-DTF-0002.md"
+    tags: [adocao, greenfield]

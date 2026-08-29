@@ -28,6 +28,16 @@ lê `CLAUDE.md`. Não há prompt para colar a cada conversa.
 4. Antes de marcar `implemented`, rode os critérios de aceite e registre
    comando e saída reais na própria SDD.
 
+## Ainda não tenho repositório de código
+
+Dá para começar assim — chama-se modo greenfield. Crie
+`docs/{PROJECT_CODE}/` no repositório central e declare
+`repository_status: none_yet` no `registry.yaml`. O
+fluxo de decisão roda inteiro; só a SDD fica para depois, porque ela
+vive no repositório de código. Quando ele existir: preencha
+`repository` e `repository_status: active` no central, e crie
+`docs/sdd/registry.yaml` vazio no repositório novo.
+
 ## Validar a qualquer momento
 
 ```
