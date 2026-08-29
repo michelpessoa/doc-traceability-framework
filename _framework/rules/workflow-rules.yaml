@@ -856,9 +856,31 @@ capabilities:
   - id: enforce_scope_verification
     description: "Antes de mover uma SDD para implemented, rodar gate_scope_verification (seção 16): confirmar que todo requisito consolidado foi implementado, que todo arquivo tocado está listado na SDD, que não há código extra sem requisito correspondente, e preencher a tabela de evidência de verificação com comando+saída reais desta sessão — nunca marcar critério como passado de memória."
   - id: verify_sdd_independently
-    description: "Executar a skill `verify-sdd` antes de mover uma SDD para implemented: conferir requisito↔código nas duas direções, rodar cada critério de aceite registrando comando e saída reais desta sessão, aplicar o sensor de discriminação a cada critério com teste automatizado, e escrever validation.md com veredito PASS/FAIL. Quem implementou não verifica."
+    trigger: "Antes de mover uma SDD de approved para implemented."
+    produces: "validation.md ao lado da SDD, com veredito PASS/FAIL e tabela de evidência (comando, saída real, sensor, resultado)."
+    invariants:
+      - "Quem implementou não verifica — sessão ou subagente separado, contexto limpo."
+      - "Nenhum critério marcado como passado sem comando rodado nesta sessão e saída real."
+      - "Todo critério com teste automatizado passa pelo sensor de discriminação (falha introduzida, teste tem que falhar, depois volta a passar)."
+      - "FAIL não avança status — o descompasso volta para decisão humana."
+    procedure: "procedures/verify-sdd.md"
+  - id: pickup_handoff
+    trigger: "Início de sessão que encontra HANDOFF.md no repositório, ou pedido explícito de retomar trabalho anterior."
+    produces: "Continuidade do trabalho a partir do Next step do HANDOFF, sem reprocessar a sessão que o gerou."
+    invariants:
+      - "Disco vence resumo — todo arquivo de 'Files touched' que for alterado é relido do estado atual antes de editar."
+      - "Nenhum gate é pulado por causa do handover — SDD ainda precisa estar approved antes de implementar, branch ainda é obrigatória antes do commit."
+      - "'Don't do' do HANDOFF é respeitado, não retentado sem perguntar."
+    procedure: "procedures/pickup.md"
   - id: write_handover
-    description: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso), gerar um HANDOFF.md (skill handover, seção 17) no repositório correto, com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer — para que a sessão seguinte (skill pickup) retome sem herdar o histórico completo."
+    trigger: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso) com trabalho do fluxo ainda pela frente."
+    produces: "HANDOFF.md no repositório correto (projeto ou central, conforme o procedimento), com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer."
+    invariants:
+      - "Sobrescreve em lugar — não acumula versões antigas de HANDOFF."
+      - "Referencia documentos por id, nunca copia o conteúdo deles."
+      - "Nenhum segredo (credencial, token, .env) entra no arquivo."
+      - "Não avança nenhum gate por conta própria — só registra o status real."
+    procedure: "procedures/handover.md"
 
 ##############################################################################
 # 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD
@@ -1191,6 +1213,11 @@ gate_scope_verification:
 # github.com/vmihalis/claude-handover), adaptado para apontar aos ids do
 # framework em vez de reexplicar contexto em prosa.
 handover_protocol:
+  normative_source: >
+    Esta seção é resumo estrutural. O procedimento normativo completo
+    vive em _framework/procedures/handover.md (geração do HANDOFF.md) e
+    _framework/procedures/pickup.md (retomada) — em caso de divergência,
+    o procedimento manda.
   when_to_trigger:
     - "Planejamento terminou (SDD compilada e approved) e a implementação vai rodar em sessão/agente separado."
     - "Uso de contexto da sessão atual atinge ~45% (limite configurável pelo usuário) e ainda há trabalho do fluxo (documentar ou implementar) pela frente."

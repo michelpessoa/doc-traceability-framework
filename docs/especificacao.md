@@ -177,6 +177,7 @@ Sob demanda, quando alguém decide rodar — não é um gate de CI nem bloqueia 
 
 ## Passagem de contexto entre sessões
 
+- **normative_source**: Esta seção é resumo estrutural. O procedimento normativo completo vive em _framework/procedures/handover.md (geração do HANDOFF.md) e _framework/procedures/pickup.md (retomada) — em caso de divergência, o procedimento manda.
 - **when_to_trigger**: Planejamento terminou (SDD compilada e approved) e a implementação vai rodar em sessão/agente separado., Uso de contexto da sessão atual atinge ~45% (limite configurável pelo usuário) e ainda há trabalho do fluxo (documentar ou implementar) pela frente., Troca deliberada de sessão/agente no meio da implementação (ex.: subagente por tarefa, como em execução multi-agente).
 - **content_rule**: HANDOFF referencia ids do framework (SDD-X, TS-X, PRD-X) em vez de reescrever o conteúdo desses documentos — a sessão seguinte lê os documentos originais quando precisar de detalhe, o HANDOFF é só o mapa de "onde parei e o que fazer a seguir". Nunca duplica o que já está em source_docs ou nos Critérios de aceite da SDD.
 - **no_placeholder**: Mesma proibição do gate_content_quality (seção 15): "Status" e "Next step" não podem ser vagos ("fazer os ajustes pendentes") — precisam de ação literal e específica.
