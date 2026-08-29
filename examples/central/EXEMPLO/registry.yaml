@@ -1,19 +1,21 @@
 # docs/EXEMPLO/registry.yaml (repositório central)
 #
-# Cenário: projeto "EXEMPLO" (checkout), demonstrando os dois caminhos do
-# gate RFC->ADR. As SDDs deste projeto NÃO aparecem aqui — elas vivem no
-# repositório de projeto (ver ../../project-repo-checkout/docs/sdd/registry.yaml).
+# Cenário: projeto "EXEMPLO" (checkout), demonstrando os três caminhos que
+# o sizing (seção 19) abre — `large` com ADR, `medium` sem ADR, e `small`
+# indo direto para a SDD sem nenhum documento no repositório central.
+# As SDDs deste projeto NÃO aparecem aqui — vivem no repositório de
+# projeto (ver ../../project-repo-checkout/docs/sdd/registry.yaml).
 # Ver regras completas em _framework/rules/workflow-rules.yaml
 
 project: "EXEMPLO"
-framework_version: "1.7.0"
+framework_version: "2.0.0"
 # Registry de demonstração: as entradas representam o cenário, mas os .md
 # não fazem parte do kit (ver README, "Exemplos incluídos").
 demo: true
 repository: "https://github.com/org/exemplo-checkout"
 
 documents:
-  # --- Caso A: RFC que exige ADR ---
+  # --- Caso A: sizing `large` — o gate exige ADR ---
   - id: STRAT-EXEMPLO-0001
     type: STRAT
     title: "Reduzir tempo de checkout em 30%"
@@ -43,27 +45,18 @@ documents:
     owner: "arquitetura"
     created: "2026-08-06"
     updated: "2026-08-06"
-    relates_to: [RFC-EXEMPLO-0001, PRD-EXEMPLO-0001, TS-EXEMPLO-0001]
+    relates_to: [RFC-EXEMPLO-0001, SPEC-EXEMPLO-0001]
     parent_rfc: RFC-EXEMPLO-0001
     strategic_impact: false
     provenance: authored
     path: "docs/EXEMPLO/02-adr/ADR-EXEMPLO-0001.md"
 
-  - id: PRD-EXEMPLO-0001
-    type: PRD
+  # Uma SPEC só: requisito (Parte 1) e desenho (Parte 2) no mesmo arquivo.
+  # Até a v1.7.0 isto eram dois documentos, PRD e Tech Spec, com o mesmo
+  # autor, o mesmo parent e revisão conjunta.
+  - id: SPEC-EXEMPLO-0001
+    type: SPEC
     title: "Novo fluxo de checkout com Provedor X"
-    status: approved
-    owner: "time-produto"
-    created: "2026-08-07"
-    updated: "2026-08-07"
-    relates_to: [RFC-EXEMPLO-0001, ADR-EXEMPLO-0001, SDD-EXEMPLO-0001]
-    parent_rfc: RFC-EXEMPLO-0001
-    parent_adr: ADR-EXEMPLO-0001
-    path: "docs/EXEMPLO/03-prd/PRD-EXEMPLO-0001.md"
-
-  - id: TS-EXEMPLO-0001
-    type: TS
-    title: "Especificação técnica — integração com Provedor X"
     status: approved
     owner: "time-checkout"
     created: "2026-08-07"
@@ -71,9 +64,10 @@ documents:
     relates_to: [RFC-EXEMPLO-0001, ADR-EXEMPLO-0001, SDD-EXEMPLO-0001]
     parent_rfc: RFC-EXEMPLO-0001
     parent_adr: ADR-EXEMPLO-0001
-    path: "docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0001.md"
+    sizing: large
+    path: "docs/EXEMPLO/03-spec/SPEC-EXEMPLO-0001.md"
 
-  # --- Caso B: RFC que NÃO exige ADR (gate pula direto) ---
+  # --- Caso B: sizing `medium` — RFC aprovada, gate dispensa ADR ---
   - id: RFC-EXEMPLO-0002
     type: RFC
     title: "Adicionar campo opcional de apelido no formulário de endereço"
@@ -81,13 +75,13 @@ documents:
     owner: "time-checkout"
     created: "2026-08-10"
     updated: "2026-08-11"
-    relates_to: [PRD-EXEMPLO-0002, TS-EXEMPLO-0002]
+    relates_to: [SPEC-EXEMPLO-0002]
     requires_adr: false
     decision_gate_criteria_met: []
     path: "docs/EXEMPLO/01-rfc/RFC-EXEMPLO-0002.md"
 
-  - id: PRD-EXEMPLO-0002
-    type: PRD
+  - id: SPEC-EXEMPLO-0002
+    type: SPEC
     title: "Campo opcional de apelido no endereço de entrega"
     status: approved
     owner: "time-produto"
@@ -96,16 +90,15 @@ documents:
     relates_to: [RFC-EXEMPLO-0002, SDD-EXEMPLO-0002]
     parent_rfc: RFC-EXEMPLO-0002
     parent_adr: null
-    path: "docs/EXEMPLO/03-prd/PRD-EXEMPLO-0002.md"
+    sizing: medium
+    path: "docs/EXEMPLO/03-spec/SPEC-EXEMPLO-0002.md"
 
-  - id: TS-EXEMPLO-0002
-    type: TS
-    title: "Especificação técnica — campo apelido de endereço"
-    status: approved
-    owner: "time-checkout"
-    created: "2026-08-11"
-    updated: "2026-08-11"
-    relates_to: [RFC-EXEMPLO-0002, SDD-EXEMPLO-0002]
-    parent_rfc: RFC-EXEMPLO-0002
-    parent_adr: null
-    path: "docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0002.md"
+  # --- Caso C: sizing `small` ---
+  # Correção de uma máscara de CEP: toca 2 arquivos, nenhum critério do
+  # gate RFC->ADR se aplica, comportamento externo do produto não muda.
+  #
+  # Este caso NÃO tem entrada aqui, de propósito. Em `small` não existe
+  # RFC, ADR nem SPEC — só a SDD, no repositório do projeto
+  # (SDD-EXEMPLO-0003), e o vínculo com o código é o `Refs:` no commit.
+  # A ausência do documento É o registro de que a fase foi pulada; não se
+  # cria documento para declarar que outro não era necessário.

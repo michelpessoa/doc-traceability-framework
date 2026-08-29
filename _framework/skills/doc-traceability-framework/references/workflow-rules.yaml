@@ -133,7 +133,8 @@ framework:
 #         - _framework/ (este arquivo, templates, prompts, skill, scripts) —
 #           cópia ÚNICA, nunca duplicada por projeto.
 #         - docs/{PROJECT_CODE}/ para TODOS os projetos, mas somente os
-#           tipos "upstream": STRAT, RFC, ADR, PRD, TS, BASE, INC, PM.
+#           tipos "upstream": STRAT, RFC, ADR, SPEC, BASE, INC, PM
+#           (mais PRD e TS em projeto legado sob 1.x).
 #         - É o histórico institucional completo: por que cada decisão foi
 #           tomada, em qualquer projeto, desde sempre.
 #
@@ -152,7 +153,7 @@ framework:
 # projetos, uma só cópia da regra canônica).
 repository_topology:
   central_repo:
-    contains: ["_framework/", "docs/{PROJECT_CODE}/ (STRAT, RFC, ADR, PRD, TS, BASE, INC, PM)"]
+    contains: ["_framework/", "docs/{PROJECT_CODE}/ (STRAT, RFC, ADR, SPEC, BASE, INC, PM; PRD e TS em projeto legado)"]
     registry: "docs/{PROJECT_CODE}/registry.yaml (um por projeto, não um arquivo único gigante)"
     role: "Fonte da verdade de todas as decisões, de todos os projetos, para sempre."
   project_repo:
@@ -163,7 +164,7 @@ repository_topology:
     description: >
       Como o repositório de projeto não tem os arquivos do repositório
       central presentes localmente, toda referência de uma SDD a um
-      documento de origem (PRD, TS, ADR) DEVE incluir não só o id mas
+      documento de origem (SPEC, ADR) DEVE incluir não só o id mas
       também a URL completa do arquivo no repositório central — sem isso,
       a rastreabilidade quebra ao atravessar repositórios. Ver
       frontmatter_schema.type_specific_fields.SDD.source_docs.
@@ -218,7 +219,7 @@ document_types:
       - plano
       - metricas
     parent_types: ["STRAT", "PM"]     # PM = pode nascer de um action item de postmortem
-    can_originate: ["ADR", "PRD", "TS"]   # depende do gate, ver decision_gates
+    can_originate: ["ADR", "SPEC"]   # depende do gate, ver decision_gates
 
   ADR:
     name: "Architectural Decision Record"
@@ -232,7 +233,7 @@ document_types:
     template: "templates/adr.template.md"
     immutable_after_status: ["approved"]   # após aprovado, só pode ser superseded, nunca editado
     parent_types: ["RFC", "BASE"]   # BASE = origem quando o ADR é reconstruído no onboarding
-    can_originate: ["PRD", "TS"]
+    can_originate: ["SPEC"]
 
   SPEC:
     name: "Specification (requisito + desenho)"
@@ -329,7 +330,7 @@ document_types:
     folder: "docs/{PROJECT_CODE}/08-postmortems"
     template: "templates/pm.template.md"
     parent_types: ["INC"]
-    can_originate: ["RFC", "PRD", "TS"]   # ver seção 5 (triagem de action items)
+    can_originate: ["RFC", "SPEC"]   # ver seção 5 (triagem de action items)
 
 ##############################################################################
 # 3. FLUXO PRINCIPAL (TO-BE) E GATE DE DECISÃO
@@ -367,8 +368,8 @@ decision_gates:
       next_types: ["ADR"]
       rfc_field_update: { requires_adr: true }
     on_false:
-      next_step: "Seguir direto para PRD e/ou Tech Spec, sem ADR"
-      next_types: ["PRD", "TS"]
+      next_step: "Seguir direto para a SPEC, sem ADR"
+      next_types: ["SPEC"]
       rfc_field_update: { requires_adr: false }
     on_rejected:
       description: "Se a RFC for rejeitada, o fluxo encerra: status = rejected -> archived. Nenhum documento downstream é criado."
@@ -516,8 +517,8 @@ action_item_triage:
     RFC->ADR em vez de criar uma régua nova.
   small_direct_fix:
     description: "Ajuste pontual, bem entendido, sem nenhum critério do gate rfc_to_adr aplicável."
-    next_types: ["PRD", "TS"]
-    note: "Não passa por RFC — vira backlog direto."
+    next_types: ["SPEC"]
+    note: "Não passa por RFC — entra pelo sizing como small ou medium."
   structural_change:
     description: "Implica mudança que atenderia a pelo menos 1 critério de decision_gates.rfc_to_adr.criteria."
     next_types: ["RFC"]
@@ -791,7 +792,7 @@ capabilities:
 # seja o que efetivamente guia o código. Uma IA que pula essa ordem está,
 # na prática, tratando o framework como decorativo.
 gate_implementation_before_code:
-  iron_law: "NENHUMA LINHA DE CÓDIGO ANTES DE PRD/TS E SDD EXISTIREM."
+  iron_law: "NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM."
   red_flags:
     description: >
       Racionalizações que a IA usa para escapar deste gate. Se você se ouvir

@@ -36,7 +36,7 @@ Este SKILL.md resume o suficiente para operar no dia a dia.
 ## Modelo de dois repositórios — confirme onde você está antes de agir
 
 - **Repositório central**: guarda `docs/{PROJECT_CODE}/` de todos os
-  projetos, mas só os tipos STRAT, RFC, ADR, PRD, TS, BASE, INC, PM. É o
+  projetos, mas só os tipos STRAT, RFC, ADR, SPEC, BASE, INC, PM. É o
   histórico institucional completo, de todos os projetos, para sempre.
 - **Repositório de cada projeto** (o repositório de código): guarda
   apenas `docs/sdd/` — as SDDs desse projeto nascem e vivem ali, porque é
@@ -55,7 +55,7 @@ quebra o modelo inteiro.
 | ADR | Registro atômico e imutável de UMA decisão de arquitetura | central | `docs/{PROJETO}/02-adr/` |
 | SPEC | Requisito (o QUÊ) + desenho executável (o COMO/ONDE) num arquivo só | central | `docs/{PROJETO}/03-spec/` |
 | PRD, TS | **Legados** (fundidos em SPEC na v2.0.0). Só em projeto mapeado sob 1.x | central | `03-prd/`, `04-tech-spec/` |
-| SDD (Spec Driven Design) | Compilado de PRD+TS(+ADR), pronto para uma IA implementar código | **projeto** | `docs/sdd/` |
+| SDD (Spec Driven Design) | Compilado da SPEC (+ADR), pronto para uma IA implementar código | **projeto** | `docs/sdd/` |
 | BASE (Baseline) | Retrato do estado atual, só no onboarding de projeto já existente | central | `docs/{PROJETO}/06-baseline/` |
 | INC (Incidente) | Evento em produção, do início ao fechamento | central | `docs/{PROJETO}/07-incidents/` |
 | PM (Postmortem) | Análise pós-incidente e action items | central | `docs/{PROJETO}/08-postmortems/` |
@@ -92,8 +92,8 @@ verdadeiro: (1) introduz ou altera um padrão arquitetural; (2) decisão de
 alto custo ou difícil reversão; (3) trade-off técnico relevante entre
 alternativas viáveis; (4) impacto cross-team; (5) troca ou introdução de
 tecnologia/vendor/dependência externa relevante. Se algum for verdadeiro,
-crie um ADR antes de PRD/Tech Spec; se nenhum for, pule direto para
-PRD/Tech Spec. RFC rejeitada → `archived`, sem downstream. Registre
+crie um ADR antes da SPEC; se nenhum for, pule direto para a SPEC.
+RFC rejeitada → `archived`, sem downstream. Registre
 sempre `decision_gate_criteria_met` no front-matter da RFC.
 
 Quando a SPEC (e o ADR, se existir) estiver `approved`, compile a SDD
@@ -117,8 +117,8 @@ sendo violado agora:
 | "Já entendi o que fazer, documentar é burocracia" | A próxima sessão não herda o seu entendimento |
 
 Origem: um ADR foi aprovado e a implementação foi direto para o código,
-tratando a seção "Consequências" do ADR como spec suficiente — PRD, Tech
-Spec e SDD só foram escritos depois, retroativamente. Ver
+tratando a seção "Consequências" do ADR como spec suficiente — a
+especificação e a SDD só foram escritas depois, retroativamente. Ver
 `gate_implementation_before_code` em `references/workflow-rules.yaml`
 (seção 13).
 
@@ -148,11 +148,11 @@ desvio a tolerar. Única exceção: incidente ativo (`INC` em
 |---|---|
 | "É um commit só, branch é cerimônia" | Sem branch não há CI nem janela de revisão |
 | "Estou sozinho, não tem quem revisar" | O PR é onde os checks rodam e os ids ficam vinculados |
-| "Já tenho PRD/TS/SDD, o gate está cumprido" | Gates 13 e 14 são independentes |
+| "Já tenho SPEC e SDD, o gate está cumprido" | Gates 13 e 14 são independentes |
 | "Faço o merge local e abro o PR depois" | Depois do merge não existe PR a abrir |
 | "Abri o PR, então posso mergear" | Mergear precisa de sinal do humano responsável |
 
-Origem: segundo gap do mesmo incidente — mesmo com PRD/TS/SDD prontos, o
+Origem: segundo gap do mesmo incidente — mesmo com a especificação e a SDD prontas, o
 código foi commitado direto na branch main do repositório de projeto, sem
 branch dedicada nem PR. Ver `gate_branch_before_commit` em
 `references/workflow-rules.yaml` (seção 14).
@@ -175,7 +175,7 @@ dedicada (ex.: `hotfix/INC-EVM-0003`) a commit direto em main.
 ## Ciclo de vida de status
 
 `draft → in_review → approved → implemented|rejected|superseded →
-archived` para STRAT, RFC, ADR, PRD, TS, SDD, BASE e PM. Um ADR
+archived` para STRAT, RFC, ADR, SPEC, SDD, BASE e PM. Um ADR
 `approved` é imutável — mudança de entendimento gera um **novo** ADR.
 
 INC é a exceção: usa `open → mitigated → resolved → closed`, porque é um
@@ -190,7 +190,7 @@ gera um único `BASE` (retrato do estado atual) e propõe ADRs
 reconstruídos (`provenance: reconstructed`, sempre começando em
 `in_review`, nunca `approved` sem revisão humana). Só depois dessa
 revisão o projeto passa a operar no fluxo normal, com a primeira RFC
-começando em `-0001`. Não reconstrua PRD ou Tech Spec do passado — o
+começando em `-0001`. Não reconstrua SPEC do passado — o
 código já é a especificação do que existe.
 
 ## Incidentes e postmortem
@@ -209,7 +209,7 @@ incidente em andamento.
 3. Ao fechar o incidente, crie o `PM` (`source_incident` aponta para o
    INC) com os action items.
 4. Triagem de cada action item: ajuste pontual sem nenhum critério do
-   gate → PRD/Tech Spec direto, sem RFC; mudança estrutural (atenderia a
+   gate → SPEC direto, sem RFC; mudança estrutural (atenderia a
    algum critério do gate RFC→ADR) → nova RFC (`relates_to` aponta para
    o PM), seguindo o fluxo normal a partir daí.
 
@@ -249,7 +249,7 @@ cruzamento a partir de um log de commits.
 
 ## O que fazer em cada pedido comum
 
-**"Cria uma RFC/ADR/PRD/Tech Spec/SDD/Strategy Doc"** — abra o template
+**"Cria uma RFC/ADR/SPEC/SDD/Strategy Doc"** — abra o template
 do tipo no repositório certo, gere o próximo ID disponível (consultando
 o registry), preencha front-matter e conteúdo, devolva a entrada nova
 para o registry.
@@ -258,14 +258,14 @@ para o registry.
 se aplicaram e por quê, diga o próximo documento a criar.
 
 **"Implementa/desenvolve o que já foi decidido"** (a partir de RFC/ADR
-`approved`) — pare antes de código: confirme PRD/TS existem (crie se
+`approved`) — pare antes de código: confirme que a SPEC existe (crie se
 faltarem), confirme SDD compilada no repositório do projeto (compile se
 faltar), só então implemente. Ver "Gate obrigatório" acima.
 
 **"Muda o status de X"** — valide contra o ciclo de vida certo (padrão
 ou o de INC), atualize documento e registry juntos.
 
-**"Monta a SDD de X"** — confirme PRD/Tech Spec (e ADR, se houver)
+**"Monta a SDD de X"** — confirme a SPEC (e o ADR, se houver)
 `approved`, compile no repositório do projeto, preencha `source_docs`
 com id+url.
 
@@ -305,10 +305,10 @@ gate de verificação de escopo antes de mudar o status (seção acima).
 Mecanizado por `_framework/scripts/validate_doc.py` — a autorrevisão
 continua sua, mas deixou de ser a única checagem.
 
-Os gates de ordem (acima) não garantem qualidade de conteúdo — um PRD/TS
+Os gates de ordem (acima) não garantem qualidade de conteúdo — uma SPEC
 `approved` pode ser vago o bastante pra SDD sair genérica. Antes de mover
-PRD, Tech Spec ou SDD de `draft` para `in_review`, rode autorrevisão:
-todo requisito (PRD) tem RF-ID + critério de aceite verificável próprio;
+SPEC ou SDD de `draft` para `in_review`, rode autorrevisão:
+todo requisito tem RF-ID + critério de aceite em EARS;
 todo contrato técnico (TS) tem assinatura/schema exato + arquivo/módulo
 onde vive; casos de borda/erro listados explicitamente, não "tratar
 apropriadamente"; nenhum placeholder ("TBD", "definir depois", "seguir

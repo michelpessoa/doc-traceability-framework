@@ -51,8 +51,36 @@ declarar que outro não era necessário.
 Tamanho decide *quais* documentos existem, nunca se os gates valem: uma
 mudança `small` tem menos documento, não menos gate.
 
-Veja o diagrama completo em
-[`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png).
+```mermaid
+flowchart LR
+    S{{"SIZING<br/>qual o blast radius?"}}
+    S -->|small<br/>~3 arquivos| SDD
+    S -->|medium| SPEC
+    S -->|large / complex| RFC
+
+    STRAT["STRAT<br/><i>opcional</i>"] -.->|complex| RFC
+    RFC["RFC"] --> G{"Gate:<br/>exige ADR?"}
+    G -->|sim| ADR["ADR"]
+    G -->|não| SPEC
+    G -->|rejeitada| ARC["rejected → archived<br/><i>nenhum downstream</i>"]
+    ADR --> SPEC["SPEC<br/><i>Parte 1: requisito</i><br/><i>Parte 2: desenho</i>"]
+    SPEC --> SDD["SDD<br/><i>repositório do projeto</i>"]
+    SDD --> IA["IA implementa<br/>(Claude Code, Cursor, ...)"]
+    ADR -.->|impacto estratégico| STRAT
+
+    classDef central fill:#1f2937,color:#fff,stroke:#111827
+    classDef projeto fill:#15803d,color:#fff,stroke:#14532d
+    classDef gate fill:#2563eb,color:#fff,stroke:#1e40af
+    classDef morto fill:#b91c1c,color:#fff,stroke:#7f1d1d
+    class STRAT,RFC,ADR,SPEC central
+    class SDD,IA projeto
+    class S,G gate
+    class ARC morto
+```
+
+O nível de sizing sai dos mesmos 5 critérios do gate RFC → ADR. A
+**ausência** de um documento é o registro de que aquela fase foi pulada —
+não se cria documento para declarar que outro não era necessário.
 
 A **fonte canônica** das regras é
 [`_framework/rules/workflow-rules.yaml`](_framework/rules/workflow-rules.yaml)
@@ -108,8 +136,33 @@ Este framework assume **dois tipos de repositório**, nunca um só:
   apenas `docs/sdd/` — as SDDs desse projeto, porque é o único documento
   pensado para ser lido por uma IA no momento de implementar.
 
-Veja o diagrama em
-[`_framework/guides/assets/topology_diagram.png`](_framework/guides/assets/topology_diagram.png).
+```mermaid
+flowchart LR
+    subgraph C["REPOSITÓRIO CENTRAL — histórico institucional de todos os projetos"]
+        direction TB
+        CT["STRAT · RFC · ADR · SPEC · BASE · INC · PM"]
+        CL["<i>legado (1.x): PRD · TS</i>"]
+        CF["_framework/ — cópia única: regras, templates, prompts, skills, scripts"]
+        CR["docs/{PROJECT_CODE}/registry.yaml — um por projeto"]
+    end
+    subgraph P["REPOSITÓRIO DO PROJETO — onde o código vive"]
+        direction TB
+        PS["SDD — docs/sdd/"]
+        PR["docs/sdd/registry.yaml — só SDD"]
+    end
+    CT -->|"source_docs: {id, url}"| PS
+    PS --> IA["IA implementadora<br/>(Claude Code, Cursor, ...)"]
+
+    classDef central fill:#eef2ff,stroke:#4338ca,color:#1e1b4b
+    classDef projeto fill:#ecfdf5,stroke:#047857,color:#064e3b
+    class CT,CL,CF,CR central
+    class PS,PR,IA projeto
+```
+
+A SDD é o único tipo que vive no repositório de código, porque é o único
+escrito para ser lido por uma IA no momento de implementar. Como ela
+atravessa repositórios, cada `source_docs` carrega `id` **e** `url` — sem
+a url a cadeia quebra na fronteira.
 
 ## Os gates obrigatórios
 
@@ -171,8 +224,10 @@ que projetos mapeados sob 1.x continuem válidos sem migração.
 
 ## Exemplos incluídos (`examples/`)
 
-- `examples/central/EXEMPLO/` — projeto novo, demonstrando os dois
-  caminhos do gate de decisão (com e sem ADR).
+- `examples/central/EXEMPLO/` — projeto novo, demonstrando os três
+  caminhos do sizing: `large` (RFC → gate → ADR → SPEC → SDD), `medium`
+  (RFC sem ADR → SPEC → SDD) e `small` (só SDD, sem nenhum documento no
+  repositório central — a ausência é o registro).
 - `examples/project-repo-checkout/` — o repositório de projeto
   correspondente, com as SDDs.
 - `examples/central/LEGADO/` — projeto já existente sendo incorporado:

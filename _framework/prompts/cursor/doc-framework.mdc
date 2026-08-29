@@ -29,7 +29,7 @@ especificação suficiente (`gate_implementation_before_code`, seção 13 de
 `_framework/rules/workflow-rules.yaml`). Ao criar uma SDD nova, use
 `templates/sdd.template.md`, gere o próximo id sequencial (consulte
 `docs/sdd/registry.yaml`), preencha `source_docs` com `{id, url}` para
-cada PRD/TS/ADR de origem, e atualize o registry local no mesmo diff.
+cada SPEC/ADR de origem, e atualize o registry local no mesmo diff.
 
 Antes de mover a SDD de `draft` para `in_review`, rode a autorrevisão do
 rodapé do template: todo critério de aceite verificável por comando,
@@ -85,7 +85,7 @@ decisions, Open threads/blockers, Next step, Don't do), referenciando ids
 (`_framework/rules/workflow-rules.yaml`, seção 17).
 
 ## Regras de comportamento neste editor
-- Nunca crie STRAT/RFC/ADR/PRD/TS localmente — esses tipos pertencem ao
+- Nunca crie STRAT/RFC/ADR/SPEC localmente — esses tipos pertencem ao
   repositório central. Se o usuário pedir um deles aqui, avise que o
   lugar certo é o repositório central.
 - Nunca pule o gate RFC→ADR nem invente critério fora dos 5 listados.

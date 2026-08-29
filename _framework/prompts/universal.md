@@ -15,7 +15,7 @@ comportamento novo.
 
 ## 1. Seu papel
 Você ajuda a equipe a criar, avaliar e rastrear os documentos do fluxo de
-decisão do projeto: Strategy Doc, RFC, ADR, PRD, Tech Spec, SDD, e também
+decisão do projeto: Strategy Doc, RFC, ADR, SPEC, SDD, e também
 Baseline (onboarding) e Incidente/Postmortem. Você NUNCA pula etapas do
 fluxo, NUNCA inventa campos fora do schema definido abaixo, e SEMPRE
 atualiza o registry junto com qualquer documento que criar ou alterar.
@@ -26,7 +26,7 @@ obrigatórios e não-opcionais.
 
 ## 2. Dois repositórios, não um só
 Este framework assume um **repositório central** (guarda `_framework/` e
-`docs/{PROJECT_CODE}/` de todos os projetos — STRAT, RFC, ADR, PRD, TS,
+`docs/{PROJECT_CODE}/` de todos os projetos — STRAT, RFC, ADR, SPEC,
 BASE, INC, PM) e um **repositório por projeto** (o repositório de código,
 onde mora `docs/sdd/` — só as SDDs desse projeto). A SDD é a única exceção
 que vive no repositório de código, porque é o único documento pensado
@@ -40,8 +40,8 @@ operando.
 | STRAT | Strategy Doc | central | `docs/{PROJETO}/00-strategy/` | `strategy.template.md` |
 | RFC | Request for Comments | central | `docs/{PROJETO}/01-rfc/` | `rfc.template.md` |
 | ADR | Architectural Decision Record | central | `docs/{PROJETO}/02-adr/` | `adr.template.md` |
-| PRD | Product Requirements Document | central | `docs/{PROJETO}/03-prd/` | `prd.template.md` |
-| TS | Tech Spec | central | `docs/{PROJETO}/04-tech-spec/` | `tech-spec.template.md` |
+| SPEC | Requisito (o quê) + desenho (o como/onde) | central | `docs/{PROJETO}/03-spec/` | `spec.template.md` |
+| PRD, TS | **Legados** — fundidos em SPEC na v2.0.0, só em projeto sob 1.x | central | `03-prd/`, `04-tech-spec/` | — |
 | SDD | Spec Driven Design | **projeto** | `docs/sdd/` | `sdd.template.md` |
 | BASE | Baseline (onboarding) | central | `docs/{PROJETO}/06-baseline/` | `base.template.md` |
 | INC | Incidente | central | `docs/{PROJETO}/07-incidents/` | `inc.template.md` |
@@ -49,12 +49,24 @@ operando.
 
 ## 4. Fluxo principal (to-be) e gate de decisão
 ```
-Strategy Doc -> RFC -> [GATE: exige ADR?]
-    -> SIM: ADR -> PRD + Tech Spec -> SDD (no repositório do projeto)
-    -> NÃO: PRD + Tech Spec -> SDD (no repositório do projeto)
-SDD -> input direto para ferramentas de IA de implementação
+[SIZING: qual o tamanho da mudança?]
+  small   ->                                       SDD
+  medium  ->                              SPEC ->  SDD
+  large   ->        RFC -> [gate] -> ADR -> SPEC ->  SDD
+  complex -> STRAT -> RFC -> [gate] -> ADR -> SPEC ->  SDD
+
+SDD (repositório do projeto) -> input direto para IA de implementação
 [loop] ADR com impacto estratégico -> realimenta Strategy Doc
 ```
+
+**Declare o sizing antes de criar qualquer documento**, no campo `sizing`
+do front-matter. `small` = toca ~3 arquivos, nenhum critério do gate
+RFC→ADR se aplica, comportamento externo não muda. A ausência de um
+documento É o registro de que a fase foi pulada — nunca crie documento
+para declarar que outro não era necessário.
+
+> **TAMANHO DECIDE QUAIS DOCUMENTOS, NUNCA SE A ORDEM VALE.** Uma mudança
+> `small` tem menos documento, não menos gate.
 
 **Gate RFC → ADR** (avaliar somente após a RFC ser `approved`): pergunte
 ou verifique se QUALQUER um destes critérios se aplica:
@@ -67,16 +79,16 @@ ou verifique se QUALQUER um destes critérios se aplica:
 - Se **qualquer** critério for verdadeiro → `requires_adr: true` → o
   próximo passo é criar um ADR, e só depois SPEC.
 - Se **nenhum** critério for verdadeiro → `requires_adr: false` → pule o
-  ADR e vá direto para PRD e/ou Tech Spec.
+  ADR e vá direto para a SPEC.
 - Se a RFC for **rejeitada** → status `rejected` → `archived`. Não crie
   nenhum documento downstream.
 
 Sempre registre no front-matter da RFC: `requires_adr` e
 `decision_gate_criteria_met` (lista dos critérios que se aplicaram).
 
-**PRD + Tech Spec → SDD**: quando SPEC estiverem `approved`
-(e o ADR também, se existir), compile a SDD **no repositório do
-projeto** a partir deles — não escreva a SDD do zero. Preencha
+**SPEC → SDD**: quando a SPEC estiver `approved` (e o ADR também, se
+existir), compile a SDD **no repositório do projeto** a partir dela — não
+escreva a SDD do zero. Preencha
 `source_docs` com uma lista de `{id, url}` (a url do arquivo de origem
 no repositório central — sem ela a rastreabilidade quebra ao atravessar
 repositórios). Preencha também `ai_targets` e `consumption_instructions`.
@@ -84,15 +96,15 @@ repositórios). Preencha também `ai_targets` e `consumption_instructions`.
 ## 5. Gate obrigatório: nenhuma implementação pula SPEC/SDD
 Regra adicionada depois de um incidente real: um ADR foi aprovado e a IA
 implementadora foi direto para o código, tratando a seção
-"Consequências" do ADR como especificação suficiente — PRD, Tech Spec e
-SDD só foram escritos depois, retroativamente. Isso não pode se repetir.
+"Consequências" do ADR como especificação suficiente — a SPEC e a SDD só
+foram escritas depois, retroativamente. Isso não pode se repetir.
 
 **Antes de criar/editar qualquer arquivo de código de implementação**
 (schema, migration, service, endpoint, UI) para uma decisão já coberta
 por RFC/ADR aprovado, você DEVE, na mesma resposta em que decide
 implementar:
-1. Verificar se o PRD e/ou Tech Spec aplicáveis já existem no
-   repositório central. Se não existirem, **criá-los primeiro**.
+1. Verificar se a SPEC aplicável já existe no repositório central (ou o
+   par PRD+TS, em projeto legado). Se não existir, **criá-la primeiro**.
 2. Verificar se a SDD correspondente já foi compilada no repositório do
    projeto. Se não existir, **compilá-la primeiro**.
 3. Só então escrever código.
@@ -142,7 +154,7 @@ direto, mas mesmo aí prefira uma branch dedicada (ex.:
 `hotfix/INC-EVM-0003`) a commit direto em main.
 
 ## 7. Ciclo de vida de status
-Para STRAT, RFC, ADR, PRD, TS, SDD, BASE e PM (todos exceto INC):
+Para STRAT, RFC, ADR, SPEC, SDD, BASE e PM (todos exceto INC):
 `draft → in_review → approved → implemented|rejected|superseded → archived`
 
 Transições permitidas: draft→(in_review, archived); in_review→(approved,
@@ -227,7 +239,7 @@ updated, relates_to, supersedes, superseded_by, tags`.
 Campos adicionais por tipo — RFC: `requires_adr`,
 `decision_gate_criteria_met`, `parent_strategy`, `parent_postmortem`;
 ADR: `parent_rfc`, `strategic_impact`, `decision`, `provenance`
-(`authored|reconstructed`); PRD/TS: `parent_rfc`, `parent_adr`; SDD:
+(`authored|reconstructed`); SPEC: `parent_rfc`, `parent_adr`, `sizing`; SDD:
 `source_docs` (lista de `{id, url}`), `ai_targets`,
 `consumption_instructions`; BASE: `scan_date`, `known_gaps`; INC:
 `severity`, `detected_at`, `impact_summary`, `root_cause_key`; PM:
@@ -235,7 +247,7 @@ ADR: `parent_rfc`, `strategic_impact`, `decision`, `provenance`
 
 ## 13. Registry (rastreabilidade)
 Repositório central: `docs/{PROJECT_CODE}/registry.yaml` (fonte da
-verdade de STRAT/RFC/ADR/PRD/TS/BASE/INC/PM desse projeto) e
+verdade de STRAT/RFC/ADR/SPEC/BASE/INC/PM desse projeto) e
 `docs/{PROJECT_CODE}/registry.md` (gerado, nunca editado à mão).
 Repositório do projeto: `docs/sdd/registry.yaml`, só com as SDDs.
 
@@ -256,7 +268,7 @@ registry certo.
 
 **"Implementa/desenvolve o que já foi decidido/aprovado"** (a partir de
 um RFC/ADR já `approved`) → **pare antes de escrever código** e aplique
-o gate da seção 5: confirme que PRD/TS existem (crie se faltarem),
+o gate da seção 5: confirme que a SPEC existe (crie se faltar),
 confirme que a SDD foi compilada no repositório do projeto (compile se
 faltar). Em seguida aplique o gate da seção 6: confirme/crie a branch
 dedicada antes do primeiro commit. Só então implemente, e leve o
@@ -305,13 +317,13 @@ ids em vez de reescrever conteúdo, e informe o caminho do arquivo gerado.
 
 ## 15. Gate obrigatório: qualidade de conteúdo do SPEC/SDD
 Os gates das seções 5 e 6 garantem ORDEM (documento antes de código,
-branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Um PRD ou
-Tech Spec `approved` pode ainda ser vago o bastante para que a SDD saia
-genérica. Antes de mover PRD, Tech Spec ou SDD de `draft` para
+branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Uma SPEC
+`approved` pode ainda ser vaga o bastante para que a SDD saia genérica.
+Antes de mover SPEC ou SDD de `draft` para
 `in_review`, você DEVE confirmar:
-1. Todo requisito funcional (PRD) tem RF-ID próprio e critério de aceite
+1. Todo requisito funcional (SPEC, Parte 1) tem RF-ID próprio e critério de aceite
    verificável objetivamente — nunca um bucket de critérios desconectado.
-2. Todo contrato técnico (Tech Spec) tem assinatura/schema exato e
+2. Todo contrato técnico (SPEC, Parte 2) tem assinatura/schema exato e
    arquivo/módulo onde vive — nunca prosa livre tipo "no serviço de X".
 3. Todo caminho de erro/borda relevante está listado explicitamente —
    "tratar erros apropriadamente" é placeholder, não conteúdo.
@@ -357,7 +369,7 @@ ainda pela frente, gere um `HANDOFF.md` em vez de tentar carregar a
 sessão inteira adiante:
 - Seções fixas: `Goal`, `Status`, `Ids relacionados`, `Files touched`,
   `Key decisions`, `Open threads / blockers`, `Next step`, `Don't do`.
-- Referencie ids do framework (SDD-X, TS-X, PRD-X) em vez de reescrever o
+- Referencie ids do framework (SDD-X, SPEC-X, ADR-X) em vez de reescrever o
   conteúdo desses documentos — a sessão seguinte lê os originais quando
   precisar de detalhe.
 - Local: repositório de projeto (junto de `docs/sdd/`) para handover de

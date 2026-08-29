@@ -44,7 +44,7 @@ Vale registrar também — não é só sobre o que deu errado.
 |---|---|---|---|
 | 1 | | `small_direct_fix` \| `structural_change` | |
 
-> `small_direct_fix` → vira PRD/Tech Spec direto, sem RFC.
+> `small_direct_fix` → entra pelo sizing como `small` ou `medium`, sem RFC.
 > `structural_change` → vira uma nova RFC (referenciando este PM em
 > `relates_to`), e segue o gate normal a partir daí.
 

@@ -39,8 +39,8 @@ tags: []
 ## Gate de decisão: esta RFC exige um ADR?
 > Preencher **somente após a RFC ser aprovada**. Marque cada critério que
 > se aplica. Se **qualquer** critério for verdadeiro, `requires_adr: true`
-> e um ADR deve ser criado antes de PRD/Tech Spec. Se nenhum se aplica,
-> `requires_adr: false` e o fluxo segue direto para PRD e/ou Tech Spec.
+> e um ADR deve ser criado antes da SPEC. Se nenhum se aplica,
+> `requires_adr: false` e o fluxo segue direto para a SPEC.
 
 - [ ] Introduz ou altera um padrão arquitetural
 - [ ] Decisão de alto custo ou difícil reversão

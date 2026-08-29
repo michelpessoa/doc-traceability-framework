@@ -79,7 +79,7 @@ gate RFC→ADR (`decision_gates.rfc_to_adr`):
   pontual sem significância arquitetural não precisa virar burocracia —
   só entra no relatório como "sem documento, sem necessidade aparente".
 
-Não reconstrua PRD ou Tech Spec de commits passados, pela mesma razão do
+Não reconstrua SPEC de commits passados, pela mesma razão do
 onboarding: o código já é a especificação do "como"; o que vale a pena
 recuperar é o "porquê" (ADR), e só quando for arquiteturalmente
 significativo.
