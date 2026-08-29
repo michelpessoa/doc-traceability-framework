@@ -71,10 +71,13 @@ Casos de borda consolidados (aplicáveis a esta etapa):
   capacidade e o caminho ausente. Cobre as três capacidades de
   continuidade que ganharam o campo em `SDD-DTF-0006`
   (`write_handover`, `pickup_handoff`, `verify_sdd_independently`).
-- **Documento já emitido contém `ai_targets`** (RF10) — validação passa
+- **Documento com `ai_targets` no front-matter** (RF10) — validação passa
   sem alteração: confirmado nesta SDD que `validate_doc.py` nunca rejeita
-  campo de front-matter fora de `REQUIRED_FRONTMATTER` — não há
-  comportamento novo a escrever, só a promessa de schema a remover da
+  campo de front-matter fora de `REQUIRED_FRONTMATTER`. Nenhuma SDD deste
+  repositório tem hoje `ai_targets` de fato no front-matter (checado por
+  `grep`) — o campo nunca foi obrigatório, só documentado; o teste do
+  critério 6 insere o campo manualmente para verificar o comportamento.
+  Não há comportamento novo a escrever, só a promessa de schema a remover da
   documentação.
 
 RF11 (paridade das duas cópias de `_framework/`) não gera código nesta
@@ -138,6 +141,14 @@ não como mecanismo novo.
 - Remove a linha `| ai_targets | {lista de ferramentas} |` da tabela de
   Rastreabilidade.
 
+**`_framework/skills/doc-traceability-framework/templates/sdd.template.md`:**
+mesma edição, replicada à mão. Esta cópia não é coberta por
+`sync_copies` (RF08 só sincroniza `scripts/*.py` e o YAML, não
+`templates/`) — ficou divergente da edição acima até ser sincronizada
+manualmente nesta implementação. `templates/` inteiro sincronizado por
+mecanismo automático é lacuna fora do escopo desta SDD, não corrigida
+aqui.
+
 **`_framework/rules/workflow-rules.yaml`:**
 - Remove a chave `ai_targets` do bloco `SDD` em
   `document_types.SDD` → schema de campos adicionais (linha com
@@ -164,7 +175,7 @@ mantendo `consumption_instructions`), replicada nos dois repositórios.
 | 3 | RF09 — `RENDERINGS` ganha AGENTS.md e `check_capability_procedures` cobre `procedures/` | `grep -c '"\.\./AGENTS.md"' _framework/scripts/check_renderings.py` e `grep -c "def check_capability_procedures" _framework/scripts/check_renderings.py` | `1` e `1` |
 | 4 | RF09 (sensor) — `procedure` inexistente reprova | Apontar `capabilities` → `write_handover.procedure` para caminho inexistente, rodar `check_renderings.py`, reverter | exit 1 nomeando `write_handover`, depois exit 0 |
 | 5 | RF10 — `ai_targets` fora do template e do YAML | `grep -c "ai_targets" _framework/templates/sdd.template.md _framework/rules/workflow-rules.yaml` | `0` nos dois |
-| 6 | RF10 — documento já emitido com `ai_targets` continua válido | `framework_check.py --auto` sobre um documento fixture com `ai_targets` no front-matter (`docs/sdd/SDD-DTF-0001.md`, que já tem o campo) | exit 0, sem erro relacionado a `ai_targets` |
+| 6 | RF10 — documento com `ai_targets` continua válido | Inserir `ai_targets: [claude-code]` no front-matter de uma SDD existente (ex.: `docs/sdd/SDD-DTF-0001.md`), rodar `framework_check.py --auto`, depois remover a linha inserida | exit 0, sem erro relacionado a `ai_targets`, nos dois lados do teste |
 | 7 | RF11 — paridade | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída |
 | 8 | Regressão | `framework_check.py --auto` e `render_prompts.py --check` | exit 0 nos dois repositórios |
 
