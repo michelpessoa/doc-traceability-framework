@@ -15,6 +15,11 @@ superseded_by: null
 tags: []
 ---
 
+> ⚠️ **Template legado.** PRD foi fundido em `SPEC` na v2.0.0 —
+> use `spec.template.md` para trabalho novo. Este arquivo existe para
+> projetos mapeados sob 1.x, que não migram
+> (`lessons_policy.non_retroactive`).
+
 # {Título}
 
 > PRD garante o **O QUÊ**: cada requisito abaixo precisa do seu próprio

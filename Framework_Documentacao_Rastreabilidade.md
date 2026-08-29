@@ -39,7 +39,33 @@ de código**, e é ali — e somente ali — que a SDD nasce e vive, em
 `docs/sdd/`, porque é o único documento pensado para ser lido por uma IA
 no momento de implementar.
 
-![Modelo de dois repositórios](_framework/guides/assets/topology_diagram.png)
+```mermaid
+flowchart LR
+    subgraph C["REPOSITÓRIO CENTRAL — histórico institucional de todos os projetos"]
+        direction TB
+        CT["STRAT · RFC · ADR · SPEC · BASE · INC · PM"]
+        CL["<i>legado (1.x): PRD · TS</i>"]
+        CF["_framework/ — cópia única: regras, templates, prompts, skills, scripts"]
+        CR["docs/{PROJECT_CODE}/registry.yaml — um por projeto"]
+    end
+    subgraph P["REPOSITÓRIO DO PROJETO — onde o código vive"]
+        direction TB
+        PS["SDD — docs/sdd/"]
+        PR["docs/sdd/registry.yaml — só SDD"]
+    end
+    CT -->|"source_docs: {id, url}"| PS
+    PS --> IA["IA implementadora<br/>(Claude Code, Cursor, ...)"]
+
+    classDef central fill:#eef2ff,stroke:#4338ca,color:#1e1b4b
+    classDef projeto fill:#ecfdf5,stroke:#047857,color:#064e3b
+    class CT,CL,CF,CR central
+    class PS,PR,IA projeto
+```
+
+A SDD é o único tipo que vive no repositório de código, porque é o único
+escrito para ser lido por uma IA no momento de implementar. Como ela
+atravessa repositórios, cada `source_docs` carrega `id` **e** `url` — sem
+a url a cadeia quebra na fronteira.
 
 Como SPEC e ADR vivem no repositório central mas a SDD que os consolida
 vive no repositório do projeto, toda referência de uma SDD aos
@@ -54,7 +80,36 @@ e nunca deve ser adivinhada.
 
 ## 3. Fluxo principal e gate de decisão
 
-![Fluxo principal e gate de decisão RFC → ADR](_framework/guides/assets/flow_diagram.png)
+```mermaid
+flowchart LR
+    S{{"SIZING<br/>qual o blast radius?"}}
+    S -->|small<br/>~3 arquivos| SDD
+    S -->|medium| SPEC
+    S -->|large / complex| RFC
+
+    STRAT["STRAT<br/><i>opcional</i>"] -.->|complex| RFC
+    RFC["RFC"] --> G{"Gate:<br/>exige ADR?"}
+    G -->|sim| ADR["ADR"]
+    G -->|não| SPEC
+    G -->|rejeitada| ARC["rejected → archived<br/><i>nenhum downstream</i>"]
+    ADR --> SPEC["SPEC<br/><i>Parte 1: requisito</i><br/><i>Parte 2: desenho</i>"]
+    SPEC --> SDD["SDD<br/><i>repositório do projeto</i>"]
+    SDD --> IA["IA implementa<br/>(Claude Code, Cursor, ...)"]
+    ADR -.->|impacto estratégico| STRAT
+
+    classDef central fill:#1f2937,color:#fff,stroke:#111827
+    classDef projeto fill:#15803d,color:#fff,stroke:#14532d
+    classDef gate fill:#2563eb,color:#fff,stroke:#1e40af
+    classDef morto fill:#b91c1c,color:#fff,stroke:#7f1d1d
+    class STRAT,RFC,ADR,SPEC central
+    class SDD,IA projeto
+    class S,G gate
+    class ARC morto
+```
+
+O nível de sizing sai dos mesmos 5 critérios do gate RFC → ADR. A
+**ausência** de um documento é o registro de que aquela fase foi pulada —
+não se cria documento para declarar que outro não era necessário.
 
 Leitura do fluxo: uma RFC (opcionalmente originada de um Strategy Doc) é
 aprovada; o gate decide se um ADR é necessário; a SPEC segue, com ou sem

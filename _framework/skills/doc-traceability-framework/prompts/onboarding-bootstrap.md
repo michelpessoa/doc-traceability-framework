@@ -60,7 +60,7 @@ serviços. Use `templates/adr.template.md` com estas particularidades:
   quê" mas não o motivo, diga isso explicitamente em vez de supor um
   motivo plausível.
 
-**O que você NÃO deve fazer nesta fase:** não reconstrua PRD ou Tech Spec
+**O que você NÃO deve fazer nesta fase:** não reconstrua SPEC
 do que já foi construído. O código já é a especificação do que existe —
 reconstruir esses dois tipos para trabalho passado é esforço alto e
 baixo valor. O que importa recuperar é o "porquê" (os ADRs), não o
@@ -84,7 +84,7 @@ Depois que a Fase 1 estiver completa e revisada, diga claramente ao time:
 "o levantamento de baseline terminou — a partir de agora, qualquer
 trabalho novo neste projeto segue o fluxo normal do framework, começando
 por `RFC-{PROJECT_CODE}-0001`". Use `prompts/universal.md` a partir daí.
-Não é preciso mais nenhum tratamento especial: RFC, gate, PRD/Tech Spec e
+Não é preciso mais nenhum tratamento especial: RFC, gate, SPEC e
 a primeira SDD (criada no repositório do projeto) funcionam exatamente
 como em um projeto que nasceu dentro do framework.
 
@@ -96,6 +96,6 @@ como em um projeto que nasceu dentro do framework.
       parecer completo")
 - [ ] `docs/{PROJECT_CODE}/registry.yaml` tem entradas para todos os
       documentos desta fase, com `tags: [onboarding]`
-- [ ] Nenhum PRD ou Tech Spec retroativo foi criado
+- [ ] Nenhuma SPEC retroativa foi criada
 - [ ] Campo `repository` em `docs/{PROJECT_CODE}/registry.yaml` está
       preenchido com a URL do repositório de código do projeto

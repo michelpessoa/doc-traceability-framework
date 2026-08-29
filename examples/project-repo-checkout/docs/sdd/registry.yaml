@@ -1,16 +1,18 @@
 # docs/sdd/registry.yaml (repositório do PROJETO "checkout")
 #
-# Só SDDs deste projeto. source_docs referencia PRD/TS/ADR que vivem no
-# repositório central "framework-central" — por isso cada entrada carrega
-# id + url (sem a url a rastreabilidade quebraria ao atravessar repositórios).
+# Só SDDs deste projeto. source_docs referencia a SPEC e o ADR que vivem
+# no repositório central "framework-central" — por isso cada entrada
+# carrega id + url (sem a url a rastreabilidade quebraria ao atravessar
+# repositórios).
 
 project: "EXEMPLO"
-framework_version: "1.7.0"
+framework_version: "2.0.0"
 # Registry de demonstração: as entradas representam o cenário, mas os .md
 # não fazem parte do kit (ver README, "Exemplos incluídos").
 demo: true
 
 documents:
+  # Caso A — sizing `large`: SDD compilada de SPEC + ADR.
   - id: SDD-EXEMPLO-0001
     type: SDD
     title: "Spec Driven Design — checkout com Provedor X"
@@ -18,17 +20,17 @@ documents:
     owner: "time-checkout"
     created: "2026-08-08"
     updated: "2026-08-08"
-    relates_to: [PRD-EXEMPLO-0001, TS-EXEMPLO-0001, ADR-EXEMPLO-0001]
+    relates_to: [SPEC-EXEMPLO-0001, ADR-EXEMPLO-0001]
+    sizing: large
     source_docs:
-      - id: PRD-EXEMPLO-0001
-        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-prd/PRD-EXEMPLO-0001.md"
-      - id: TS-EXEMPLO-0001
-        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0001.md"
+      - id: SPEC-EXEMPLO-0001
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-spec/SPEC-EXEMPLO-0001.md"
       - id: ADR-EXEMPLO-0001
         url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/02-adr/ADR-EXEMPLO-0001.md"
     ai_targets: [claude-code, cursor]
     path: "docs/sdd/SDD-EXEMPLO-0001.md"
 
+  # Caso B — sizing `medium`: sem ADR, o gate da RFC dispensou.
   - id: SDD-EXEMPLO-0002
     type: SDD
     title: "Spec Driven Design — campo apelido de endereço"
@@ -36,11 +38,32 @@ documents:
     owner: "time-checkout"
     created: "2026-08-12"
     updated: "2026-08-12"
-    relates_to: [PRD-EXEMPLO-0002, TS-EXEMPLO-0002]
+    relates_to: [SPEC-EXEMPLO-0002]
+    sizing: medium
     source_docs:
-      - id: PRD-EXEMPLO-0002
-        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-prd/PRD-EXEMPLO-0002.md"
-      - id: TS-EXEMPLO-0002
-        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/04-tech-spec/TS-EXEMPLO-0002.md"
+      - id: SPEC-EXEMPLO-0002
+        url: "https://github.com/org/framework-central/blob/main/docs/EXEMPLO/03-spec/SPEC-EXEMPLO-0002.md"
     ai_targets: [claude-code]
     path: "docs/sdd/SDD-EXEMPLO-0002.md"
+
+  # Caso C — sizing `small`: nenhum documento no repositório central.
+  # Correção de máscara de CEP, 2 arquivos, nenhum critério do gate
+  # RFC->ADR, comportamento externo inalterado. `source_docs` vazio não é
+  # lacuna: é o registro de que não houve upstream. O vínculo com o código
+  # é o `Refs: SDD-EXEMPLO-0003` no commit e no PR.
+  #
+  # Note que os gates continuam valendo integralmente: a SDD existe antes
+  # do código (gate 13), o código nasce em branch (gate 14), e o status só
+  # vai a `implemented` com evidência verificada (gate 16).
+  - id: SDD-EXEMPLO-0003
+    type: SDD
+    title: "Corrigir máscara de CEP no formulário de endereço"
+    status: implemented
+    owner: "time-checkout"
+    created: "2026-08-14"
+    updated: "2026-08-14"
+    relates_to: []
+    sizing: small
+    source_docs: []
+    ai_targets: [claude-code]
+    path: "docs/sdd/SDD-EXEMPLO-0003.md"

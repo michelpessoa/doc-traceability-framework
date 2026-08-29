@@ -51,4 +51,4 @@ determinar com segurança — fica para alguém do time completar.
 ## Próximo passo
 Depois que os ADRs acima forem revisados e aprovados, este projeto passa
 a operar no fluxo normal do framework (Strategy → RFC → gate → ...),
-começando a numeração de RFC/PRD/TS/SDD do zero.
+começando a numeração de RFC/SPEC/SDD do zero.
