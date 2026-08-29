@@ -112,7 +112,7 @@ central).
 
 <!-- BEGIN GENERATED: núcleo do framework — não edite à mão -->
 
-## Núcleo canônico (framework 2.0.0)
+## Núcleo canônico (framework 2.1.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.
@@ -134,8 +134,6 @@ divergência com qualquer texto abaixo ou acima, o YAML manda.
 | RFC | central | `docs/{PROJECT_CODE}/01-rfc` | ativo |
 | ADR | central | `docs/{PROJECT_CODE}/02-adr` | ativo |
 | SPEC | central | `docs/{PROJECT_CODE}/03-spec` | ativo |
-| PRD | central | `docs/{PROJECT_CODE}/03-prd` | legado desde 2.0.0 |
-| TS | central | `docs/{PROJECT_CODE}/04-tech-spec` | legado desde 2.0.0 |
 | SDD | project | `docs/sdd` | ativo |
 | BASE | central | `docs/{PROJECT_CODE}/06-baseline` | ativo |
 | INC | central | `docs/{PROJECT_CODE}/07-incidents` | ativo |

@@ -104,7 +104,12 @@ def _derive_constants():
     except Exception:
         rules = {}
 
-    types = list((rules.get("document_types") or {}).keys()) or _FALLBACK_DOC_TYPES
+    # Tipos legados (PRD, TS) saíram de document_types na v2.1.0 mas seguem
+    # válidos em projeto já mapeado: sem a união, ID_PATTERN pararia de
+    # reconhecer ids PRD-*/TS-* já emitidos (lessons_policy.non_retroactive).
+    active = list((rules.get("document_types") or {}).keys())
+    legacy = list((rules.get("legacy_document_types") or {}).keys())
+    types = active + [t for t in legacy if t not in active] or _FALLBACK_DOC_TYPES
     statuses = set((rules.get("status_lifecycle") or {}).get("states") or ()) or _FALLBACK_STATUSES
     incident = set((rules.get("incident_lifecycle") or {}).get("states") or ()) or _FALLBACK_INCIDENT_STATUSES
     return types, statuses, incident

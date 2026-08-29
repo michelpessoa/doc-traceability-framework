@@ -14,9 +14,23 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.0.0"
+  version: "2.1.0"
   last_updated: "2026-08-29"
   changelog:
+    - version: "2.1.0"
+      summary: >
+        Primeira etapa da neutralização de fornecedor (SPEC-DTF-0001,
+        ADR-DTF-0001): o framework deixa de depender de prompt colado para
+        ser usado. `AGENTS.md` na raiz do repositório passa a ser o alvo
+        canônico das renderizações — lido nativamente por Codex, Cursor,
+        Gemini CLI, Copilot e Aider — acompanhado de um `QUICKSTART.md` de
+        uma página; ambos são gerados por render_prompts.py, nunca
+        escritos à mão, e o CI barra divergência. PRD e TS saem de
+        `document_types` para a chave nova `legacy_document_types`: somem
+        do caminho oferecido a trabalho novo sem perder validade nem
+        rastreabilidade de id nos projetos já mapeados. Mudança de
+        superfície e de empacotamento, não de regra: fluxo, gates, sizing
+        e ciclo de vida seguem idênticos.
     - version: "2.0.0"
       summary: >
         BREAKING. Três mudanças de desenho, todas para cortar volume sem
@@ -249,36 +263,6 @@ document_types:
     can_originate: ["SDD"]
     replaces: ["PRD", "TS"]
 
-  PRD:
-    name: "Product Requirements Document (legado)"
-    purpose: "Detalha o requisito de produto a ser construído."
-    deprecated_since: "2.0.0"
-    deprecation_note: >
-      Fundido em SPEC na v2.0.0. Documentos PRD existentes seguem válidos e
-      não são migrados — projeto mapeado sob 1.x continua operando sob 1.x
-      (lessons_policy.non_retroactive). Trabalho novo usa SPEC.
-    repo: central
-    folder: "docs/{PROJECT_CODE}/03-prd"
-    template: "templates/prd.template.md"
-    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
-    can_originate: ["SDD"]
-
-  TS:
-    name: "Tech Spec (legado)"
-    deprecated_since: "2.0.0"
-    deprecation_note: >
-      Fundido em SPEC na v2.0.0. Mesma regra de não-retroatividade do PRD.
-    purpose: >
-      Transforma uma decisão em desenho executável: detalha implementação,
-      explicita contratos técnicos, alinha times consumidores, reduz
-      ambiguidade de execução, antecipa riscos operacionais e conecta
-      arquitetura, código e rollout. É fonte final para SDD's.
-    repo: central
-    folder: "docs/{PROJECT_CODE}/04-tech-spec"
-    template: "templates/tech-spec.template.md"
-    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
-    can_originate: ["SDD"]
-
   SDD:
     name: "Spec Driven Design"
     purpose: >
@@ -344,6 +328,51 @@ document_types:
 #
 # Este foi o GAP corrigido na v1.0: antes, TODA RFC aprovada exigia ADR
 # antes de PRD/Tech Spec. Agora existe um gate explícito.
+
+
+##############################################################################
+# 3b. TIPOS LEGADOS — não fazem parte do fluxo, mas continuam válidos
+#
+# PRD e TS saíram de `document_types` na v2.1.0: não são mais caminho
+# possível para trabalho novo, e nenhuma renderização deve oferecê-los.
+# Continuam declarados aqui porque projeto mapeado sob 1.x segue operando
+# sob 1.x (lessons_policy.non_retroactive) e porque os validadores
+# precisam reconhecer ids `PRD-*` e `TS-*` já emitidos — ver
+# framework_lib._derive_constants, que monta DOC_TYPES pela união das duas
+# chaves.
+##############################################################################
+
+legacy_document_types:
+  PRD:
+    name: "Product Requirements Document (legado)"
+    purpose: "Detalha o requisito de produto a ser construído."
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Documentos PRD existentes seguem válidos e
+      não são migrados — projeto mapeado sob 1.x continua operando sob 1.x
+      (lessons_policy.non_retroactive). Trabalho novo usa SPEC.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/03-prd"
+    template: "templates/prd.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
+  TS:
+    name: "Tech Spec (legado)"
+    deprecated_since: "2.0.0"
+    deprecation_note: >
+      Fundido em SPEC na v2.0.0. Mesma regra de não-retroatividade do PRD.
+    purpose: >
+      Transforma uma decisão em desenho executável: detalha implementação,
+      explicita contratos técnicos, alinha times consumidores, reduz
+      ambiguidade de execução, antecipa riscos operacionais e conecta
+      arquitetura, código e rollout. É fonte final para SDD's.
+    repo: central
+    folder: "docs/{PROJECT_CODE}/04-tech-spec"
+    template: "templates/tech-spec.template.md"
+    parent_types: ["RFC", "ADR"]   # ADR é opcional, depende do gate
+    can_originate: ["SDD"]
+
 
 decision_gates:
   rfc_to_adr:
