@@ -74,7 +74,7 @@ documents:
   - id: SDD-DTF-0008
     type: SDD
     title: "Fim da duplicação manual e cobertura de renderizações"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-08-29"
     updated: "2026-08-29"

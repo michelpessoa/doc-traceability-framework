@@ -2,7 +2,7 @@
 id: SDD-DTF-0008
 type: SDD
 title: "Fim da duplicação manual e cobertura de renderizações"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
@@ -203,17 +203,30 @@ comando tem que falhar antes da correção e voltar a passar depois.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não preenchido — a preencher em sessão
-separada da que implementou.
+**Verificador independente:** sim — terceira tentativa. As duas
+anteriores deram FAIL por afirmação factual incorreta na própria SDD
+(não no código, que nunca mudou): fixture errado no critério 6, e a
+mesma frase falsa sobre `SDD-DTF-0001.md` sobrevivendo em dois lugares
+diferentes do texto (corrigida integralmente só na segunda correção).
+PASS nesta tentativa, 8/8 critérios, tabela completa em
+`docs/sdd/validation.md`. Resumo:
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `render_prompts.py` + `diff -rq` das cópias da skill | sem diff, nos dois repos | — | sim |
+| 2 | edição manual em `framework_lib.py` (cópia), `--check` | `exit 1` divergente, `exit 0` após regenerar | **sensor** | sim |
+| 3 | grep de `../AGENTS.md` e `check_capability_procedures` | `1` e `1` nos dois repos | — | sim |
+| 4 | `write_handover.procedure` apontado para caminho inexistente | `exit 1` nomeando `write_handover`, `exit 0` restaurado | **sensor** | sim |
+| 5 | grep `ai_targets` em template e YAML | `0` nos dois arquivos, nos dois repos | — | sim |
+| 6 | `ai_targets` inserido/removido em `SDD-DTF-0001.md` | `exit 0` nos dois estados | — | sim |
+| 7 | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída | — | sim |
+| 8 | `framework_check.py --auto`, `render_prompts.py --check` | exit 0 nos dois repos | — | sim |
 
 ## Rastreabilidade
 
