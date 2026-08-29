@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v1.6.0)
+# Framework de Documentação & Rastreabilidade para IA (v1.7.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
@@ -27,6 +27,14 @@ IA no momento de implementar.
   → archived`. Atualize `docs/sdd/registry.yaml` junto com qualquer
   criação ou mudança de status — front-matter e registry nunca podem
   divergir.
+- Antes de mover a SDD de `draft` para `in_review`, rode a autorrevisão
+  do rodapé do template: todo critério de aceite verificável por comando
+  executável, todo item técnico apontando arquivo/módulo concreto,
+  nenhum placeholder ("TBD", "tratar erros apropriadamente", "seguir o
+  padrão do projeto" sem nomear o arquivo), e ambiguidade real marcada
+  como `NEEDS CLARIFICATION` em vez de suposta — a SDD não vai a
+  `approved` com essa marcação pendente. Ver `gate_content_quality`,
+  `_framework/rules/workflow-rules.yaml` seção 15.
 
 ## Antes de gerar código (gate obrigatório, não opcional)
 Verifique se existe uma SDD `approved`/`implemented` em `docs/sdd/` para
@@ -60,6 +68,26 @@ Ver `_framework/rules/workflow-rules.yaml`, seção 14,
 `gate_branch_before_commit`. Só commite direto em main se o usuário
 confirmar explicitamente que quer pular o gate, sabendo que está
 violando a regra (reduz revisão e quebra o uso de CI/CD).
+
+## Antes de marcar a SDD como `implemented` (gate obrigatório)
+Não marque `implemented` de memória. Confirme: todo requisito consolidado
+da SDD tem código correspondente; todo arquivo tocado pela implementação
+está listado na SDD (arquivo fora da lista é escopo não registrado —
+atualize a SDD — ou scope creep — remova antes do commit, nunca em
+silêncio); nenhuma abstração/dependência extra sem requisito na SDD; a
+tabela "Evidência de verificação" preenchida com comando+saída reais
+desta sessão para cada critério de aceite. Ver `gate_scope_verification`,
+`_framework/rules/workflow-rules.yaml` seção 16 (repositório central).
+
+## Handover ao trocar de sessão/agente
+Ao terminar o planejamento antes de outra sessão implementar, ou perto de
+~45% de uso de contexto com trabalho pela frente: gere `HANDOFF.md` na
+raiz deste repositório (seções fixas: Goal, Status, Ids relacionados,
+Files touched, Key decisions, Open threads/blockers, Next step, Don't
+do), referenciando ids (SDD-X, TS-X, PRD-X) em vez de reescrever
+conteúdo — a próxima sessão lê os documentos originais quando precisar de
+detalhe. Ver `handover_protocol`, `_framework/rules/workflow-rules.yaml`
+seção 17.
 
 ## O que NÃO fazer aqui
 Não crie Strategy Doc, RFC, ADR, PRD ou Tech Spec neste repositório —

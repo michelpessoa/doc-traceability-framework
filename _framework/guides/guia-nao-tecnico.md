@@ -38,7 +38,12 @@ aprovado, esse documento não é mais editado, porque ele é a "ata" de uma
 decisão que já aconteceu.
 
 **PRD** — o requisito de produto: o que vai ser construído, para quem,
-com que critérios de sucesso.
+com que critérios de sucesso. Cada requisito precisa vir com o seu
+próprio critério de aceite, escrito de forma que dê para verificar
+objetivamente depois ("o sistema recusa o cadastro sem CPF" serve;
+"funciona bem" não serve). Se algo ainda depende de uma definição sua, o
+documento marca isso explicitamente em vez de o time supor — e nada é
+aprovado com essa marcação pendente.
 
 **Tech Spec** — a tradução da decisão em plano de execução técnico. Você
 normalmente não vai escrever este, mas pode ser convidado a validar se
@@ -74,6 +79,13 @@ adiante) ou **arquivado** (não está mais ativo). Quando você olhar um
 documento e quiser saber "isso já está valendo?", o que importa é o
 status: só considere uma decisão como definitiva quando ela estiver
 `aprovado` ou além.
+
+Uma observação sobre **implementado**: esse status não é uma opinião de
+quem fez o trabalho. Para um documento chegar lá, é obrigatório que cada
+critério de aceite tenha sido de fato testado, com o resultado registrado
+no próprio documento — e que nada tenha sido construído além do que foi
+pedido. Se você ler "implementado", pode confiar que existe evidência por
+trás, não só a impressão de que ficou pronto.
 
 ## Rastreabilidade — o que isso significa na prática para você
 

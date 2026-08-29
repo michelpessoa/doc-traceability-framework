@@ -50,9 +50,38 @@ explicitamente "Sem ADR — RFC dispensou decisão arquitetural via gate".)
 (Consolidado do Tech Spec: contratos, plano de implementação, rollout.)
 
 ## Critérios de aceite / definição de pronto
+Cada item vem do RF/critério do PRD e do contrato/caso de erro do Tech
+Spec — não invente critério novo aqui, consolide o que já existe a
+montante. Todo item tem que ser verificável por comando executável, não
+por leitura de código.
+
+| # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado |
+|---|---|---|---|
+
 ## Instruções específicas para a IA implementadora
 Instruções objetivas — arquivos/módulos esperados, padrões de código a
 seguir, testes obrigatórios, o que NÃO alterar.
+
+## Verificação de escopo (nada a mais, nada a menos)
+Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
+tanto quanto SDD estourada são falha:
+- [ ] Todo requisito consolidado acima tem código correspondente (nada
+      do PRD/TS ficou de fora).
+- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+      técnica consolidada" ou "Instruções específicas" — se a
+      implementação tocou um arquivo não listado aqui, ou é escopo que
+      faltou registrar na SDD (atualize-a) ou é scope creep a remover
+      antes do merge.
+- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+      foi pedido por nenhum requisito consolidado ("já que estava ali").
+
+## Evidência de verificação (preencher antes de status `implemented`)
+Para cada critério da tabela acima, comando rodado de fato nesta sessão e
+saída real — não "deve passar" nem resultado de memória. Sem isto, status
+não pode avançar para `implemented`.
+
+| # | Comando rodado | Saída (resumo) | Passou? |
+|---|---|---|---|
 
 ## Rastreabilidade
 | Campo | Valor |

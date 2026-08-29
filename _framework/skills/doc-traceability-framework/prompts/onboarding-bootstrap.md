@@ -1,4 +1,4 @@
-# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.2.0)
+# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.3.0)
 
 Use este prompt **uma única vez por projeto**, no dia em que um projeto
 que já tem código em produção (mas nunca usou este framework) vai passar

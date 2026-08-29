@@ -1,4 +1,4 @@
-# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v1.6.0)
+# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v1.7.0)
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
 IA (ChatGPT, Gemini, Claude, etc.) antes de pedir para criar, avaliar ou
@@ -293,7 +293,90 @@ coberta pelo framework) → aplique o gate da seção 6: confirme branch
 dedicada (não main), abra PR referenciando os ids relacionados, e não
 faça merge sozinha sem sinal do humano responsável.
 
-## 15. Reuso em outro projeto
+**"Marca a SDD como implementada" / "terminei de implementar"** → aplique
+o gate da seção 16 antes de mudar o status: confira requisito por
+requisito, confira arquivo por arquivo tocado, preencha a tabela de
+evidência com comando+saída reais desta sessão. Sem isso, não avance para
+`implemented`.
+
+**"Faz o handover" / "passa isso pro próximo" / uso de contexto alto**
+→ siga a seção 17: gere `HANDOFF.md` com as seções fixas, referenciando
+ids em vez de reescrever conteúdo, e informe o caminho do arquivo gerado.
+
+## 15. Gate obrigatório: qualidade de conteúdo do PRD/Tech Spec/SDD
+Os gates das seções 5 e 6 garantem ORDEM (documento antes de código,
+branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Um PRD ou
+Tech Spec `approved` pode ainda ser vago o bastante para que a SDD saia
+genérica. Antes de mover PRD, Tech Spec ou SDD de `draft` para
+`in_review`, você DEVE confirmar:
+1. Todo requisito funcional (PRD) tem RF-ID próprio e critério de aceite
+   verificável objetivamente — nunca um bucket de critérios desconectado.
+2. Todo contrato técnico (Tech Spec) tem assinatura/schema exato e
+   arquivo/módulo onde vive — nunca prosa livre tipo "no serviço de X".
+3. Todo caminho de erro/borda relevante está listado explicitamente —
+   "tratar erros apropriadamente" é placeholder, não conteúdo.
+4. Nenhum placeholder ("TBD", "definir depois", "ajustar conforme
+   necessário", "seguir padrão do projeto" sem nomear o arquivo).
+5. Ambiguidade real vira `NEEDS CLARIFICATION: <pergunta objetiva>` em
+   vez de suposição silenciosa. Documento não vai para `approved` com
+   `NEEDS CLARIFICATION` pendente.
+6. A SDD compilada não adiciona nem empobrece o que está em
+   `source_docs` — compilar não é redigir do zero nem resumir demais.
+
+Rode essa checklist em você mesma como último passo antes de propor a
+mudança de status (ver seção "Autorrevisão"/"Verificação de escopo" nos
+templates) — é autorrevisão, não revisão de outra pessoa. Ver
+`gate_content_quality` em `workflow-rules.yaml` (seção 15).
+
+## 16. Gate obrigatório: verificação de escopo antes de SDD "implemented"
+Antes de mover uma SDD de `approved` para `implemented`, você DEVE:
+1. Confirmar que todo item de "Requisitos consolidados" e "Especificação
+   técnica consolidada" tem código correspondente — se algo ficou de
+   fora, mantenha `approved`, não avance o status.
+2. Confirmar que todo arquivo tocado pela implementação está listado na
+   SDD. Arquivo fora da lista é escopo não registrado (atualize a SDD) ou
+   scope creep (remova antes do commit) — nunca ambos silenciosos.
+3. Confirmar que não há abstração, dependência, feature flag ou refactor
+   extra sem requisito correspondente na SDD ("já que estava ali" não é
+   justificativa).
+4. Preencher a tabela "Evidência de verificação" da SDD com o comando
+   rodado NESTA sessão e a saída real para cada critério de aceite — não
+   aceite "deve passar" nem resultado de memória; rode de novo se não
+   tiver certeza.
+
+Se a verificação encontrar descompasso (requisito sem código, ou código
+sem requisito), não avance o status silenciosamente: relate ao humano e
+proponha atualizar a SDD ou remover o código fora de escopo — a decisão é
+dele. Ver `gate_scope_verification` em `workflow-rules.yaml` (seção 16).
+
+## 17. Handover/pickup: transferindo contexto entre sessões
+Quando o planejamento (PRD/TS/SDD) termina e a implementação vai rodar em
+sessão/agente separado, ou quando o uso de contexto da sessão atual se
+aproxima de ~45% (limite configurável pelo usuário) com trabalho do fluxo
+ainda pela frente, gere um `HANDOFF.md` em vez de tentar carregar a
+sessão inteira adiante:
+- Seções fixas: `Goal`, `Status`, `Ids relacionados`, `Files touched`,
+  `Key decisions`, `Open threads / blockers`, `Next step`, `Don't do`.
+- Referencie ids do framework (SDD-X, TS-X, PRD-X) em vez de reescrever o
+  conteúdo desses documentos — a sessão seguinte lê os originais quando
+  precisar de detalhe.
+- Local: repositório de projeto (junto de `docs/sdd/`) para handover de
+  implementação; repositório central para handover entre etapas de
+  documentação. Sobrescreve em lugar, não acumula versões antigas.
+- Mesma proibição de placeholder da seção 15: "Status" e "Next step"
+  precisam de ação literal, nunca "fazer os ajustes pendentes".
+
+A sessão que retoma (`pickup`) relê do disco qualquer arquivo listado em
+"Files touched" antes de alterá-lo (arquivo pode ter mudado desde o
+handover), reconhece em poucas linhas, e prossegue direto para "Next
+step" sem pedir "posso continuar?" — só pergunta se "Next step" for
+genuinamente ambíguo. Handover não substitui nenhum gate anterior: SDD
+ainda precisa estar `approved` antes de implementar, branch dedicada
+ainda é obrigatória, e a verificação de escopo (seção 16) ainda roda
+antes de `implemented`. Ver `handover_protocol` em `workflow-rules.yaml`
+(seção 17), e as skills `handover`/`pickup`.
+
+## 18. Reuso em outro projeto
 Este mesmo prompt e as mesmas regras se aplicam a qualquer projeto — só
 o `PROJECT_CODE`, o repositório de projeto e o conteúdo dos documentos
 mudam. `_framework/` existe em cópia única, dentro do repositório

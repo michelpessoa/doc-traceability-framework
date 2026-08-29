@@ -3,7 +3,7 @@ description: Framework de Documentação & Rastreabilidade para IA — SDD local
 globs: ["docs/sdd/**/*.md", "docs/sdd/registry.yaml"]
 alwaysApply: true
 ---
-# Framework de Documentação & Rastreabilidade (v1.2.0)
+# Framework de Documentação & Rastreabilidade (v1.7.0)
 
 Este arquivo roda no **repositório do projeto** (onde o código vive) e
 implementa as MESMAS regras de `_framework/rules/workflow-rules.yaml` e
@@ -22,11 +22,22 @@ arquivo real no repositório central, que você não tem localmente.
 ## SDD — o que fazer antes de gerar código
 Antes de gerar código para uma feature coberta por este framework,
 procure a SDD correspondente em `docs/sdd/`. Se não existir SDD
-`approved`, avise o usuário em vez de implementar às cegas. Ao criar uma
-SDD nova, use `templates/sdd.template.md`, gere o próximo id sequencial
-(consulte `docs/sdd/registry.yaml`), preencha `source_docs` com
-`{id, url}` para cada PRD/TS/ADR de origem, e atualize o registry local
-no mesmo diff.
+`approved`, avise o usuário em vez de implementar às cegas — e note que
+a SDD só pode ser compilada a partir de PRD e Tech Spec `approved` no
+repositório central; um ADR sozinho, mesmo detalhado, não é
+especificação suficiente (`gate_implementation_before_code`, seção 13 de
+`_framework/rules/workflow-rules.yaml`). Ao criar uma SDD nova, use
+`templates/sdd.template.md`, gere o próximo id sequencial (consulte
+`docs/sdd/registry.yaml`), preencha `source_docs` com `{id, url}` para
+cada PRD/TS/ADR de origem, e atualize o registry local no mesmo diff.
+
+Antes de mover a SDD de `draft` para `in_review`, rode a autorrevisão do
+rodapé do template: todo critério de aceite verificável por comando,
+todo item técnico apontando arquivo/módulo concreto, nenhum placeholder
+("TBD", "tratar erros apropriadamente", "seguir o padrão" sem nomear o
+arquivo), e ambiguidade real marcada como `NEEDS CLARIFICATION` em vez
+de suposta — documento não vai a `approved` com essa marcação pendente.
+Ver `gate_content_quality` (seção 15).
 
 ## Fluxo e gate de decisão (contexto — acontece no repositório central)
 `Strategy Doc → RFC → [gate: exige ADR?] → (sim: ADR → PRD+TS → SDD) |
@@ -56,6 +67,22 @@ processo — use `_framework/prompts/framework-audit.md` (repositório
 central). Não bloqueia commit nem PR; é diagnóstico sob demanda, nunca
 CI. `scripts/registry_tools.py audit <git_log_file> <docs_dir...>`
 automatiza o cruzamento entre commits e os registries conhecidos.
+
+## Antes de marcar a SDD como `implemented` (gate obrigatório)
+Não marque `implemented` de memória. Confirme: todo requisito consolidado
+da SDD tem código correspondente; todo arquivo tocado está listado na SDD
+(senão atualize a SDD ou remova o código fora de escopo — nunca em
+silêncio); a tabela "Evidência de verificação" tem comando+saída reais
+desta sessão para cada critério. Ver `gate_scope_verification`
+(`_framework/rules/workflow-rules.yaml`, seção 16, repositório central).
+
+## Handover ao trocar de sessão/agente
+Terminando o planejamento antes de outra sessão implementar, ou perto de
+~45% de uso de contexto: gere `HANDOFF.md` na raiz deste repositório
+(seções fixas: Goal, Status, Ids relacionados, Files touched, Key
+decisions, Open threads/blockers, Next step, Don't do), referenciando ids
+(SDD-X, TS-X) em vez de reescrever conteúdo. Ver `handover_protocol`
+(`_framework/rules/workflow-rules.yaml`, seção 17).
 
 ## Regras de comportamento neste editor
 - Nunca crie STRAT/RFC/ADR/PRD/TS localmente — esses tipos pertencem ao

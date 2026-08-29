@@ -1,6 +1,6 @@
 # Registry — Projeto EXEMPLO
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-08-15 17:37. Não editar manualmente. Framework v1.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-08-29 11:27. Não editar manualmente. Framework v1.7.0._
 
 Total de documentos: **2**
 

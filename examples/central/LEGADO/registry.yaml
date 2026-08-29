@@ -6,7 +6,7 @@
 # nascendo de um action item estrutural do postmortem).
 
 project: "LEGADO"
-framework_version: "1.1.0"
+framework_version: "1.7.0"
 repository: "https://github.com/org/legado"
 
 documents:

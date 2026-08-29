@@ -14,9 +14,33 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "1.6.0"
-  last_updated: "2026-08-25"
+  version: "1.7.0"
+  last_updated: "2026-08-29"
   changelog:
+    - version: "1.7.0"
+      summary: >
+        Corrige gap de qualidade (não de ordem): os gates 13/14 garantiam
+        que PRD/TS/SDD existissem antes do código e que o código nascesse
+        em branch — mas nada garantia que o CONTEÚDO desses documentos
+        fosse específico o suficiente para implementação sem ambiguidade,
+        nem que a SDD, ao virar `implemented`, tivesse sido de fato
+        verificada contra evidência (não memória) e não tivesse crescido
+        além do que foi pedido. Templates de PRD/Tech Spec/SDD ganham
+        estrutura granular (requisito↔critério 1:1, contratos com
+        Consumes/Produces e "onde" exato, casos de borda explícitos),
+        marcador `NEEDS CLARIFICATION` para não inventar silenciosamente,
+        autorrevisão obrigatória antes de `in_review`, e a SDD ganha seção
+        de evidência de verificação e checklist de escopo (nada a mais,
+        nada a menos) antes de `implemented`. Novas seções 15
+        (gate_content_quality) e 16 (gate_scope_verification). Inspirado
+        em práticas de github.com/obra/superpowers (self-review contra
+        placeholder, "Iron Law" de evidência antes de afirmar conclusão) —
+        adaptado, não copiado, pois este framework opera em dois
+        repositórios e por documentos versionados, não por sessão única.
+        Nova skill `handover` (par com `pickup`, seção 17) para transferir
+        contexto de quem planejou (PRD/TS/SDD) para quem implementa sem
+        herdar a sessão inteira — pensada para manter o agente
+        implementador abaixo de ~45% de uso de contexto da sessão.
     - version: "1.6.0"
       summary: >
         Corrige segundo gap do mesmo incidente EVM: mesmo com PRD/TS/SDD
@@ -500,8 +524,8 @@ frontmatter_schema:
     created: "date (YYYY-MM-DD) — obrigatório"
     updated: "date (YYYY-MM-DD) — obrigatório, atualizar a cada mudança"
     relates_to: "lista de ids — outros documentos diretamente conectados (pais/filhos)"
-    supersedes: "id ou null"
-    superseded_by: "id ou null"
+    supersedes: "id ou null — não se aplica a INC (incident_lifecycle não tem estado `superseded`); o template de INC omite este campo"
+    superseded_by: "id ou null — não se aplica a INC, mesma razão de `supersedes`"
     tags: "lista de strings — livre (ex.: [onboarding] para documentos da Fase 1)"
   type_specific_fields:
     RFC:
@@ -694,6 +718,12 @@ capabilities:
     description: "Antes de escrever ou alterar qualquer código de implementação para uma decisão coberta por este framework, verificar gate_implementation_before_code (seção 13): garantir que PRD/TS/SDD aplicáveis existam (criando-os primeiro, na mesma resposta, se faltarem) antes de tocar em código — nunca implementar primeiro e documentar depois."
   - id: enforce_branch_before_commit
     description: "Antes de criar o primeiro commit de implementação de uma SDD/PRD/TS/ADR no repositório de projeto, verificar gate_branch_before_commit (seção 14): garantir que existe (ou criar) uma branch dedicada a partir de main e que o commit vai para essa branch — nunca commitar implementação direto em main. Ao final, abrir PR para main em vez de mergear localmente sem revisão."
+  - id: enforce_content_quality_gate
+    description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
+  - id: enforce_scope_verification
+    description: "Antes de mover uma SDD para implemented, rodar gate_scope_verification (seção 16): confirmar que todo requisito consolidado foi implementado, que todo arquivo tocado está listado na SDD, que não há código extra sem requisito correspondente, e preencher a tabela de evidência de verificação com comando+saída reais desta sessão — nunca marcar critério como passado de memória."
+  - id: write_handover
+    description: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso), gerar um HANDOFF.md (skill handover, seção 17) no repositório correto, com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer — para que a sessão seguinte (skill pickup) retome sem herdar o histórico completo."
 
 ##############################################################################
 # 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD
@@ -823,3 +853,163 @@ gate_branch_before_commit:
     garante que, mesmo com especificação pronta, o código entra em main
     pelo caminho de revisão — não em sequência, mas em paralelo: ambos
     valem para a mesma sessão de implementação.
+
+##############################################################################
+# 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DO PRD/TECH SPEC/SDD
+##############################################################################
+# Motivação: os gates 13/14 garantem ORDEM (documento antes de código,
+# branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Um PRD
+# ou Tech Spec podem existir, estar "approved", e ainda assim serem vagos
+# o bastante para que a SDD compilada a partir deles saia genérica. A
+# qualidade observada em SDDs anteriores (ex.: SDD-EVM-0001/0009) veio de
+# disciplina espontânea da sessão que compilou, não de exigência do
+# framework — o que significa que não é reprodutível. Este gate torna
+# essa disciplina obrigatória e verificável.
+gate_content_quality:
+  applies_to: >
+    PRD, Tech Spec e SDD, nesta ordem — a qualidade de uma SDD depende
+    diretamente da qualidade do PRD/TS de onde foi compilada.
+  rule: >
+    OBRIGATÓRIO antes de mover PRD/TS/SDD de `draft` para `in_review`:
+      1. Todo requisito funcional (PRD) tem RF-ID próprio e critério de
+         aceite verificável objetivamente (número, condição, valor
+         esperado) — não um bucket solto de critérios desconectado dos
+         requisitos.
+      2. Todo contrato técnico (Tech Spec) tem assinatura/schema exato e
+         aponta o arquivo/módulo onde vive ("onde") — não descrição em
+         prosa livre do tipo "no serviço de X".
+      3. Todo caminho de erro/borda relevante está listado explicitamente
+         (PRD: "Casos de borda"; Tech Spec: "Casos de borda / tratamento
+         de erro") — "tratar erros apropriadamente" não é conteúdo, é
+         placeholder.
+      4. Nenhum placeholder do tipo "TBD", "definir depois", "ajustar
+         conforme necessário", "seguir padrão do projeto" sem nomear o
+         arquivo padrão, ou qualquer frase que descreva o que fazer sem
+         mostrar como.
+      5. Ambiguidade real (algo que genuinamente depende de decisão do
+         humano) é marcada como `NEEDS CLARIFICATION: <pergunta
+         objetiva>` em vez de resolvida por suposição da IA. Um documento
+         não pode ir para `approved` com `NEEDS CLARIFICATION` pendente —
+         só até `in_review`, e mesmo assim sinalizado ao humano revisor.
+      6. A SDD compilada não introduz critério, contrato ou instrução que
+         não exista em nenhum PRD/TS de `source_docs` — compilar não é
+         redigir do zero (regra já existente, seção 3), e este gate
+         proíbe também a direção inversa: a SDD empobrecer o que o PRD/TS
+         já continha.
+  self_review_checklist: >
+    A IA que redige o documento roda esta checklist nela mesma, como
+    último passo antes de propor a mudança de status — não é revisão de
+    outra pessoa/agente, é autorrevisão (ver template de cada tipo,
+    seção "Autorrevisão antes de status in_review" / "Verificação de
+    escopo"): (a) cobertura — todo requisito/contrato do documento de
+    origem tem contrapartida no documento atual; (b) scan de placeholder
+    — busca literal pelos termos banidos no item 4 acima; (c)
+    consistência de nome — um contrato chamado `criarPedido` numa seção e
+    `criarNovoPedido` noutra é bug de documento, não estilo.
+  not_a_ci_gate: >
+    Como os gates 13/14, este não é imposto por CI — é uma
+    responsabilidade da IA que redige o documento, cobrada no momento da
+    transição de status. Divergência encontrada depois (documento
+    `approved` com placeholder) é achado de auditoria (seção 11), não
+    motivo para travar retroativamente.
+
+##############################################################################
+# 16. GATE OBRIGATÓRIO: VERIFICAÇÃO DE ESCOPO ANTES DE SDD "IMPLEMENTED"
+##############################################################################
+# Motivação: gate 13 garante que a SDD existe antes do código. Nada,
+# antes deste gate, garantia que o código entregue fosse exatamente o que
+# a SDD pediu — nem mais (scope creep silencioso: abstração, config ou
+# refactor "já que estava ali") nem menos (requisito que ficou de fora
+# sem ninguém perceber). "Implemented" também não podia ser confiado sem
+# evidência: um checklist marcado `[x]` de memória não prova nada.
+gate_scope_verification:
+  applies_to: "SDD, no momento da transição approved -> implemented."
+  rule: >
+    OBRIGATÓRIO antes de mover uma SDD para `implemented`:
+      1. Todo item de "Requisitos consolidados" e "Especificação técnica
+         consolidada" da SDD tem código correspondente identificável —
+         se algo ficou de fora, a SDD não está implementada, está
+         parcial (mantenha `approved`, não avance o status).
+      2. Todo arquivo efetivamente criado/alterado pela implementação
+         está listado na SDD (seção técnica ou instruções à IA). Arquivo
+         tocado que não está na SDD é um destes dois casos, nunca
+         silencioso: (a) escopo que faltou registrar — volte e atualize a
+         SDD antes de prosseguir; ou (b) scope creep — remova antes do
+         commit final.
+      3. Nenhuma abstração, dependência nova, feature flag ou refactor
+         que não foi pedido por nenhum requisito da SDD. "Já que eu
+         estava ali" não é justificativa válida sob este framework (ver
+         também `principio_minimalismo`, se definido em guias do
+         projeto).
+      4. A tabela "Evidência de verificação" da SDD é preenchida com o
+         comando de fato executado NESTA sessão e a saída real — cada
+         critério de "Critérios de aceite" precisa de uma linha de
+         evidência correspondente. "Deve passar" ou resultado assumido de
+         memória não satisfaz este item; rode o comando de novo se não
+         tiver certeza de quando rodou pela última vez.
+  evidence_standard: >
+    Mesmo padrão de rigor de "evidência antes de afirmação" — nenhuma
+    reivindicação de conclusão (`implemented`, "critério atendido",
+    "teste passa") é aceita sem o comando + saída que a comprova, gerados
+    na mesma sessão em que a reivindicação é feita. Relatório de outro
+    agente/subagente sobre o próprio trabalho não substitui rodar a
+    verificação de forma independente.
+  if_scope_mismatch_found: >
+    Se a verificação encontrar requisito não implementado ou código sem
+    requisito correspondente, a IA não avança o status silenciosamente:
+    relata o descompasso ao humano responsável e propõe (a) atualizar a
+    SDD para refletir o escopo real acordado, ou (b) remover o código
+    fora de escopo — a decisão de qual caminho é do humano, não da IA.
+
+##############################################################################
+# 17. SKILL DE TRANSFERÊNCIA DE CONTEXTO: HANDOVER / PICKUP
+##############################################################################
+# Motivação: o fluxo deste framework frequentemente separa quem planeja
+# (compila PRD/TS/SDD) de quem implementa (escreve código a partir da
+# SDD) — inclusive quando é a mesma pessoa, mas em sessões de IA
+# diferentes para não estourar o orçamento de contexto de uma sessão só.
+# Sem um formato padrão de passagem, a sessão implementadora reconstrói
+# contexto lendo tudo de novo (PRD/TS/SDD inteiros, histórico de decisão)
+# ou herda uma sessão inchada. Handover resolve isso com um artefato de
+# passagem pequeno e padronizado — inspirado no padrão observado em
+# implementações públicas de "handover"/"pickup" (ex.:
+# github.com/vmihalis/claude-handover), adaptado para apontar aos ids do
+# framework em vez de reexplicar contexto em prosa.
+handover_protocol:
+  when_to_trigger:
+    - "Planejamento terminou (SDD compilada e approved) e a implementação vai rodar em sessão/agente separado."
+    - "Uso de contexto da sessão atual atinge ~45% (limite configurável pelo usuário) e ainda há trabalho do fluxo (documentar ou implementar) pela frente."
+    - "Troca deliberada de sessão/agente no meio da implementação (ex.: subagente por tarefa, como em execução multi-agente)."
+  artifact:
+    name: "HANDOFF.md"
+    location: >
+      Repositório de projeto (junto de docs/sdd/) quando o handover é
+      para implementação; repositório central quando o handover é entre
+      etapas de documentação (ex.: RFC/ADR redigidos, PRD/TS pendentes).
+      Sobrescreve em lugar dentro do repositório (não acumula histórico
+      de handovers antigos — o histórico real é o commit/PR, não o
+      HANDOFF).
+    required_sections: ["Goal", "Status", "Ids relacionados", "Files touched", "Key decisions", "Open threads / blockers", "Next step", "Don't do"]
+  content_rule: >
+    HANDOFF referencia ids do framework (SDD-X, TS-X, PRD-X) em vez de
+    reescrever o conteúdo desses documentos — a sessão seguinte lê os
+    documentos originais quando precisar de detalhe, o HANDOFF é só o
+    mapa de "onde parei e o que fazer a seguir". Nunca duplica o que já
+    está em source_docs ou nos Critérios de aceite da SDD.
+  no_placeholder: >
+    Mesma proibição do gate_content_quality (seção 15): "Status" e "Next
+    step" não podem ser vagos ("fazer os ajustes pendentes") — precisam
+    de ação literal e específica.
+  pickup_rule: >
+    A sessão/agente que retoma lê o HANDOFF, relê (do disco, não da
+    descrição do HANDOFF) qualquer arquivo listado em "Files touched" que
+    for alterar, reconhece em poucas linhas (objetivo + o que está pronto
+    + próximo passo) e prossegue direto para "Next step" sem pedir
+    confirmação genérica de "posso continuar?" — a menos que "Next step"
+    seja de fato ambíguo, caso em que faz UMA pergunta específica.
+  relationship_with_gates: >
+    Handover não substitui nenhum gate anterior — SDD ainda precisa
+    existir e estar `approved` antes de implementar (seção 13), branch
+    dedicada ainda é obrigatória antes do commit (seção 14), e a
+    verificação de escopo (seção 16) ainda roda antes de `implemented`,
+    independente de quantas sessões/handoffs aconteceram no meio.
