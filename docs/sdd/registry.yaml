@@ -1,5 +1,5 @@
 project: "DTF"
-framework_version: "2.0.0"
+framework_version: "2.1.0"
 documents:
   - id: SDD-DTF-0001
     type: SDD
