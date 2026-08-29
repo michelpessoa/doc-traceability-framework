@@ -37,13 +37,15 @@ SDD -> input direto para a IA que vai implementar o código
 Veja o diagrama completo em
 [`_framework/guides/assets/flow_diagram.png`](_framework/guides/assets/flow_diagram.png).
 
-A **fonte canônica e sempre atual** das regras é
+A **fonte canônica** das regras é
 [`_framework/rules/workflow-rules.yaml`](_framework/rules/workflow-rules.yaml)
 — em caso de divergência com qualquer prompt, guia ou skill, o YAML manda.
-Os arquivos `Framework_Documentacao_Rastreabilidade_v1.x.md` na raiz são
-instantâneos históricos das especificações 1.1 e 1.2, mantidos por
-registro, e não refletem mais o estado atual. O histórico de evolução está
-em [`CHANGELOG.md`](CHANGELOG.md).
+A especificação narrada, que explica o desenho e o porquê de cada regra,
+está em
+[`Framework_Documentacao_Rastreabilidade.md`](Framework_Documentacao_Rastreabilidade.md)
+e acompanha sempre a versão atual — não há cópias versionadas dela. O
+histórico de o que mudou em cada versão está em
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## Estrutura deste repositório
 
