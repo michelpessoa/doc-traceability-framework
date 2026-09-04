@@ -114,7 +114,7 @@ documents:
   - id: SDD-DTF-0012
     type: SDD
     title: "Adiciona .env ao .gitignore do kit público"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-03"
     updated: "2026-09-03"
