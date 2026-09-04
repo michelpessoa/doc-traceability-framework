@@ -2,11 +2,11 @@
 id: SDD-DTF-0005
 type: SDD
 title: "Porta de entrada única e documentação gerada"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
-updated: "2026-08-29"
+updated: "2026-09-04"
 relates_to: [SPEC-DTF-0004, ADR-DTF-0001]
 source_docs:
   - id: "SPEC-DTF-0004"
@@ -156,9 +156,9 @@ de projeto é alterado, nenhum dado migrado.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
