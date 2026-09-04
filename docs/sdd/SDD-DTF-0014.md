@@ -2,7 +2,7 @@
 id: SDD-DTF-0014
 type: SDD
 title: "Lockfile de dependências dev + config de formatter explícita"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-04"
@@ -129,9 +129,12 @@ nenhuma reformatação.)
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** pendente — esta tabela é do
-implementador, mesma sessão. Verificação independente por sessão
-separada (`sdd-verifier`) ainda precisa rodar antes de `implemented`.
+**Verificador independente:** sim — sessão separada da implementação,
+sem contexto herdado (leu só a SDD e o diff). A tabela abaixo (do
+implementador) não foi usada como fonte de verdade — todos os comandos
+foram rodados de novo pela verificação independente. Detalhe completo,
+incluindo os sensores de discriminação dos critérios 2 e 3, em
+`docs/sdd/validation.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
@@ -139,6 +142,12 @@ separada (`sdd-verifier`) ainda precisa rodar antes de `implemented`.
 | 2 | `grep -n "pip install -r requirements.txt" .github/workflows/framework-check.yml` | 1 ocorrência (linha 51) | — | Sim |
 | 3 | `ruff format --check _framework/scripts` | `10 files already formatted` | — | Sim |
 | 4 | `framework_check.py --auto` e `pytest` | `✅ Todas as verificações do framework passaram.`, `7 passed` | — | Sim |
+
+Verificação independente (sessão separada, subagente/sessão de
+verificação `verify-sdd`): comandos 1-4 rerodados do zero, mais sensor
+de discriminação nos critérios 2 e 3 (linha do CI revertida → grep
+falha; violação de formatação real introduzida → `ruff format --check`
+falha). Veredito PASS. Detalhe completo em `docs/sdd/validation.md`.
 
 ## Rastreabilidade
 
