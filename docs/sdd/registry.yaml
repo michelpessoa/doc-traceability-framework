@@ -131,3 +131,13 @@ documents:
     relates_to: [SDD-DTF-0011]
     path: "docs/sdd/SDD-DTF-0013.md"
     tags: [tooling, qualidade, kit-publico]
+  - id: SDD-DTF-0014
+    type: SDD
+    title: "Lockfile de dependências dev + config de formatter explícita"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-09-04"
+    updated: "2026-09-04"
+    relates_to: [SDD-DTF-0013]
+    path: "docs/sdd/SDD-DTF-0014.md"
+    tags: [tooling, higiene, kit-publico]

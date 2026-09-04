@@ -4,3 +4,7 @@ exclude = ["examples/**"]
 
 [lint]
 select = ["E", "F", "I", "W"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
