@@ -19,6 +19,7 @@ Uso:
 --check não escreve: sai 1 se algum bloco estiver desatualizado (é o que
 o CI roda).
 """
+import json
 import sys
 from pathlib import Path
 
@@ -40,7 +41,40 @@ FULL_TARGETS = [
     ("prompts/universal.md", "build_universal"),
     ("prompts/cursor/doc-framework.mdc", "build_cursor_mdc"),
     ("prompts/copilot/copilot-instructions.md", "build_copilot_instructions"),
+    ("../.claude/settings.json", "build_claude_settings"),
+    (
+        "../.claude/agents/sdd-verifier.md",
+        lambda rules: build_claude_agent(find_capability(rules, "verify_sdd_independently"), rules),
+    ),
+    (
+        "../.claude/commands/framework-check.md",
+        lambda rules: build_claude_command(find_capability(rules, "audit_repo_adherence"), rules),
+    ),
+    ("../_framework/scripts/guard_bash.sh", "build_guard_bash"),
 ]
+
+# artifact_type aceitos em capabilities.<id>.mechanization — qualquer outro
+# valor é erro de configuração no YAML, reprovado antes de escrever arquivo.
+MECHANIZATION_ARTIFACT_TYPES = {
+    "hook_pretooluse",
+    "hook_posttooluse",
+    "hook_sessionstart",
+    "hook_precompact",
+    "agent",
+    "command",
+}
+
+# artifact_type -> chave do evento em .claude/settings.json.
+HOOK_EVENT_BY_ARTIFACT_TYPE = {
+    "hook_sessionstart": "SessionStart",
+    "hook_precompact": "PreCompact",
+    "hook_pretooluse": "PreToolUse",
+    "hook_posttooluse": "PostToolUse",
+}
+
+# Ordem fixa dos eventos em .claude/settings.json — mantém o arquivo gerado
+# byte-idêntico ao mantido à mão antes desta SDD.
+HOOK_EVENT_ORDER = ["SessionStart", "PreCompact", "PreToolUse", "PostToolUse"]
 
 # Versões anteriores ao changelog canônico do YAML, que começa na 1.4.0.
 # Preservado literalmente para a geração não apagar histórico.
@@ -138,6 +172,196 @@ def core_facts(rules: dict) -> str:
             lines.append(f"- **{c['id']}** — {' '.join((c.get('description') or '').split())}")
 
     return "\n".join(lines)
+
+
+def find_capability(rules: dict, capability_id: str) -> dict:
+    """Busca uma capacidade por id em rules['capabilities']."""
+    for cap in rules.get("capabilities") or []:
+        if cap.get("id") == capability_id:
+            return cap
+    raise ValueError(f"capacidade '{capability_id}' não encontrada em workflow-rules.yaml")
+
+
+def mechanized_filename(capability: dict) -> str:
+    """Nome de arquivo (sem extensão) de um artefato mecanizado.
+
+    `mechanization_filename` existe para preservar nomes já em uso
+    (`sdd-verifier`, `framework-check`) sem acoplar o gerador ao id da
+    capacidade.
+    """
+    return capability.get("mechanization_filename", capability["id"])
+
+
+def validate_mechanizations(rules: dict) -> None:
+    """Falha cedo (antes de escrever qualquer FULL_TARGETS) se alguma
+    capacidade mecanizada tiver artifact_type desconhecido, ou se duas
+    colidirem no mesmo nome de arquivo agent/command."""
+    filenames_by_kind = {"agent": {}, "command": {}}
+    for cap in rules.get("capabilities") or []:
+        mech = cap.get("mechanization")
+        if not mech:
+            continue
+        artifact_type = mech.get("artifact_type")
+        if artifact_type not in MECHANIZATION_ARTIFACT_TYPES:
+            raise SystemExit(
+                f"capacidade '{cap.get('id')}': artifact_type '{artifact_type}' desconhecido "
+                f"(aceitos: {', '.join(sorted(MECHANIZATION_ARTIFACT_TYPES))})."
+            )
+        if artifact_type in ("agent", "command"):
+            name = mechanized_filename(cap)
+            existing = filenames_by_kind[artifact_type].get(name)
+            if existing:
+                raise SystemExit(
+                    f"colisão de mechanization_filename '{name}' entre '{existing}' e "
+                    f"'{cap['id']}' (artifact_type: {artifact_type})."
+                )
+            filenames_by_kind[artifact_type][name] = cap["id"]
+
+
+def _json_str(value: str) -> str:
+    """String JSON com acentuação legível (ensure_ascii=False)."""
+    return json.dumps(value, ensure_ascii=False)
+
+
+def build_claude_settings(rules: dict) -> str:
+    """.claude/settings.json — hooks gerados a partir de toda capacidade com
+    mechanization.artifact_type iniciando em 'hook_', agrupados por evento."""
+    hooks: dict = {}
+    for cap in rules.get("capabilities") or []:
+        mech = cap.get("mechanization")
+        if not mech:
+            continue
+        event = HOOK_EVENT_BY_ARTIFACT_TYPE.get(mech.get("artifact_type"))
+        if event is None:
+            continue
+        if "prompt" in mech:
+            entry_lines = [
+                "          {",
+                '            "type": "prompt",',
+                f'            "prompt": {_json_str(mech["prompt"])}',
+                "          }",
+            ]
+        else:
+            command, *args = mech["hook_command"]
+            args_json = ", ".join(_json_str(a) for a in args)
+            entry_lines = [
+                "          {",
+                '            "type": "command",',
+                f'            "command": {_json_str(command)},',
+                f'            "args": [{args_json}]',
+                "          }",
+            ]
+        hooks.setdefault(event, {"matcher": mech["matcher"], "entries": []})
+        hooks[event]["entries"].append("\n".join(entry_lines))
+
+    event_blocks = []
+    for event in HOOK_EVENT_ORDER:
+        if event not in hooks:
+            continue
+        matcher = hooks[event]["matcher"]
+        entries = ",\n".join(hooks[event]["entries"])
+        event_blocks.append(
+            f'    "{event}": [\n'
+            f"      {{\n"
+            f'        "matcher": {_json_str(matcher)},\n'
+            f'        "hooks": [\n{entries}\n'
+            f"        ]\n"
+            f"      }}\n"
+            f"    ]"
+        )
+
+    return "{\n  \"hooks\": {\n" + ",\n".join(event_blocks) + "\n  }\n}\n"
+
+
+def build_claude_agent(capability: dict, rules: dict) -> str:
+    """.claude/agents/<mechanization_filename>.md gerado por inteiro."""
+    procedure = capability.get("procedure")
+    if procedure:
+        body = f"Segue integralmente o procedimento normativo em `_framework/{procedure}` (capacidade `{capability['id']}`)."
+    else:
+        body = f"{capability['description']}\n\nCapacidade: `{capability['id']}`."
+    return "\n".join([
+        "---",
+        f"name: {mechanized_filename(capability)}",
+        f"description: {capability['description']}",
+        "---",
+        "",
+        body,
+        "",
+    ])
+
+
+def build_claude_command(capability: dict, rules: dict) -> str:
+    """.claude/commands/<mechanization_filename>.md gerado por inteiro."""
+    hook_command = (capability.get("mechanization") or {}).get("hook_command")
+    if hook_command:
+        cmd_line = " ".join(hook_command)
+        body = "\n".join([
+            "Execute:",
+            "",
+            "```bash",
+            cmd_line,
+            "```",
+            "",
+            f"Capacidade: `{capability['id']}`.",
+        ])
+    else:
+        body = f"{capability['description']}\n\nCapacidade: `{capability['id']}`."
+    return "\n".join([
+        "---",
+        f"description: {capability['description']}",
+        "---",
+        "",
+        body,
+        "",
+    ])
+
+
+def build_guard_bash(rules: dict) -> str:
+    """_framework/scripts/guard_bash.sh gerado a partir de
+    enforce_branch_before_commit.enforcement_patterns."""
+    patterns = find_capability(rules, "enforce_branch_before_commit").get("enforcement_patterns") or []
+    if not patterns:
+        print("WARN: enforce_branch_before_commit sem enforcement_patterns — guard_bash.sh gerado sem regra alguma.")
+
+    header = '''#!/usr/bin/env bash
+#
+# PreToolUse gate hook (Claude Code, matcher: Bash).
+#
+# Lê o payload JSON do hook via stdin e recusa (exit 2) comandos
+# destrutivos óbvios antes de rodarem — mesmo espírito do
+# .githooks/pre-push deste repositório (recusa push direto/force em
+# main), estendido para o próprio shell do agente.
+#
+# Falha aberta de propósito: se o payload não tiver o campo esperado,
+# deixa passar em vez de travar o agente por um formato inesperado.
+set -euo pipefail
+
+payload="$(cat)"
+command="$(python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+print(data.get("tool_input", {}).get("command", ""))
+' <<<"$payload")"
+
+[ -z "$command" ] && exit 0
+
+deny() {
+  echo "guard_bash: bloqueado — $1" >&2
+  exit 2
+}
+'''
+    lines = [header, "case \"$command\" in"]
+    for entry in patterns:
+        lines.append(f'  {entry["pattern"]})')
+        lines.append(f'    deny "{entry["message"]}" ;;')
+    lines.append("esac")
+    lines.append("")
+    lines.append("exit 0")
+    return "\n".join(lines) + "\n"
 
 
 def build_agents(rules: dict) -> str:
@@ -454,9 +678,11 @@ def main() -> int:
     if not rules_file:
         raise SystemExit("workflow-rules.yaml não encontrado.")
     root = rules_file.parent.parent
+    validate_mechanizations(load_rules())
     ok = True
     for rel, builder in FULL_TARGETS:
-        ok &= write_full((root / rel).resolve(), globals()[builder](load_rules()), check)
+        build = builder if callable(builder) else globals()[builder]
+        ok &= write_full((root / rel).resolve(), build(load_rules()), check)
 
     ok &= sync_copies(root, check)
 

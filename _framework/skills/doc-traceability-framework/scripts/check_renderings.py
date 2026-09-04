@@ -49,6 +49,31 @@ RENDERINGS = [
 # — incluí-los ali reprovaria sempre, falso positivo estrutural. A
 # checagem certa para eles é existência do arquivo referenciado.
 
+# Artefatos mecanizados por fornecedor (SDD-DTF-0009): .claude/settings.json,
+# .claude/agents/sdd-verifier.md, .claude/commands/framework-check.md e
+# guard_bash.sh. Mesmo motivo do comentário acima — hook JSON e stub de
+# agent/command não citam tipo de documento nem Iron Law, então também não
+# entram no laço de RENDERINGS (reprovaria sempre). A divergência de
+# conteúdo desses quatro já é coberta por `render_prompts.py --check`
+# (FULL_TARGETS); aqui só confere que os quatro existem no disco.
+MECHANIZED_ARTIFACTS = [
+    "../.claude/settings.json",
+    "../.claude/agents/sdd-verifier.md",
+    "../.claude/commands/framework-check.md",
+    "../_framework/scripts/guard_bash.sh",
+]
+
+
+def check_mechanized_artifacts(root: Path) -> list:
+    """Os quatro artefatos gerados por capabilities.<id>.mechanization
+    existem no disco. Conteúdo divergente é responsabilidade de
+    `render_prompts.py --check`, não deste script."""
+    return [
+        f"{rel}: artefato mecanizado ausente — rode render_prompts.py."
+        for rel in MECHANIZED_ARTIFACTS
+        if not (root / rel).is_file()
+    ]
+
 
 def check_links(root: Path) -> list:
     """Links relativos que não resolvem em disco.
@@ -117,6 +142,7 @@ def main() -> int:
     problems, warnings = [], []
     problems += check_links(root)
     problems += check_capability_procedures(rules, root)
+    problems += check_mechanized_artifacts(root)
 
     for rel in RENDERINGS:
         path = root / rel
