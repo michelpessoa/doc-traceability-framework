@@ -28,6 +28,7 @@ audit:    implementa a seção 11 (audit) de workflow-rules.yaml — cruza um
 
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
+
 import sys
 from pathlib import Path
 
@@ -92,8 +93,12 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
                 problems.append(f"{did}: relates_to aponta para id inexistente '{rel}'")
 
         for field in (
-            "parent_rfc", "parent_adr", "parent_strategy", "parent_postmortem",
-            "supersedes", "superseded_by",
+            "parent_rfc",
+            "parent_adr",
+            "parent_strategy",
+            "parent_postmortem",
+            "supersedes",
+            "superseded_by",
         ):
             val = d.get(field)
             if val and val not in docs and not is_expected_external(val):
@@ -116,8 +121,7 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
     return report(
         problems,
         warnings,
-        f"✅ registry.yaml e documentos consistentes ({len(docs)} documentos, "
-        "nenhum problema encontrado).",
+        f"✅ registry.yaml e documentos consistentes ({len(docs)} documentos, nenhum problema encontrado).",
         report_only=report_only,
     )
 
@@ -196,8 +200,7 @@ def check_framework_version(data: dict, docs_dir: Path, warnings: list) -> list:
     declared = str(declared)
     if known and declared not in known:
         problems.append(
-            f"`framework_version: {declared}` não é uma versão conhecida do "
-            f"framework (conhecidas: {', '.join(known)})."
+            f"`framework_version: {declared}` não é uma versão conhecida do framework (conhecidas: {', '.join(known)})."
         )
     elif current and version_key(declared) > version_key(current):
         problems.append(
@@ -255,9 +258,7 @@ def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: li
             continue
 
         if fm.get("id") != did:
-            problems.append(
-                f"{did}: front-matter declara id '{fm.get('id')}', registry diz '{did}'."
-            )
+            problems.append(f"{did}: front-matter declara id '{fm.get('id')}', registry diz '{did}'.")
 
         for field in MIRRORED_FIELDS:
             doc_value = fm.get(field)
@@ -267,10 +268,7 @@ def check_documents_on_disk(docs_dir: Path, data: dict, docs: dict, warnings: li
                     continue
             elif str(doc_value) == str(reg_value):
                 continue
-            problems.append(
-                f"{did}: `{field}` diverge — documento: '{doc_value}', "
-                f"registry: '{reg_value}'."
-            )
+            problems.append(f"{did}: `{field}` diverge — documento: '{doc_value}', registry: '{reg_value}'.")
 
         problems += check_source_docs_urls(did, fm)
 
@@ -316,7 +314,7 @@ def resolve_doc_path(docs_dir: Path, rel_path: str) -> Path | None:
         candidate = root / rel_path
         if candidate.is_file():
             return candidate
-    tail = (docs_dir / Path(rel_path).name)
+    tail = docs_dir / Path(rel_path).name
     return tail if tail.is_file() else None
 
 

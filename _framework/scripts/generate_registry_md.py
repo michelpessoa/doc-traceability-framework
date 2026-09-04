@@ -12,6 +12,7 @@ Uso:
 Se <caminho_para_docs> for omitido, assume "docs" no diretório atual.
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
+
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -44,8 +45,8 @@ def render_table(docs: list) -> str:
     for d in docs:
         related = ", ".join(d.get("relates_to") or []) or "—"
         rows.append(
-            f"| `{d['id']}` | {d.get('title','')} | {d.get('status','')} "
-            f"| {d.get('owner','')} | {d.get('updated','')} | {related} |"
+            f"| `{d['id']}` | {d.get('title', '')} | {d.get('status', '')} "
+            f"| {d.get('owner', '')} | {d.get('updated', '')} | {related} |"
         )
     return header + "\n".join(rows) + "\n"
 

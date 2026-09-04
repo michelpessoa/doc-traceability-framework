@@ -12,6 +12,7 @@ acessível (fallback embutido só para uso fora do repositório).
 
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
+
 import re
 from pathlib import Path
 
@@ -20,6 +21,7 @@ import yaml
 # ---------------------------------------------------------------------------
 # Regras canônicas
 # ---------------------------------------------------------------------------
+
 
 def find_rules_file(start: Path = None) -> Path | None:
     """
@@ -91,8 +93,13 @@ FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
 _FALLBACK_DOC_TYPES = ["STRAT", "RFC", "ADR", "SPEC", "PRD", "TS", "SDD", "BASE", "INC", "PM"]
 _FALLBACK_STATUSES = {
-    "draft", "in_review", "approved", "rejected",
-    "implemented", "superseded", "archived",
+    "draft",
+    "in_review",
+    "approved",
+    "rejected",
+    "implemented",
+    "superseded",
+    "archived",
 }
 _FALLBACK_INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
 # Arquivos que o framework manda criar dentro das pastas de documento mas
@@ -124,9 +131,7 @@ DOC_TYPES, VALID_STATUSES, INCIDENT_STATUSES, OPERATIONAL_ARTIFACTS = _derive_co
 
 # Tipos ordenados por tamanho decrescente: sem isso a alternância do regex
 # casaria "TS" dentro de um id que começa com outro prefixo mais longo.
-ID_PATTERN = re.compile(
-    r"\b(?:" + "|".join(sorted(DOC_TYPES, key=len, reverse=True)) + r")-[A-Z0-9]+-\d{4}\b"
-)
+ID_PATTERN = re.compile(r"\b(?:" + "|".join(sorted(DOC_TYPES, key=len, reverse=True)) + r")-[A-Z0-9]+-\d{4}\b")
 
 
 def allowed_transitions(doc_type: str = None) -> dict:
@@ -145,6 +150,7 @@ def sizing_levels() -> list:
 # Front-matter
 # ---------------------------------------------------------------------------
 
+
 def read_frontmatter(path: Path):
     """
     Retorna (frontmatter_dict, corpo_markdown).
@@ -162,7 +168,7 @@ def read_frontmatter(path: Path):
         raise ValueError(f"{path}: front-matter não é YAML válido — {exc}") from exc
     if not isinstance(fm, dict):
         raise ValueError(f"{path}: front-matter não é um mapa YAML")
-    return fm, text[m.end():]
+    return fm, text[m.end() :]
 
 
 def iter_documents(docs_dir: Path):
@@ -184,6 +190,7 @@ def iter_documents(docs_dir: Path):
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
+
 
 def project_version(path: Path) -> str | None:
     """
@@ -238,6 +245,7 @@ def registry_mode(data: dict) -> str:
 # ---------------------------------------------------------------------------
 # Saída
 # ---------------------------------------------------------------------------
+
 
 def report(problems, warnings, ok_message: str, report_only: bool = False) -> int:
     """

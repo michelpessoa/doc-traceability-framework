@@ -21,6 +21,7 @@ Uso:
 Fora dele, a convenção de referência segue sendo recomendada e não
 obrigatória, como a seção 11 define.
 """
+
 import re
 import subprocess
 import sys
@@ -55,8 +56,7 @@ def check_message(message: str, label: str, require_refs: bool) -> tuple[list, l
     m = CONVENTIONAL.match(subject)
     if not m:
         problems.append(
-            f"{label}: assunto fora de Conventional Commits — "
-            f"'{subject[:60]}'. Esperado 'tipo(escopo): descrição'."
+            f"{label}: assunto fora de Conventional Commits — '{subject[:60]}'. Esperado 'tipo(escopo): descrição'."
         )
         return problems, warnings
 
@@ -68,10 +68,7 @@ def check_message(message: str, label: str, require_refs: bool) -> tuple[list, l
 
     ids = set(ID_PATTERN.findall(message))
     if not ids and m.group("type") in IMPLEMENTATION_TYPES:
-        msg = (
-            f"{label}: commit '{m.group('type')}' sem id do framework na mensagem "
-            "(ex.: 'Refs: SDD-PROJETO-0001')."
-        )
+        msg = f"{label}: commit '{m.group('type')}' sem id do framework na mensagem (ex.: 'Refs: SDD-PROJETO-0001')."
         (problems if require_refs else warnings).append(msg)
 
     return problems, warnings
@@ -80,7 +77,9 @@ def check_message(message: str, label: str, require_refs: bool) -> tuple[list, l
 def messages_from_range(rev_range: str) -> list[tuple[str, str]]:
     out = subprocess.run(
         ["git", "log", "--pretty=format:%H%x00%B%x00---END---", rev_range],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout
     result = []
     for chunk in out.split("---END---"):

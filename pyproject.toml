@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+testpaths = ["_framework/scripts/tests"]
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = false
+implicit_optional = true
+disable_error_code = ["var-annotated", "union-attr", "index"]
+files = ["_framework/scripts"]
