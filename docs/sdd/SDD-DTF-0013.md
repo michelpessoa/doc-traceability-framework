@@ -2,7 +2,7 @@
 id: SDD-DTF-0013
 type: SDD
 title: "Tooling de dev completo no kit público: test runner declarado, typecheck, formatter, pre-commit framework"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-03"
@@ -182,20 +182,25 @@ Sensor de discriminação: critério 3 tem caso negativo explícito
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** pendente — esta tabela é do implementador,
-nesta mesma sessão (`pip install --user --break-system-packages mypy
-ruff pre-commit`, ambiente sem `venv`/`pipx` disponível). Verificação
-independente por sessão separada (`sdd-verifier`) ainda precisa rodar
-antes de `implemented`.
+**Verificador independente:** sim — subagent `sdd-verifier`, sessão
+separada da implementação, sem contexto herdado (leu só a SDD e o diff
+`b90b023..13e206d`). Detalhe completo, incluindo verificação do desvio de
+mypy e sensor de discriminação do formatter, em `docs/sdd/validation.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `pytest -v` (raiz do kit, sem argumento) | `7 passed` | — | Sim |
+| 1 | `pytest -v` (raiz do kit, sem argumento) | `configfile: pyproject.toml`, `testpaths: _framework/scripts/tests`, `7 passed` | — | Sim |
 | 2 | `mypy _framework/scripts` | `Success: no issues found in 10 source files` | — | Sim |
-| 3 | Criei `_framework/scripts/_tmp_bad_fmt.py` com indentação errada, `ruff format --check` (exit 1, "1 file would be reformatted"), `ruff format` + checagem de novo (exit 0), removi o arquivo | exit 1 → exit 0 | negativo→positivo | Sim |
-| 4 | `pre-commit run --all-files -c .pre-commit-config.yaml` | `ruff (legacy alias)` Passed, `ruff format` Passed, `framework-check (documentos)` Passed | — | Sim |
-| 5 | `mypy _framework/scripts` e `ruff format --check _framework/scripts` isolados | ambos exit 0 | — | Sim |
+| 3 | Quebra real em `validate_doc.py` (`import re` → `import   re`), `ruff format --check` (exit 1, aponta a linha), restaurado, `ruff format --check` de novo (exit 0) | exit 1 → exit 0 | negativo→positivo | Sim |
+| 4 | `pre-commit run --all-files -c .pre-commit-config.yaml`; `cat .githooks/pre-commit` | `ruff`/`ruff format`/`framework-check` Passed; hook original intacto | — | Sim |
+| 5 | Inspeção de `.github/workflows/framework-check.yml` + replay local de `mypy _framework/scripts` e `ruff format --check` | steps na ordem certa, ambos exit 0 isolados | — | Sim |
 | 6 | `framework_check.py --auto` e `pytest _framework/scripts/tests/ -v` | `✅ Todas as verificações do framework passaram.`, `7 passed` | — | Sim |
+| 7 | `ruff check _framework/scripts` | `All checks passed!` | — | Sim |
+| 8 | `render_prompts.py --check` | todas as cópias mecanizadas sincronizadas | — | Sim |
+| 9 | Desvio de mypy (implicit_optional + disable_error_code) removido temporariamente, `mypy _framework/scripts` sem ele, restaurado | 10 erros reais em 7 arquivos, todos em anotações pré-existentes fora do diff do PR; desvio justificado (SDD cita "4" var-annotated, real é 5 — descompasso de prosa, não de código) | — | Sim |
+
+Detalhe completo (comandos, saídas integrais, comparação linha-a-linha dos
+9 scripts reformatados) em `docs/sdd/validation.md`.
 
 ## Rastreabilidade
 
