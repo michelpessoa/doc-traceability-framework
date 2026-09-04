@@ -251,7 +251,12 @@ correção, passa depois, nas duas pontas.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não — mesma sessão que implementou.
+**Verificador independente:** sim — sessão separada da que implementou,
+sem ler o histórico da sessão implementadora. Os 11 critérios abaixo
+foram re-executados nesta sessão em 2026-09-04, com os mesmos resultados
+já registrados (implementação correta; a falha original era só de
+processo — ver `LESSONS.md`, "SDD-DTF-0009 marcada implemented sem
+verificador independente").
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
