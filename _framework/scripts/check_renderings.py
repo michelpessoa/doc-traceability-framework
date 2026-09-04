@@ -19,6 +19,7 @@ precisa carregar para não induzir a IA ao erro:
 Uso:
     python3 check_renderings.py [--report-only]
 """
+
 import re
 import sys
 from pathlib import Path
@@ -92,9 +93,7 @@ def check_links(root: Path) -> list:
             if target.startswith(("http://", "https://", "#", "mailto:")):
                 continue
             if not (md.parent / target.split("#")[0]).resolve().exists():
-                problems.append(
-                    f"{md.relative_to(repo)}: link relativo quebrado → '{target}'"
-                )
+                problems.append(f"{md.relative_to(repo)}: link relativo quebrado → '{target}'")
     return problems
 
 
@@ -171,13 +170,11 @@ def main() -> int:
         for key, law in iron_laws.items():
             norm_law = " ".join(law.replace(".", "").lower().split())
             if norm_law not in norm_text:
-                problems.append(f"{rel}: Iron Law de `{key}` diverge ou ausente: \"{law}\"")
+                problems.append(f'{rel}: Iron Law de `{key}` diverge ou ausente: "{law}"')
 
         for t in legacy_types:
             if re.search(rf"\b{re.escape(t)}\b", text) and "legad" not in text.lower():
-                warnings.append(
-                    f"{rel}: cita o tipo legado '{t}' sem marcar que é legado."
-                )
+                warnings.append(f"{rel}: cita o tipo legado '{t}' sem marcar que é legado.")
 
     return report(
         problems,

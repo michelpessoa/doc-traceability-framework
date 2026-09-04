@@ -19,6 +19,7 @@ Uso:
 --check não escreve: sai 1 se algum bloco estiver desatualizado (é o que
 o CI roda).
 """
+
 import json
 import sys
 from pathlib import Path
@@ -147,17 +148,22 @@ def core_facts(rules: dict) -> str:
     lines += ["", "### Tipos de documento", "", "| Tipo | Repositório | Pasta | Situação |", "|---|---|---|---|"]
     for name, spec in types.items():
         spec = spec or {}
-        situation = f"legado desde {spec['deprecated_since']}" if spec.get("deprecated_since") else (
-            "opcional" if spec.get("optional") else "ativo"
+        situation = (
+            f"legado desde {spec['deprecated_since']}"
+            if spec.get("deprecated_since")
+            else ("opcional" if spec.get("optional") else "ativo")
         )
-        lines.append(
-            f"| {name} | {spec.get('repo', '-')} | `{spec.get('folder', '-')}` | {situation} |"
-        )
+        lines.append(f"| {name} | {spec.get('repo', '-')} | `{spec.get('folder', '-')}` | {situation} |")
 
     sizing = (rules.get("sizing") or {}).get("levels") or []
     if sizing:
-        lines += ["", "### Sizing — quais documentos a mudança exige", "",
-                  "| Nível | Critério | Documentos |", "|---|---|---|"]
+        lines += [
+            "",
+            "### Sizing — quais documentos a mudança exige",
+            "",
+            "| Nível | Critério | Documentos |",
+            "|---|---|---|",
+        ]
         for lvl in sizing:
             criteria = " ".join((lvl.get("criteria") or "").split())
             docs = ", ".join(lvl.get("documents") or [])
@@ -165,18 +171,22 @@ def core_facts(rules: dict) -> str:
 
     lifecycle = rules.get("status_lifecycle") or {}
     if lifecycle.get("states"):
-        lines += ["", "### Ciclo de vida de status", "",
-                  "`" + "` → `".join(lifecycle["states"][:5]) + "`",
-                  "",
-                  "Transições válidas: " + "; ".join(
-                      f"{k} → {', '.join(v)}" for k, v in (lifecycle.get("allowed_transitions") or {}).items() if v
-                  ) + ".",
-                  "",
-                  "INC usa o ciclo próprio: `" + "` → `".join(
-                      (rules.get("incident_lifecycle") or {}).get("states") or []
-                  ) + "`."]
+        lines += [
+            "",
+            "### Ciclo de vida de status",
+            "",
+            "`" + "` → `".join(lifecycle["states"][:5]) + "`",
+            "",
+            "Transições válidas: "
+            + "; ".join(f"{k} → {', '.join(v)}" for k, v in (lifecycle.get("allowed_transitions") or {}).items() if v)
+            + ".",
+            "",
+            "INC usa o ciclo próprio: `"
+            + "` → `".join((rules.get("incident_lifecycle") or {}).get("states") or [])
+            + "`.",
+        ]
 
-    gate = ((rules.get("decision_gates") or {}).get("rfc_to_adr") or {})
+    gate = (rules.get("decision_gates") or {}).get("rfc_to_adr") or {}
     if gate.get("criteria"):
         lines += ["", "### Critérios do gate RFC → ADR (qualquer um verdadeiro exige ADR)", ""]
         for c in gate["criteria"]:
@@ -281,7 +291,7 @@ def build_claude_settings(rules: dict) -> str:
             f"    ]"
         )
 
-    return "{\n  \"hooks\": {\n" + ",\n".join(event_blocks) + "\n  }\n}\n"
+    return '{\n  "hooks": {\n' + ",\n".join(event_blocks) + "\n  }\n}\n"
 
 
 def build_claude_agent(capability: dict, rules: dict) -> str:
@@ -294,15 +304,17 @@ def build_claude_agent(capability: dict, rules: dict) -> str:
         )
     else:
         body = f"{capability['description']}\n\nCapacidade: `{capability['id']}`."
-    return "\n".join([
-        "---",
-        f"name: {mechanized_filename(capability)}",
-        f"description: {capability['description']}",
-        "---",
-        "",
-        body,
-        "",
-    ])
+    return "\n".join(
+        [
+            "---",
+            f"name: {mechanized_filename(capability)}",
+            f"description: {capability['description']}",
+            "---",
+            "",
+            body,
+            "",
+        ]
+    )
 
 
 def build_claude_command(capability: dict, rules: dict) -> str:
@@ -310,25 +322,29 @@ def build_claude_command(capability: dict, rules: dict) -> str:
     hook_command = (capability.get("mechanization") or {}).get("hook_command")
     if hook_command:
         cmd_line = " ".join(hook_command)
-        body = "\n".join([
-            "Execute:",
-            "",
-            "```bash",
-            cmd_line,
-            "```",
-            "",
-            f"Capacidade: `{capability['id']}`.",
-        ])
+        body = "\n".join(
+            [
+                "Execute:",
+                "",
+                "```bash",
+                cmd_line,
+                "```",
+                "",
+                f"Capacidade: `{capability['id']}`.",
+            ]
+        )
     else:
         body = f"{capability['description']}\n\nCapacidade: `{capability['id']}`."
-    return "\n".join([
-        "---",
-        f"description: {capability['description']}",
-        "---",
-        "",
-        body,
-        "",
-    ])
+    return "\n".join(
+        [
+            "---",
+            f"description: {capability['description']}",
+            "---",
+            "",
+            body,
+            "",
+        ]
+    )
 
 
 def build_guard_bash(rules: dict) -> str:
@@ -338,7 +354,7 @@ def build_guard_bash(rules: dict) -> str:
     if not patterns:
         print("WARN: enforce_branch_before_commit sem enforcement_patterns — guard_bash.sh gerado sem regra alguma.")
 
-    header = '''#!/usr/bin/env bash
+    header = """#!/usr/bin/env bash
 #
 # PreToolUse gate hook (Claude Code, matcher: Bash).
 #
@@ -367,10 +383,10 @@ deny() {
   echo "guard_bash: bloqueado — $1" >&2
   exit 2
 }
-'''
-    lines = [header, "case \"$command\" in"]
+"""
+    lines = [header, 'case "$command" in']
     for entry in patterns:
-        lines.append(f'  {entry["pattern"]})')
+        lines.append(f"  {entry['pattern']})")
         lines.append(f'    deny "{entry["message"]}" ;;')
     lines.append("esac")
     lines.append("")
@@ -386,78 +402,80 @@ def build_agents(rules: dict) -> str:
     que é quem manda em caso de divergência.
     """
     fw = rules.get("framework") or {}
-    return "\n".join([
-        f"# AGENTS.md — Framework de Documentação & Rastreabilidade (v{fw.get('version')})",
-        "",
-        "Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de",
-        "`_framework/rules/workflow-rules.yaml`. Não edite à mão: o CI reprova",
-        "(`render_prompts.py --check`). Para mudar comportamento, edite o YAML e",
-        "regenere. Em qualquer divergência entre este arquivo e o YAML, **o YAML",
-        "manda** — divergência é falha de build, não diferença tolerada.",
-        "",
-        "## Como usar",
-        "",
-        "Você ajuda a criar, avaliar e rastrear os documentos de decisão do",
-        "projeto. Não pule etapas do fluxo, não invente campo fora do schema, e",
-        "atualize o registry no mesmo momento em que criar ou alterar qualquer",
-        "documento — front-matter e registry nunca divergem.",
-        "",
-        "Dois repositórios: o **central** guarda `_framework/` e",
-        "`docs/{PROJECT_CODE}/`; o **repositório de projeto** guarda `docs/sdd/`.",
-        "A SDD é a única exceção que vive no repositório de código, porque é o",
-        "único documento pensado para ser lido por uma IA na hora de implementar.",
-        "Antes de criar qualquer documento, confirme em qual dos dois você está.",
-        "",
-        core_facts(rules),
-        "",
-        "## Caminho comum (small e medium)",
-        "",
-        "1. **Classifique o sizing** aplicando os critérios acima e **declare** o",
-        "   nível no campo `sizing` do front-matter. Você propõe; o humano pode",
-        "   subir a qualquer momento, e descer exige justificativa registrada.",
-        "2. **small** → escreva só a SDD, em `docs/sdd/` do repositório de",
-        "   projeto. O vínculo com o código é o `Refs:` no commit/PR.",
-        "   **medium** → SPEC no central (`docs/{PROJECT_CODE}/03-spec`), depois",
-        "   a SDD compilada a partir dela.",
-        "3. **Compile, não escreva do zero.** A SDD nasce de `source_docs` — cada",
-        "   entrada com id **e** URL completa, já que os documentos de origem",
-        "   estão no outro repositório.",
-        "4. **Só então implemente**, em branch nomeada pelo id que a originou",
-        "   (ex.: `sdd/SDD-PROJETO-0007`), levada a main por PR.",
-        "5. **Verifique antes de `implemented`**: cada critério de aceite rodado",
-        "   de fato, com o comando e a saída real registrados na SDD. Nunca",
-        "   \"deve passar\", nunca resultado de memória.",
-        "",
-        "## Ainda não tenho repositório de código",
-        "",
-        "Modo greenfield: STRAT, RFC, ADR e SPEC rodam inteiros no repositório",
-        "central. Declare `repository_status: none_yet` no `registry.yaml` do",
-        "projeto — sem isso o estado é assumido, não registrado. SDD fica",
-        "bloqueada enquanto durar, porque SDD vive em `docs/sdd/` do repositório",
-        "de projeto; isso não dispensa gate algum, apenas não há código ainda.",
-        "Ao criar o repositório, num único ato: preencha `repository` com a URL",
-        "e `repository_status: active` no central, e crie `docs/sdd/registry.yaml`",
-        "vazio no repositório novo.",
-        "",
-        "`large` e `complex` acrescentam RFC e ADR antes da SPEC — leia",
-        "`_framework/rules/workflow-rules.yaml` (seções `decision_gates` e",
-        "`sizing`) antes de conduzir um desses.",
-        "",
-        "## Proibido",
-        "",
-        "- Placeholder em documento (`TBD`, `a definir`, `ajustar conforme",
-        "  necessário`). Ambiguidade real vira `[NEEDS CLARIFICATION: pergunta]`.",
-        "- Marcar critério como verificado por leitura de código.",
-        "- Editar ADR já `approved` — gere um novo que o marque `superseded`.",
-        "- Editar qualquer arquivo gerado (este inclusive).",
-        "",
-        "## Validação",
-        "",
-        "```",
-        "python3 _framework/scripts/framework_check.py --auto",
-        "```",
-        "",
-    ])
+    return "\n".join(
+        [
+            f"# AGENTS.md — Framework de Documentação & Rastreabilidade (v{fw.get('version')})",
+            "",
+            "Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de",
+            "`_framework/rules/workflow-rules.yaml`. Não edite à mão: o CI reprova",
+            "(`render_prompts.py --check`). Para mudar comportamento, edite o YAML e",
+            "regenere. Em qualquer divergência entre este arquivo e o YAML, **o YAML",
+            "manda** — divergência é falha de build, não diferença tolerada.",
+            "",
+            "## Como usar",
+            "",
+            "Você ajuda a criar, avaliar e rastrear os documentos de decisão do",
+            "projeto. Não pule etapas do fluxo, não invente campo fora do schema, e",
+            "atualize o registry no mesmo momento em que criar ou alterar qualquer",
+            "documento — front-matter e registry nunca divergem.",
+            "",
+            "Dois repositórios: o **central** guarda `_framework/` e",
+            "`docs/{PROJECT_CODE}/`; o **repositório de projeto** guarda `docs/sdd/`.",
+            "A SDD é a única exceção que vive no repositório de código, porque é o",
+            "único documento pensado para ser lido por uma IA na hora de implementar.",
+            "Antes de criar qualquer documento, confirme em qual dos dois você está.",
+            "",
+            core_facts(rules),
+            "",
+            "## Caminho comum (small e medium)",
+            "",
+            "1. **Classifique o sizing** aplicando os critérios acima e **declare** o",
+            "   nível no campo `sizing` do front-matter. Você propõe; o humano pode",
+            "   subir a qualquer momento, e descer exige justificativa registrada.",
+            "2. **small** → escreva só a SDD, em `docs/sdd/` do repositório de",
+            "   projeto. O vínculo com o código é o `Refs:` no commit/PR.",
+            "   **medium** → SPEC no central (`docs/{PROJECT_CODE}/03-spec`), depois",
+            "   a SDD compilada a partir dela.",
+            "3. **Compile, não escreva do zero.** A SDD nasce de `source_docs` — cada",
+            "   entrada com id **e** URL completa, já que os documentos de origem",
+            "   estão no outro repositório.",
+            "4. **Só então implemente**, em branch nomeada pelo id que a originou",
+            "   (ex.: `sdd/SDD-PROJETO-0007`), levada a main por PR.",
+            "5. **Verifique antes de `implemented`**: cada critério de aceite rodado",
+            "   de fato, com o comando e a saída real registrados na SDD. Nunca",
+            '   "deve passar", nunca resultado de memória.',
+            "",
+            "## Ainda não tenho repositório de código",
+            "",
+            "Modo greenfield: STRAT, RFC, ADR e SPEC rodam inteiros no repositório",
+            "central. Declare `repository_status: none_yet` no `registry.yaml` do",
+            "projeto — sem isso o estado é assumido, não registrado. SDD fica",
+            "bloqueada enquanto durar, porque SDD vive em `docs/sdd/` do repositório",
+            "de projeto; isso não dispensa gate algum, apenas não há código ainda.",
+            "Ao criar o repositório, num único ato: preencha `repository` com a URL",
+            "e `repository_status: active` no central, e crie `docs/sdd/registry.yaml`",
+            "vazio no repositório novo.",
+            "",
+            "`large` e `complex` acrescentam RFC e ADR antes da SPEC — leia",
+            "`_framework/rules/workflow-rules.yaml` (seções `decision_gates` e",
+            "`sizing`) antes de conduzir um desses.",
+            "",
+            "## Proibido",
+            "",
+            "- Placeholder em documento (`TBD`, `a definir`, `ajustar conforme",
+            "  necessário`). Ambiguidade real vira `[NEEDS CLARIFICATION: pergunta]`.",
+            "- Marcar critério como verificado por leitura de código.",
+            "- Editar ADR já `approved` — gere um novo que o marque `superseded`.",
+            "- Editar qualquer arquivo gerado (este inclusive).",
+            "",
+            "## Validação",
+            "",
+            "```",
+            "python3 _framework/scripts/framework_check.py --auto",
+            "```",
+            "",
+        ]
+    )
 
 
 def build_quickstart(rules: dict) -> str:
@@ -465,64 +483,66 @@ def build_quickstart(rules: dict) -> str:
     fw = rules.get("framework") or {}
     types = rules.get("document_types") or {}
     active = ", ".join(k for k, v in types.items() if not (v or {}).get("deprecated_since"))
-    return "\n".join([
-        f"# Quickstart (framework v{fw.get('version')})",
-        "",
-        "Arquivo GERADO por `_framework/scripts/render_prompts.py`. Não edite à",
-        "mão.",
-        "",
-        "## Em 30 segundos",
-        "",
-        "Este framework registra decisões de projeto em documentos versionados e",
-        "obriga que código só nasça depois de especificação, em branch dedicada.",
-        "Quem executa é uma ferramenta de IA qualquer — as regras não dependem de",
-        "nenhuma delas.",
-        "",
-        f"Tipos ativos: {active}.",
-        "",
-        "## Não cole prompt",
-        "",
-        "Abra o repositório na sua ferramenta de IA. `AGENTS.md`, na raiz, é lido",
-        "nativamente por Codex, Cursor, Gemini CLI, Copilot e Aider; o Claude Code",
-        "lê `CLAUDE.md`. Não há prompt para colar a cada conversa.",
-        "",
-        "## Primeiro trabalho",
-        "",
-        "1. Descreva a mudança e peça o **sizing**. Mudança de até ~3 arquivos,",
-        "   sem impacto arquitetural e sem mudar comportamento externo, é `small`.",
-        "2. `small` → só a SDD, em `docs/sdd/` do repositório de código.",
-        "   `medium` → SPEC no repositório central, depois a SDD.",
-        "3. Aprove a SDD. Só então o código começa, em branch própria.",
-        "4. Antes de marcar `implemented`, rode os critérios de aceite e registre",
-        "   comando e saída reais na própria SDD.",
-        "",
-        "## Ainda não tenho repositório de código",
-        "",
-        "Dá para começar assim — chama-se modo greenfield. Crie",
-        "`docs/{PROJECT_CODE}/` no repositório central e declare",
-        "`repository_status: none_yet` no `registry.yaml`. O",
-        "fluxo de decisão roda inteiro; só a SDD fica para depois, porque ela",
-        "vive no repositório de código. Quando ele existir: preencha",
-        "`repository` e `repository_status: active` no central, e crie",
-        "`docs/sdd/registry.yaml` vazio no repositório novo.",
-        "",
-        "## Validar a qualquer momento",
-        "",
-        "```",
-        "python3 _framework/scripts/framework_check.py --auto",
-        "```",
-        "",
-        "Verde significa registry e documentos consistentes, sem placeholder e",
-        "sem escopo pendente. É o mesmo comando que roda no CI.",
-        "",
-        "## Onde está o resto",
-        "",
-        "- `AGENTS.md` — o núcleo canônico e o caminho comum.",
-        "- `_framework/rules/workflow-rules.yaml` — fonte de verdade. Manda sobre",
-        "  qualquer arquivo gerado.",
-        "- `_framework/templates/` — um template por tipo de documento.",
-        "",
-    ])
+    return "\n".join(
+        [
+            f"# Quickstart (framework v{fw.get('version')})",
+            "",
+            "Arquivo GERADO por `_framework/scripts/render_prompts.py`. Não edite à",
+            "mão.",
+            "",
+            "## Em 30 segundos",
+            "",
+            "Este framework registra decisões de projeto em documentos versionados e",
+            "obriga que código só nasça depois de especificação, em branch dedicada.",
+            "Quem executa é uma ferramenta de IA qualquer — as regras não dependem de",
+            "nenhuma delas.",
+            "",
+            f"Tipos ativos: {active}.",
+            "",
+            "## Não cole prompt",
+            "",
+            "Abra o repositório na sua ferramenta de IA. `AGENTS.md`, na raiz, é lido",
+            "nativamente por Codex, Cursor, Gemini CLI, Copilot e Aider; o Claude Code",
+            "lê `CLAUDE.md`. Não há prompt para colar a cada conversa.",
+            "",
+            "## Primeiro trabalho",
+            "",
+            "1. Descreva a mudança e peça o **sizing**. Mudança de até ~3 arquivos,",
+            "   sem impacto arquitetural e sem mudar comportamento externo, é `small`.",
+            "2. `small` → só a SDD, em `docs/sdd/` do repositório de código.",
+            "   `medium` → SPEC no repositório central, depois a SDD.",
+            "3. Aprove a SDD. Só então o código começa, em branch própria.",
+            "4. Antes de marcar `implemented`, rode os critérios de aceite e registre",
+            "   comando e saída reais na própria SDD.",
+            "",
+            "## Ainda não tenho repositório de código",
+            "",
+            "Dá para começar assim — chama-se modo greenfield. Crie",
+            "`docs/{PROJECT_CODE}/` no repositório central e declare",
+            "`repository_status: none_yet` no `registry.yaml`. O",
+            "fluxo de decisão roda inteiro; só a SDD fica para depois, porque ela",
+            "vive no repositório de código. Quando ele existir: preencha",
+            "`repository` e `repository_status: active` no central, e crie",
+            "`docs/sdd/registry.yaml` vazio no repositório novo.",
+            "",
+            "## Validar a qualquer momento",
+            "",
+            "```",
+            "python3 _framework/scripts/framework_check.py --auto",
+            "```",
+            "",
+            "Verde significa registry e documentos consistentes, sem placeholder e",
+            "sem escopo pendente. É o mesmo comando que roda no CI.",
+            "",
+            "## Onde está o resto",
+            "",
+            "- `AGENTS.md` — o núcleo canônico e o caminho comum.",
+            "- `_framework/rules/workflow-rules.yaml` — fonte de verdade. Manda sobre",
+            "  qualquer arquivo gerado.",
+            "- `_framework/templates/` — um template por tipo de documento.",
+            "",
+        ]
+    )
 
 
 def _wrap(text) -> str:
@@ -572,17 +592,23 @@ def build_spec_doc(rules: dict) -> str:
                 out += [_wrap(value[field]), ""]
         flags = ((value.get("red_flags") or {}).get("patterns")) or []
         if flags:
-            out += ["Racionalizações que denunciam a violação acontecendo agora:", "",
-                    "| Se você pensar | A realidade |", "|---|---|"]
+            out += [
+                "Racionalizações que denunciam a violação acontecendo agora:",
+                "",
+                "| Se você pensar | A realidade |",
+                "|---|---|",
+            ]
             for f in flags:
                 out.append(f"| {_wrap(f.get('flag'))} | {_wrap(f.get('reality'))} |")
             out.append("")
 
-    for key, title in (("registry", "Registry"),
-                       ("audit", "Auditoria de aderência"),
-                       ("handover_protocol", "Passagem de contexto entre sessões"),
-                       ("onboarding", "Onboarding de projeto existente"),
-                       ("incident_lifecycle", "Ciclo de vida de incidente")):
+    for key, title in (
+        ("registry", "Registry"),
+        ("audit", "Auditoria de aderência"),
+        ("handover_protocol", "Passagem de contexto entre sessões"),
+        ("onboarding", "Onboarding de projeto existente"),
+        ("incident_lifecycle", "Ciclo de vida de incidente"),
+    ):
         block = rules.get(key)
         if not isinstance(block, dict):
             continue
