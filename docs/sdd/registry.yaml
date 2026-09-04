@@ -84,7 +84,7 @@ documents:
   - id: SDD-DTF-0009
     type: SDD
     title: "Mecanização de capacidades: hooks, agent e command gerados por fornecedor"
-    status: draft
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-03"
     updated: "2026-09-03"

@@ -2,7 +2,7 @@
 id: SDD-DTF-0009
 type: SDD
 title: "Mecanização de capacidades: hooks, agent e command gerados por fornecedor"
-status: draft
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-03"
@@ -245,16 +245,42 @@ correção, passa depois, nas duas pontas.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** não — mesma sessão que implementou.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `grep -c "^    mechanization:" _framework/rules/workflow-rules.yaml` | `6` | — | Sim |
+| 2 | `python3 -c "import json; d=json.load(open('.claude/settings.json')); print(sorted(d['hooks'].keys()))"` | `['PostToolUse', 'PreCompact', 'PreToolUse', 'SessionStart']` | — | Sim |
+| 3 | `grep -l "verify_sdd_independently\|audit_repo_adherence" .claude/agents/sdd-verifier.md .claude/commands/framework-check.md` | os dois arquivos listados | — | Sim |
+| 4 | `grep -c "deny " _framework/scripts/guard_bash.sh` | `4` | — | Sim |
+| 5 | `diff /tmp/guard_bash_original.sh _framework/scripts/guard_bash.sh` (original = guard_bash.sh hoje escrito à mão no central, `_framework/scripts/guard_bash.sh` sincronizado por `chore/sync-harness-guard-bash`, PR #30) | sem saída | — | Sim |
+| 6 | Editei `.claude/settings.json` manualmente (`{"broken": true}`), rodei `render_prompts.py --check` (exit 1), regenerei com `render_prompts.py`, rodei `--check` de novo | exit 1 → exit 0 | negativo→positivo | Sim |
+| 7 | Renomeei `.claude/agents/sdd-verifier.md` temporariamente, rodei `render_prompts.py --check` (`❌ sdd-verifier.md: ausente`), restaurei e regenerei, `--check` de novo | ausente citado → exit 0 | negativo→positivo | Sim |
+| 8 | `find .claude -type f \| wc -l` (repositório não tinha `.claude/` antes desta SDD) | `3` (settings.json + agents/sdd-verifier.md + commands/framework-check.md; +4 contando `_framework/scripts/guard_bash.sh` fora de `.claude/`) | — | Sim |
+| 9 | Troquei `artifact_type: "command"` de `audit_repo_adherence` para `"bogus"` no YAML, rodei `render_prompts.py`, reverti | `capacidade 'audit_repo_adherence': artifact_type 'bogus' desconhecido (...)`, exit 1, nenhum arquivo escrito antes do erro | negativo→positivo | Sim |
+| 10 | `python3 _framework/scripts/framework_check.py --auto` (kit e central) e `python3 _framework/scripts/check_renderings.py` (kit e central) | `✅ Todas as verificações do framework passaram.` / `✅ 5 renderização(ões) concordam...` nos dois repositórios | — | Sim |
+| 11 | `diff -r --exclude=__pycache__ _framework /home/michel/doc-traceability-central/_framework` e `diff .claude /home/michel/doc-traceability-central/.claude` | primeiro sem saída; segundo só acusa `settings.local.json` e `skills/` (pré-existentes no central, fora de escopo desta SDD) | — | Sim |
+| — | Idempotência (não é critério numerado, mas é requisito não funcional da SDD): `render_prompts.py` rodado duas vezes seguidas, `md5sum` dos 4 arquivos comparado | hashes idênticos nas duas rodadas | — | Sim |
+
+**Desvio da especificação técnica registrado nesta implementação:** a
+`SPEC-DTF-0006`/SDD pedia adicionar os 4 caminhos novos ao `RENDERINGS` de
+`check_renderings.py`, "mesmo mecanismo de checagem tipo/status já
+existente". Fazer isso litealmente reprova sempre: `.claude/settings.json`
+(JSON), o agent/command gerados e `guard_bash.sh` não citam nenhum tipo de
+documento nem Iron Law — o mesmo motivo pelo qual `procedures/*.md`
+(SDD-DTF-0006) já é explicitamente excluído do mesmo laço, no comentário
+que precede `RENDERINGS` no próprio arquivo. Implementei uma checagem de
+existência equivalente (`check_mechanized_artifacts`), consistente com o
+padrão já usado para `capabilities.<id>.procedure`
+(`check_capability_procedures`) — a checagem de conteúdo/divergência
+continua coberta por `render_prompts.py --check` (RF05), que é a mais
+forte das duas.
 
 ## Rastreabilidade
 

@@ -849,15 +849,39 @@ capabilities:
     description: "Aplicar action_item_triage a cada action item de um PM, decidindo se vira PRD/TS direto ou uma nova RFC."
   - id: audit_repo_adherence
     description: "Executar audit (seção 11): cruzar commits/PRs do repositório do projeto com os registries conhecidos, classificar em coberto/referência quebrada/não documentado, e propor ADRs reconstruídos para o que for arquiteturalmente significativo, sem bloquear nada e sem exigir adesão perfeita à convenção de referência."
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "command"
+    mechanization_filename: "framework-check"
   - id: enforce_implementation_gate
     description: "Antes de escrever ou alterar qualquer código de implementação para uma decisão coberta por este framework, verificar gate_implementation_before_code (seção 13): garantir que PRD/TS/SDD aplicáveis existam (criando-os primeiro, na mesma resposta, se faltarem) antes de tocar em código — nunca implementar primeiro e documentar depois."
   - id: enforce_branch_before_commit
     description: "Antes de criar o primeiro commit de implementação de uma SDD/PRD/TS/ADR no repositório de projeto, verificar gate_branch_before_commit (seção 14): garantir que existe (ou criar) uma branch dedicada a partir de main e que o commit vai para essa branch — nunca commitar implementação direto em main. Ao final, abrir PR para main em vez de mergear localmente sem revisão."
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "hook_pretooluse"
+      matcher: "Bash"
+      hook_command: ["bash", "_framework/scripts/guard_bash.sh"]
+    enforcement_patterns:
+      - pattern: '*"push --force"*|*"push -f "*|*"push -f"|*" -f "*"origin main"*'
+        message: "force-push detectado. Use PR normal."
+      - pattern: '*"push"*"origin main"*|*"push"*" main"*'
+        message: "push direto em main. Abra PR."
+      - pattern: '*"reset --hard"*'
+        message: "reset --hard é destrutivo. Confirme com o usuário antes."
+      - pattern: '*"rm -rf ."*|*"rm -rf /"*|*"rm -rf ~"*'
+        message: "rm -rf de escopo amplo. Confirme com o usuário antes."
   - id: enforce_content_quality_gate
     description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "hook_posttooluse"
+      matcher: "Edit|Write"
+      hook_command: ["python3", "_framework/scripts/framework_check.py", "--auto", "--report-only"]
   - id: enforce_scope_verification
     description: "Antes de mover uma SDD para implemented, rodar gate_scope_verification (seção 16): confirmar que todo requisito consolidado foi implementado, que todo arquivo tocado está listado na SDD, que não há código extra sem requisito correspondente, e preencher a tabela de evidência de verificação com comando+saída reais desta sessão — nunca marcar critério como passado de memória."
   - id: verify_sdd_independently
+    description: "Verifica de forma independente se uma SDD foi implementada antes de virar `implemented` — quem implementou não verifica. Use quando o usuário pedir \"verifica a SDD\", \"pode marcar implemented?\", ou ao final de uma sessão de implementação."
     trigger: "Antes de mover uma SDD de approved para implemented."
     produces: "validation.md ao lado da SDD, com veredito PASS/FAIL e tabela de evidência (comando, saída real, sensor, resultado)."
     invariants:
@@ -866,6 +890,10 @@ capabilities:
       - "Todo critério com teste automatizado passa pelo sensor de discriminação (falha introduzida, teste tem que falhar, depois volta a passar)."
       - "FAIL não avança status — o descompasso volta para decisão humana."
     procedure: "procedures/verify-sdd.md"
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "agent"
+    mechanization_filename: "sdd-verifier"
   - id: pickup_handoff
     trigger: "Início de sessão que encontra HANDOFF.md no repositório, ou pedido explícito de retomar trabalho anterior."
     produces: "Continuidade do trabalho a partir do Next step do HANDOFF, sem reprocessar a sessão que o gerou."
@@ -874,6 +902,11 @@ capabilities:
       - "Nenhum gate é pulado por causa do handover — SDD ainda precisa estar approved antes de implementar, branch ainda é obrigatória antes do commit."
       - "'Don't do' do HANDOFF é respeitado, não retentado sem perguntar."
     procedure: "procedures/pickup.md"
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "hook_sessionstart"
+      matcher: "*"
+      prompt: "Se existir HANDOFF.md na raiz do repositório, use a skill pickup antes de qualquer outra coisa: confirme o status real dos ids citados e releia do disco os arquivos que vai alterar, em vez de confiar no que o handoff anotou."
   - id: write_handover
     trigger: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso) com trabalho do fluxo ainda pela frente."
     produces: "HANDOFF.md no repositório correto (projeto ou central, conforme o procedimento), com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer."
@@ -883,6 +916,11 @@ capabilities:
       - "Nenhum segredo (credencial, token, .env) entra no arquivo."
       - "Não avança nenhum gate por conta própria — só registra o status real."
     procedure: "procedures/handover.md"
+    mechanization:
+      vendor: "claude-code"
+      artifact_type: "hook_precompact"
+      matcher: "*"
+      prompt: "O contexto desta sessão está prestes a ser compactado. Antes disso, use a skill handover para gerar/atualizar HANDOFF.md referenciando os ids dos documentos em vez de reescrever o conteúdo deles — não deixe o estado de rastreabilidade se perder na compactação."
 
 ##############################################################################
 # 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD

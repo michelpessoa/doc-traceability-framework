@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Se existir HANDOFF.md na raiz do repositório, use a skill pickup antes de qualquer outra coisa: confirme o status real dos ids citados e releia do disco os arquivos que vai alterar, em vez de confiar no que o handoff anotou."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "O contexto desta sessão está prestes a ser compactado. Antes disso, use a skill handover para gerar/atualizar HANDOFF.md referenciando os ids dos documentos em vez de reescrever o conteúdo deles — não deixe o estado de rastreabilidade se perder na compactação."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": ["_framework/scripts/guard_bash.sh"]
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["_framework/scripts/framework_check.py", "--auto", "--report-only"]
+          }
+        ]
+      }
+    ]
+  }
+}

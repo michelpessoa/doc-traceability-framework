@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-03 21:40. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-03 21:53. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **9**
 
@@ -17,4 +17,4 @@ Total de documentos: **9**
 | `SDD-DTF-0006` | Memória portável: procedimentos neutros e capacidades por contrato | implemented | Michel Pessoa | 2026-08-29 | SPEC-DTF-0001, ADR-DTF-0001 |
 | `SDD-DTF-0007` | Adaptadores por fornecedor gerados integralmente | implemented | Michel Pessoa | 2026-08-29 | SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006 |
 | `SDD-DTF-0008` | Fim da duplicação manual e cobertura de renderizações | implemented | Michel Pessoa | 2026-08-29 | SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006, SDD-DTF-0007 |
-| `SDD-DTF-0009` | Mecanização de capacidades: hooks, agent e command gerados por fornecedor | draft | Michel Pessoa | 2026-09-03 | SDD-DTF-0007, SDD-DTF-0006 |
+| `SDD-DTF-0009` | Mecanização de capacidades: hooks, agent e command gerados por fornecedor | implemented | Michel Pessoa | 2026-09-03 | SDD-DTF-0007, SDD-DTF-0006 |
