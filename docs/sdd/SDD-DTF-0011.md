@@ -2,7 +2,7 @@
 id: SDD-DTF-0011
 type: SDD
 title: "Linter (ruff) para os scripts Python do kit público"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-04"
@@ -163,10 +163,11 @@ não usado) — falha antes da correção, passa depois.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não ainda — autorrevisão desta sessão,
-comandos reais abaixo. Status fica `approved`, verificação independente
-roda depois (agent `sdd-verifier`), mesmo padrão adotado em
-`SDD-DTF-0010`.
+**Verificador independente:** sim. Verificação rodada em sessão separada
+da que implementou, sem ler o histórico dessa sessão — só a SDD e o diff
+`461b127..b7bfde3`. Detalhe completo, incluindo checagem de
+byte-identidade dos artefatos gerados por `render_prompts.py` antes/depois
+do commit, em `docs/sdd/validation-SDD-DTF-0011.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
