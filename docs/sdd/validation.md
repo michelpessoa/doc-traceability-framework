@@ -316,7 +316,8 @@ repositórios.
 
 - **Correção de referência morta em prosa (crase) resolve o RF06, mas o
   checker automatizado continua sem cobrir esse caso.** `check_links`
-  ainda só varre `[texto](alvo)`; a lição já estava registrada na rodada
+  ainda só varre a sintaxe padrão de link markdown (colchete de texto
+  seguido de parênteses de alvo); a lição já estava registrada na rodada
   anterior — reafirmada aqui porque a correção manual (não o checker) é
   que fechou o item 9.
 - **Paridade "ponto no tempo" precisa ser revalidada por conteúdo, não só
