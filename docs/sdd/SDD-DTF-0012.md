@@ -2,7 +2,7 @@
 id: SDD-DTF-0012
 type: SDD
 title: "Adiciona .env ao .gitignore do kit público"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-03"
@@ -78,14 +78,15 @@ __pycache__/
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** pendente — preencher na sessão de
-verificação, antes de mover para `implemented`.
+**Verificador independente:** sim — subagent `sdd-verifier`, sessão
+separada da implementação, sem contexto herdado, worktree isolado a
+partir de `origin/main`. Detalhe completo em `docs/sdd/validation.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | (pendente) | | | |
-| 2 | (pendente) | | | |
-| 3 | (pendente) | | | |
+| 1 | `touch .env && git check-ignore .env` | imprime `.env`, exit 0 | Linhas removidas do `.gitignore` → exit 1; restauradas → exit 0 | Sim |
+| 2 | `touch .env.local && git check-ignore .env.local` | imprime `.env.local`, exit 0 | Mesma quebra acima → exit 1; restaurado → exit 0 | Sim |
+| 3 | `framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` | — | Sim |
 
 ## Rastreabilidade
 
