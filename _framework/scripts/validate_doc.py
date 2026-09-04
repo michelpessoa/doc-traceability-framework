@@ -209,7 +209,8 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
         # Rigor de EARS vale para SPEC (tipo novo). Em PRD legado é aviso:
         # projeto mapeado sob 1.x não migra (lessons_policy.non_retroactive).
         strict = doc_type == "SPEC"
-        for problem in (check_ears if applies("ears") else lambda *_: [])(doc_id, section_body(body, "Requisitos funcionais")):
+        ears_checker = check_ears if applies("ears") else lambda *_: []
+        for problem in ears_checker(doc_id, section_body(body, "Requisitos funcionais")):
             (problems if strict else warnings).append(problem)
 
     if doc_type in ("TS", "SPEC"):

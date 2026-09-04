@@ -91,7 +91,10 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
             if rel not in docs and not is_expected_external(rel):
                 problems.append(f"{did}: relates_to aponta para id inexistente '{rel}'")
 
-        for field in ("parent_rfc", "parent_adr", "parent_strategy", "parent_postmortem", "supersedes", "superseded_by"):
+        for field in (
+            "parent_rfc", "parent_adr", "parent_strategy", "parent_postmortem",
+            "supersedes", "superseded_by",
+        ):
             val = d.get(field)
             if val and val not in docs and not is_expected_external(val):
                 problems.append(f"{did}: {field} aponta para id inexistente '{val}'")
