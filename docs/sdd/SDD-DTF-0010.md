@@ -2,11 +2,11 @@
 id: SDD-DTF-0010
 type: SDD
 title: "Fecha lacuna do harness score: skills expostas + teste real prometido em SDD-DTF-0009"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-04"
-updated: "2026-09-04"
+updated: "2026-09-03"
 relates_to: [SDD-DTF-0009]
 source_docs: []
 consumption_instructions: "Sizing small — sem SPEC upstream. Mudança operacional: expõe o que já existe (skills) e completa teste já prometido em SDD-DTF-0009, sem decisão de arquitetura nova."
@@ -113,24 +113,19 @@ sizing `medium`); qualquer teste fora do módulo `mechanization` de
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não ainda — mesma sessão que implementou
-rodou os comandos abaixo como autorrevisão, com saída real e sensor de
-discriminação no critério 3. Status fica em `approved`, não
-`implemented`, até um agente `sdd-verifier` separado confirmar em sessão
-própria — mesmo gate da seção 16, sem exceção para sizing `small`
-("nunca dispensa... a verificação de escopo com evidência antes de
-`implemented`"). Nota de processo: o código abaixo foi escrito antes
-desta SDD existir, violando a ordem documento→código (seção 13) — a SDD
-deveria ter sido escrita primeiro, mesmo em sizing `small`. Registrado
-aqui em vez de encobrir; sem `LESSONS.md` porque não houve estado ruim
-persistido (nada foi commitado fora de branch, nenhum status avançou
-incorretamente) — é o tipo de desvio que a autorrevisão já pega antes do
-commit, diferente da falha maior de `SDD-DTF-0009`.
+**Verificador independente:** sim — sessão de verificação dedicada
+(`sdd/SDD-DTF-0010-verificacao-independente`), separada da que
+implementou; não leu o histórico da sessão de implementação, apenas esta
+SDD e o diff `8d88fc2..be6d824` (PR #34, mergeado como `99ba56c`). Todos
+os comandos abaixo foram rodados do zero nesta sessão, incluindo o sensor
+de discriminação do critério 3, e a saída bateu integralmente com a
+autorrevisão anterior registrada nesta tabela. Detalhe completo em
+`docs/sdd/validation.md` (veredito PASS).
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
 | 1 | `readlink` nos 4 symlinks | 4 caminhos para `_framework/skills/<n>/SKILL.md`, todos existentes | — | Sim |
-| 2 | `python3 -m pytest _framework/scripts/tests/ -v` | `7 passed in 0.12s` | — | Sim |
+| 2 | `python3 -m pytest _framework/scripts/tests/ -v` | `7 passed in 0.28s` | — | Sim |
 | 3 | troquei `deny` por `echo` em `build_guard_bash`, rodei o teste do guard_bash, revertei, rodei de novo | `1 failed` → `1 passed` | negativo→positivo | Sim |
 | 4 | `grep -A5 "pull_request:" .github/workflows/framework-check.yml` | `.claude/**` presente | — | Sim |
 | 5 | `framework_check.py --auto` e `render_prompts.py --check` | ambos `exit 0` (`✅ Todas as verificações do framework passaram.`) | — | Sim |
