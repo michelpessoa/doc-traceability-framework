@@ -101,3 +101,13 @@ documents:
     relates_to: [SDD-DTF-0009]
     path: "docs/sdd/SDD-DTF-0010.md"
     tags: [neutralidade, adocao, testes]
+  - id: SDD-DTF-0011
+    type: SDD
+    title: "Linter (ruff) para os scripts Python do kit público"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-04"
+    updated: "2026-09-04"
+    relates_to: [SDD-DTF-0009, SDD-DTF-0010]
+    path: "docs/sdd/SDD-DTF-0011.md"
+    tags: [tooling, qualidade, kit-publico]

@@ -12,7 +12,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest  # noqa: E402
-
 from framework_lib import find_rules_file, load_rules  # noqa: E402
 from render_prompts import (  # noqa: E402
     build_claude_agent,

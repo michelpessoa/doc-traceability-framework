@@ -13,9 +13,10 @@ Se <caminho_para_docs> for omitido, assume "docs" no diretório atual.
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
 import sys
-import yaml
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import yaml
 
 TYPE_ORDER = ["STRAT", "RFC", "ADR", "PRD", "TS", "SDD"]
 TYPE_LABEL = {
