@@ -151,3 +151,13 @@ documents:
     relates_to: [SDD-DTF-0014]
     path: "docs/sdd/SDD-DTF-0015.md"
     tags: [tooling, higiene, kit-publico]
+  - id: SDD-DTF-0016
+    type: SDD
+    title: "RULE_SINCE por data de criação do documento, não por framework_version do registry"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-04"
+    updated: "2026-09-04"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0016.md"
+    tags: [tooling, gate_content_quality, non_retroactive]

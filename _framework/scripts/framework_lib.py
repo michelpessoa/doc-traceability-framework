@@ -221,6 +221,37 @@ def rule_applies(rule_since: str, project: str | None) -> bool:
     return version_key(project) >= version_key(rule_since)
 
 
+def version_date(rules: dict, version: str) -> str | None:
+    """Data (YYYY-MM-DD) em que `version` entrou no changelog, ou None se
+    a versão não tiver `date` registrada (changelog anterior a essa
+    convenção)."""
+    fw = rules.get("framework") or {}
+    for entry in fw.get("changelog") or []:
+        if entry.get("version") == version:
+            return entry.get("date")
+    return None
+
+
+def rule_applies_since_date(rules: dict, rule_since: str, doc_created: str | None, project: str | None) -> bool:
+    """
+    Uma regra de conteúdo (RULE_SINCE) vale para um documento se ele foi
+    CRIADO em ou depois da data em que a regra passou a existir — não se
+    o registry do projeto declara uma versão recente. Isso é o que torna
+    a não-retroatividade granular por documento: subir `framework_version`
+    do registry (projeto decide adotar SPEC/2.x daqui pra frente) não pode
+    reprovar retroativamente documento antigo que a regra nova nunca
+    poderia ter guiado.
+
+    Sem `date` conhecida para `rule_since` (changelog legado) ou sem
+    `created` no documento, cai no comportamento anterior por versão do
+    projeto (`rule_applies`) — nunca menos rígido, só menos preciso.
+    """
+    since_date = version_date(rules, rule_since)
+    if since_date and doc_created:
+        return str(doc_created) >= since_date
+    return rule_applies(rule_since, project)
+
+
 def load_registry(docs_dir: Path):
     """Retorna (dados_do_registry, {id: entrada})."""
     path = docs_dir / "registry.yaml"
