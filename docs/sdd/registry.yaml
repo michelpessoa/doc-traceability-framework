@@ -111,3 +111,13 @@ documents:
     relates_to: [SDD-DTF-0009, SDD-DTF-0010]
     path: "docs/sdd/SDD-DTF-0011.md"
     tags: [tooling, qualidade, kit-publico]
+  - id: SDD-DTF-0013
+    type: SDD
+    title: "Tooling de dev completo no kit público: test runner declarado, typecheck, formatter, pre-commit framework"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-03"
+    updated: "2026-09-03"
+    relates_to: [SDD-DTF-0011]
+    path: "docs/sdd/SDD-DTF-0013.md"
+    tags: [tooling, qualidade, kit-publico]

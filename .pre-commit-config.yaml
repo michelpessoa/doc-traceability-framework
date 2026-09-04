@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: framework-check
+        name: framework-check (documentos)
+        entry: python3 _framework/scripts/framework_check.py --auto
+        language: system
+        pass_filenames: false

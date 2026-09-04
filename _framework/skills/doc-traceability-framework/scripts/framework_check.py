@@ -16,6 +16,7 @@ Uso:
 --auto descobre sozinho todo diretório que contenha um registry.yaml a
 partir do diretório atual — é o modo usado pelo CI.
 """
+
 import sys
 from pathlib import Path
 
@@ -65,9 +66,12 @@ def main() -> int:
             problems += p
             warnings += w
         from framework_lib import report as emit
+
         failures += emit(
-            problems, warnings,
-            f"✅ {len(paths)} documento(s) ok.", report_only=report_only,
+            problems,
+            warnings,
+            f"✅ {len(paths)} documento(s) ok.",
+            report_only=report_only,
         )
 
         print("-- verificação de escopo (seção 16)")
@@ -77,8 +81,10 @@ def main() -> int:
             problems += p
             warnings += w
         failures += emit(
-            problems, warnings,
-            f"✅ {len(paths)} documento(s) ok.", report_only=report_only,
+            problems,
+            warnings,
+            f"✅ {len(paths)} documento(s) ok.",
+            report_only=report_only,
         )
 
     print()

@@ -16,6 +16,7 @@ Uso:
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
+
 import re
 import sys
 from pathlib import Path
@@ -137,8 +138,7 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
     e cita comando rodado — não resultado assumido."""
     if evidence is None:
         return [
-            f"{doc_id}: status `implemented` sem seção 'Evidência de verificação' "
-            "— gate_scope_verification item 4."
+            f"{doc_id}: status `implemented` sem seção 'Evidência de verificação' — gate_scope_verification item 4."
         ]
 
     problems = []
@@ -174,14 +174,10 @@ def check_scope(doc_id: str, scope: str | None) -> list:
     marcada."""
     if scope is None:
         return [
-            f"{doc_id}: status `implemented` sem seção 'Verificação de escopo' "
-            "— gate_scope_verification itens 1-3."
+            f"{doc_id}: status `implemented` sem seção 'Verificação de escopo' — gate_scope_verification itens 1-3."
         ]
     if CHECKBOX_UNCHECKED.search(scope):
-        return [
-            f"{doc_id}: 'Verificação de escopo' tem item não marcado e o status "
-            "é `implemented`."
-        ]
+        return [f"{doc_id}: 'Verificação de escopo' tem item não marcado e o status é `implemented`."]
     return []
 
 

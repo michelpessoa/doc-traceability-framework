@@ -5,6 +5,7 @@ do workflow-rules.yaml real (que muda com o tempo) para os casos
 sintéticos, e usa o YAML real só onde o teste é justamente "o gerado bate
 com o que está em disco".
 """
+
 import json
 import sys
 from pathlib import Path

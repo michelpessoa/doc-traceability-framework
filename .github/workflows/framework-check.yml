@@ -48,10 +48,16 @@ jobs:
           python-version: "3.12"
 
       - name: Instalar dependências
-        run: pip install pyyaml pytest ruff
+        run: pip install pyyaml pytest ruff mypy
 
       - name: Lint (ruff)
         run: ruff check _framework/scripts
+
+      - name: Typecheck (mypy)
+        run: mypy _framework/scripts
+
+      - name: Formatter (ruff format --check)
+        run: ruff format --check _framework/scripts
 
       - name: Testes de mechanization (render_prompts.py)
         run: python3 -m pytest _framework/scripts/tests/ -v

@@ -21,6 +21,7 @@ Checa, por documento:
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
+
 import re
 import sys
 from pathlib import Path
@@ -178,8 +179,11 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     for term in BANNED_PLACEHOLDERS if scan_placeholders else []:
         if term in lowered:
             line = next(
-                (i for i, ln in enumerate(body.splitlines(), 1)
-                 if term in ln.lower() and not ln.lstrip().startswith(">")),
+                (
+                    i
+                    for i, ln in enumerate(body.splitlines(), 1)
+                    if term in ln.lower() and not ln.lstrip().startswith(">")
+                ),
                 None,
             )
             where = f" (linha {line})" if line else ""
