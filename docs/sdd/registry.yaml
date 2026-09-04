@@ -81,3 +81,13 @@ documents:
     relates_to: [SPEC-DTF-0001, ADR-DTF-0001, SDD-DTF-0006, SDD-DTF-0007]
     path: "docs/sdd/SDD-DTF-0008.md"
     tags: [neutralidade, adocao, limpeza]
+  - id: SDD-DTF-0009
+    type: SDD
+    title: "Mecanização de capacidades: hooks, agent e command gerados por fornecedor"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-03"
+    updated: "2026-09-03"
+    relates_to: [SDD-DTF-0007, SDD-DTF-0006]
+    path: "docs/sdd/SDD-DTF-0009.md"
+    tags: [neutralidade, adocao, geracao, automacao]
