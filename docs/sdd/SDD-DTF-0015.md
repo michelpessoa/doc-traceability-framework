@@ -2,7 +2,7 @@
 id: SDD-DTF-0015
 type: SDD
 title: "Consolida config do ruff em pyproject.toml (sensor de formatter só olha lá)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-04"
@@ -102,16 +102,20 @@ indent-style = "space"
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** pendente — esta tabela é do
-implementador, mesma sessão.
+**Verificador independente:** sim — sessão separada da implementação,
+sem contexto herdado (leu só a SDD e o diff `main..HEAD` do PR #44,
+commit `6c6f6be`). A tabela abaixo (do implementador) não foi usada
+como fonte de verdade — todos os comandos foram rerodados do zero por
+esta verificação. Detalhe completo, incluindo os sensores de
+discriminação dos critérios 3 e 4, em `docs/sdd/validation.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `test -f ruff.toml; echo $?` | `1` | — | Sim |
-| 2 | `grep -n "\[tool.ruff\]" pyproject.toml` | 1 ocorrência (linha 1) | — | Sim |
-| 3 | `ruff check --show-settings` (antes/depois) e `ruff check _framework/scripts` | `line_length = 120`, `target_version = 3.12` idênticos ao "antes"; `All checks passed!` | — | Sim |
-| 4 | `ruff format --check _framework/scripts` | `10 files already formatted` | — | Sim |
-| 5 | `framework_check.py --auto` e `pytest` | `✅ Todas as verificações do framework passaram.`, `7 passed` | — | Sim |
+| 1 | `test -f ruff.toml; echo $?` | `1` (ausente) | trivial (existência de arquivo) | Sim |
+| 2 | `grep -n "\[tool.ruff\]" pyproject.toml` | `1:[tool.ruff]` — 1 ocorrência | trivial (grep literal) | Sim |
+| 3 | `ruff check --show-settings _framework/scripts` (com `pyproject.toml` atual) e comparado contra `--config` apontando pro `ruff.toml` do commit anterior (`58d0e2a`, base do SDD-DTF-0014) | `linter.line_length = 120`, `formatter/analyze target_version = 3.12` idênticos nas duas configs; `ruff check _framework/scripts` → `All checks passed!` | Sim — copiei o `pyproject.toml` pra um dir descartável, mudei `line-length` pra `79` e confirmei que `--show-settings` reporta `79` (comando reage a config real, não é saída fixa) | Sim |
+| 4 | `ruff format --check _framework/scripts` | `10 files already formatted`, exit 0 | Sim — copiei `_framework/scripts` + `pyproject.toml` pra dir descartável, adicionei violação real de formatação (`x =    1` num script) → `ruff format --check` reportou `1 file would be reformatted` e apontou a linha, exit 1; sem a violação volta a `10 files already formatted`, exit 0 | Sim |
+| 5 | `python3 _framework/scripts/framework_check.py --auto` e `pytest -q` | `✅ Todas as verificações do framework passaram.`; `7 passed in 0.12s` | sem sensor dedicado — gate de regressão geral já coberto por SDDs anteriores, escopo desta SDD não adiciona lógica nova aqui | Sim |
 
 ## Rastreabilidade
 
