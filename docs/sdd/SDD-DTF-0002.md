@@ -2,11 +2,11 @@
 id: SDD-DTF-0002
 type: SDD
 title: "Modo greenfield: registry sem repositório de código e textos de entrada"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
-updated: "2026-08-29"
+updated: "2026-09-04"
 relates_to: [SPEC-DTF-0002, SDD-DTF-0001]
 source_docs:
   - id: "SPEC-DTF-0002"
@@ -131,20 +131,22 @@ nenhum dado é migrado.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada"
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada"
       ou "Instruções específicas".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 **Verificador independente:** não — mesma sessão que implementou. Registra
-os comandos rodados de fato; não substitui a verificação independente
-exigida pelo `gate_scope_verification` antes de `implemented`.
+os comandos rodados de fato. A verificação independente exigida pelo
+`gate_scope_verification` antes de `implemented` está em
+`docs/sdd/validation.md` (veredito: PASS, com ressalva no
+critério 12 de paridade entre repositórios).
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `registry_tools.py validate` em registry de teste sem `repository` | Warning "modo greenfield ASSUMIDO, não declarado"; `exit=0` | ver #2 | sim |
+| 1 | `registry_tools.py validate` em registry de teste sem `repository` | Warning nomeia o estado como não declarado, inferido por omissão de `repository_status`; `exit=0` | ver #2 | sim |
 | 2 | mesmo registry, agora com `repository` e `repository_status: active` | `exit=0`, **sem** warning de repositório | **é o sensor**: o warning some quando o campo é preenchido | sim |
 | 3 | registry com `repository_status: none_yet` **e** `repository` preenchido | `exit=1` — "contradiz o campo `repository`, que está preenchido" | contradição introduzida de propósito; passaria se a checagem não existisse | sim |
 | 4 | registry com `repository_status: talvez` | `exit=1` — "valor inválido 'talvez' — aceitos: active, none_yet" | valor inválido introduzido de propósito | sim |

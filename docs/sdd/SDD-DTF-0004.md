@@ -2,11 +2,11 @@
 id: SDD-DTF-0004
 type: SDD
 title: "Exclusão de artefatos operacionais na varredura de documentos"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
-updated: "2026-08-29"
+updated: "2026-09-04"
 relates_to: [SPEC-DTF-0005]
 source_docs:
   - id: "SPEC-DTF-0005"
@@ -98,9 +98,9 @@ verde nos dois repositórios.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 

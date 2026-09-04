@@ -2,11 +2,11 @@
 id: SDD-DTF-0003
 type: SDD
 title: "Datação das exigências do gate 16 em validate_state.py"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
-updated: "2026-08-29"
+updated: "2026-09-04"
 relates_to: [SPEC-DTF-0003]
 source_docs:
   - id: "SPEC-DTF-0003"
@@ -110,14 +110,19 @@ verde, replicado no central. Rollback é `git revert` de um arquivo.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada".
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não — mesma sessão que implementou. Não
-substitui a verificação independente exigida antes de `implemented`.
+**Verificador independente:** não — mesma sessão que implementou (tabela
+abaixo, rodada durante a implementação). A verificação independente
+exigida antes de `implemented` foi feita à parte, em subagente separado,
+e está registrada em `docs/sdd/validation.md` — veredito
+PASS, com um descompasso não bloqueante (paridade de formatação entre
+repositórios, causada por commit de tooling posterior e não relacionado
+a esta SDD).
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
