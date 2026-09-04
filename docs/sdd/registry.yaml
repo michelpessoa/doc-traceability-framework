@@ -91,3 +91,13 @@ documents:
     relates_to: [SDD-DTF-0007, SDD-DTF-0006]
     path: "docs/sdd/SDD-DTF-0009.md"
     tags: [neutralidade, adocao, geracao, automacao]
+  - id: SDD-DTF-0010
+    type: SDD
+    title: "Fecha lacuna do harness score: skills expostas + teste real prometido em SDD-DTF-0009"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-04"
+    updated: "2026-09-04"
+    relates_to: [SDD-DTF-0009]
+    path: "docs/sdd/SDD-DTF-0010.md"
+    tags: [neutralidade, adocao, testes]

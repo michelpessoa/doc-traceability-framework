@@ -1,0 +1,1 @@
+../../../_framework/skills/pickup/SKILL.md

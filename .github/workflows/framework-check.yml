@@ -23,6 +23,7 @@ on:
     paths:
       - "examples/**"
       - "_framework/**"
+      - ".claude/**"
       - ".github/workflows/framework-check.yml"
   push:
     branches: [main]
@@ -47,7 +48,10 @@ jobs:
           python-version: "3.12"
 
       - name: Instalar dependências
-        run: pip install pyyaml
+        run: pip install pyyaml pytest
+
+      - name: Testes de mechanization (render_prompts.py)
+        run: python3 -m pytest _framework/scripts/tests/ -v
 
       - name: Validar registries e documentos
         run: python3 _framework/scripts/framework_check.py --auto $REPORT_ONLY
