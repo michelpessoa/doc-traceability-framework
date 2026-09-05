@@ -32,10 +32,11 @@ from framework_lib import (  # noqa: E402
     INCIDENT_STATUSES,
     VALID_STATUSES,
     iter_documents,
+    load_rules,
     project_version,
     read_frontmatter,
     report,
-    rule_applies,
+    rule_applies_since_date,
 )
 
 # Em que versão cada exigência entrou. Regra não vale retroativamente:
@@ -150,9 +151,6 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     if version is None:
         version = project_version(path)
 
-    def applies(rule: str) -> bool:
-        return rule_applies(RULE_SINCE[rule], version)
-
     try:
         fm, body = read_frontmatter(path)
     except ValueError as exc:
@@ -160,6 +158,11 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
 
     if not fm:
         return [f"{path}: sem bloco de front-matter."], []
+
+    rules = load_rules()
+
+    def applies(rule: str) -> bool:
+        return rule_applies_since_date(rules, RULE_SINCE[rule], fm.get("created"), version)
 
     doc_id = fm.get("id") or path.name
     doc_type = fm.get("type")
