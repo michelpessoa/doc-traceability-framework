@@ -2,7 +2,7 @@
 id: SDD-DTF-0017
 type: SDD
 title: "QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-08"
@@ -155,14 +155,26 @@ Nenhum — mudança interna à documentação de onboarding do próprio kit.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Os 2 requisitos consolidados têm código/conteúdo correspondente.
-- [ ] Único arquivo de código tocado é `render_prompts.py`; único `.md`
+- [x] Os 2 requisitos consolidados têm código/conteúdo correspondente.
+- [x] Único arquivo de código tocado é `render_prompts.py`; único `.md`
       editado à mão é `guia-nao-tecnico.md`; `QUICKSTART.md` só regenerado.
-- [ ] Nenhuma abstração, config extra ou refactor além do texto pedido.
+- [x] Nenhuma abstração, config extra ou refactor além do texto pedido.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preencher na sessão de implementação/verificação.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+- **Diff verificado:** `dec1b9f` (PR #49) + `a0b9f11` (PR #50, correção de status sem mudança de conteúdo), ambos em `main`. Sync para `doc-traceability-central`: `5b75ae2` (PR #46 do central).
+- **Verificador independente:** sim.
+
+| # | Critério | Comando | Saída | Sensor | Passou? |
+|---|---|---|---|---|---|
+| 1 | RF1 — QUICKSTART.md menciona large/complex | `grep -A3 "small.*só a SDD" QUICKSTART.md` | cita `large`/`complex`, RFC/ADR, `guia-tecnico.md` | Sim — reverter `build_quickstart()` + regenerar fez o texto sumir; restaurado, volta | Sim |
+| 2 | RF1 — arquivo gerado bate com a função | `python3 _framework/scripts/render_prompts.py --check` | `exit 0` | trivial (idempotência) | Sim |
+| 3 | RF2 — guia não-técnico separa large/complex | `grep -c "Muito grande" docs/guias/guia-nao-tecnico.md` | `1` | Sim — bullet removido temporariamente, `grep -c` caiu a `0`; restaurado, volta a `1` | Sim |
+| 4 | Regressão geral | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` | sem sensor dedicado (regressão geral) | Sim |
+
+Detalhe completo, conformidade requisito↔código nas duas direções e ressalvas em `docs/sdd/validation.md`.
 
 ## Rastreabilidade
 
