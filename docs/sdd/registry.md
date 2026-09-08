@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-04 20:59. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-08 08:57. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **16**
 
@@ -24,4 +24,4 @@ Total de documentos: **16**
 | `SDD-DTF-0013` | Tooling de dev completo no kit público: test runner declarado, typecheck, formatter, pre-commit framework | implemented | Michel Pessoa | 2026-09-03 | SDD-DTF-0011 |
 | `SDD-DTF-0014` | Lockfile de dependências dev + config de formatter explícita | implemented | Michel Pessoa | 2026-09-04 | SDD-DTF-0013 |
 | `SDD-DTF-0015` | Consolida config do ruff em pyproject.toml (sensor de formatter só olha lá) | implemented | Michel Pessoa | 2026-09-04 | SDD-DTF-0014 |
-| `SDD-DTF-0016` | RULE_SINCE por data de criação do documento, não por framework_version do registry | draft | Michel Pessoa | 2026-09-04 | — |
+| `SDD-DTF-0016` | RULE_SINCE por data de criação do documento, não por framework_version do registry | implemented | Michel Pessoa | 2026-09-08 | — |

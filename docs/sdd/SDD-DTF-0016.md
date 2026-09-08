@@ -2,11 +2,11 @@
 id: SDD-DTF-0016
 type: SDD
 title: "RULE_SINCE por data de criação do documento, não por framework_version do registry"
-status: draft
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-04"
-updated: "2026-09-04"
+updated: "2026-09-08"
 relates_to: []
 source_docs: []
 consumption_instructions: "Sizing small — ausência de SPEC é o registro de que a fase foi pulada, não falha de processo. Escopo mecânico: framework_lib.py ganha version_date/rule_applies_since_date, validate_doc.py passa a comparar fm.created em vez do framework_version único do registry."
@@ -155,10 +155,18 @@ version)`. Import troca `rule_applies` por `load_rules` +
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não — mesma sessão que implementou
-(gate 13 violado, ver `LESSONS.md`; evidência abaixo é do
-implementador, sujeita a reverificação independente antes de qualquer
-outra decisão se apoiar nela).
+**Verificador independente:** sim — sessão separada da implementadora
+rodou verificação completa em `docs/sdd/validation.md` (PASS técnico,
+sensor de discriminação do critério 3 confirmado, regressão geral verde
+em 6 alvos). Evidência do implementador abaixo preservada como registro
+original.
+
+**Aprovação humana do gate 13 violado:** obtida em 2026-09-08 (Michel
+Pessoa, dono do projeto) — ciente de que o código foi escrito antes
+desta SDD existir, aprovou avançar `draft` → `approved` → `implemented`
+na mesma revisão, seguindo o padrão de `provenance` retroativo já usado
+para ADR reconstruído. Ver `docs/sdd/validation.md` para a recomendação
+que motivou o pedido de aprovação.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
