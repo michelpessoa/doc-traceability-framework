@@ -1,56 +1,36 @@
-# Verificação — SDD-DTF-0016
+# Verificação — SDD-DTF-0017
 
-- **Veredito:** PASS (técnico) — com bloqueio de processo pendente (ver "Descompassos encontrados")
-- **Diff verificado:** `main` (39b3af8) .. `sdd/SDD-DTF-0016-rule-since-por-data` (cbc4a7c)
-- **Verificador independente:** sim — sessão separada, sem ter lido o histórico da sessão implementadora, apenas a SDD e o diff.
+- **Veredito:** PASS
+- **Diff verificado:** `dec1b9f` (docs(dtf): QUICKSTART e guia não-técnico cobrem os 4 níveis de sizing), mergeado em `c0db014` (PR #49); mais `a0b9f11` (correção de status `draft` → `approved`, sem mudança de conteúdo), mergeado em `23ab566` (PR #50) — ambos já em `main`.
+- **Verificador independente:** sim — sessão separada, sem ter lido o histórico da sessão implementadora; entrada foi só a SDD (`docs/sdd/SDD-DTF-0017.md`) e o diff dos 2 commits acima, localizados via `git log --all --grep="SDD-DTF-0017"`.
 
 | Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1. Changelog tem `date` em toda entrada | `python3 -c "import yaml; d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml')); print(all('date' in e for e in d['framework']['changelog']))"` | `True` | trivial (checagem estrutural) | Sim |
-| 2. EVM (registry 2.1.0, PRD/TS criadas 2026-08-25/antes de 1.7.0) deixa de reprovar | `python3 _framework/scripts/framework_check.py /home/michel/doc-traceability-central/docs/EVM` (branch fix) vs. mesmo comando com `_framework` do `main` num `git worktree` separado | Branch fix: `✅ Todas as verificações do framework passaram.` (44 docs). `main` (pré-fix): `❌ 1 verificação(ões) falharam` — 11 PRD-EVM-000x reprovados por RF-ID ausente, idêntico ao relato da SDD. Confirmado `created: "2026-08-25"` em PRD-EVM-0001 (antes de 2026-08-29, data de 1.7.0) | Sim — reproduzi eu mesma o `❌` do `main` e o `✅` da branch, no mesmo diretório central, nesta sessão | Sim |
-| 3. Documento pós-1.7.0 sem RF-ID continua reprovando (sensor negativo) | Criei `PRD-SENSOR-0001.md` (`created: "2026-09-01"`) sem RF-ID formal, fora de qualquer `registry.yaml` de projeto (fallback puro por data), e rodei `python3 _framework/scripts/validate_doc.py <path>` | `❌ 3 problema(s)`, incluindo `'Requisitos funcionais' sem RF-ID próprio` | Sim — quebrei deliberadamente `rule_applies_since_date` (`return False` quando `since_date and doc_created`) e reexecutei: o erro de RF-ID desapareceu (`❌ 2 problema(s)`, sem a linha de RF-ID). Desfiz a alteração e confirmei retorno ao `❌ 3 problema(s)` original, `git diff --stat` limpo | Sim |
-| 4. Skill sincronizada | `python3 _framework/scripts/render_prompts.py` | Todas as linhas `✅ .../sincronizado`/`em dia`, incluindo `framework_lib.py`, `validate_doc.py`, `references/workflow-rules.yaml` | trivial (idempotência do sync) — também confirmado por `diff` byte-a-byte entre `_framework/scripts/{framework_lib,validate_doc}.py` e as cópias em `_framework/skills/doc-traceability-framework/` | Sim |
-| 5. Regressão geral | `python3 -m pytest -q` → `7 passed in 0.12s`. `python3 _framework/scripts/framework_check.py --auto` → `✅ 16 documento(s) ok` + `✅ Todas as verificações do framework passaram` (examples/central/EXEMPLO, LEGADO, project-repo-checkout). `python3 _framework/scripts/framework_check.py docs/sdd` (neste repo) → `✅` (16 docs). `framework_check.py docs/EVM` (central) → `✅` (44 docs). `framework_check.py docs/DTF` (central) → `✅` (12 docs). `framework_check.py docs/ABSTRACTCLINIC` (central) → `✅` (17 docs) | sem sensor dedicado — regressão geral, não lógica nova desta SDD | Sim, todas |
+| 1. RF1 — QUICKSTART.md menciona large/complex | `grep -A3 "small.*só a SDD" QUICKSTART.md` | Linhas citam `large`/`complex`, RFC/ADR e apontam pra `docs/guias/guia-tecnico.md` | Ver nota abaixo — grep isolado não discrimina (o padrão de match é a linha de introdução, não o conteúdo novo); sensor real aplicado sobre a cadeia de geração: revertida a edição em `build_quickstart()` (`_framework/scripts/render_prompts.py`), rodado `python3 _framework/scripts/render_prompts.py` (sem `--check`) pra regenerar — o `QUICKSTART.md` resultante voltou a **não** citar `large`/`complex`/RFC/ADR (confirmado por leitura do mesmo `grep -A3`). Desfeito (`git checkout`) o `render_prompts.py` do kit **e** a cópia sincronizada em `_framework/skills/doc-traceability-framework/scripts/render_prompts.py` (o regen tinha sincronizado a cópia com o texto quebrado) — `render_prompts.py --check` voltou a `✅ QUICKSTART.md: em dia.` em todas as 17 checagens, `git status --porcelain` limpo | Sim |
+| 2. RF1 — arquivo gerado bate com a função | `python3 _framework/scripts/render_prompts.py --check` | `exit 0`, 17 linhas `✅ .../em dia`/`sincronizado` | trivial (idempotência do sync); não discrimina conteúdo, só consistência gerador↔gerado — coberto pelo sensor do critério 1 | Sim |
+| 3. RF2 — guia não-técnico separa large/complex | `grep -c "Muito grande" docs/guias/guia-nao-tecnico.md` | `1` | Sim — removido temporariamente (edição descartável, não commitada) o bullet novo "Muito grande" de `docs/guias/guia-nao-tecnico.md`; `grep -c` caiu para `0` (exit 1). `git checkout -- docs/guias/guia-nao-tecnico.md` desfez a edição; `grep -c` voltou a `1`, `git status --porcelain` limpo | Sim |
+| 4. Regressão geral | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` (4 diretórios: `docs/sdd` deste repo — 17 docs ok —, `examples/central/EXEMPLO`, `examples/central/LEGADO`, `examples/project-repo-checkout/docs/sdd`) | sem sensor dedicado — regressão geral, não lógica nova desta SDD | Sim |
+
+Checagem mecânica complementar: `python3 _framework/scripts/validate_state.py docs/sdd` → `✅ 17 documento(s) verificados: nenhuma SDD 'implemented' sem evidência.`
 
 ## Conformidade requisito → código (e inverso)
 
-Todos os 4 requisitos consolidados da SDD têm código correspondente confirmado por leitura de diff:
-- `date` em `framework.changelog` (workflow-rules.yaml) — presente em todas as 11 entradas.
-- `version_date()` e `rule_applies_since_date()` em `framework_lib.py` — implementação bate literalmente com o pseudocódigo da "Especificação técnica consolidada" da SDD.
-- `validate_doc.check_document` troca `rule_applies` por `rule_applies_since_date(rules, RULE_SINCE[rule], fm.get("created"), version)`, com `load_rules()` chamado uma vez — confirmado no diff.
-- `render_prompts.py` sincronizou as cópias da skill (mecanismo existente, não código novo) — confirmado por diff byte-a-byte igual entre original e cópia.
+RF1 (`QUICKSTART.md` menciona `large`/`complex` → RFC/ADR, com referência a `guia-tecnico.md`) e RF2 (`guia-nao-tecnico.md` separa "Grande" de "Muito grande" com o mesmo critério de `guia-tecnico.md`) têm conteúdo correspondente confirmado por leitura de diff (`git show dec1b9f`): a edição em `build_quickstart()` (item 2 da lista "Primeiro trabalho") bate literalmente com o texto pedido na "Especificação técnica consolidada" da SDD, assim como o bullet "Muito grande" adicionado em `guia-nao-tecnico.md`.
 
-Direção inversa (arquivo no diff sem requisito): os 10 arquivos do diff (`LESSONS.md`, `workflow-rules.yaml`, `framework_lib.py`, `validate_doc.py`, as 3 cópias correspondentes em `_framework/skills/...`, `SDD-DTF-0016.md`, `registry.md`, `registry.yaml`) mapeiam integralmente para: os 3 arquivos de framework declarados + suas cópias sincronizadas (mecanismo já existente) + bookkeeping do próprio SDD/registry + `LESSONS.md` documentando o desvio de processo. Nenhum scope creep encontrado. `render_prompts.py` em si não foi alterado (corretamente, a SDD não pede isso).
+Direção inversa (arquivo no diff sem requisito): os arquivos tocados pelo commit `dec1b9f` são `QUICKSTART.md` (gerado, RF1), `_framework/scripts/render_prompts.py` (RF1) e sua cópia sincronizada em `_framework/skills/doc-traceability-framework/scripts/render_prompts.py` (mecanismo de sync já existente, não código novo), `docs/guias/guia-nao-tecnico.md` (RF2), mais `docs/sdd/SDD-DTF-0017.md`, `docs/sdd/registry.md` e `docs/sdd/registry.yaml` (bookkeeping da própria SDD). Nenhum arquivo fora dessa lista. `README.md`, `guia-tecnico.md` e `docs/especificacao.md` — declarados fora de escopo na SDD — não aparecem no diff. Nenhuma abstração, dependência, feature flag ou refactor sem requisito correspondente.
+
+O passo 5 do plano de implementação (sync `_framework/` e `docs/guias/` para a cópia em `doc-traceability-central`, em PR separado) está fora do escopo verificável neste repositório — pertence ao repositório central, não a este. Não verificado aqui; ver nota em "Descompassos encontrados".
 
 ## Descompassos encontrados
 
-**Gate 13 (`gate_implementation_before_code`) violado — confirmado.** O único commit da branch (`cbc4a7c`) contém, na mesma mensagem, a nota: *"código escrito antes da SDD (gate 13 violado), registrado em LESSONS.md. SDD-DTF-0016 fica em draft até verificação independente"*. Não há como reconstruir pela árvore de commits a ordem cronológica real dentro da sessão implementadora (é um único commit atômico cobrindo LESSONS.md, código de framework e a própria SDD), mas a admissão está registrada tanto no corpo do commit quanto em `LESSONS.md` (entrada de 2026-09-04, "Gate 13 violado ao corrigir o próprio gate_content_quality") quanto no corpo da SDD (`Evidência de verificação` → "não — mesma sessão que implementou (gate 13 violado...)"). `docs/sdd/registry.yaml`/`registry.md` também refletem `status: draft` para SDD-DTF-0016, não `approved` nem `implemented` — a sessão implementadora não tentou esconder ou pular o problema, e explicitamente reteve o próprio avanço de status até esta verificação. Nenhuma exceção do gate 13 se aplica (não é INC ativo).
+Nenhum descompasso de requisito↔código, arquivo fora de escopo ou abstração extra neste repositório (kit).
 
-Nenhum outro descompasso: sem requisito órfão, sem arquivo fora de escopo, sem abstração extra.
+Ressalva de processo: a SDD (`Riscos operacionais`, `Plano de rollout`, `Instruções específicas para a IA implementadora`) condiciona `implemented` à conclusão do passo 5 — sync para `doc-traceability-central` — mas esse passo acontece em outro repositório e não foi verificado nesta sessão (esta verificação rodou só em `/home/michel/doc-traceability-framework`). Não é um descompasso de código; é uma dependência externa ao escopo desta verificação, que o humano precisa confirmar separadamente antes ou depois de marcar `implemented` aqui.
 
 ## Lições
 
-Já capturada em `LESSONS.md` (entrada de 2026-09-04) com a red flag correta ("já entendi o que fazer, documentar é burocracia") e o padrão notado (segunda ocorrência na mesma sessão, projetos diferentes DTF/EVM, mas não atinge o critério de virar regra global por ser comportamento de agente numa sessão, não gap estrutural — corretamente avaliado contra `lessons_policy.when_a_lesson_becomes_a_rule`, que exige 2 PROJETOS + checagem mecânica possível).
+Nenhuma lição nova — nenhum red flag reaproveitável surgiu desta verificação. O critério 1 expôs que o `grep -A3` declarado como "Comando de verificação" na tabela de critérios de aceite da SDD não é, por si só, um sensor de discriminação (ele sempre casa a linha de introdução, independente do conteúdo novo estar presente); a discriminação real só apareceu ao reverter a cadeia de geração (`build_quickstart()` → regen → `QUICKSTART.md`) e comparar visualmente. Isso já está coberto pela orientação existente do procedimento normativo ("Se não houver teste automatizado para um critério, diga isso explicitamente em vez de marcar o critério como verificado por leitura de código") — não é gap novo, só aplicação de uma regra já existente.
 
 ## Recomendação de status
 
-Verificação técnica: **PASS** — todos os requisitos têm código correspondente, nenhum scope creep, todos os 5 critérios de aceite rodados nesta sessão com saída real, sensor de discriminação do critério 3 confirmado positivo (falha injetada faz o teste cair; revertida, volta a passar), regressão completa verde em todos os 6 alvos pedidos.
-
-Processo: gate 13 foi violado (código antes da SDD existir), fato admitido pela própria sessão implementadora em três lugares (commit, LESSONS.md, corpo da SDD) e não escondido. O procedimento normativo (`_framework/rules/workflow-rules.yaml`, seção 13) trata esse gate como erro a evitar pela própria IA, sem exceção fora de incidentes ativos, e o padrão `if_user_asks_to_skip` (a única passagem do framework que trata de skip do gate 13) exige, quando a ordem é pulada, **confirmação humana explícita** antes de prosseguir — não apenas registro em prosa pela própria IA. Aqui a IA já se autoimpôs `status: draft` e retenção do avanço até verificação independente, o que é a correção mecânica adequada, mas essa autocorreção não substitui a confirmação humana explícita que o framework exige para esse tipo de desvio.
-
-Portanto: **não avançar automaticamente para `implemented` nem para `approved` só com base nesta verificação técnica** — exigia aprovação humana explícita primeiro.
-
-**Atualização 2026-09-08:** aprovação obtida (Michel Pessoa, dono do
-projeto), ciente do gate 13 violado. PR #47 já estava mergeada em
-`main` do kit desde 2026-09-05 (só a SDD ficou presa em `draft`). Nesta
-sessão: `draft` → `implemented` direto (gate é de ordem, não de tempo de
-espera), `LESSONS.md` mantido sem mudança (já adequado). Próximo passo:
-sincronizar `_framework/` do kit para o espelho em
-`doc-traceability-central` (`[[project_framework_dois_repos_sync]]`),
-que ainda está com a versão antiga e por isso `main` do central segue
-vermelho (`framework-check` runs #67/#68).
-
-## Ressalvas de verificação
-
-- Não pude reconstruir a ordem cronológica exata dentro da sessão implementadora (código antes/depois da SDD) via timestamps de commit, pois tudo está em um único commit atômico — a confirmação do gate 13 violado se apoia na admissão textual (commit message + LESSONS.md + corpo da SDD), não em evidência de timestamp independente.
-- `gh pr view 47` confirma PR aberta, `main` ← `sdd/SDD-DTF-0016-rule-since-por-data`, estado `OPEN`, corpo da PR já menciona a mesma ressalva de gate 13/draft.
+**PASS.** Todos os 4 critérios de aceite rodados nesta sessão com saída real; critérios 1 e 3 têm sensor de discriminação confirmado (falha injetada faz a checagem cair; revertida, volta a passar); critério 2 é estrutural (idempotência) e critério 4 é regressão geral, sem sensor dedicado, ambos consistentes com o procedimento. Nenhum requisito órfão, nenhum arquivo fora de escopo, nenhuma abstração extra. Autoriza avançar `SDD-DTF-0017` para `implemented` neste repositório (kit), com a ressalva registrada acima sobre o passo 5 (sync central) não coberto por esta verificação.
