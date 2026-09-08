@@ -73,6 +73,10 @@ documentos existem:
 - **Média** (uma funcionalidade contida): ganha uma SPEC.
 - **Grande** (mexe em como o sistema é montado, é cara de desfazer, afeta
   vários times, ou troca uma tecnologia): ganha RFC e ADR antes.
+- **Muito grande** (mais de um desses motivos ao mesmo tempo, afeta vários
+  times ao mesmo tempo, ou a ideia ainda nem tem direção definida): antes
+  da RFC, o time registra a direção num documento separado — só então
+  parte pra RFC e ADR.
 
 O que **não** muda com o tamanho: a ordem (documento antes de código) e a
 exigência de evidência antes de dizer que ficou pronto. Mudança pequena

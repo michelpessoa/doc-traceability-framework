@@ -161,3 +161,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0016.md"
     tags: [tooling, gate_content_quality, non_retroactive]
+  - id: SDD-DTF-0017
+    type: SDD
+    title: "QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-08"
+    updated: "2026-09-08"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0017.md"
+    tags: [documentacao, ux, onboarding]
