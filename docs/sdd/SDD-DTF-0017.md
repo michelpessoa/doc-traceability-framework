@@ -2,7 +2,7 @@
 id: SDD-DTF-0017
 type: SDD
 title: "QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-08"
