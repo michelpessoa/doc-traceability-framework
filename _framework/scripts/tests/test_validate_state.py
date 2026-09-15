@@ -131,6 +131,31 @@ def test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia(tmp_path):
     assert not any("critério(s) de aceite mas só" in p for p in problems)
 
 
+def test_tabela_real_depois_de_bloco_cercado_fechado_e_contada():
+    """SDD-DTF-0028: linha de tabela real que vem DEPOIS de um bloco
+    cercado já fechado precisa ser contada. Discrimina a mutação M2
+    (fazer `in_fence` nunca voltar a `False` — uma cerca de abertura
+    que nunca "fecha" de verdade no parser): com essa mutação, toda
+    linha depois da abertura do bloco cercado, inclusive uma tabela real
+    mais adiante, seria ignorada e `table_rows` devolveria menos linhas
+    do que devia."""
+    section = (
+        HEADER_5
+        + "| 1 | `pytest` | 3 passed | teste reintroduzido | sim |\n"
+        + "\nBloco fora da tabela porque usa pipe de shell:\n\n"
+        + "```bash\n"
+        + "python3 script.py --report-only |\n"
+        + "  | grep -c -e algo\n"
+        + "```\n"
+        + "\n"
+        + "| 2 | `pytest -k outro` | 5 passed | segunda evidência | sim |\n"
+    )
+    assert table_rows(section) == [
+        ["1", "`pytest`", "3 passed", "teste reintroduzido", "sim"],
+        ["2", "`pytest -k outro`", "5 passed", "segunda evidência", "sim"],
+    ]
+
+
 def test_nenhum_validador_chama_rule_applies_direto():
     offenders = [
         p.name
