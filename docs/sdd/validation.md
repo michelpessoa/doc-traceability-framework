@@ -288,3 +288,44 @@ Nenhum descompasso de implementação. Observações:
 
 - Red flag: critério de aceite "antes/depois" que referencia `origin/main` como estado anterior. Ele só discrimina até o merge; use o SHA da base (ou `git merge-base`) para que a verificação pós-merge continue válida.
 - Red flag: requisito com qualificador ("relativo a `root`", lista de nomes podados) cujo teste só exercita os casos sem ambiguidade. Cada qualificador precisa de um caso que falhe se ele for ignorado; senão o sensor mostra mutações sobreviventes.
+
+---
+
+# Verificação — SDD-DTF-0026
+
+- **Veredito:** FAIL (bloqueante: critério 3 não reproduz o resultado esperado nem a saída registrada)
+- **Diff verificado:** `2c3f931..ca704db` (commit `ca704db`, mergeado via PR #72)
+- **Verificador independente:** sim — sessão/subagente separado da que implementou, contexto limpo, sem ler o histórico dela; entrada foi `docs/sdd/SDD-DTF-0026.md` e o diff acima. Verificação em 2026-09-15 na branch `docs/sdd-dtf-0026-verificacao` a partir de `main` em `a415235`.
+
+A tabela de evidência canônica fica dentro da SDD (seção "Evidência de verificação"); este arquivo é o relatório complementar. **A tabela da SDD não foi atualizada e o status continua `approved`** — veredito FAIL não avança status.
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1/RF3 — `git stash` não é mais oferecido como opção | `grep -n 'stash\`, cópia\|stash, cópia' _framework/procedures/verify-sdd.md` | sem saída, `exit=1` | bloco antes/depois ancorado em SHA fixo: em `2c3f931` o mesmo grep conta `1`; em `ca704db` conta `0` — discrimina | Sim |
+| 2. RF1 — restauração por cópia/checkout presente | `grep -n "cp arquivo.py /tmp/backup\|git checkout -- <arquivo>" _framework/procedures/verify-sdd.md` | 2 linhas (`58`, `66`), `exit=0` | antes `0`, depois `2` — discrimina | Sim |
+| 3. RF2/RF3 — SHA fixo e `origin/main` só como o que evitar | `grep -n "merge-base\|nunca .origin/main" _framework/procedures/verify-sdd.md` | 2 linhas (`21`, `22`), `grep -c` = `2`, `exit=0` | antes `0`, depois `2` — discrimina | **Não** — esperado na SDD é "3+ ocorrências" e a evidência registrada afirma 3 linhas, incluindo `24:`. Ver descompasso 1 |
+| 4. RF3 — sem cópia sincronizada a atualizar | `python3 _framework/scripts/render_prompts.py --check` | todas as entradas `em dia`/`sincronizado`, nenhuma menção a `verify-sdd.md`, `exit=0` | n/a (checagem estática) | Sim |
+| 5. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` (docs/sdd: 26 documentos ok), `exit=0` | regressão geral, sem sensor dedicado | Sim |
+| 6. Suíte do kit intacta | `python3 -m pytest -q` | `79 passed in 3.10s`, `exit=0` | regressão geral, sem sensor dedicado | Sim |
+
+**Sobre o sensor de mutação:** confirmado por leitura que `_framework/procedures/verify-sdd.md` é texto de procedimento, sem lógica executável — não há condição a inverter nem valor a fixar. No lugar do sensor de mutação foi rodado um bloco comparativo antes/depois ancorado no SHA fixo `2c3f931` (a própria técnica que esta SDD institui), que mostra os três greps estáticos invertendo de resultado entre as duas versões do arquivo. Critérios 5 e 6 são regressão geral, sem sensor dedicado.
+
+## Conformidade requisito ↔ código (SDD-DTF-0026)
+
+- **RF1:** atendido. Passo 3, item 1 (linhas 57–63) instrui "cópia do arquivo original (ex.: `cp arquivo.py /tmp/backup && ...` ou `git checkout -- <arquivo>` rodado dentro da própria worktree)", com **nunca `git stash`** e a justificativa ("compartilhado entre worktrees e sessões do mesmo repositório; com verificadores em paralelo, um `git stash` de uma sessão colide com o de outra"). Item 3 (linhas 66–67) manda restaurar pela cópia guardada ou por `git checkout -- <arquivo>`.
+- **RF2:** atendido. Bullet do diff em "Entrada" (linhas 20–26) exige `<base>` como SHA fixo — `merge-base` capturado na redação ou o SHA citado na SDD/PR — e diz **Nunca `origin/main`** direto, com a explicação da ref móvel.
+- **RF3:** atendido. `grep -n "stash"` no arquivo devolve só as linhas 59 e 61, ambas dentro da instrução do que **não** fazer (caso de borda da SDD respeitado: a palavra permanece como contraexemplo). `grep -n "origin/main"` devolve só 22, 24 e 25, todas dentro do mesmo parágrafo que proíbe o uso — nenhum bloco do procedimento continua ancorado em `origin/main` como "antes".
+
+**Direção inversa:** `git diff --name-only 2c3f931 ca704db` lista exatamente 4 arquivos — `_framework/procedures/verify-sdd.md`, `docs/sdd/SDD-DTF-0026.md`, `docs/sdd/registry.md`, `docs/sdd/registry.yaml` — o arquivo único previsto mais a própria SDD e o registry. Nenhum script Python, nada em `_framework/skills/`, nenhum arquivo fora da lista da SDD. Nenhuma abstração, dependência, flag ou refactor sem requisito.
+
+## Descompassos encontrados (SDD-DTF-0026)
+
+1. **Bloqueante — critério de aceite 3: resultado esperado e saída registrada não reproduzem.** A SDD exige "3+ ocorrências" e a tabela "Evidência de verificação" registra 3 linhas, entre elas `24: \`origin/main\`** direto: é uma ref móvel...`. O comando real devolve **2** linhas (21 e 22), `grep -c` = `2`. A segunda alternativa do padrão, `nunca .origin/main`, não casa com **nenhuma** linha do arquivo (`grep -n "nunca .origin/main" ... ; exit=1`, idem com `-i`): o texto quebra a frase entre linhas — a linha 23 termina em `**Nunca` e a linha 24 começa em `` `origin/main`** direto ``, e `grep` casa por linha. A linha 24 só entraria por um padrão que não exija a palavra "nunca" junto. Ou seja: a saída registrada na SDD não pode ter saído do comando registrado na SDD.
+2. **Não bloqueante — envelhecimento esperado das linhas 5 e 6 da evidência.** A tabela registra "docs/sdd 22 documentos ok" e `72 passed`; hoje são 26 documentos e `79 passed`. Diferença explicada pelos merges das SDDs irmãs (0024, 0025, 0027) depois da redação, não é defeito.
+3. **Não bloqueante — verificação original não-independente, declarada.** A tabela da SDD diz "Verificador independente: não — mesma sessão que redigiu e aplicou a correção". Declarar é o que o procedimento pede, mas o descompasso 1 é justamente o tipo de erro que a verificação independente pega: a sessão que escreveu o comando e o texto leu na saída o que esperava ver.
+
+## Lições (SDD-DTF-0026)
+
+- Red flag: **critério de aceite por `grep` cujo padrão exige duas palavras que o texto verificado quebra entre linhas.** `grep` casa por linha; requisito redigido como frase ("nunca `origin/main`") vira padrão que não casa quando a frase atravessa a quebra. Ou o padrão usa só o termo que cabe numa linha, ou a checagem é `grep -z`/`rg -U` multilinha.
+- Red flag: **saída registrada na tabela de evidência com mais linhas do que o comando registrado ao lado consegue produzir.** Contar as linhas da saída contra o `-c` do próprio comando é uma conferência de um segundo e pega transcrição por memória.
+

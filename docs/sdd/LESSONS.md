@@ -220,3 +220,38 @@ global (`lessons_policy`).
 `approved`, código já mergeado em `main`. Ainda não `implemented` —
 falta verificação independente (quem implementou não verifica), em
 sessão separada.
+
+## 2026-09-15 — SDD-DTF-0026: critério de aceite por `grep` com padrão que o texto quebra entre linhas
+
+Verificação independente de `SDD-DTF-0026` (diff `2c3f931..ca704db`, PR
+#72). Requisitos RF1–RF3 atendidos no texto de
+`_framework/procedures/verify-sdd.md`, escopo exato (nenhum arquivo fora
+da SDD), regressão verde — mas o critério de aceite 3 não reproduz.
+Veredito **FAIL**; status mantido em `approved`.
+
+### 9. Critério de aceite por `grep` cujo padrão atravessa a quebra de linha
+
+**O que falhou:** o critério 3 da SDD manda rodar `grep -n
+"merge-base\|nunca .origin/main" _framework/procedures/verify-sdd.md` e
+esperar "3+ ocorrências"; a tabela de evidência registra 3 linhas,
+incluindo a `24`. O comando devolve **2** linhas (21 e 22). A alternativa
+`nunca .origin/main` não casa com linha nenhuma do arquivo (nem com
+`-i`): o texto quebra a frase — linha 23 termina em `**Nunca`, linha 24
+começa em `` `origin/main`** direto ``. `grep` casa por linha.
+
+**Red flag:** critério de aceite que procura por `grep` uma frase de duas
+palavras num texto quebrado em parágrafo — o padrão só casa se a quebra
+cair onde o autor imaginou. E: saída registrada na tabela de evidência
+com mais linhas do que o `-c` do comando registrado ao lado produz.
+
+**Correção proposta (decisão do dono):** (a) corrigir só a SDD — padrão
+do critério 3 para um termo que cabe numa linha (ex.: `merge-base\|ref
+móvel`) ou checagem multilinha (`grep -z`, `rg -U`), expectativa
+recalibrada, e a linha 3 da tabela de evidência reescrita com a saída
+real; ou (b) reescrever o parágrafo de "Entrada" do procedimento para que
+"nunca `origin/main`" caiba numa linha só, mantendo o critério como está.
+Em ambos os casos a verificação independente precisa ser rodada de novo
+antes de `implemented`.
+
+**Escopo:** um projeto (kit), uma ocorrência. Não vira regra global
+(`lessons_policy`).
