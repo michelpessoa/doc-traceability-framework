@@ -2,7 +2,7 @@
 id: SDD-DTF-0018
 type: SDD
 title: "validate_state: não retroatividade por data de criação e checagem de evidência por coluna"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
