@@ -234,7 +234,7 @@ documents:
   - id: SDD-DTF-0025
     type: SDD
     title: "test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-15"
     updated: "2026-09-15"

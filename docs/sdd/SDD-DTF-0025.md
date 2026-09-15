@@ -2,7 +2,7 @@
 id: SDD-DTF-0025
 type: SDD
 title: "test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -156,12 +156,26 @@ Nenhum outro arquivo é tocado.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
+Verificação independente completa em `docs/sdd/validation.md` (seção
+SDD-DTF-0025). Veredito: **PASS**.
+
+**Verificador independente:** sim — subagente separado, contexto limpo,
+sem ler o histórico da sessão que implementou; entrada foi esta SDD e o
+diff `ae3fb0e..2c3f931` (commit de implementação `2c3f931`, PR #71).
+Verificação em 2026-09-15 na branch `docs/sdd-dtf-0025-verificacao` a
+partir de `a415235`. Todos os comandos abaixo foram rodados nesta sessão
+de verificação; as saídas são literais.
+
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_discover.py -v` | `3 passed in 0.08s`/`0.09s` (rodado 3x: baseline, após restaurar mutação 1, após restaurar mutação 2) | n/a (execução limpa) | Sim |
-| 2 | Mutação `PRUNED_DIR_NAMES = {".git", "_framework", "node_modules", "worktrees"}` em `framework_check.py` (temporária, restaurada por `cp` do backup, nunca commitada), depois comando do critério 1 | `2 failed, 1 passed` — `test_discover_poda_node_modules_framework_e_worktrees` e `test_discover_poda_worktrees_so_relativo_a_root` falham (`assert [] == ['docs/worktrees/registry_dir']`); `test_discover_nunca_desce_em_git` continua passando (não afetado por essa mutação). Restaurado (`diff` contra backup: idêntico) → `3 passed in 0.09s` | Sim, discrimina a mutação 1 | Sim |
-| 3 | Mutação `PRUNED_DIR_NAMES = {"_framework", "node_modules"}` (sem `.git`) em `framework_check.py` (temporária, restaurada por `cp` do backup, nunca commitada), depois comando do critério 1 | `2 failed, 1 passed` — `test_discover_poda_node_modules_framework_e_worktrees` e `test_discover_nunca_desce_em_git` falham (`assert ['.git/x'] == []`); `test_discover_poda_worktrees_so_relativo_a_root` continua passando (não afetado por essa mutação). Restaurado (`diff` contra backup: idêntico) → `3 passed in 0.09s` | Sim, discrimina a mutação 2 | Sim |
-| 4 | `python3 -m pytest && ruff check _framework/scripts && ruff format --check _framework/scripts` | pytest: `74 passed in 3.52s`; ruff check: `All checks passed!`; ruff format --check: `21 files already formatted` | sem sensor próprio (regressão) | Sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_discover.py -v` | `3 passed in 1.07s` — `test_discover_poda_node_modules_framework_e_worktrees PASSED`, `test_discover_poda_worktrees_so_relativo_a_root PASSED`, `test_discover_nunca_desce_em_git PASSED` (reexecutado após cada restauração de mutação: `3 passed in 0.10s` e `3 passed in 0.09s`) | n/a (execução limpa; os sensores são as linhas 2 e 3) | Sim |
+| 2 | Mutação temporária `PRUNED_DIR_NAMES = {".git", "_framework", "node_modules", "worktrees"}` em `_framework/scripts/framework_check.py` (backup por `cp` no scratchpad, nunca `git stash`, nunca commitada), depois o comando do critério 1 | `2 failed, 1 passed in 1.88s` — falham `test_discover_poda_worktrees_so_relativo_a_root` (`AssertionError: assert [] == ['docs/worktrees/registry_dir']`) e `test_discover_poda_node_modules_framework_e_worktrees`; `test_discover_nunca_desce_em_git` passa (não é alvo desta mutação). Restaurado por `cp` do backup (`diff` idêntico, `git status --porcelain` vazio) → `3 passed in 0.10s` | Sim — a mutação "podar `worktrees` por nome em qualquer nível" é pega | Sim |
+| 3 | Mutação temporária `PRUNED_DIR_NAMES = {"_framework", "node_modules"}` (sem `.git`) em `_framework/scripts/framework_check.py` (backup por `cp`, nunca `git stash`, nunca commitada), depois o comando do critério 1 | `2 failed, 1 passed in 0.10s` — falham `test_discover_nunca_desce_em_git` (`AssertionError: assert ['.git/x'] == []`) e `test_discover_poda_node_modules_framework_e_worktrees`; `test_discover_poda_worktrees_so_relativo_a_root` passa (não é alvo desta mutação). Restaurado por `cp` do backup (`diff` idêntico, `git status --porcelain` vazio) → `3 passed in 0.09s` | Sim — a mutação "tirar `.git` de `PRUNED_DIR_NAMES`" é pega | Sim |
+| 4 | `python3 -m pytest && ruff check _framework/scripts && ruff format --check _framework/scripts` | pytest: `79 passed in 3.10s`; `All checks passed!`; `21 files already formatted`; cadeia com exit 0 | sem sensor próprio (regressão) | Sim |
+
+Nota sobre a linha 4: a SDD foi redigida quando a suíte tinha 74 testes;
+`main` em `a415235` já traz os testes de SDD-DTF-0024/0026/0027, daí
+`79 passed`. O critério pede exit 0 na cadeia, satisfeito.
 
 ## Rastreabilidade
 
