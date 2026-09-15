@@ -2,7 +2,7 @@
 id: SDD-DTF-0018
 type: SDD
 title: "validate_state: não retroatividade por data de criação e checagem de evidência por coluna"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
@@ -166,8 +166,8 @@ Bloco C2 (fora da tabela porque usa pipe de shell) — conta problemas
 atribuídos às SDDs que são falso positivo hoje:
 
 ```bash
-python3 _framework/scripts/validate_state.py /home/michel/projetos/viverMelhor/docs/sdd --report-only \
-  | grep -c -e "SDD-EVM-000" -e "SDD-EVM-0012"
+python3 _framework/scripts/validate_state.py /home/michel/projetos/viverMelhor/docs/sdd --report-only |
+  grep -c -e "SDD-EVM-000" -e "SDD-EVM-0012"
 ```
 
 Que o validador não ficou permissivo é coberto pelo critério 1
@@ -197,12 +197,12 @@ projeto.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Arquivos tocados: `_framework/scripts/validate_state.py`,
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Arquivos tocados: `_framework/scripts/validate_state.py`,
       `_framework/scripts/tests/test_validate_state.py` e a cópia gerada
       em `_framework/skills/doc-traceability-framework/scripts/validate_state.py`
       — qualquer outro arquivo é escopo não registrado ou scope creep.
-- [ ] Nenhuma abstração, config ou refactor extra sem requisito acima.
+- [x] Nenhuma abstração, config ou refactor extra sem requisito acima.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
@@ -210,10 +210,19 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** —
+**Verificador independente:** sim — subagente separado da sessão que implementou (PR #58), sem ler o histórico dela; entrada: esta SDD e `git diff bf1b6af 2c02209`. Verificação em 2026-09-14, branch `docs/sdd-dtf-0018-verificacao` a partir de `origin/main` (`2c02209`).
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `10 passed in 0.69s`, exit 0 | Seis mutações temporárias em `validate_state.py` (restauradas por cópia do original, nunca commitadas), cada uma derrubou exatamente 1 teste (`1 failed, 9 passed`): RF1 `created` trocado por `None` derruba `test_legado_antes_da_regra_nao_reprova`; RF2 escopo sempre linha inteira derruba `test_na_no_sensor_nao_reprova`; RF2 sem chave `passou` derruba `test_na_no_passou_reprova`; RF3 `col = 1` fixo derruba `test_tabela_seis_colunas_comando_vazio`; RF4 sem cabeçalho checando lista vazia derruba `test_sem_cabecalho_reconhecivel_linha_inteira`; RF5 comentário com `rule_applies(` anexado derruba `test_nenhum_validador_chama_rule_applies_direto`. Restaurado: `10 passed` | sim |
+| 2 | Bloco C2: `python3 _framework/scripts/validate_state.py /home/michel/projetos/viverMelhor/docs/sdd --report-only` com saída filtrada por `grep -c -e "SDD-EVM-000" -e "SDD-EVM-0012"` | `0`; relatório completo: `✅ 20 documento(s) verificados: nenhuma SDD implemented sem evidência.` | Mesmo comando com o `validate_state.py` de `bf1b6af` (cópia temporária, removida): contagem `21` (18 linhas SDD-EVM-0001..0009 e 3 linhas SDD-EVM-0012 com resultado assumido em Sensor). Os 6 problemas reais citados no resumo (SDD-EVM-0013/0014/0015) já foram corrigidos no viverMelhor em `8bd6f85`; o não-afrouxamento fica com os testes do critério 1 | sim |
+| 3 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; `validate_state.py: sincronizado` e demais cópias em dia | Anexada linha `# drift` à cópia da skill (temporário): exit 1 com `validate_state.py: divergente`; restaurada, exit 0 | sim |
+| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.` (docs/sdd 21 documentos ok, 3 exemplos); suíte `17 passed in 0.64s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelos sensores do critério 1 | sim |
+| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, `11 files already formatted`, `Success: no issues found in 11 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
+
+Descompasso registrado (não bloqueante, decisão do humano): RF4 condiciona a checagem de linha inteira à ausência de coluna **comando**; a Especificação técnica consolidada (seguida à risca pelo código) condiciona à ausência de qualquer coluna reconhecida (comando, saída, passou). Com cabeçalho `# | Critério | Saída | Passou?`, um "n/a" em Critério não é apontado (antes era). A checagem de comando vazio cai corretamente para `row[1]`. Ver `docs/sdd/validation.md`.
+
+Ajuste editorial feito na verificação: no bloco C2, o pipe passou do início da linha de continuação para o fim da linha anterior (mesma semântica). `table_rows` contava a linha `  | grep ...` do bloco de código como 6º critério de aceite (falso positivo pré-existente, fora do diff; detalhe em `validation.md`).
 
 ## Rastreabilidade
 
