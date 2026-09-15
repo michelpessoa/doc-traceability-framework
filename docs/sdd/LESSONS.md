@@ -73,7 +73,8 @@ intenção). Fica registrado caso o mesmo padrão se repita em outra SDD.
 
 Oito descompassos apontados pelos verificadores (`validation.md`,
 seções de SDD-DTF-0018, 0019, 0020, 0021 e 0023). Nenhum reprovou
-implementação; todos seguem em aberto, cada um com a correção proposta.
+implementação. **Todos os 8 resolvidos em 2026-09-15** (PRs #69–#73);
+ver "Resolvido" em cada item.
 
 ### 1. SDD-DTF-0018 — RF4 em prosa diverge do pseudocódigo
 
@@ -90,6 +91,8 @@ fallback com gatilhos diferentes, sem teste que separe as duas leituras.
 **Correção proposta:** ajustar o texto do RF4 ao implementado (edição de
 SDD `implemented`, sem mudança de código).
 
+**Resolvido:** PR #69 — RF4 corrigido em `docs/sdd/SDD-DTF-0018.md`.
+
 ### 2. `table_rows` conta linha de bloco de código como linha de tabela
 
 **O que falhou:** ao validar `SDD-DTF-0018`, `validate_state.py` acusou 6
@@ -102,6 +105,9 @@ blocos cercados.
 
 **Correção proposta:** SDD small para `table_with_header` ignorar linhas
 dentro de blocos cercados. Até lá, em SDD, pipe de shell no fim da linha.
+
+**Resolvido:** PR #70, `SDD-DTF-0024` (`approved`) — `table_with_header`
+ignora linhas dentro de blocos cercados.
 
 ### 3. SDD-DTF-0020 — `check_hooks` reprova comando válido em forma de shell
 
@@ -119,6 +125,9 @@ gerado.
 **Correção proposta:** decidir entre (a) RF06 exigir só a forma sem shell
 ou (b) SDD small tokenizando com `shlex` e aceitando as variantes.
 
+**Resolvido:** decisão (b), PR #73, `SDD-DTF-0027` (`approved`) —
+`check_hooks.py` tokeniza `command` com `shlex.split()`.
+
 ### 4. SDD-DTF-0021 — justificativa do here-string está errada
 
 **O que falhou:** a SDD (e o HANDOFF da sessão) afirmam que em `printf |
@@ -135,6 +144,9 @@ equivalente.
 sairia só do subshell; o here-string não depende disso". Here-string
 mantido.
 
+**Resolvido:** PR #69 — justificativa corrigida em
+`docs/sdd/SDD-DTF-0021.md`.
+
 ### 5. SDD-DTF-0021 — caso de borda com `;` dentro de aspas não bloqueia
 
 **O que falhou:** a SDD afirma que `git commit -m "a; git push origin
@@ -150,6 +162,11 @@ testes.
 SDD como limite aceito, coberto pelo pre-push; ou (b) SDD small apertando
 os padrões com fronteira que aceite aspas, com teste dedicado.
 
+**Resolvido:** decisão (a), PR #69 — tabela de casos de borda de
+`docs/sdd/SDD-DTF-0021.md` corrigida (dizia "bloqueia", comportamento
+real é "não bloqueia"), documentado como limite aceito coberto por
+`.githooks/pre-push`. Sem mudança de código.
+
 ### 6. `verify-sdd.md` sugere `git stash` como espaço descartável
 
 **O que falhou:** o passo 3 do procedimento sugere `git stash` para
@@ -160,6 +177,9 @@ mutações de sensor; o stash é compartilhado entre worktrees e sessões. Em
 
 **Correção proposta:** SDD small trocando por "restaurar por cópia ou
 `git checkout -- <arquivo>` na própria worktree".
+
+**Resolvido:** PR #72, `SDD-DTF-0026` (`approved`) —
+`_framework/procedures/verify-sdd.md` não recomenda mais `git stash`.
 
 ### 7. SDD-DTF-0023 — blocos C3 e C5 usam `origin/main` como estado "antes"
 
@@ -172,6 +192,9 @@ a base `756c83b`.
 **Correção proposta:** em SDD nova, bloco "antes/depois" usa o SHA da
 base registrado na redação (ou `git merge-base`), nunca `origin/main`.
 Candidata a red flag no template de SDD se repetir.
+
+**Resolvido:** PR #72, `SDD-DTF-0026` (`approved`) — mesma SDD do item 6
+(mesmo arquivo, `verify-sdd.md`); instrução agora exige SHA fixo.
 
 ### 8. SDD-DTF-0023 — `test_discover.py` não pega duas mutações
 
@@ -187,5 +210,13 @@ previu esses casos.
 acrescentar `docs/worktrees/registry.yaml` (deve ser descoberto) e
 `.git/x/registry.yaml` (não deve) à fixture.
 
+**Resolvido:** PR #71, `SDD-DTF-0025` (`approved`) — fixture reforçada em
+`test_discover.py`, discriminação das 2 mutações confirmada.
+
 **Escopo:** um projeto (kit), uma ocorrência cada. Nenhum vira regra
 global (`lessons_policy`).
+
+**Nota sobre status das SDDs de correção (0024–0027):** todas
+`approved`, código já mergeado em `main`. Ainda não `implemented` —
+falta verificação independente (quem implementou não verifica), em
+sessão separada.
