@@ -288,3 +288,39 @@ Nenhum descompasso de implementação. Observações:
 
 - Red flag: critério de aceite "antes/depois" que referencia `origin/main` como estado anterior. Ele só discrimina até o merge; use o SHA da base (ou `git merge-base`) para que a verificação pós-merge continue válida.
 - Red flag: requisito com qualificador ("relativo a `root`", lista de nomes podados) cujo teste só exercita os casos sem ambiguidade. Cada qualificador precisa de um caso que falhe se ele for ignorado; senão o sensor mostra mutações sobreviventes.
+
+# Verificação — SDD-DTF-0025
+
+- **Veredito:** PASS
+- **Diff verificado:** `ae3fb0e..2c3f931` (commit de implementação `2c3f931`, PR #71). SHA fixo, nunca `origin/main` — a SDD já está mergeada em `main`, e `origin/main` deixaria de discriminar o "antes".
+- **Verificador independente:** sim — subagente separado, contexto limpo, sem ler o histórico da sessão que implementou. Branch `docs/sdd-dtf-0025-verificacao` a partir de `a415235`.
+
+A tabela completa de evidência (comandos, saídas e sensores dos critérios 1–4) está na seção "Evidência de verificação" da própria `SDD-DTF-0025.md`. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/scripts/tests/test_discover.py -v` | `3 passed in 1.07s`, os 3 casos nomeados na spec | ver critérios 2 e 3 | Sim |
+| 2 | mutação `+"worktrees"` em `PRUNED_DIR_NAMES`, depois o comando do critério 1 | `2 failed, 1 passed` (`assert [] == ['docs/worktrees/registry_dir']`); restaurado → `3 passed` | discrimina | Sim |
+| 3 | mutação `-".git"` em `PRUNED_DIR_NAMES`, depois o comando do critério 1 | `2 failed, 1 passed` (`assert ['.git/x'] == []`); restaurado → `3 passed` | discrimina | Sim |
+| 4 | `python3 -m pytest && ruff check _framework/scripts && ruff format --check _framework/scripts` | `79 passed in 3.10s`; `All checks passed!`; `21 files already formatted`; exit 0 | regressão | Sim |
+
+Restauração das mutações por `cp` de backup no scratchpad (nunca `git stash` — lição item 6 da seção de 2026-09-14), confirmada por `diff` contra o backup e `git status --porcelain` vazio nas duas vezes.
+
+## Conformidade requisito ↔ código (SDD-DTF-0025)
+
+- RF1 → `test_discover_poda_worktrees_so_relativo_a_root`: fixture isolada com `docs/worktrees/registry_dir/registry.yaml`, asserção `found == ["docs/worktrees/registry_dir"]`. Sensor do critério 2 prova que discrimina.
+- RF2 → `test_discover_nunca_desce_em_git`: fixture isolada com `.git/x/registry.yaml`, asserção `found == []`. Sensor do critério 3 prova que discrimina.
+- RF3 → `REGISTRY_DIRS` ganha `"docs/worktrees/registry_dir"` e `".git/x"` (comentadas com `# SDD-DTF-0025`); `test_discover_poda_node_modules_framework_e_worktrees` afirma `["docs/EVM", "docs/node_modules_notes", "docs/sdd", "docs/worktrees/registry_dir"]` — ordem alfabética conferida, `.git/x` ausente como previsto nos casos de borda. O teste combinado falha nas duas mutações, confirmando que a convivência com `node_modules`, `_framework` e `.claude/worktrees` na mesma árvore continua discriminando.
+- Direção inversa: `git diff --stat ae3fb0e..2c3f931` lista 4 arquivos — `_framework/scripts/tests/test_discover.py`, `docs/sdd/SDD-DTF-0025.md`, `docs/sdd/registry.yaml`, `docs/sdd/registry.md`. Todos previstos na checklist de escopo da SDD. Nenhum arquivo fora da lista, nenhuma abstração, dependência ou flag sem requisito.
+- Fora de escopo respeitado: `framework_check.py` (incl. `discover` e `PRUNED_DIR_NAMES`), `validate_state.py`, `verify-sdd.md` e `check_hooks.py` não aparecem no diff. `discover()` em `HEAD` segue idêntico ao de `ae3fb0e`; o comportamento correto que os novos testes mecanizam é o que já existia.
+
+## Descompassos encontrados (SDD-DTF-0025)
+
+Nenhum. Uma observação sem efeito no veredito:
+
+1. A linha 4 da tabela original (escrita pela sessão implementadora) registrava `74 passed`; nesta sessão a suíte dá `79 passed`, porque `main` em `a415235` já traz os testes de SDD-DTF-0024/0026/0027, mergeados depois. O critério pede exit 0 na cadeia, não um número fixo de testes. A tabela foi reescrita com a saída desta sessão.
+
+## Lições (SDD-DTF-0025)
+
+- Nenhuma lição nova. Esta SDD é a correção do item 8 da seção "2026-09-14 — Descompassos das verificações independentes de SDD-DTF-0018 a 0023" do `LESSONS.md` ("`test_discover.py` não pega duas mutações"): as duas mutações sobreviventes ali registradas foram reproduzidas nesta verificação e agora **falham**, fechando o achado.
+- Confirmação positiva da red flag já registrada: "requisito com qualificador cujo teste só exercita os casos sem ambiguidade" — os qualificadores de RF4 da SDD-DTF-0023 ("relativo a `root`", `.git` na lista podada) agora têm cada um um caso que falha se forem ignorados.
