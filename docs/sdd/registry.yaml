@@ -221,6 +221,36 @@ documents:
     relates_to: [SDD-DTF-0019]
     path: "docs/sdd/SDD-DTF-0023.md"
     tags: [tooling, validadores, artefatos]
+  - id: SDD-DTF-0024
+    type: SDD
+    title: "table_with_header não conta linha de bloco cercado como linha de tabela"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0018]
+    path: "docs/sdd/SDD-DTF-0024.md"
+    tags: [tooling, gate_scope_verification, validate_state]
+  - id: SDD-DTF-0025
+    type: SDD
+    title: "test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0023]
+    path: "docs/sdd/SDD-DTF-0025.md"
+    tags: [tooling, testes, discover]
+  - id: SDD-DTF-0026
+    type: SDD
+    title: "verify-sdd: sensor de mutação sem git stash compartilhado e diff ancorado em SHA fixo, não em origin/main"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0019, SDD-DTF-0023]
+    path: "docs/sdd/SDD-DTF-0026.md"
+    tags: [procedimento, verify_sdd, gate_scope_verification]
   - id: SDD-DTF-0027
     type: SDD
     title: "check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR}"

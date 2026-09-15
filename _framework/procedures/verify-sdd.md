@@ -17,7 +17,13 @@ sessão, declare isso na tabela de evidência — verificação não-independent
 ## Entrada
 
 - A SDD (`docs/sdd/SDD-*.md`) com status `approved`.
-- O diff da implementação (`git diff <base>..HEAD`).
+- O diff da implementação (`git diff <base>..HEAD`), onde `<base>` é um
+  SHA fixo — o `merge-base` capturado no momento da redação (`git
+  merge-base HEAD origin/main`, rodado **antes** de qualquer merge da
+  própria mudança) ou o SHA específico citado na SDD/PR. **Nunca
+  `origin/main`** direto: é uma ref móvel, e assim que a mudança sendo
+  verificada é mergeada, `origin/main` passa a contê-la — o "antes" deixa
+  de existir e qualquer bloco comparativo para de discriminar.
 - Nada mais. **Não leia o histórico da sessão que implementou** — herdar
   o raciocínio dela é herdar os pontos cegos dela.
 
@@ -48,12 +54,17 @@ Não aceite, de você mesma nem de subagente: "deve passar", "rodei antes",
 Um teste que nunca falhou pode não estar testando nada. Para cada
 critério com teste automatizado:
 
-1. Num espaço descartável (`git stash`, cópia, ou worktree — **nunca** um
-   commit), introduza uma falha de comportamento real no código que
-   aquele critério cobre: inverta uma condição, retorne valor fixo, pule
-   uma validação.
+1. Num espaço descartável — cópia do arquivo original (ex.: `cp
+   arquivo.py /tmp/backup && ...` ou `git checkout -- <arquivo>` rodado
+   dentro da própria worktree) — **nunca `git stash`** (o stash é
+   compartilhado entre worktrees e sessões do mesmo repositório; com
+   verificadores em paralelo, um `git stash` de uma sessão colide com o
+   de outra) e **nunca** um commit, introduza uma falha de comportamento
+   real no código que aquele critério cobre: inverta uma condição,
+   retorne valor fixo, pule uma validação.
 2. Rode o teste. **Ele tem que falhar.**
-3. Desfaça a alteração e confirme que o teste volta a passar.
+3. Restaure pela cópia guardada (ou `git checkout -- <arquivo>`) e
+   confirme que o teste volta a passar.
 
 Teste que passa com a implementação quebrada não verifica o critério —
 ele é ruído verde. Registre o resultado do sensor na tabela.
