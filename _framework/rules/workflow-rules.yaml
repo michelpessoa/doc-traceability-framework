@@ -403,7 +403,7 @@ operational_artifacts:
     purpose: "Passagem de contexto entre sessões. Sobrescreve no lugar, é descartável."
     declared_in: "handover_protocol"
   validation.md:
-    purpose: "Veredito da verificação independente de uma SDD, ao lado dela. Sem front-matter, mesmo formato de artefato descartável que HANDOFF.md e LESSONS.md."
+    purpose: "Veredito da verificação independente de uma SDD, ao lado dela. Complementa, nunca substitui, a tabela 'Evidência de verificação' dentro da SDD. Sem front-matter, mesmo formato de artefato descartável que HANDOFF.md e LESSONS.md."
     declared_in: "capabilities.verify_sdd_independently"
 
 decision_gates:
@@ -873,13 +873,13 @@ capabilities:
       matcher: "Bash"
       hook_command: ["bash", "${CLAUDE_PROJECT_DIR}/_framework/scripts/guard_bash.sh"]
     enforcement_patterns:
-      - pattern: '*"push --force"*|*"push -f "*|*"push -f"|*" -f "*"origin main"*'
+      - pattern: '"git push"*--force*|"git push"*" -f"|"git push"*" -f "*'
         message: "force-push detectado. Use PR normal."
-      - pattern: '*"push"*"origin main"*|*"push"*" main"*'
+      - pattern: '"git push"*" main"|"git push"*" main "*|"git push"*":main"*|"git push"*" main:"*'
         message: "push direto em main. Abra PR."
-      - pattern: '*"reset --hard"*'
+      - pattern: '"git reset --hard"*'
         message: "reset --hard é destrutivo. Confirme com o usuário antes."
-      - pattern: '*"rm -rf ."*|*"rm -rf /"*|*"rm -rf ~"*'
+      - pattern: '"rm -rf ."*|"rm -rf /"*|"rm -rf ~"*'
         message: "rm -rf de escopo amplo. Confirme com o usuário antes."
   - id: enforce_content_quality_gate
     description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
@@ -893,7 +893,7 @@ capabilities:
   - id: verify_sdd_independently
     description: "Verifica de forma independente se uma SDD foi implementada antes de virar `implemented` — quem implementou não verifica. Use quando o usuário pedir \"verifica a SDD\", \"pode marcar implemented?\", ou ao final de uma sessão de implementação."
     trigger: "Antes de mover uma SDD de approved para implemented."
-    produces: "validation.md ao lado da SDD, com veredito PASS/FAIL e tabela de evidência (comando, saída real, sensor, resultado)."
+    produces: "Tabela 'Evidência de verificação' preenchida na própria SDD (lida pelo gate 16), validation.md ao lado com veredito PASS/FAIL, descompassos e lições, e validate_state.py com exit 0 na SDD verificada antes de implemented."
     invariants:
       - "Quem implementou não verifica — sessão ou subagente separado, contexto limpo."
       - "Nenhum critério marcado como passado sem comando rodado nesta sessão e saída real."
