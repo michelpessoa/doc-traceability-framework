@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from validate_state import check_sdd  # noqa: E402
+from validate_state import check_sdd, table_rows  # noqa: E402
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 
@@ -99,6 +99,36 @@ def test_tabela_seis_colunas_ok(tmp_path):
 def test_sem_cabecalho_reconhecivel_linha_inteira(tmp_path):
     table = "| a | b | c |\n|---|---|---|\n| 1 | `pytest` | n/a |\n"
     assert _assumed(_with_evidence(tmp_path, table))
+
+
+def test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela():
+    """SDD-DTF-0024: uma linha de continuação de comando shell dentro de um
+    bloco cercado (ex.: `  | grep -c ...`) começa com `|` mas não é linha
+    de tabela markdown — não pode inflar a contagem de critérios."""
+    section = (
+        HEADER_5
+        + "| 1 | `pytest` | 3 passed | teste reintroduzido | sim |\n"
+        + "\n"
+        + "Bloco fora da tabela porque usa pipe de shell:\n\n"
+        + "```bash\n"
+        + "python3 script.py --report-only |\n"
+        + "  | grep -c -e algo\n"
+        + "```\n"
+    )
+    assert table_rows(section) == [["1", "`pytest`", "3 passed", "teste reintroduzido", "sim"]]
+
+
+def test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia(tmp_path):
+    """Mesma situação, mas fim a fim: 1 critério de aceite e 1 linha de
+    evidência real não deve reprovar por 'critérios vs linhas' mesmo com um
+    bloco cercado contendo `|` dentro da seção de evidência."""
+    table = (
+        HEADER_5
+        + "| 1 | `pytest` | 3 passed | teste reintroduzido | sim |\n"
+        + "\n```bash\npython3 script.py --report-only |\n  | grep -c -e algo\n```\n"
+    )
+    problems = _with_evidence(tmp_path, table)
+    assert not any("critério(s) de aceite mas só" in p for p in problems)
 
 
 def test_nenhum_validador_chama_rule_applies_direto():

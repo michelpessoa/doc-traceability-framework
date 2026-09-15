@@ -71,10 +71,13 @@ se aplica. Reusa `framework_lib.rule_applies_since_date`, introduzida por
 - **RF3**: Quando `check_evidence` checar "linha sem comando rodado", o
   sistema deve usar a coluna cujo cabeçalho contém "comando", não a
   posição fixa 1.
-- **RF4**: Se a tabela de evidência não tiver cabeçalho com coluna
-  reconhecível como comando, então o sistema deve aplicar as duas
-  checagens à linha inteira (comportamento atual) — nunca ficar mais
-  permissivo por falta de cabeçalho.
+- **RF4**: Se a tabela de evidência não tiver cabeçalho com nenhuma
+  coluna reconhecível (comando, saída ou passou), então o sistema deve
+  aplicar as duas checagens à linha inteira (comportamento atual) —
+  nunca ficar mais permissivo por falta de cabeçalho. (Texto corrigido
+  em 2026-09-15 pra bater com pseudocódigo/código: o fallback é por
+  ausência de qualquer coluna reconhecida, não só "comando" — ver
+  descompasso registrado abaixo e `docs/sdd/LESSONS.md`.)
 - **RF5**: O sistema deve ter teste automatizado em
   `_framework/scripts/tests/test_validate_state.py` cobrindo RF1–RF4 e um
   teste de guarda que falha se qualquer script de `_framework/scripts/`
