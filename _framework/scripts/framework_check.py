@@ -19,6 +19,7 @@ partir do diretório atual — é o modo usado pelo CI. Antes disso, se houver
 (SDD-DTF-0020).
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -31,15 +32,20 @@ import validate_state  # noqa: E402
 from framework_lib import iter_documents  # noqa: E402
 from framework_lib import report as emit  # noqa: E402
 
+PRUNED_DIR_NAMES = {".git", "_framework", "node_modules"}
+
 
 def discover(root: Path) -> list[Path]:
-    """Todo diretório com registry.yaml, ignorando o que está sob _framework/."""
+    """Todo diretório com registry.yaml, sem descer em .git, _framework,
+    node_modules nem .claude/worktrees (cópias de sub-agent)."""
     found = []
-    for path in sorted(root.rglob("registry.yaml")):
-        if "_framework" in path.parts or ".git" in path.parts:
-            continue
-        found.append(path.parent)
-    return found
+    worktrees = root / ".claude" / "worktrees"
+    for dirpath, dirnames, filenames in os.walk(root):
+        current = Path(dirpath)
+        dirnames[:] = sorted(d for d in dirnames if d not in PRUNED_DIR_NAMES and current / d != worktrees)
+        if "registry.yaml" in filenames:
+            found.append(current)
+    return sorted(found)
 
 
 def main() -> int:
