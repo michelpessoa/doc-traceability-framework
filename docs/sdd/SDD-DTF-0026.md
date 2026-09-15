@@ -131,7 +131,7 @@ deste procedimento.
 |---|---|---|---|
 | 1 | RF1/RF3 — `git stash` não é mais oferecido como opção de uso no passo 3 | `grep -n "stash\`, cópia\|stash, cópia" _framework/procedures/verify-sdd.md` | Sem match, exit 1 (grep não encontra a recomendação antiga) |
 | 2 | RF1 — instrução de restauração por cópia/checkout presente | `grep -n "cp arquivo.py /tmp/backup\|git checkout -- <arquivo>" _framework/procedures/verify-sdd.md` | 2+ ocorrências |
-| 3 | RF2/RF3 — instrução de SHA fixo (merge-base) presente e `origin/main` citado só como o que evitar | `grep -n "merge-base\|nunca .origin/main" _framework/procedures/verify-sdd.md` | 3+ ocorrências |
+| 3 | RF2/RF3 — instrução de SHA fixo (merge-base) presente e `origin/main` citado só como o que evitar | `grep -n "merge-base\|ref móvel" _framework/procedures/verify-sdd.md` | 3+ ocorrências (padrão corrigido em 2026-09-15: o original `nunca .origin/main` não casa porque a frase quebra em 2 linhas no procedimento — verificação independente pegou, ver `docs/sdd/LESSONS.md`) |
 | 4 | RF3 — não há cópia sincronizada deste arquivo a atualizar | `python3 _framework/scripts/render_prompts.py --check` | exit 0, sem menção a `verify-sdd.md` como divergente |
 | 5 | Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` |
 | 6 | Suíte de testes do kit intacta | `python3 -m pytest -q` | Todos os testes `passed`, exit 0 |
