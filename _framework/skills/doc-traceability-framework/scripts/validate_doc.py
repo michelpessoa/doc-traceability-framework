@@ -18,6 +18,10 @@ Checa, por documento:
   5. SPEC/PRD: todo requisito funcional tem RF-ID próprio.
   6. SPEC/PRD: todo critério de aceite está em notação EARS.
   7. SPEC/TS: a seção de contratos aponta arquivo/módulo ("onde").
+  8. SPEC: toda linha de RF tem coluna Arquivos preenchida (RF06, SDD-DTF-0030).
+  9. SDD: toda linha de task tem coluna Arquivos preenchida; "Decomposição em
+     tasks" ausente sem dispensa por sizing/RF único é gate (RF06/RF07,
+     SDD-DTF-0030).
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
@@ -122,6 +126,17 @@ EARS_TRIGGER = re.compile(r"^\s*(quando|enquanto|se|onde|ao|após|dado que)\b", 
 
 # "onde" de um contrato: caminho de arquivo com extensão, ou módulo com barra.
 FILE_HINT = re.compile(r"[\w./-]+\.(?:ts|tsx|js|jsx|py|go|rs|java|kt|rb|sql|yaml|yml|json|prisma|mjs)\b")
+
+# RF06/RF07 (SDD-DTF-0030, paralelismo derivado): "Rollout: não retroativo —
+# SDD/SPEC já approved/implemented não ganham a seção nova" — como vários
+# documentos já implementados foram criados no mesmo dia desta SDD, data de
+# criação não discrimina. O gate vale só enquanto o documento ainda está
+# sendo redigido (draft/in_review); um documento que já virou approved ou
+# implemented antes desta regra existir fica congelado nesse formato para
+# sempre (bump de framework.version é fora de escopo desta SDD).
+DRAFTING_STATUSES = {"draft", "in_review"}
+
+TASK_NUM = re.compile(r"^\d+$")
 
 
 def scannable(body: str) -> str:
@@ -228,6 +243,13 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
                 "('onde' do gate_content_quality item 2)."
             )
 
+    drafting = status in DRAFTING_STATUSES
+    if drafting and doc_type == "SPEC":
+        problems += check_files_column(doc_id, doc_type, section_body(body, "Requisitos funcionais"))
+    if drafting and doc_type == "SDD":
+        problems += check_files_column(doc_id, doc_type, section_body(body, "Decomposição em tasks"))
+        problems += check_tasks_section(doc_id, fm, body)
+
     return problems, warnings
 
 
@@ -262,6 +284,57 @@ def check_ears(doc_id: str, section: str | None) -> list:
                 f"deve...'): '{criterion[:60]}'."
             )
     return problems
+
+
+def check_files_column(doc_id: str, doc_type: str, section: str | None) -> list:
+    """
+    RF06 (SDD-DTF-0030): toda linha de RF (tabela "Requisitos funcionais"
+    da SPEC) ou de task (tabela "Decomposição em tasks" da SDD) tem a
+    coluna Arquivos preenchida — usada por `parallel_plan.py` para derivar
+    paralelismo. `(decisão pura)` conta como preenchida.
+    """
+    if not section:
+        return []
+    problems = []
+    for line in section.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if doc_type == "SPEC":
+            if len(cells) < 4 or not RF_ID.search(cells[0]):
+                continue
+            row_id, files = cells[0], cells[3]
+        else:
+            if len(cells) < 5 or not TASK_NUM.match(cells[0]):
+                continue
+            row_id, files = cells[0], cells[3]
+        if not files:
+            problems.append(
+                f"{doc_id}: linha '{row_id}' com coluna Arquivos vazia — gate RF06 "
+                "(SDD-DTF-0030): preencha caminho(s) relativo(s) ou '(decisão pura)'."
+            )
+    return problems
+
+
+def check_tasks_section(doc_id: str, fm: dict, body: str) -> list:
+    """
+    RF07 (SDD-DTF-0030): "Decomposição em tasks" é opcional só quando a SDD
+    declara `sizing: small` ou tem um único RF-ID em "Requisitos
+    consolidados" — fora isso, ausência da seção é gate.
+    """
+    if section_body(body, "Decomposição em tasks") is not None:
+        return []
+    if fm.get("sizing") == "small":
+        return []
+    consolidated = section_body(body, "Requisitos consolidados") or ""
+    rf_ids = set(RF_ID.findall(consolidated))
+    if len(rf_ids) <= 1:
+        return []
+    return [
+        f"{doc_id}: sem seção 'Decomposição em tasks' e não elegível para dispensa "
+        f"(sizing != small, {len(rf_ids)} RFs consolidados) — gate RF07 (SDD-DTF-0030)."
+    ]
 
 
 def collect(targets) -> list[Path]:

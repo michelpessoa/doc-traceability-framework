@@ -49,6 +49,17 @@ explicitamente "Sem ADR — RFC dispensou decisão arquitetural via gate".)
 ## Especificação técnica consolidada
 (Consolidado da Parte 2 da SPEC: contratos, plano de implementação, rollout.)
 
+## Decomposição em tasks
+Opcional quando a SDD herdar sizing `small` da SPEC de origem ou tiver um
+único RF consolidado — nesses casos, omita a seção (não deixe tabela
+vazia). Cada task cita os arquivos que toca; interseção de arquivo entre
+tasks força bloqueio de paralelismo mesmo sem "Depende de" declarado
+(`parallel_plan.py` deriva isso automaticamente, não escreva o grafo à
+mão).
+
+| # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
+|---|---|---|---|---|
+
 ## Critérios de aceite / definição de pronto
 Cada item vem do RF/critério da Parte 1 e do contrato/caso de erro da
 Parte 2 da SPEC — não invente critério novo aqui, consolide o que já existe a

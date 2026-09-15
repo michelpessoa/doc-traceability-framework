@@ -11,7 +11,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.pytest.ini_options]
-testpaths = ["_framework/scripts/tests"]
+testpaths = ["_framework/scripts/tests", "_framework/tests"]
 
 [tool.mypy]
 ignore_missing_imports = true

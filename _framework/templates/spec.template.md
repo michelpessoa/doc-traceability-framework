@@ -51,9 +51,14 @@ fim do documento. As cinco formas:
 | indesejada | Se `<condição>`, então o sistema deve `<resposta>` |
 | opcional | Onde `<capacidade>`, o sistema deve `<resposta>` |
 
-| RF-ID | Requisito | Critério de aceite (EARS) |
-|---|---|---|
-| RF01 | | |
+Coluna `Arquivos`: path relativo ao repositório do projeto, separado por
+vírgula se houver mais de um, ou `(decisão pura)` quando o RF não tocar
+arquivo algum. Usada para derivar paralelismo (`parallel_plan.py`) — não
+deixe vazia.
+
+| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |
+|---|---|---|---|
+| RF01 | | | |
 
 ## Casos de borda / condições de erro
 Todo caminho de falha ou condição-limite relevante a algum RF acima,

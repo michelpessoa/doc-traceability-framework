@@ -4,6 +4,14 @@
 > `_framework/rules/workflow-rules.yaml`; em caso de divergência, o YAML
 > manda. A mesma regra em prosa gerada está em `docs/especificacao.md`.
 
+> Este guia descreve um padrão de organização por trilhas de negócio,
+> pensado à mão pelo time. `RFC-DTF-0003`/`ADR-DTF-0003` (paralelismo
+> derivado, `SDD-DTF-0030`) resolvem um problema menor e mais mecânico:
+> dado um conjunto de tasks/SDDs já escritas, quais são seguras de rodar
+> em paralelo — por interseção de arquivo declarado, via
+> `_framework/scripts/parallel_plan.py`. É sinal informativo (não gate),
+> e não substitui a organização por trilhas descrita aqui.
+
 Este guia é opcional e complementar ao `guia-tecnico.md`. Ele descreve
 um padrão de organização para projetos cujo escopo se divide em módulos
 de negócio relativamente independentes, permitindo que múltiplas
