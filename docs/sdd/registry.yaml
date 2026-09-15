@@ -221,3 +221,13 @@ documents:
     relates_to: [SDD-DTF-0019]
     path: "docs/sdd/SDD-DTF-0023.md"
     tags: [tooling, validadores, artefatos]
+  - id: SDD-DTF-0026
+    type: SDD
+    title: "verify-sdd: sensor de mutação sem git stash compartilhado e diff ancorado em SHA fixo, não em origin/main"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0019, SDD-DTF-0023]
+    path: "docs/sdd/SDD-DTF-0026.md"
+    tags: [procedimento, verify_sdd, gate_scope_verification]
