@@ -2,7 +2,7 @@
 id: SDD-DTF-0030
 type: SDD
 title: "Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
