@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 22:49. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 23:17. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **21**
 
@@ -27,6 +27,6 @@ Total de documentos: **21**
 | `SDD-DTF-0016` | RULE_SINCE por data de criação do documento, não por framework_version do registry | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0017` | QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0018` | validate_state: não retroatividade por data de criação e checagem de evidência por coluna | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0016 |
-| `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
+| `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
 | `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
 | `SDD-DTF-0021` | Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0020 |

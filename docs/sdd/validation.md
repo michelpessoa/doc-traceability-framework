@@ -51,6 +51,55 @@ Direção inversa: `git diff --stat bf1b6af 2c02209` lista exatamente os 3 arqui
 - Red flag: requisito em prosa e pseudocódigo da especificação técnica descrevendo a mesma condição com gatilhos diferentes ("sem coluna comando" vs "sem nenhuma coluna reconhecida"). O implementador segue o pseudocódigo e o teste só cobre o caso em que os dois coincidem (`a | b | c`). Ao escrever SDD, o caso de borda de fallback precisa de um teste que separe as duas leituras.
 - Red flag: parser de tabela markdown baseado em "linha começa com `|`" sem saber de blocos de código. Comando de shell com pipe em linha de continuação dentro de uma SDD vira linha de tabela. Até corrigir, em SDD, pipe de shell no fim da linha, nunca no começo.
 
+# Verificação — SDD-DTF-0019
+
+- **Veredito:** PASS
+- **Diff verificado:** `de1c893..ccd5c1d` restrito ao que o merge #59 trouxe = commit `0d8575c` (`git show --stat 0d8575c`: 3 arquivos, 41 inserções, 14 remoções)
+- **Verificador independente:** sim — subagente separado da sessão implementadora, sem ler o histórico dela; entrada foi só `docs/sdd/SDD-DTF-0019.md` e o diff acima. Verificação em 2026-09-14 na branch `docs/sdd-dtf-0019-verificacao` (a partir de `origin/main` em `36f05e2`), em worktree própria.
+
+A tabela de evidência canônica está dentro da SDD (seção "Evidência de verificação"); esta seção é o relatório complementar.
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1, RF2 | `grep -n "da própria SDD" ...; grep -n "não a substitui" ...` (em `verify-sdd.md`) | linha 41 (passo 2) e linha 82 (passo 4) | frases removidas: ambas vazias, exit 1; restaurado, 2 ocorrências | sim |
+| 2. RF3 | `grep -n "### 5. Checagem mecânica antes de mudar status" ...; grep -c "Checagem mecânica complementar" ...` | `111:### 5. ...`; `0` | cabeçalho antigo restaurado: vazio e `1`; desfeito, `0` | sim |
+| 3. RF3 por arquivo | `grep -c "validate_state.py docs/sdd$" _framework/procedures/verify-sdd.md` | `0` | comando por diretório reinserido: `1`; desfeito, `0` | sim |
+| 4. RF4, RF5 | `python3 -c "import yaml; ..."` (literal da SDD) | `True True` | trechos novos removidos do YAML: `False False`; desfeito, `True True` | sim |
+| 5. Caso real | bloco C5, com a cópia de `docs/sdd` no scratchpad em vez de `mktemp -d` | cópia sem evidência: `❌ ... 'Evidência de verificação' está vazia e o status é implemented`, `exit=1`; original: `✅ 1 documento(s) verificados`, `exit=0` | o bloco é o sensor (procedimento é texto) | sim |
+| 6. Renderizações e regressão | `render_prompts.py --check && check_renderings.py && framework_check.py --auto` | `5 renderização(ões) concordam`; `✅ Todas as verificações do framework passaram.`; exit 0 | YAML mutado sem regenerar: `--check` exit 1 `divergente`; restaurado, exit 0 | sim |
+
+Todas as mutações foram feitas no working tree da worktree de verificação e desfeitas com `git checkout -- <arquivo>`; `git status --short` vazio antes de editar a SDD. Nenhuma mutação commitada.
+
+Checagem mecânica (passo 5 do procedimento novo, aplicado a ele mesmo): status para `implemented` na SDD e no `registry.yaml`, `python3 _framework/scripts/validate_state.py docs/sdd/SDD-DTF-0019.md` → `✅ 1 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 na primeira execução. `registry.md` regenerado com `generate_registry_md.py docs/sdd`; `framework_check.py --auto` → `✅ Todas as verificações do framework passaram.`
+
+## Conformidade requisito ↔ código
+
+- RF1: passo 2 (linhas 39–41) com "**da própria SDD** — é essa tabela que o gate 16 e `validate_state.py` leem."
+- RF2: passo 4 abre com o modelo da seção da SDD (ponteiro para `validation.md` com veredito, `**Verificador independente:**`, tabela com uma linha por critério) e o parágrafo "complementa ... **não a substitui** ... gate 16 violado", antes do modelo de `validation.md`. Texto idêntico ao da especificação técnica.
+- RF3: `### 5. Checagem mecânica antes de mudar status` com (a) status no front-matter e registry, (b) `validate_state.py docs/sdd/SDD-{PROJETO}-{SEQ}.md`, (c) volta para `approved` com exit ≠ 0 antes de commit, (d) não commitar `implemented` sem exit 0. Seção antiga removida; ressalva "necessário e não suficiente" mantida. Última frase do passo 4 virou "`PASS` autoriza o passo 5."
+- Red flag nova na tabela: presente, texto literal.
+- RF4, RF5: `produces` e `purpose` com o texto literal da especificação técnica; cópia da skill idêntica (render `--check` exit 0).
+
+Direção inversa: `git show --stat 0d8575c` lista exatamente `verify-sdd.md`, `workflow-rules.yaml` e a cópia gerada da skill. No YAML, só as duas linhas previstas. Passos 1 e 3 sem alteração. Nenhum script, regra ou gate alterado.
+
+## Descompassos encontrados
+
+Nenhum bloqueante. Avaliação dos dois achados conhecidos da implementação:
+
+1. **Quebra de linha do passo 2 deslocada (conforme).** A especificação técnica cita o parágrafo como blockquote com quebras próprias; a implementação mantém o texto palavra por palavra e só junta "leem." à linha de `**da própria SDD**`. Quebra de linha em markdown não altera o conteúdo normativo, e o critério 1 é `grep` por linha — com "da própria" e "SDD" em linhas diferentes o critério falharia sem que o requisito estivesse descumprido. Aceito.
+2. **"Escreva `validation.md` ao lado da SDD:" mantido no passo 4 (conforme).** A especificação manda inserir o novo trecho "antes do bloco do `validation.md`", o que pressupõe o bloco mantido; nenhum RF manda removê-lo. O modelo de `validation.md` ainda repete a tabela de evidência, mas agora subordinado ao parágrafo "não a substitui". Aceito.
+
+Informativos (fora do escopo desta SDD, sem ação aqui):
+
+3. O modelo da seção da SDD aponta para `docs/sdd/validation.md` literal, enquanto o viverMelhor usa `validation-EVM-00XX.md` e este kit acumula várias seções num mesmo `validation.md`. A SDD declara a convenção de nome fora de escopo; há SDD-DTF-0023 em rascunho em outra branch (ainda não em `main`) tratando do assunto.
+4. `docs/guias/guia-tecnico.md:263` ainda lista `validate_state.py docs/sdd` por diretório, mas numa lista geral de ferramentas (auditoria), não no fluxo de verificação; não contradiz o passo 5.
+5. O passo 3 do procedimento sugere `git stash` como espaço descartável; em ambiente com várias worktrees e sessões em paralelo o stash é compartilhado. Esta verificação usou `git checkout -- <arquivo>` na worktree própria. Candidato a SDD pequena, não é descompasso desta.
+
+## Lições
+
+- Red flag: critério de aceite por `grep` de linha sobre texto normativo reflowable. A quebra de linha passa a fazer parte do contrato sem estar escrita em nenhum RF. Ao escrever SDD de procedimento em texto, buscar trechos curtos que caibam numa linha, ou usar `grep -z`/Python sobre o arquivo inteiro.
+- Red flag: sensor de procedimento em texto é naturalmente fraco (a mutação é o inverso literal do `grep`). O bloco C5, que exercita o comando que o texto manda rodar contra um caso real, é o que dá discriminação de comportamento; SDD de procedimento deve ter pelo menos um critério desse tipo.
+
 # Verificação — SDD-DTF-0021
 
 - **Veredito:** PASS (com descompassos não bloqueantes, decisão do humano abaixo)
