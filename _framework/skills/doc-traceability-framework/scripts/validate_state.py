@@ -66,10 +66,21 @@ def table_rows(section: str) -> list[list[str]]:
 
 
 def table_with_header(section: str) -> tuple[list[str], list[list[str]]]:
-    """(cabeçalho normalizado em minúsculas, linhas de dados)."""
+    """(cabeçalho normalizado em minúsculas, linhas de dados).
+
+    Ignora linhas dentro de blocos cercados por ``` — uma linha de
+    evidência que é continuação de comando shell (ex.: `  | grep -c ...`)
+    começa com `|` mas não é linha de tabela markdown (SDD-DTF-0024).
+    """
     rows = []
+    in_fence = False
     for line in section.splitlines():
         line = line.strip()
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         if not line.startswith("|"):
             continue
         cells = [c.strip() for c in line.strip("|").split("|")]
