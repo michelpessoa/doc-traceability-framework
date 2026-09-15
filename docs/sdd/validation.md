@@ -99,3 +99,56 @@ Informativos (fora do escopo desta SDD, sem ação aqui):
 
 - Red flag: critério de aceite por `grep` de linha sobre texto normativo reflowable. A quebra de linha passa a fazer parte do contrato sem estar escrita em nenhum RF. Ao escrever SDD de procedimento em texto, buscar trechos curtos que caibam numa linha, ou usar `grep -z`/Python sobre o arquivo inteiro.
 - Red flag: sensor de procedimento em texto é naturalmente fraco (a mutação é o inverso literal do `grep`). O bloco C5, que exercita o comando que o texto manda rodar contra um caso real, é o que dá discriminação de comportamento; SDD de procedimento deve ter pelo menos um critério desse tipo.
+
+# Verificação — SDD-DTF-0021
+
+- **Veredito:** PASS (com descompassos não bloqueantes, decisão do humano abaixo)
+- **Diff verificado:** `36f05e2^1..36f05e2` (merge do PR #62; commits `42fce27`, `0a02f4a`)
+- **Verificador independente:** sim (subagente separado; não li o histórico da sessão que implementou)
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF07 guard por segmento | `python3 -m pytest _framework/scripts/tests/test_guard_bash.py -v` | `18 passed` | M1, M2, M3 falham (3, 3, 2 failed); M4 não falha (mutação equivalente, ver descompasso 1) | sim |
+| 2. RF08 merge real | `python3 -m pytest _framework/scripts/tests/test_check_commit.py -v` | `4 passed` | M5, M6, M7 falham (1 failed cada) | sim |
+| 3. Gerado bate e sem laço em pipe | `python3 _framework/scripts/render_prompts.py --check && grep -cF 'done <<<"$segments"' _framework/scripts/guard_bash.sh` | exit 0; `1` | M8 (gerador sem here-string): `--check` reprova; M4: grep dá `0` | sim |
+| 4. Incidente real (bloco C4) | bloco C4 da SDD, executado de arquivo de script | `exit=0` / `guard_bash: bloqueado — push direto em main. Abra PR.` `exit=2` | coberto por M1/M2 | sim |
+| 5. RF08 no histórico do kit | `python3 _framework/scripts/check_commit.py --last 30` | `✅ 17 mensagem(ns) de commit no formato esperado.`, exit 0 | histórico real, sem sensor próprio | sim |
+| 6. Regressão e renderizações | `ruff check ... && ruff format --check ... && mypy ... && python3 -m pytest && check_renderings.py && framework_check.py --auto` | `All checks passed!`; `19 files already formatted`; `no issues found in 19 source files`; `68 passed`; `5 renderização(ões) concordam`; `Todas as verificações do framework passaram.` | sem sensor dedicado | sim |
+
+Checagem mecânica: `python3 _framework/scripts/validate_state.py docs/sdd/SDD-DTF-0021.md` e `python3 _framework/scripts/framework_check.py --auto` depois de preencher a evidência e mudar o status (saídas no PR desta verificação).
+
+### Sensores (mutações temporárias no disco, restauradas por cópia do original, nunca commitadas)
+
+| Mutação | Arquivo | Resultado |
+|---|---|---|
+| M1: `re.split(...)` trocado por `[command]` (sem divisão) | `guard_bash.sh` | 3 failed, 15 passed |
+| M2: sem normalizar `git -C <caminho>` | `guard_bash.sh` | 3 failed, 15 passed |
+| M3: padrão push-main volta a ter `*` inicial | `guard_bash.sh` | 2 failed, 16 passed |
+| M4: `done <<<"$segments"` trocado por `printf ... \| while ... done` | `guard_bash.sh` | 18 passed (não discrimina); grep do critério 3 dá `0` |
+| M5: remove `if len(parents.split()) > 1: continue` | `check_commit.py` | 1 failed, 3 passed |
+| M6: `merge_in_progress` retorna `False` | `check_commit.py` | 1 failed, 3 passed |
+| M7: `merge_in_progress` retorna `True` | `check_commit.py` | 1 failed, 3 passed |
+| M8: gerador emite `done` sem here-string | `render_prompts.py` | `render_prompts.py --check` com `❌ divergente` |
+
+Depois das mutações: `22 passed` nos dois arquivos de teste, `git status --short` sem mudanças em código, `render_prompts.py --check` exit 0.
+
+## Conformidade requisito ↔ código
+
+- RF07: `enforcement_patterns` idênticos ao bloco da especificação técnica; `build_guard_bash` gera o trecho Python de divisão (`&&`, `||`, `;`, `|`, `\n`) e normalização de `git -C`, variável `segments`, `[ -z "$segments" ] && exit 0`, `while IFS= read -r segment` com `done <<<"$segments"`, linha de comentário citando SDD-DTF-0021. `guard_bash.sh` e cópias da skill batem com o gerador (`--check`). Mensagens de `deny` e `hook_command` intactos.
+- RF08: `messages_from_range` com `%H%x00%P%x00%B%x00---END---` e descarte de commit com mais de um pai (assinatura e retorno inalterados, `--last` herda); `merge_in_progress()` via `git rev-parse --git-path MERGE_HEAD` + `is_file()`, chamado no modo arquivo antes de ler a mensagem; falha do git retorna False. `check_message` e regra `Merge `/`Revert ` intactas.
+- Testes: os 17 casos + stdin inválido e os 4 casos de RF08 da tabela de testes, com os exits exigidos.
+- Casos de borda conferidos à mão (script em arquivo): linha de heredoc começando por `git push origin main` → exit 2; `git push` sem argumentos → exit 0; payload sem `tool_input.command` → exit 0; `check_commit.py msg` fora de repositório git com mensagem fora do formato → exit 1. Sem teste automatizado para esses; não exigidos pela tabela de testes.
+
+Direção inversa: `git diff --stat 36f05e2^1 36f05e2` lista 9 arquivos, todos na lista da verificação de escopo (`workflow-rules.yaml`, `render_prompts.py`, `guard_bash.sh`, `check_commit.py`, os dois testes novos e as cópias geradas `references/workflow-rules.yaml`, `scripts/check_commit.py`, `scripts/render_prompts.py` da skill). Nada em `.claude/`, `.githooks/`. Nenhuma abstração, dependência ou refactor além do descrito (`merge_in_progress` é a extração nomeada do passo que a especificação descreve em `main()`).
+
+## Descompassos encontrados
+
+1. **Premissa da SDD sobre o laço em pipe é falsa neste script (não bloqueante).** A especificação diz que com `printf ... | while` "o `exit` dentro do pipe só sai do subshell e o comando passaria". Executado num script mínimo com `deny` dentro de `printf | while`: com `set -euo pipefail` → exit 2, nada depois do pipe roda; com `set -eu` (sem pipefail) → exit 2 também; só sem `set -e` (`set -o pipefail` sozinho ou nenhum) → exit 0 e o script segue. Quem propaga é o `set -e`, não o `pipefail`: o `while` é o último elemento do pipe, então o status 2 do subshell já é o status do pipeline. Consequência: M4 é mutação equivalente com o cabeçalho atual, e os testes corretamente não a distinguem; a decisão do here-string só é protegida pelo grep do critério 3. Continua sendo a escolha mais robusta (não depende de `set -e`, que é frágil em funções e condicionais), mas a justificativa escrita está errada. Caminho sugerido: corrigir a frase na SDD/SPEC para "sem `set -e` o exit sairia só do subshell; o here-string não depende disso".
+2. **Caso de borda "separador dentro de aspas" não se comporta como a SDD diz (não bloqueante, decisão do humano).** Tabela de casos de borda: `-m "a; git push origin main"` → "vira segmento e bloqueia". Executado: `git commit -m "a; git push origin main"` → **exit 0**. O segmento vira `git push origin main"` (aspas finais), e nenhum dos padrões especificados casa (`" main"` exige terminar em ` main`, `" main "*` exige espaço depois). O código segue os padrões da especificação técnica literalmente; a inconsistência é interna à SDD (exemplo do caso de borda vs padrões). A frase "falha para o lado seguro" (casos de borda e Riscos) também não vale para esse exemplo; na prática o texto entre aspas de um `commit -m` não executa push, mas `bash -c "cd x; git push origin main"` também passa — já coberto pelo risco aceito "forma não prevista" e pelo `.githooks/pre-push`. Caminhos: (a) corrigir o caso de borda na SDD para "segmento termina em aspas e não casa: passa; limite aceito, coberto pelo pre-push" (escopo real); (b) nova SDD apertando os padrões (ex.: `"git push"*" main"*` com fronteira que aceite aspas) com teste dedicado. Classifiquei como PASS seguindo o precedente da SDD-DTF-0018 (inconsistência interna, código conforme à especificação técnica e à tabela de testes aprovada); o humano pode reverter.
+3. **Nome da branch de implementação (informativo).** Instruções específicas pediam `sdd/SDD-DTF-0021-guardrails`; a branch foi `sdd/SDD-DTF-0021-guard-subcomando`. Compatível com o `consumption_instructions` (`sdd/SDD-DTF-0021-*`) e com o gate de branch; sem efeito no código.
+4. **Warning de assunto com 78 caracteres (informativo, não é desta implementação).** Em `36f05e2`, `check_commit.py --last 30` não emite warning. O warning aparece com janela maior (`--last 45`): `64800703: assunto com 78 caracteres (>72)` — commit antigo da SDD-DTF-0016, junto com `afeae144` (87) e `1a836267` (73). Os dois commits do PR #62 passam limpos (`--range 36f05e2^1..0a02f4a` → `2 mensagem(ns)`, exit 0). Warning não altera exit.
+
+## Lições
+
+- Red flag: justificativa de desenho sobre semântica de shell escrita sem rodar no cabeçalho real (`set -euo pipefail`). Ao afirmar "isso quebraria", o sensor precisa ser um teste que falhe com a alternativa; se nenhum teste consegue falhar, a alternativa é equivalente e a justificativa tem de ser outra — ou o critério vira um grep, como aqui.
+- Red flag: exemplo de caso de borda que não está na tabela de testes. Os 17 casos simulados passaram; o único exemplo de borda com resultado afirmado e sem teste estava errado. Todo caso de borda com comportamento afirmado entra na tabela de testes ou é marcado "não testado".
