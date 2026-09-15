@@ -2,7 +2,7 @@
 id: SDD-DTF-0019
 type: SDD
 title: "verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
@@ -214,12 +214,12 @@ python3 _framework/scripts/validate_state.py docs/sdd/SDD-DTF-0017.md; echo "exi
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem alteração correspondente.
-- [ ] Arquivos tocados: `_framework/procedures/verify-sdd.md`,
+- [x] Todo requisito consolidado acima tem alteração correspondente.
+- [x] Arquivos tocados: `_framework/procedures/verify-sdd.md`,
       `_framework/rules/workflow-rules.yaml` e a cópia gerada em
       `_framework/skills/doc-traceability-framework/references/workflow-rules.yaml`
       — qualquer outro arquivo é escopo não registrado ou scope creep.
-- [ ] Nenhuma mudança de regra, gate ou script além do descrito.
+- [x] Nenhuma mudança de regra, gate ou script além do descrito.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
@@ -227,10 +227,19 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** —
+Verificação independente completa em `docs/sdd/validation.md` (seção SDD-DTF-0019). Veredito: **PASS**.
+Diff verificado: `git show --stat 0d8575c` (merge `ccd5c1d`, PR #59) — exatamente os 3 arquivos listados na checklist de escopo.
+
+**Verificador independente:** sim — subagente separado da sessão implementadora, sem ler o histórico dela; worktree própria a partir de `origin/main` `36f05e2`, 2026-09-14.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `grep -n "da própria SDD" _framework/procedures/verify-sdd.md; grep -n "não a substitui" _framework/procedures/verify-sdd.md` | `41:**da própria SDD** — é essa tabela que o gate 16 e validate_state.py leem.` (passo 2) e `82:lições — **não a substitui**. ...` (passo 4) | Sim — frases removidas temporariamente por sed: as duas buscas sem saída, exit 1; arquivo restaurado, voltam as 2 ocorrências | Sim |
+| 2 | `grep -n "### 5. Checagem mecânica antes de mudar status" _framework/procedures/verify-sdd.md; grep -c "Checagem mecânica complementar" _framework/procedures/verify-sdd.md` | `111:### 5. Checagem mecânica antes de mudar status`; `0` | Sim — cabeçalho trocado de volta para `## Checagem mecânica complementar`: primeira busca vazia, contagem `1`; restaurado, `0` | Sim |
+| 3 | `grep -c "validate_state.py docs/sdd$" _framework/procedures/verify-sdd.md` | `0` | Sim — linha do passo 5 trocada pelo comando antigo por diretório: contagem `1`; restaurado, `0` | Sim |
+| 4 | `python3 -c "import yaml; d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml')); c=[x for x in d['capabilities'] if x['id']=='verify_sdd_independently'][0]; print('própria SDD' in c['produces'], 'nunca substitui' in d['operational_artifacts']['validation.md']['purpose'])"` | `True True` | Sim — trechos novos removidos de `produces` e `purpose`: `False False`; restaurado, `True True` | Sim |
+| 5 | bloco C5 (cópia de `docs/sdd` no scratchpad em vez de `mktemp -d`; mesmo regex; mesmo `validate_state.py` por arquivo) | cópia sem linhas de evidência: `❌ SDD-DTF-0017: 'Evidência de verificação' está vazia e o status é implemented`, `exit=1`; original: `✅ 1 documento(s) verificados`, `exit=0` | O bloco é o próprio sensor (procedimento é texto, sem teste automatizado): separa SDD sem tabela de SDD com tabela | Sim |
+| 6 | `python3 _framework/scripts/render_prompts.py --check && python3 _framework/scripts/check_renderings.py && python3 _framework/scripts/framework_check.py --auto` | todos `em dia`/`sincronizado`; `5 renderização(ões) concordam`; `✅ Todas as verificações do framework passaram.`; `exit=0` | Sim — `workflow-rules.yaml` mutado sem regenerar a cópia: `render_prompts.py --check` exit 1 `references/workflow-rules.yaml: divergente`; restaurado, exit 0 | Sim |
 
 ## Rastreabilidade
 
