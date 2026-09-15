@@ -75,8 +75,11 @@ def check_message(message: str, label: str, require_refs: bool) -> tuple[list, l
 
 
 def messages_from_range(rev_range: str) -> list[tuple[str, str]]:
+    """Mensagens do intervalo, sem os commits de merge real (mais de um
+    pai) — merge é pulado pelo número de pais, não pelo assunto
+    (SDD-DTF-0021, RF08)."""
     out = subprocess.run(
-        ["git", "log", "--pretty=format:%H%x00%B%x00---END---", rev_range],
+        ["git", "log", "--pretty=format:%H%x00%P%x00%B%x00---END---", rev_range],
         capture_output=True,
         text=True,
         check=True,
@@ -86,9 +89,27 @@ def messages_from_range(rev_range: str) -> list[tuple[str, str]]:
         chunk = chunk.strip("\n\x00 ")
         if not chunk:
             continue
-        sha, _, body = chunk.partition("\x00")
+        sha, _, rest = chunk.partition("\x00")
+        parents, _, body = rest.partition("\x00")
+        if len(parents.split()) > 1:
+            continue
         result.append((sha[:8], body.strip()))
     return result
+
+
+def merge_in_progress() -> bool:
+    """True se o `git` apontar um MERGE_HEAD existente (commit-msg de um
+    merge). Falha do `git` — fora de repositório — conta como False."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--git-path", "MERGE_HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return bool(out) and Path(out).is_file()
 
 
 def main() -> int:
@@ -105,6 +126,8 @@ def main() -> int:
         idx = argv.index("--last")
         entries = messages_from_range(f"-{argv[idx + 1]}")
     elif positional:
+        if merge_in_progress():
+            return 0
         path = Path(positional[0])
         if not path.is_file():
             raise SystemExit(f"Não encontrado: {path}")
