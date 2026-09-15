@@ -344,8 +344,8 @@ printf '{"tool_name":"Edit","tool_input":{"file_path":"%s"}}' "$PWD/docs/sdd/SDD
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01–RF06 têm código e teste correspondentes.
-- [ ] Arquivos tocados só entre: `_framework/scripts/hook_session_start.py`,
+- [x] RF01–RF06 têm código e teste correspondentes.
+- [x] Arquivos tocados só entre: `_framework/scripts/hook_session_start.py`,
       `_framework/scripts/hook_post_edit.py`,
       `_framework/scripts/check_hooks.py`,
       `_framework/scripts/framework_check.py`,
@@ -358,7 +358,7 @@ printf '{"tool_name":"Edit","tool_input":{"file_path":"%s"}}' "$PWD/docs/sdd/SDD
       `.claude/settings.json` (gerado), cópias geradas em
       `_framework/skills/doc-traceability-framework/`, e esta SDD e o
       registry (status/evidência).
-- [ ] Nenhuma mudança em `guard_bash.sh`, `check_commit.py`,
+- [x] Nenhuma mudança em `guard_bash.sh`, `check_commit.py`,
       `enforcement_patterns` ou regra/gate além do descrito.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
@@ -367,10 +367,19 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** —
+**Verificador independente:** sim — subagente separado da sessão implementadora, sem ler o histórico dela; entrada foi esta SDD e o diff `9d98af0..de1c893` (PR #61, commits `0185688`, `d119055`). Verificação em 2026-09-14 na branch `docs/sdd-dtf-0020-verificacao` a partir de `origin/main` em `de1c893`. Critério 9 **não rodado** (manual) — por isso o status continua `approved`. Relatório complementar e sensores detalhados em `docs/sdd/validation.md`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/scripts/tests/test_hook_session_start.py -v` | `8 passed in 0.25s`, exit 0 | 5 mutações em `hook_session_start.py` (sem glob `docs/*`, ordem invertida, `post-compact` sem print, imprime sem HANDOFF, ignora env/`cwd`): todas exit 1; restaurado exit 0 | sim |
+| 2 | `python3 -m pytest _framework/scripts/tests/test_hook_post_edit.py -v` | `8 passed in 1.27s`, exit 0 | 5 mutações em `hook_post_edit.py` (exit 0 no lugar de 2, problemas em stdout, `check_sdd` pulado, filtro de tipo removido, warnings somados): todas exit 1; restaurado exit 0 | sim |
+| 3 | `python3 -m pytest _framework/scripts/tests/test_render_prompts_mechanization.py -v` | `12 passed in 0.19s`, exit 0 | 4 mutações em `render_prompts.py` (aceita `prompt`, aceita caminho relativo, checa `artifact_type: command`, colapsa matchers): todas exit 1; restaurado exit 0. Extra: `_framework/` relativo no YAML real → `render_prompts.py` exit 1 citando `enforce_content_quality_gate`, nenhum arquivo escrito | sim |
+| 4 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `8 passed in 0.10s`, exit 0 | 6 mutações em `check_hooks.py` (regras 1–5 desligadas uma a uma; regra 3 reprovando prefixo correto): todas exit 1; restaurado exit 0 | sim |
+| 5 | `python3 -c "import json; s=json.load(open('.claude/settings.json'))['hooks']; …"` (comando da tabela, literal) | `['PostToolUse', 'PreToolUse', 'SessionStart'] {'command'} True`, exit 0 | coberto pelo sensor do critério 3 (gerador recusa `prompt`/caminho relativo); `render_prompts.py --check` exit 0 no critério 8 prova que o arquivo é o gerado | sim |
+| 6 | `python3 _framework/scripts/check_hooks.py && python3 _framework/scripts/framework_check.py --auto` | `✅ .claude/settings.json: hooks ok.`; `-- hooks do harness`; `✅ Todas as verificações do framework passaram.`, exit 0 | `if settings.exists()` → `if False` em `framework_check.py`: saída sem `-- hooks do harness` (grep exit 1); restaurado exit 0. Extra: diretório sem `registry.yaml` com `prompt` em SessionStart → `--auto` exit 1 (`--report-only` exit 0) | sim |
+| 7 | bloco C7 literal (script em arquivo, rodado com `bash`) | 1ª: stderr `framework: /tmp/tmp.hbRNjMBA90/sdd/SDD-DTF-0017.md viola gate(s)` + `SDD-DTF-0017: 'Evidência de verificação' está vazia e o status é implemented`, `exit=2`; 2ª: sem saída, `exit=0` | `return 2` → `return 0`: C7 não imprime `exit=2` (exit 1); `check_sdd` pulado: idem; restaurado exit 0 | sim |
+| 8 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts && python3 -m pytest && python3 _framework/scripts/render_prompts.py --check && python3 _framework/scripts/check_renderings.py` | `All checks passed!`; `17 files already formatted`; `Success: no issues found in 17 source files`; `46 passed in 2.17s`; `render --check` exit 0 (cópias `sincronizado`); `✅ 5 renderização(ões) concordam` (1 aviso pré-existente sobre `TS` no cursor), todos exit 0 | regressão e estático, sem sensor dedicado | sim |
+| 9 | não rodado — manual, requer sessão real do usuário (`claude --debug`) | sem saída nesta verificação | sem sensor — critério manual | não verificado |
 
 ## Rastreabilidade
 
