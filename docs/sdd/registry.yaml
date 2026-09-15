@@ -181,3 +181,13 @@ documents:
     relates_to: [SDD-DTF-0016]
     path: "docs/sdd/SDD-DTF-0018.md"
     tags: [tooling, gate_scope_verification, non_retroactive]
+  - id: SDD-DTF-0019
+    type: SDD
+    title: "verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-14"
+    updated: "2026-09-14"
+    relates_to: [SDD-DTF-0018]
+    path: "docs/sdd/SDD-DTF-0019.md"
+    tags: [procedimento, gate_scope_verification, verify_sdd]

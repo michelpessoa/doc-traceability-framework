@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 21:08. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 21:11. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **18**
+Total de documentos: **19**
 
 
-## SDD (18)
+## SDD (19)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -27,3 +27,4 @@ Total de documentos: **18**
 | `SDD-DTF-0016` | RULE_SINCE por data de criação do documento, não por framework_version do registry | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0017` | QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0018` | validate_state: não retroatividade por data de criação e checagem de evidência por coluna | in_review | Michel Pessoa | 2026-09-14 | SDD-DTF-0016 |
+| `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | in_review | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
