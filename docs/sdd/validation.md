@@ -288,3 +288,57 @@ Nenhum descompasso de implementação. Observações:
 
 - Red flag: critério de aceite "antes/depois" que referencia `origin/main` como estado anterior. Ele só discrimina até o merge; use o SHA da base (ou `git merge-base`) para que a verificação pós-merge continue válida.
 - Red flag: requisito com qualificador ("relativo a `root`", lista de nomes podados) cujo teste só exercita os casos sem ambiguidade. Cada qualificador precisa de um caso que falhe se ele for ignorado; senão o sensor mostra mutações sobreviventes.
+
+# Verificação — SDD-DTF-0027
+
+- **Veredito:** PASS (com um descompasso não bloqueante: lacuna de cobertura de teste, abaixo)
+- **Diff verificado:** `f8ee505^..f8ee505` (PR #73, squash `f8ee505`; SHA fixo, nunca `origin/main`)
+- **Verificador independente:** sim — sessão nova de contexto limpo, sem ler o histórico da sessão que implementou; entrada foi só `docs/sdd/SDD-DTF-0027.md` e o diff acima. Verificação em 2026-09-15 na branch `docs/sdd-dtf-0027-verificacao`, em worktree própria. Substitui a autoavaliação da sessão implementadora, que declarava "Verificador independente: não".
+
+A tabela de evidência canônica (comandos, saídas e sensores dos critérios 1–6, mais o quadro antes/depois de 11 casos) está na seção "Evidência de verificação" da própria `SDD-DTF-0027.md`. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF5 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `11 passed in 0.11s`, exit 0 | M1, M2 derrubam os testes esperados; M3 sobrevive (descompasso 1) | sim |
+| 2. Regra 3 não afrouxa | bloco C2 (M1, M2 no disco, restauradas com `git checkout --`) | M1 `1 failed, 10 passed`; M2 `2 failed, 9 passed`; restaurado `11 passed` | o bloco é o sensor | sim |
+| 3. Cópia da skill | `render_prompts.py --check` e `cmp` fonte vs cópia | exit 0, `sincronizado`; `cmp` silencioso | byte a byte | sim |
+| 4. Regressão | `framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; `79 passed in 3.05s` | regressão, sem sensor dedicado | sim |
+| 5. Paridade CI | `ruff check && ruff format --check && mypy` (em `_framework/scripts`) | `All checks passed!`; `21 files already formatted`; `no issues found in 21 source files` | estático | sim |
+| 6. Renderizações | `check_renderings.py` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml` | regressão | sim |
+
+Checagem mecânica depois de preencher a evidência e mudar o status: `python3 _framework/scripts/validate_state.py docs/sdd/SDD-DTF-0027.md` → `✅ 1 documento(s) verificados: nenhuma SDD 'implemented' sem evidência.`, exit 0 na primeira execução.
+
+### Sensores (mutações temporárias em `_framework/scripts/check_hooks.py`; nunca `git stash`, nunca commitadas; `diff` contra cópia do original ao final sem diferença)
+
+| Id | Mutação | Resultado |
+|---|---|---|
+| M1 | `PROJECT_DIR_PREFIXES = ("${CLAUDE_PROJECT_DIR}/",)` (perde a forma sem chaves) | `1 failed, 10 passed` — `test_command_shell_com_prefixo_sem_chaves_entre_aspas` |
+| M2 | `_tokens` sem `shlex.split` (`command` como token único, comportamento anterior) | `2 failed, 9 passed` — os dois testes de forma de shell |
+| M3 | regra 3 afrouxada para substring (`"CLAUDE_PROJECT_DIR" not in token` na condição) | `11 passed` — **sobrevive**; com ela, `$CLAUDE_PROJECT_DIR_FALSO/...` passa a ser aceito |
+
+## Conformidade requisito ↔ código (SDD-DTF-0027)
+
+- RF1: `_tokens(hook)` tokeniza `command` com `shlex.split`; as regras 3 e 4 iteram `_tokens(hook)` (antes `_items`). `_items` permanece, usada só pela regra 2 (`--report-only`).
+- RF2: `PROJECT_DIR_PREFIXES = ("${CLAUDE_PROJECT_DIR}/", "$CLAUDE_PROJECT_DIR/")`, casada com `token.startswith(p)`. Conferido por chamada direta: as formas com chaves, sem chaves, com e sem aspas são aceitas.
+- RF3: sem referência válida, continua reprovando — `python3 _framework/scripts/hook.py` (nenhuma referência), `$CLAUDE_PROJECT_DIR_FALSO/...` (prefixo que não é prefixo exato) e `CLAUDE_PROJECT_DIR_framework/...` (substring solta) reprovados no HEAD. Não houve afrouxamento.
+- RF4: `args` entram em `_tokens` sem passar por `shlex` (`tokens.extend(a for a in args if isinstance(a, str))`); item com espaços permanece um token só.
+- RF5: `try/except ValueError` cai para `tokens.append(command)`; comando com aspas malformadas é reprovado como token único, igual ao comportamento anterior.
+- Mensagem da regra 3 cita as duas formas: "sem o prefixo ${CLAUDE_PROJECT_DIR}/ (nem a variante $CLAUDE_PROJECT_DIR/)".
+- Efeito colateral previsto no resumo executivo confirmado: com shell-form e script inexistente, o "antes" reportava só o problema de prefixo; o HEAD reporta `script referenciado inexistente` — a regra 4 deixou de ser mascarada.
+- Testes: os 3 casos novos com os nomes exatos da tabela da SDD, mais os 8 pré-existentes.
+
+Direção inversa: `git diff --name-only f8ee505^ f8ee505` lista exatamente 6 arquivos — `check_hooks.py`, `tests/test_check_hooks.py`, a cópia gerada da skill, a SDD, `registry.yaml` e `registry.md` — todos na checklist de escopo. Nenhuma abstração, dependência, flag ou refactor fora dos RF; `render_prompts.py`, `workflow-rules.yaml`, `validate_state.py` e `test_discover.py` intocados, como a SDD exige.
+
+## Descompassos encontrados (SDD-DTF-0027)
+
+1. **Mutação sobrevivente: nada na suíte pega o afrouxamento para substring (não bloqueante, decisão do humano).** A SDD lista em "Riscos" e em "Instruções específicas para a IA implementadora" exatamente o cenário de `"$CLAUDE_PROJECT_DIR_FALSO/x.py"` e proíbe trocar `startswith` por substring. O código atual está correto (prefixo exato, conferido à mão: `$CLAUDE_PROJECT_DIR_FALSO/...` e `CLAUDE_PROJECT_DIR_framework/...` reprovados), mas a mutação M3, que implementa justamente o afrouxamento proibido, passa nos 11 testes — o único caso negativo da tabela de testes (`python3 _framework/scripts/hook.py`) não contém a substring, então não discrimina. Mesma categoria do item 8 das lições de 2026-09-14 (`test_discover.py`). Caminhos: (a) aceitar como está, com a lição registrada (escopo real, o risco só se materializa se alguém editar a regra no futuro); (b) SDD pequena acrescentando um teste com `command` contendo `$CLAUDE_PROJECT_DIR_FALSO/_framework/...` esperando reprovação. Classificado como PASS porque todo RF e todo item da especificação técnica têm código conforme e a tabela de testes aprovada foi cumprida à letra.
+
+Informativos, sem ação aqui:
+
+2. A suíte completa dá `79 passed`, não `75` como registrado na implementação — SDDs irmãs (0024–0026) entraram em `main` depois. Não afeta o critério.
+3. `check_settings` também aceita `"${CLAUDE_PROJECT_DIR}"/x.py` (chaves entre aspas), forma não citada na tabela de casos de borda da SDD. É consequência direta e desejável de RF1+RF2 (`shlex` remove as aspas), não um afrouxamento; vale citar na tabela se a SDD for revisada.
+
+## Lições (SDD-DTF-0027)
+
+- Red flag: risco nomeado na seção "Riscos" ou nas instruções à IA implementadora ("não troque `startswith` por substring") sem um caso correspondente na tabela de testes. O risco só está protegido por revisão humana; o sensor de discriminação mostra a mutação sobrevivendo. Todo risco que descreve uma implementação errada concreta precisa do teste que a reprova.
+- Confirmação útil: quadro "antes/depois" reconstruído com `git show <SHA>:<arquivo>` num diretório descartável continua discriminando depois do merge — diferente de comandos ancorados em `origin/main`, que deixam de discriminar (item 7 das lições de 2026-09-14).

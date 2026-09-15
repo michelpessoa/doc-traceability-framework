@@ -216,7 +216,38 @@ acrescentar `docs/worktrees/registry.yaml` (deve ser descoberto) e
 **Escopo:** um projeto (kit), uma ocorrência cada. Nenhum vira regra
 global (`lessons_policy`).
 
-**Nota sobre status das SDDs de correção (0024–0027):** todas
-`approved`, código já mergeado em `main`. Ainda não `implemented` —
-falta verificação independente (quem implementou não verifica), em
-sessão separada.
+**Nota sobre status das SDDs de correção (0024–0027):** código de todas
+já mergeado em `main`. A `SDD-DTF-0027` passou por verificação
+independente em 2026-09-15 e está `implemented` (ver seção abaixo e
+`validation.md`); 0024–0026 seguem `approved`, aguardando verificação
+independente em sessão separada (quem implementou não verifica).
+
+---
+
+## 2026-09-15 — SDD-DTF-0027: risco nomeado na SDD sem teste que o reprove
+
+**O que falhou:** nada no comportamento. A verificação independente da
+`SDD-DTF-0027` (PR #73, `f8ee505`) confirmou os 6 critérios de aceite com
+comando e saída reais, e confirmou à mão que a regra 3 de `check_hooks.py`
+não afrouxou (`python3 _framework/scripts/hook.py`,
+`$CLAUDE_PROJECT_DIR_FALSO/_framework/...` e
+`CLAUDE_PROJECT_DIR_framework/...` continuam reprovados). O que falhou foi
+o sensor: a mutação que troca o `startswith` por uma checagem de substring
+— exatamente o afrouxamento que a SDD proíbe em "Riscos" e em "Instruções
+específicas para a IA implementadora" — **passa nos 11 testes**. O único
+caso negativo da tabela de testes não contém a substring
+`CLAUDE_PROJECT_DIR`, então não discrimina.
+
+**Red flag que teria pegado antes:** risco descrito em prosa com uma
+implementação errada concreta ("não use `"CLAUDE_PROJECT_DIR" in token`")
+e nenhuma linha correspondente na tabela de testes da SDD. Enquanto o
+risco só vive na prosa, quem for editar a regra depois não tem freio
+automático. Mesma família do item 8 de 2026-09-14 (`test_discover.py`).
+
+**Correção proposta:** na próxima SDD que tocar `check_hooks.py`,
+acrescentar um caso com `command: "python3 $CLAUDE_PROJECT_DIR_FALSO/_framework/scripts/hook.py"`
+esperando 1 problema. Não bloqueia o `implemented` da 0027: todo RF tem
+código conforme e a tabela de testes aprovada foi cumprida à letra.
+
+**Escopo:** um projeto (kit), uma ocorrência. Não vira regra global em
+`workflow-rules.yaml` (`lessons_policy` exige dois projetos).
