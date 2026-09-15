@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 08:20. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 12:35. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **28**
 
@@ -35,5 +35,5 @@ Total de documentos: **28**
 | `SDD-DTF-0025` | test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0023 |
 | `SDD-DTF-0026` | verify-sdd: sensor de mutação sem git stash compartilhado e diff ancorado em SHA fixo, não em origin/main | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0019, SDD-DTF-0023 |
 | `SDD-DTF-0027` | check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR} | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0020 |
-| `SDD-DTF-0028` | test_validate_state: tabela real depois de bloco cercado fechado discrimina mutação em in_fence | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0024 |
+| `SDD-DTF-0028` | test_validate_state: tabela real depois de bloco cercado fechado discrimina mutação em in_fence | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0024 |
 | `SDD-DTF-0029` | test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0027 |
