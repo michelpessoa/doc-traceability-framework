@@ -191,3 +191,13 @@ documents:
     relates_to: [SDD-DTF-0018]
     path: "docs/sdd/SDD-DTF-0019.md"
     tags: [procedimento, gate_scope_verification, verify_sdd]
+  - id: SDD-DTF-0020
+    type: SDD
+    title: "Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-14"
+    updated: "2026-09-14"
+    relates_to: [SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019]
+    path: "docs/sdd/SDD-DTF-0020.md"
+    tags: [tooling, harness, hooks, claude-code]
