@@ -242,6 +242,36 @@ No checkout principal do kit, em `main` com PR #61 (`de1c893` ou posterior) e Cl
 - Red flag: sensor de configuração que compara prefixo de string num campo que o harness aceita em duas formas (exec e shell). A regra precisa ser escrita por forma, com teste para cada exemplo da documentação oficial, ou o requisito precisa restringir explicitamente uma forma.
 - Red flag: especificação técnica que troca "sem o prefixo" (RF) por "sem começar por" (pseudocódigo) — o implementador segue o pseudocódigo e os testes só cobrem o caso em que as duas leituras coincidem.
 
+# Re-verificação — SDD-DTF-0020 (2026-09-15)
+
+- **Veredito:** PASS nos critérios automatizáveis 1–8 (reconfirmado, sessão nova); critério 9 (manual, sessão interativa nova de Claude Code) **continua pendente** → status permanece `approved`.
+- **Diff verificado:** `9d98af0..de1c893` (commits `0185688`, `d119055`, mergeados via PR #61), conferido contra o estado atual de `main` (HEAD `843599a`) — o código de RF01–RF06 é idêntico ao de `de1c893`.
+- **Verificador independente:** sim — subagente novo, sem ler o histórico da sessão implementadora nem da verificação anterior (`docs/sdd-dtf-0020-verificacao`, commit `56361f8`); entrada foi só a SDD e o diff acima.
+
+Esta é uma segunda rodada independente da verificação já registrada mais acima neste arquivo (seção "Verificação — SDD-DTF-0020"). Motivo: critério 9 seguia pendente e o humano pediu conferência do que já foi feito. Resultado: reconfirma o PASS dos critérios 1–8 com sensores próprios (mutações diferentes das da primeira rodada em alguns casos, mesmo arquivo-alvo) e nota que o descompasso nº 1 da rodada anterior (falso positivo de `check_hooks.py` regra 3 em comando shell-form) **já foi corrigido** — `test_check_hooks.py` hoje inclui `test_command_shell_com_prefixo_com_chaves`, `test_command_shell_com_prefixo_sem_chaves_entre_aspas`, `test_command_shell_sem_referencia_reprova` e `test_command_shell_prefixo_falso_reprova`, todos passando, via SDD-DTF-0027 (tokenização com `shlex`) e SDD-DTF-0029.
+
+A tabela de evidência canônica está dentro da SDD (seção "Evidência de verificação", atualizada nesta rodada); tabela abaixo é o resumo desta re-verificação.
+
+| Critério | Comando rodado | Saída (resumo) | Sensor (mutação → restauração via `git checkout --`) | Passou? |
+|---|---|---|---|---|
+| 1. RF01, RF02 | `pytest test_hook_session_start.py -v` | `8 passed`, exit 0 | ordem `docs/*` antes da raiz em `find_handoffs` → falha (`docs/EVM/HANDOFF.md, HANDOFF.md`); restaurado → `8 passed` | sim |
+| 2. RF03 | `pytest test_hook_post_edit.py -v` | `8 passed`, exit 0 | `problems_for` deixa de somar `check_sdd` para `type=="SDD"` → falha (`0 == 2`); restaurado → `8 passed` | sim |
+| 3. RF04, RF05 | `pytest test_render_prompts_mechanization.py -v` | `12 passed`, exit 0 | `if "prompt" in mech` neutralizado (`if False and ...`) → `DID NOT RAISE SystemExit`; restaurado → `12 passed` | sim |
+| 4. RF06 | `pytest test_check_hooks.py -v` | `12 passed`, exit 0 | checagem de prefixo `${CLAUDE_PROJECT_DIR}/` neutralizada em `check_settings` → 3 testes falham; restaurado → `12 passed` | sim |
+| 5. RF05 gerado | one-liner da SDD sobre `.claude/settings.json` | `['PostToolUse', 'PreToolUse', 'SessionStart'] {'command'} True` | coberto pelo sensor do critério 3 | sim |
+| 6. RF06 `--auto` | `check_hooks.py && framework_check.py --auto` | `hooks ok`, `-- hooks do harness`, `Todas as verificações do framework passaram`, exit 0 | `if settings.exists()` → `if False` em `framework_check.py` → linha `-- hooks do harness` some (`grep -c` = 0); restaurado → linha volta | sim |
+| 7. RF03 caso real | bloco C7 literal | `exit=2` com stderr citando `SDD-DTF-0017`; depois `exit=0` sem saída | o próprio bloco discrimina; reforçado pelos sensores 2 e 4 | sim |
+| 8. Regressão | ruff, ruff format, mypy, pytest, `render_prompts.py --check`, `check_renderings.py` | `All checks passed!`, `21 files already formatted`, `no issues found in 21 source files`, `81 passed`, `sincronizado`, `5 renderização(ões) concordam` (2 avisos pré-existentes sobre `PRD`/`TS` legados); todos exit 0 | estático/regressão, sem sensor dedicado | sim |
+| 9. Sessão real | não rodado — manual, requer sessão interativa nova de Claude Code (`claude --debug`), que um subagente não inicia | sem saída | sem sensor — manual | pendente |
+
+## Descompassos encontrados (re-verificação)
+
+Nenhum novo. O único descompasso da rodada anterior (falso positivo de `check_hooks.py` regra 3 em comando shell-form) foi corrigido por SDD-DTF-0027/0029, já em `main`. Critério 9 continua pendente pelo mesmo motivo de sempre: exige um humano abrindo uma sessão nova de Claude Code — nenhuma sessão de verificação automatizada substitui isso.
+
+## Lições (re-verificação)
+
+- Nada novo para o LESSONS.md do projeto: esta rodada reconfirma achados já registrados; nenhum red flag adicional.
+
 # Verificação — SDD-DTF-0023
 
 - **Veredito:** PASS
