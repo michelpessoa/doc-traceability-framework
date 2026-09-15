@@ -72,7 +72,10 @@ Fora de escopo:
 - Hooks que alcançam o modelo, `check_hooks.py`, `hook_command` com
   `${CLAUDE_PROJECT_DIR}` (RF01–RF06) — `SDD-DTF-0020`.
 - Parser de shell (aspas, subshell, `$(...)`): a divisão é textual por
-  decisão da SPEC.
+  decisão da SPEC. Limite aceito (registrado 2026-09-15, não vira SDD
+  nova): `git commit -m "a; git push origin main"` não bloqueia — o
+  segmento termina dentro das aspas e nenhum padrão casa. Coberto pelo
+  `.githooks/pre-push`, que barra o push real. Ver `docs/sdd/LESSONS.md`.
 - Novos padrões de bloqueio ou mudança das mensagens de `deny`.
 - `.githooks/pre-push` e `.githooks/commit-msg`: não mudam.
 - Sincronizar central e projetos; bump de `framework.version`.
@@ -129,8 +132,11 @@ while IFS= read -r segment; do
 done <<<"$segments"
 ```
 
-(não usar `printf ... | while`: o `exit` dentro do pipe só sai do
-subshell e o comando passaria.) Demais linhas do cabeçalho (comentário,
+(não usar `printf ... | while`: com `set -e`, o status do `while`
+— último comando do pipe — já encerra o script com `exit 2`, com ou
+sem `pipefail`; a razão real de manter o here-string é não depender de
+`set -e` estar ligado, não o subshell. Texto corrigido em 2026-09-15,
+comportamento inalterado — ver `docs/sdd/LESSONS.md`.) Demais linhas do cabeçalho (comentário,
 `set -euo pipefail`, `deny`) ficam como estão; o comentário ganha uma
 linha citando a avaliação por segmento e `SDD-DTF-0021`.
 
