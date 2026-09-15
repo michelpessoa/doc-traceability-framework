@@ -201,3 +201,13 @@ documents:
     relates_to: [SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019]
     path: "docs/sdd/SDD-DTF-0020.md"
     tags: [tooling, harness, hooks, claude-code]
+  - id: SDD-DTF-0021
+    type: SDD
+    title: "Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-14"
+    updated: "2026-09-14"
+    relates_to: [SDD-DTF-0009, SDD-DTF-0020]
+    path: "docs/sdd/SDD-DTF-0021.md"
+    tags: [tooling, harness, guardrails, claude-code]
