@@ -2,7 +2,7 @@
 id: SDD-DTF-0026
 type: SDD
 title: "verify-sdd: sensor de mutação sem git stash compartilhado e diff ancorado em SHA fixo, não em origin/main"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -164,26 +164,36 @@ deste procedimento.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não — mesma sessão que redigiu e aplicou a
-correção (mudança de texto, sizing small, sem código; risco aceito pelo
-sizing — não há lógica a discriminar por sensor de mutação, só presença
-de texto).
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim — subagente separado, contexto limpo,
+sem ler o histórico da sessão que implementou. Tabela reescrita do zero
+em 2026-09-15 com saída real desta sessão (a tabela anterior era da
+própria sessão implementadora e trazia números de outra execução).
+Diff verificado: `2c3f931..ca704db` (commit de implementação `ca704db`,
+PR #72) — SHA fixo, nunca `origin/main`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `grep -n "stash\`, cópia\|stash, cópia" _framework/procedures/verify-sdd.md` | sem saída, exit 1 | n/a (checagem estática — ausência de string) | Sim |
-| 2 | `grep -n "cp arquivo.py /tmp/backup\|git checkout -- <arquivo>" _framework/procedures/verify-sdd.md` | 2 linhas: `51:1. Num espaço descartável — cópia do arquivo original (ex.: \`cp` e `60:3. Restaure pela cópia guardada (ou \`git checkout -- <arquivo>\`) e` | n/a (checagem estática) | Sim |
-| 3 | `grep -n "merge-base\|nunca .origin/main" _framework/procedures/verify-sdd.md` | 3 linhas: `21: SHA fixo — o \`merge-base\` capturado...`, `22: merge-base HEAD origin/main\`, rodado...`, `24: \`origin/main\`** direto: é uma ref móvel...` | n/a (checagem estática) | Sim |
-| 4 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; todas as cópias listadas como "em dia"/"sincronizado", nenhuma menção a `verify-sdd.md` (confirma que este arquivo não é copiado por `sync_copies`) | n/a (checagem estática) | Sim |
-| 5 | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` (docs/sdd 22 documentos ok; 3 exemplos ok) | Regressão geral, sem sensor dedicado (sem lógica nova) | Sim |
-| 6 | `python3 -m pytest -q` | `72 passed in 2.99s`, exit 0 | Regressão geral, sem sensor dedicado (sem lógica nova) | Sim |
+| 1 | `grep -n "stash\`, cópia\|stash, cópia" _framework/procedures/verify-sdd.md` | sem saída, `exit=1` | Bloco antes/depois ancorado em `2c3f931`: com o texto antigo o grep casa `51:1. Num espaço descartável (\`git stash\`, cópia, ou worktree — **nunca** um` (`exit=0`); restaurado → `exit=1`. Discrimina | Sim |
+| 2 | `grep -n "cp arquivo.py /tmp/backup\|git checkout -- <arquivo>" _framework/procedures/verify-sdd.md` | 2 linhas, `exit=0`: `58:   arquivo.py /tmp/backup && ...\` ou \`git checkout -- <arquivo>\` rodado` e `66:3. Restaure pela cópia guardada (ou \`git checkout -- <arquivo>\`) e` | Mesmo bloco: com o texto de `2c3f931` → 0 ocorrências, `exit=1`; restaurado → 2, `exit=0`. Discrimina | Sim |
+| 3 | `grep -n "merge-base\|ref móvel" _framework/procedures/verify-sdd.md` | 3 linhas, `exit=0`: `21:  SHA fixo — o \`merge-base\` capturado no momento da redação (\`git`, `22:  merge-base HEAD origin/main\`, rodado **antes** de qualquer merge da`, `24:  \`origin/main\`** direto: é uma ref móvel, e assim que a mudança sendo` | Mesmo bloco: com o texto de `2c3f931` → 0 ocorrências, `exit=1`; restaurado → 3, `exit=0`. Discrimina | Sim |
+| 4 | `python3 _framework/scripts/render_prompts.py --check` | `exit=0`; 11 renderizações "em dia" e 13 cópias "sincronizado"; nenhuma menção a `verify-sdd.md` (confirma que o procedimento não é copiado por `sync_copies`) | n/a (checagem estática de sincronismo) | Sim |
+| 5 | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.`, `exit=0` (docs/sdd: 26 documentos ok em registry, seção 15 e seção 16; 3 projetos de exemplo ok com aviso esperado de versão de framework) | Regressão geral, sem sensor dedicado (sem lógica nova) | Sim |
+| 6 | `python3 -m pytest -q` | `79 passed in 3.16s`, `exit=0` | Regressão geral, sem sensor dedicado (sem lógica nova) | Sim |
 
-Sem sensor de mutação (item "Sensor" da tabela do gate 16): a mudança é
-só texto de procedimento consumido por uma IA verificadora em sessão
-futura, não há código executável para introduzir falha de comportamento
-e observar teste falhando. Critérios 1–4 são checagem estática de
-presença/ausência de string, declarada como tal em vez de marcada
-"verificado por leitura de código".
+Sensor de mutação de código: **não aplicável** — o arquivo alterado é
+markdown de procedimento, sem lógica executável em que introduzir falha
+de comportamento. No lugar dele, os critérios estáticos 1–3 foram
+submetidos a um bloco antes/depois ancorado no SHA fixo
+`2c3f9312dce28876bd32f770d0b6996ec306ca89` (pai do commit de
+implementação; nunca `origin/main`, que já contém a mudança): o arquivo
+foi copiado para backup no scratchpad, substituído pelo conteúdo antigo
+via `git show <SHA>:_framework/procedures/verify-sdd.md`, os três greps
+rodados de novo — os três inverteram de resultado —, e o arquivo
+restaurado por `cp` do backup (`git status --porcelain` vazio depois),
+com os três greps voltando ao resultado esperado. Nenhum `git stash`
+foi usado. Critérios 4–6 são regressão e não têm sensor dedicado.
 
 ## Rastreabilidade
 

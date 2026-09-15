@@ -324,3 +324,52 @@ Nenhum. Uma observação sem efeito no veredito:
 
 - Nenhuma lição nova. Esta SDD é a correção do item 8 da seção "2026-09-14 — Descompassos das verificações independentes de SDD-DTF-0018 a 0023" do `LESSONS.md` ("`test_discover.py` não pega duas mutações"): as duas mutações sobreviventes ali registradas foram reproduzidas nesta verificação e agora **falham**, fechando o achado.
 - Confirmação positiva da red flag já registrada: "requisito com qualificador cujo teste só exercita os casos sem ambiguidade" — os qualificadores de RF4 da SDD-DTF-0023 ("relativo a `root`", `.git` na lista podada) agora têm cada um um caso que falha se forem ignorados.
+
+# Verificação — SDD-DTF-0026
+
+- **Veredito:** PASS
+- **Diff verificado:** `2c3f931..ca704db` (commit de implementação `ca704db`, PR #72). SHA fixo (`2c3f9312dce28876bd32f770d0b6996ec306ca89` = pai do commit de implementação), nunca `origin/main` — a mudança já está mergeada em `main`, e `origin/main` deixaria de representar o "antes".
+- **Verificador independente:** sim — subagente separado, contexto limpo, sem ler o histórico da sessão que implementou nem o da sessão que corrigiu o critério 3. Branch `docs/sdd-dtf-0026-verificacao-v2` a partir de `10719aa` (`origin/main`).
+
+A tabela completa de evidência (comandos, saídas e sensores dos critérios 1–6) está na seção "Evidência de verificação" da própria `SDD-DTF-0026.md`, reescrita do zero com a saída real desta sessão. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1 | `grep -n "stash\`, cópia\|stash, cópia" _framework/procedures/verify-sdd.md` | sem saída, `exit=1` | bloco antes/depois em `2c3f931`: antigo casa a linha 51, novo não. Discrimina | Sim |
+| 2 | `grep -n "cp arquivo.py /tmp/backup\|git checkout -- <arquivo>" _framework/procedures/verify-sdd.md` | linhas 58 e 66, `exit=0` | antigo → 0 ocorrências `exit=1`; novo → 2 `exit=0`. Discrimina | Sim |
+| 3 | `grep -n "merge-base\|ref móvel" _framework/procedures/verify-sdd.md` | linhas 21, 22 e 24, `exit=0` (3 ocorrências, o esperado da tabela) | antigo → 0 ocorrências `exit=1`; novo → 3 `exit=0`. Discrimina | Sim |
+| 4 | `python3 _framework/scripts/render_prompts.py --check` | `exit=0`; 11 renderizações "em dia", 13 cópias "sincronizado"; `verify-sdd.md` não aparece | n/a (checagem estática de sincronismo) | Sim |
+| 5 | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.`, `exit=0`; docs/sdd com 26 documentos ok nas três checagens | regressão | Sim |
+| 6 | `python3 -m pytest -q` | `79 passed in 3.16s`, `exit=0` | regressão | Sim |
+
+## Sensor: o que substituiu a mutação de código
+
+`_framework/procedures/verify-sdd.md` é markdown de procedimento, sem lógica executável — não há condição a inverter nem valor a fixar, logo não existe sensor de mutação de código aplicável. No lugar dele, os três critérios estáticos foram submetidos a um bloco antes/depois ancorado em SHA fixo:
+
+1. `cp _framework/procedures/verify-sdd.md <scratchpad>/verify-sdd.md.bak` (backup fora do repo; **nunca `git stash`**, que é compartilhado entre worktrees).
+2. `git show 2c3f9312dce28876bd32f770d0b6996ec306ca89:_framework/procedures/verify-sdd.md > _framework/procedures/verify-sdd.md` — o arquivo passa a ser o texto anterior à implementação.
+3. Os greps 1, 2 e 3 rodados de novo: critério 1 passa a **casar** (`51:1. Num espaço descartável (\`git stash\`, cópia, ou worktree — **nunca** um`, `exit=0`), critérios 2 e 3 passam a **não casar** (`exit=1`, 0 ocorrências). Os três invertem.
+4. Restauração por `cp` do backup; `git status --short` do arquivo vazio; greps de volta a `exit=1` / 2 ocorrências / 3 ocorrências.
+
+Os três grafos estáticos distinguem, portanto, o texto antigo do novo: nenhum deles é verde constante.
+
+## Conformidade requisito ↔ código (SDD-DTF-0026)
+
+- RF1 → passo 3 do procedimento (linhas 57–64): `git stash` some da lista de espaços descartáveis, entra como `**nunca \`git stash\`**` com a justificativa (compartilhado entre worktrees e sessões, colisão com verificadores em paralelo); a restauração é `cp ... /tmp/backup` ou `git checkout -- <arquivo>` na própria worktree. Passo 3 da lista (linha 66) reescrito para "Restaure pela cópia guardada".
+- RF2 → seção "Entrada" (linhas 20–26): `<base>` definido como SHA fixo, com `git merge-base HEAD origin/main` rodado antes do merge, ou o SHA citado na SDD/PR; `**Nunca \`origin/main\`** direto` com a explicação da ref móvel.
+- RF3 → varredura do arquivo inteiro: `grep -n "stash"` traz só as duas menções do passo 3 (a proibição e a justificativa); `grep -n "origin/main"` traz só as linhas 22, 24 e 25, todas dentro da instrução de RF2 (o comando `merge-base`, a proibição e a explicação da ref móvel). Nenhum bloco do procedimento usa `origin/main` como "antes" fixo.
+- Caso de borda respeitado: a palavra `git stash` continua no texto, só que como exemplo do que não fazer.
+- Direção inversa: `git diff --stat 2c3f931..ca704db` lista 4 arquivos — `_framework/procedures/verify-sdd.md`, `docs/sdd/SDD-DTF-0026.md`, `docs/sdd/registry.yaml`, `docs/sdd/registry.md`. Todos previstos na checklist de escopo (o arquivo do procedimento, a própria SDD e o registry). Nenhuma abstração, dependência, flag ou refactor sem requisito; o diff do procedimento é exatamente os dois hunks da "Especificação técnica consolidada".
+- Fora de escopo respeitado: `validate_state.py`, `test_discover.py`, `check_hooks.py`, `workflow-rules.yaml` e `_framework/skills/` não aparecem no diff. `render_prompts.py --check` confirma que o procedimento não tem cópia sincronizada a atualizar.
+
+## Descompassos encontrados (SDD-DTF-0026)
+
+Nenhum descompasso de implementação. Duas observações de histórico, ambas já fechadas antes desta verificação:
+
+1. O critério 3 original da tabela usava o padrão `grep -n "merge-base\|nunca .origin/main"`, que nunca casava a segunda alternativa: no procedimento a frase quebra em duas linhas (`**Nunca` no fim da linha 23, `` `origin/main`** `` no começo da 24), e `grep` casa linha a linha. A verificação anterior (PR #76, veredito FAIL) pegou; a correção para `"merge-base\|ref móvel"` veio no PR #78. Reproduzido de forma independente nesta sessão: o padrão corrigido dá 3 ocorrências (linhas 21, 22, 24), o antigo dava 2.
+2. A tabela de evidência anterior era da própria sessão implementadora (declarada "verificador independente: não") e registrava `72 passed` e "22 documentos", números de outra execução. Foi descartada e reescrita com a saída desta sessão (`79 passed`, 26 documentos). O critério pede exit 0, não um número fixo.
+
+## Lições (SDD-DTF-0026)
+
+- Red flag: critério de aceite com `grep` cujo padrão atravessa uma quebra de linha do arquivo alvo. `grep` casa linha a linha; um padrão que "lê certo" na prosa pode nunca casar no arquivo. Todo padrão de critério estático precisa ser rodado contra o arquivo real na hora de escrever o critério — e contra a versão anterior, para provar que ele também sabe dizer "não".
+- Red flag: critério estático que nunca foi rodado contra o estado "antes". Ausência de sensor de mutação de código (arquivo sem lógica executável) não dispensa a discriminação: o bloco antes/depois ancorado em SHA fixo faz o mesmo papel e custa um `git show`.
