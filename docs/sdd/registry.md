@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 12:36. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 12:37. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **29**
 
@@ -9,7 +9,7 @@ Total de documentos: **29**
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
-| `SDD-DTF-0001` | Superfície de entrada: AGENTS.md, QUICKSTART.md e expurgo de PRD/TS | approved | Michel Pessoa | 2026-08-29 | SPEC-DTF-0001, ADR-DTF-0001 |
+| `SDD-DTF-0001` | Superfície de entrada: AGENTS.md, QUICKSTART.md e expurgo de PRD/TS | implemented | Michel Pessoa | 2026-09-15 | SPEC-DTF-0001, ADR-DTF-0001 |
 | `SDD-DTF-0002` | Modo greenfield: registry sem repositório de código e textos de entrada | implemented | Michel Pessoa | 2026-09-04 | SPEC-DTF-0002, SDD-DTF-0001 |
 | `SDD-DTF-0003` | Datação das exigências do gate 16 em validate_state.py | implemented | Michel Pessoa | 2026-09-04 | SPEC-DTF-0003 |
 | `SDD-DTF-0004` | Exclusão de artefatos operacionais na varredura de documentos | implemented | Michel Pessoa | 2026-09-04 | SPEC-DTF-0005 |
