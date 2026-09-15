@@ -2,7 +2,7 @@
 id: SDD-DTF-0023
 type: SDD
 title: "Varredura dos validadores em repositório de projeto: validation-*.md como artefato operacional e --auto sem node_modules nem worktrees"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
