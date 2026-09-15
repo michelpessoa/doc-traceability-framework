@@ -281,3 +281,13 @@ documents:
     relates_to: [SDD-DTF-0027]
     path: "docs/sdd/SDD-DTF-0029.md"
     tags: [tooling, testes, check_hooks, gate_scope_verification]
+  - id: SDD-DTF-0030
+    type: SDD
+    title: "Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0030.md"
+    tags: [paralelismo, sdd, spec, execucao, tooling]
