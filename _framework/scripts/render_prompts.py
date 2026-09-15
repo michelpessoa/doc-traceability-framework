@@ -77,6 +77,10 @@ HOOK_EVENT_BY_ARTIFACT_TYPE = {
 # byte-idêntico ao mantido à mão antes desta SDD.
 HOOK_EVENT_ORDER = ["SessionStart", "PreCompact", "PreToolUse", "PostToolUse"]
 
+# Prefixo obrigatório de todo caminho `_framework/` em hook_command: o hook
+# roda com o diretório corrente da sessão, não da raiz (SDD-DTF-0020).
+PROJECT_DIR_PREFIX = "${CLAUDE_PROJECT_DIR}/"
+
 # Versões anteriores ao changelog canônico do YAML, que começa na 1.4.0.
 # Preservado literalmente para a geração não apagar histórico.
 LEGACY_CHANGELOG = """## Histórico anterior ao changelog canônico
@@ -215,8 +219,10 @@ def mechanized_filename(capability: dict) -> str:
 
 def validate_mechanizations(rules: dict) -> None:
     """Falha cedo (antes de escrever qualquer FULL_TARGETS) se alguma
-    capacidade mecanizada tiver artifact_type desconhecido, ou se duas
-    colidirem no mesmo nome de arquivo agent/command."""
+    capacidade mecanizada tiver artifact_type desconhecido, se duas
+    colidirem no mesmo nome de arquivo agent/command, ou se um hook for
+    mudo: `prompt` não injeta texto na sessão, e caminho `_framework/`
+    relativo quebra depois de `cd` ou em worktree (SDD-DTF-0020)."""
     filenames_by_kind = {"agent": {}, "command": {}}
     for cap in rules.get("capabilities") or []:
         mech = cap.get("mechanization")
@@ -228,6 +234,18 @@ def validate_mechanizations(rules: dict) -> None:
                 f"capacidade '{cap.get('id')}': artifact_type '{artifact_type}' desconhecido "
                 f"(aceitos: {', '.join(sorted(MECHANIZATION_ARTIFACT_TYPES))})."
             )
+        if artifact_type.startswith("hook_"):
+            if "prompt" in mech:
+                raise SystemExit(
+                    f"capacidade '{cap.get('id')}': hook com `prompt` não chega ao modelo — "
+                    'use hook_command (type: "command").'
+                )
+            for item in mech.get("hook_command") or []:
+                if "_framework/" in item and not item.startswith(PROJECT_DIR_PREFIX):
+                    raise SystemExit(
+                        f"capacidade '{cap.get('id')}': hook_command '{item}' com caminho "
+                        f"_framework/ sem o prefixo {PROJECT_DIR_PREFIX}."
+                    )
         if artifact_type in ("agent", "command"):
             name = mechanized_filename(cap)
             existing = filenames_by_kind[artifact_type].get(name)
@@ -247,6 +265,10 @@ def _json_str(value: str) -> str:
 def build_claude_settings(rules: dict) -> str:
     """.claude/settings.json — hooks gerados a partir de toda capacidade com
     mechanization.artifact_type iniciando em 'hook_', agrupados por evento."""
+    # evento -> matcher -> entradas; dicts preservam a ordem de aparição das
+    # capacidades, então os matchers de um evento saem nessa ordem
+    # (SDD-DTF-0020). Só hook `type: "command"`: `prompt` é recusado antes,
+    # em validate_mechanizations.
     hooks: dict = {}
     for cap in rules.get("capabilities") or []:
         mech = cap.get("mechanization")
@@ -255,41 +277,32 @@ def build_claude_settings(rules: dict) -> str:
         event = HOOK_EVENT_BY_ARTIFACT_TYPE.get(mech.get("artifact_type"))
         if event is None:
             continue
-        if "prompt" in mech:
-            entry_lines = [
-                "          {",
-                '            "type": "prompt",',
-                f'            "prompt": {_json_str(mech["prompt"])}',
-                "          }",
-            ]
-        else:
-            command, *args = mech["hook_command"]
-            args_json = ", ".join(_json_str(a) for a in args)
-            entry_lines = [
-                "          {",
-                '            "type": "command",',
-                f'            "command": {_json_str(command)},',
-                f'            "args": [{args_json}]',
-                "          }",
-            ]
-        hooks.setdefault(event, {"matcher": mech["matcher"], "entries": []})
-        hooks[event]["entries"].append("\n".join(entry_lines))
+        command, *args = mech["hook_command"]
+        args_json = ", ".join(_json_str(a) for a in args)
+        entry_lines = [
+            "          {",
+            '            "type": "command",',
+            f'            "command": {_json_str(command)},',
+            f'            "args": [{args_json}]',
+            "          }",
+        ]
+        hooks.setdefault(event, {}).setdefault(mech["matcher"], []).append("\n".join(entry_lines))
 
     event_blocks = []
     for event in HOOK_EVENT_ORDER:
         if event not in hooks:
             continue
-        matcher = hooks[event]["matcher"]
-        entries = ",\n".join(hooks[event]["entries"])
-        event_blocks.append(
-            f'    "{event}": [\n'
-            f"      {{\n"
-            f'        "matcher": {_json_str(matcher)},\n'
-            f'        "hooks": [\n{entries}\n'
-            f"        ]\n"
-            f"      }}\n"
-            f"    ]"
-        )
+        groups = []
+        for matcher, entry_list in hooks[event].items():
+            entries = ",\n".join(entry_list)
+            groups.append(
+                f"      {{\n"
+                f'        "matcher": {_json_str(matcher)},\n'
+                f'        "hooks": [\n{entries}\n'
+                f"        ]\n"
+                f"      }}"
+            )
+        event_blocks.append(f'    "{event}": [\n' + ",\n".join(groups) + "\n    ]")
 
     return '{\n  "hooks": {\n' + ",\n".join(event_blocks) + "\n  }\n}\n"
 

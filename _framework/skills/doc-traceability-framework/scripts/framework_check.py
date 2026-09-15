@@ -14,7 +14,9 @@ Uso:
     python3 framework_check.py --auto [--report-only]
 
 --auto descobre sozinho todo diretório que contenha um registry.yaml a
-partir do diretório atual — é o modo usado pelo CI.
+partir do diretório atual — é o modo usado pelo CI. Antes disso, se houver
+.claude/settings.json no diretório atual, roda check_hooks.py nele
+(SDD-DTF-0020).
 """
 
 import sys
@@ -22,10 +24,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import check_hooks  # noqa: E402
 import registry_tools  # noqa: E402
 import validate_doc  # noqa: E402
 import validate_state  # noqa: E402
 from framework_lib import iter_documents  # noqa: E402
+from framework_lib import report as emit  # noqa: E402
 
 
 def discover(root: Path) -> list[Path]:
@@ -42,15 +46,29 @@ def main() -> int:
     report_only = "--report-only" in sys.argv
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
 
+    failures = 0
     if "--auto" in sys.argv or not args:
+        # Hooks do harness antes da descoberta: roda mesmo sem registry.yaml
+        # (SDD-DTF-0020, RF06).
+        settings = Path(".claude/settings.json")
+        if settings.exists():
+            print("-- hooks do harness")
+            failures += emit(
+                check_hooks.check_settings(settings),
+                [],
+                f"✅ {settings}: hooks ok.",
+                report_only=report_only,
+            )
         dirs = discover(Path.cwd())
         if not dirs:
             print("Nenhum registry.yaml encontrado a partir de", Path.cwd())
+            if failures and not report_only:
+                print(f"❌ {failures} verificação(ões) falharam.")
+                return 1
             return 0
     else:
         dirs = [Path(a) for a in args]
 
-    failures = 0
     for docs_dir in dirs:
         print(f"\n=== {docs_dir} ===")
 
@@ -65,8 +83,6 @@ def main() -> int:
             p, w = validate_doc.check_document(path)
             problems += p
             warnings += w
-        from framework_lib import report as emit
-
         failures += emit(
             problems,
             warnings,
