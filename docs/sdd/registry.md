@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 22:15. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 22:33. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **21**
+Total de documentos: **22**
 
 
-## SDD (21)
+## SDD (22)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -30,3 +30,4 @@ Total de documentos: **21**
 | `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
 | `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
 | `SDD-DTF-0021` | Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0020 |
+| `SDD-DTF-0023` | Relatório de verificação por SDD (validation-*.md) reconhecido como artefato operacional | in_review | Michel Pessoa | 2026-09-14 | SDD-DTF-0019 |
