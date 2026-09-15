@@ -61,7 +61,7 @@ Casos de borda:
 | `git -C /repo push origin main` | RF07 | Bloqueia: normalizado para `git push origin main` |
 | `git commit -m "evita push em main agora"` | RF07 | Não bloqueia: segmento começa por `git commit` |
 | Linha de heredoc que comece por `git push`/`rm -rf` | RF07 | Ainda bloqueia — limite aceito do casamento textual; escrever o arquivo pela ferramenta de edição e só executá-lo |
-| Separador dentro de string entre aspas (ex.: `-m "a; git push origin main"`) | RF07 | O trecho depois do `;` vira segmento e bloqueia — limite aceito (divisão textual, sem parser de shell); falha para o lado seguro |
+| Separador dentro de string entre aspas (ex.: `-m "a; git push origin main"`) | RF07 | **Não bloqueia** — o segmento termina com as aspas (`git push origin main"`) e nenhum padrão casa; verificado em 2026-09-14, texto anterior desta linha estava errado (dizia que bloqueava). Limite aceito da divisão textual sem parser de shell, coberto pelo `.githooks/pre-push` real. Ver `docs/sdd/LESSONS.md`. |
 | `git push` sem argumentos estando em `main` | RF07 | Fora do alcance do padrão textual — coberto pelo `.githooks/pre-push` existente |
 | stdin não é JSON ou sem `tool_input.command` | RF07 | Exit 0 sem saída (falha aberta, comportamento atual) |
 | Merge com assunto `Merge pull request #N` | RF08 | Continua pulado pela regra de assunto existente |
@@ -129,8 +129,11 @@ while IFS= read -r segment; do
 done <<<"$segments"
 ```
 
-(não usar `printf ... | while`: o `exit` dentro do pipe só sai do
-subshell e o comando passaria.) Demais linhas do cabeçalho (comentário,
+(não usar `printf ... | while`: com `set -e`, o status do `while`
+— último comando do pipe — já encerra o script com `exit 2`, com ou
+sem `pipefail`; a razão real de manter o here-string é não depender de
+`set -e` estar ligado, não o subshell. Texto corrigido em 2026-09-15,
+comportamento inalterado — ver `docs/sdd/LESSONS.md`.) Demais linhas do cabeçalho (comentário,
 `set -euo pipefail`, `deny`) ficam como estão; o comentário ganha uma
 linha citando a avaliação por segmento e `SDD-DTF-0021`.
 
