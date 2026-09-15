@@ -2,7 +2,7 @@
 id: SDD-DTF-0029
 type: SDD
 title: "test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -176,20 +176,18 @@ def test_command_shell_prefixo_falso_reprova(tmp_path):
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida nesta mesma sessão porque o sizing é `small` e a verificação
-mecânica (sensor de mutação) já foi rodada como parte da implementação;
-a verificação independente completa (skill `verify-sdd`, quem
-implementou não verifica) fica para outra sessão antes de mover para
-`implemented`.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 1.24s`, exit 0 (12º teste: `test_command_shell_prefixo_falso_reprova`) | n/a (checagem estática) | sim |
-| 2 | Editado o cálculo de `prefix` em `check_hooks.py`: `token.startswith(p)` → `"CLAUDE_PROJECT_DIR" in token` (espaço descartável, não commitado); rodado `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `2 failed, 10 passed` — falharam `test_command_shell_com_prefixo_sem_chaves_entre_aspas` (mensagem `script referenciado inexistente` em vez de `[]`, porque `prefix` deixa de ser `None` e a regra 4 dispara sobre um slice errado) e `test_command_shell_prefixo_falso_reprova` (mesma causa: `AssertionError` — a mensagem virou `script referenciado inexistente: .../LSO/_framework/scripts/hook.py.`, não mais `sem o prefixo`, então `len(problems) == 1` ainda bate mas o texto esperado não); restaurado com `git checkout -- _framework/scripts/check_hooks.py`, `12 passed in 0.10s` de novo | Mutação aplicada de fato e revertida de fato, não simulada | sim |
-| 3 | `git diff --stat main -- _framework/scripts/check_hooks.py` | saída vazia, exit 0 | Confirma nenhuma mudança de produção nesta SDD | sim |
-| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.11s`, exit 0 | Regressão geral; lógica nova coberta pelo sensor do critério 2 | sim |
-| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
-| 6 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; todas as cópias, inclusive `check_hooks.py`, `sincronizado` | Confirma que a ausência de mudança em `check_hooks.py` não deixou a cópia divergente | sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 0.45s`, exit 0 (12º teste: `test_command_shell_prefixo_falso_reprova`) | ver critério 2 | Sim |
+| 2 | Editado o cálculo de `prefix` em `check_hooks.py`: `token.startswith(p)` → `"CLAUDE_PROJECT_DIR" in token` (edição direta na worktree, nunca commitada); rodado `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `2 failed, 10 passed` — falharam `test_command_shell_com_prefixo_sem_chaves_entre_aspas` e `test_command_shell_prefixo_falso_reprova` (mensagem virou `script referenciado inexistente: ...` em vez de `sem o prefixo`, porque `prefix` deixa de ser `None`); restaurado com `git checkout -- _framework/scripts/check_hooks.py`, `12 passed in 0.11s` de novo | Mutação aplicada de fato e revertida de fato, não simulada | Sim |
+| 3 | `git diff --stat main -- _framework/scripts/check_hooks.py` | saída vazia, exit 0 | Confirma nenhuma mudança de produção nesta SDD | Sim |
+| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.29s`, exit 0 | Regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | Sim |
+| 6 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; todas as cópias, inclusive `check_hooks.py`, `sincronizado` | Confirma que a ausência de mudança em `check_hooks.py` não deixou a cópia divergente | Sim |
 
 ## Rastreabilidade
 
