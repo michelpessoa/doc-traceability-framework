@@ -61,7 +61,7 @@ Casos de borda:
 | `git -C /repo push origin main` | RF07 | Bloqueia: normalizado para `git push origin main` |
 | `git commit -m "evita push em main agora"` | RF07 | Não bloqueia: segmento começa por `git commit` |
 | Linha de heredoc que comece por `git push`/`rm -rf` | RF07 | Ainda bloqueia — limite aceito do casamento textual; escrever o arquivo pela ferramenta de edição e só executá-lo |
-| Separador dentro de string entre aspas (ex.: `-m "a; git push origin main"`) | RF07 | O trecho depois do `;` vira segmento e bloqueia — limite aceito (divisão textual, sem parser de shell); falha para o lado seguro |
+| Separador dentro de string entre aspas (ex.: `-m "a; git push origin main"`) | RF07 | **Não bloqueia** — o segmento termina com as aspas (`git push origin main"`) e nenhum padrão casa; verificado em 2026-09-14, texto anterior desta linha estava errado (dizia que bloqueava). Limite aceito da divisão textual sem parser de shell, coberto pelo `.githooks/pre-push` real. Ver `docs/sdd/LESSONS.md`. |
 | `git push` sem argumentos estando em `main` | RF07 | Fora do alcance do padrão textual — coberto pelo `.githooks/pre-push` existente |
 | stdin não é JSON ou sem `tool_input.command` | RF07 | Exit 0 sem saída (falha aberta, comportamento atual) |
 | Merge com assunto `Merge pull request #N` | RF08 | Continua pulado pela regra de assunto existente |
@@ -72,10 +72,7 @@ Fora de escopo:
 - Hooks que alcançam o modelo, `check_hooks.py`, `hook_command` com
   `${CLAUDE_PROJECT_DIR}` (RF01–RF06) — `SDD-DTF-0020`.
 - Parser de shell (aspas, subshell, `$(...)`): a divisão é textual por
-  decisão da SPEC. Limite aceito (registrado 2026-09-15, não vira SDD
-  nova): `git commit -m "a; git push origin main"` não bloqueia — o
-  segmento termina dentro das aspas e nenhum padrão casa. Coberto pelo
-  `.githooks/pre-push`, que barra o push real. Ver `docs/sdd/LESSONS.md`.
+  decisão da SPEC.
 - Novos padrões de bloqueio ou mudança das mensagens de `deny`.
 - `.githooks/pre-push` e `.githooks/commit-msg`: não mudam.
 - Sincronizar central e projetos; bump de `framework.version`.
