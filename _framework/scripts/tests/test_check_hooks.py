@@ -76,6 +76,29 @@ def test_command_shell_sem_referencia_reprova(tmp_path):
     assert "PreToolUse" in problems[0] and "sem o prefixo" in problems[0]
 
 
+def test_command_shell_prefixo_falso_reprova(tmp_path):
+    """SDD-DTF-0029: token que CONTÉM a substring "CLAUDE_PROJECT_DIR" mas
+    não é um prefixo válido (nome de variável diferente, só compartilha o
+    texto) continua reprovado — discrimina mutação que trocasse
+    `token.startswith(prefix)` por `"CLAUDE_PROJECT_DIR" in token`."""
+    hooks = {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 $CLAUDE_PROJECT_DIR_FALSO/_framework/scripts/hook.py",
+                    }
+                ],
+            }
+        ]
+    }
+    problems = check_settings(_settings(tmp_path, hooks))
+    assert len(problems) == 1
+    assert "PreToolUse" in problems[0] and "sem o prefixo" in problems[0]
+
+
 def test_prompt_em_sessionstart(tmp_path):
     hooks = {"SessionStart": [{"matcher": "*", "hooks": [{"type": "prompt", "prompt": "faça pickup"}]}]}
     problems = check_settings(_settings(tmp_path, hooks))

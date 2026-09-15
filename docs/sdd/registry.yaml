@@ -271,3 +271,13 @@ documents:
     relates_to: [SDD-DTF-0024]
     path: "docs/sdd/SDD-DTF-0028.md"
     tags: [tooling, testes, validate_state, gate_scope_verification]
+  - id: SDD-DTF-0029
+    type: SDD
+    title: "test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0027]
+    path: "docs/sdd/SDD-DTF-0029.md"
+    tags: [tooling, testes, check_hooks, gate_scope_verification]
