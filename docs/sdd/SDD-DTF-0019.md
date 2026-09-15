@@ -2,7 +2,7 @@
 id: SDD-DTF-0019
 type: SDD
 title: "verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"

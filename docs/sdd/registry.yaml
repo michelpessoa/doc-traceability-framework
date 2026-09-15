@@ -174,7 +174,7 @@ documents:
   - id: SDD-DTF-0018
     type: SDD
     title: "validate_state: não retroatividade por data de criação e checagem de evidência por coluna"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-14"
     updated: "2026-09-14"
@@ -184,7 +184,7 @@ documents:
   - id: SDD-DTF-0019
     type: SDD
     title: "verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-14"
     updated: "2026-09-14"
