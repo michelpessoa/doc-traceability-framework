@@ -451,3 +451,37 @@ Nenhum. Todo requisito consolidado tem código correspondente; todo arquivo do d
 
 - Quando a mudança a verificar já está em `main` (aqui, `b6ca3f4` é ancestral direto de `HEAD`/`main`), o merge-base correto não é `git merge-base HEAD origin/main` (que devolveria o próprio `HEAD`, incluindo a mudança) — é o pai do commit que introduziu a mudança, localizável por `git log --all --grep` seguido de `git show --stat <commit>` para confirmar os arquivos e `git log -1 --format=%P <commit>` para o pai.
 - SDD `sizing: small` com evidência preenchida pela própria sessão implementadora (declarado explicitamente no texto da seção) ainda exige a verificação independente completa desta skill antes de `implemented` — a nota "verificação mecânica já rodada" não substitui o papel do verificador, só evita que a evidência fique com marcador enganoso de independência.
+# Verificação — SDD-DTF-0028
+
+- **Veredito:** PASS
+- **Diff verificado:** `10719aa..5fcf523` (commit `5fcf5231860a18137f47dd70fa5af3dcffd860c6`, "test(validate_state): tabela real depois de bloco cercado fechado discrimina mutação em in_fence (#81)", já mergeado em `main`). `origin/main` não foi usado como base porque a mudança já está nele nesse ponto — o pai direto do commit de implementação (`10719aa`) é o "antes" real.
+- **Verificador independente:** sim — sessão nova, sem ler o histórico da sessão que implementou. A seção "Evidência de verificação" pré-existente na SDD dizia explicitamente que a verificação independente completa "fica para outra sessão"; toda a evidência abaixo foi rodada do zero nesta sessão, não copiada dela.
+
+A tabela completa de evidência (comandos, saídas e sensor) foi reescrita na seção "Evidência de verificação" da própria `SDD-DTF-0028.md` com a saída real desta sessão. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF2, RF5 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.99s`, exit 0 (12 pré-existentes + `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada`) | ver critério 2 | Sim |
+| 2. RF3 — sensor de discriminação | `in_fence = not in_fence` editado para `in_fence = True` em `table_with_header` (`_framework/scripts/validate_state.py`, espaço descartável, nunca commitado), suíte rodada, restaurado com `git checkout -- _framework/scripts/validate_state.py` | Mutação: `1 failed, 12 passed` — falha só `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` (`AssertionError`, falta a linha `['2', '\`pytest -k outro\`', ...]`). Restaurado: `13 passed in 0.65s` | mutação manual introduzida e revertida nesta sessão, discrimina de fato (falha estreitada ao teste novo, os outros 12 seguem verdes) | Sim |
+| 3. RF4 — sem mudança de produção | `git diff --stat main -- _framework/scripts/validate_state.py` | saída vazia, exit 0 | confirma nenhuma alteração de produção nesta SDD | Sim |
+| 4. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; `81 passed in 3.26s`, exit 0 | regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5. Paridade com o CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | estático, sem sensor dedicado | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0028)
+
+- RF1: teste novo `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` em `_framework/scripts/tests/test_validate_state.py`, chama `table_rows` com seção contendo, nesta ordem, tabela real com cabeçalho (`HEADER_5`), bloco cercado ` ```bash ` com linha `|`-like dentro, fechamento do bloco, e uma segunda linha de tabela real depois — exatamente como especificado.
+- RF2: asserção é `==` contra lista de listas completa, incluindo a linha posterior ao bloco cercado — não um "contém" ou "não vazio".
+- RF3: sensor rodado nesta sessão (critério 2 acima) confirma que a mutação M2 (`in_fence` nunca volta a `False`) derruba só o teste novo; sem a mutação, os 13 passam.
+- RF4: `git diff --stat main -- _framework/scripts/validate_state.py` vazio — nenhuma mudança em código de produção.
+- RF5: os 12 testes pré-existentes de `test_validate_state.py` continuam passando (parte do `13 passed`).
+- Direção inversa: `git diff --stat 10719aa..5fcf523` lista exatamente `_framework/scripts/tests/test_validate_state.py`, `docs/sdd/SDD-DTF-0028.md`, `docs/sdd/registry.md` e `docs/sdd/registry.yaml` — todos previstos na "Verificação de escopo" da própria SDD (arquivo de teste + a documentação de rastreabilidade). Nenhum arquivo fora da lista, nenhuma abstração, dependência, flag ou refactor sem requisito correspondente.
+- Fora de escopo respeitado: `validate_state.py`, `check_hooks.py` e seus testes, e a cópia da skill `_framework/skills/doc-traceability-framework/` não aparecem alterados no diff.
+
+## Descompassos encontrados (SDD-DTF-0028)
+
+Nenhum. Requisitos, especificação técnica e critérios de aceite têm código correspondente identificável nas duas direções; nenhum arquivo do diff fica de fora da lista declarada na SDD.
+
+## Lições (SDD-DTF-0028)
+
+- SDD de sizing `small` com evidência preenchida pela própria sessão implementadora ("verificação independente fica para outra sessão") é um sinal saudável quando declarado explicitamente — evita a armadilha de tratar a tabela pré-existente como prova; bastou rodar tudo de novo do zero para confirmar.
+- Quando o commit de implementação já está em `main` (ex.: `git log --all --grep` aponta um commit que `git log --oneline main` também lista), o "antes" correto para o diff é o pai direto desse commit (`<sha>^1`), não `git merge-base HEAD origin/main` — este último, rodado depois do merge, aponta para o próprio commit da mudança e deixa de discriminar.

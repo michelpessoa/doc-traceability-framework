@@ -2,7 +2,7 @@
 id: SDD-DTF-0028
 type: SDD
 title: "test_validate_state: tabela real depois de bloco cercado fechado discrimina mutação em in_fence"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -170,19 +170,17 @@ def test_tabela_real_depois_de_bloco_cercado_fechado_e_contada():
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida nesta mesma sessão porque o sizing é `small` e a verificação
-mecânica (sensor de mutação) já foi rodada como parte da implementação;
-a verificação independente completa (skill `verify-sdd`, quem
-implementou não verifica) fica para outra sessão antes de mover para
-`implemented`.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.64s`, exit 0 (13º teste: `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada`) | n/a (checagem estática) | sim |
-| 2 | Editado `in_fence = not in_fence` → `in_fence = True` em `table_with_header` (espaço descartável, não commitado); rodado `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `1 failed, 12 passed` — falhou só `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` com `AssertionError` (linha `['2', '\`pytest -k outro\`', '5 passed', 'segunda evidência', 'sim']` ausente do retorno); restaurado com `git checkout -- _framework/scripts/validate_state.py`, `13 passed` de novo | Mutação M2 aplicada de fato e revertida de fato, não simulada | sim |
-| 3 | `git diff --stat main -- _framework/scripts/validate_state.py` | saída vazia, exit 0 | Confirma nenhuma mudança de produção nesta SDD | sim |
-| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `80 passed in 3.13s`, exit 0 | Regressão geral; lógica nova coberta pelo sensor do critério 2 | sim |
-| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, arquivos já formatados, `Success: no issues found`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.99s`, exit 0 (13º teste: `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada`) | ver critério 2 | Sim |
+| 2 | Editado `in_fence = not in_fence` → `in_fence = True` em `table_with_header` (espaço descartável, não commitado); rodado `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v`; restaurado com `git checkout -- _framework/scripts/validate_state.py` | `1 failed, 12 passed` — falhou só `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` com `AssertionError` (linha `['2', '\`pytest -k outro\`', '5 passed', 'segunda evidência', 'sim']` ausente do retorno); restaurado, `13 passed in 0.65s` de novo | Mutação M2 aplicada de fato e revertida de fato nesta sessão, discrimina | Sim |
+| 3 | `git diff --stat main -- _framework/scripts/validate_state.py` | saída vazia, exit 0 | Confirma nenhuma mudança de produção nesta SDD | Sim |
+| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.26s`, exit 0 | Regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, `21 files already formatted`, `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | Sim |
 
 ## Rastreabilidade
 
