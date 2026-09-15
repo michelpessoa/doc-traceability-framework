@@ -2,7 +2,7 @@
 id: SDD-DTF-0024
 type: SDD
 title: "table_with_header não conta linha de bloco cercado como linha de tabela"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -171,17 +171,22 @@ novos:
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou
-(esta sessão implementou e não marca `implemented` — só `approved`).
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
 
-**Verificador independente:** ainda não rodado — pendente, sessão
-separada.
+**Verificador independente:** sim — sessão separada da que implementou, sem
+ler o histórico dela. Toda a evidência abaixo foi rodada nesta sessão,
+descartando a tabela anterior (deixada pela sessão implementadora, que por
+procedimento não pode ser quem marca `implemented`). Diff verificado:
+`ae3fb0e^..ae3fb0e` (commit `ae3fb0e`, PR #70, já mergeado em `main` —
+`origin/main` não serve mais de "antes"), mais o fechamento de cobertura
+trazido por `SDD-DTF-0028` (commit `e1a6563`/`5fcf523`, PR #81, também já
+em `main`).
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `12 passed in 0.62s`, exit 0 (2 testes novos: `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` e `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia`, mais os 10 já existentes de SDD-DTF-0018) | Reverti temporariamente `table_with_header` para a versão sem o flag `in_fence` (espaço descartável, não commitado): `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` falhou (`AssertionError`, linha extra `['grep -c -e algo']` contada), os outros 11 continuaram passando; restaurada a versão corrigida, `12 passed` | sim |
-| 2 | `python3 _framework/scripts/render_prompts.py --check` | Antes de sincronizar: `❌ .../validate_state.py: divergente`, exit 1. Depois de rodar `render_prompts.py` sem `--check`: `✅ .../validate_state.py: sincronizado`, exit 0 | Estado divergente observado de fato antes da sincronização (não simulado) | sim |
-| 3 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `74 passed in 3.41s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelos sensores do critério 1 | sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.96s`, exit 0 (13 = 10 de SDD-DTF-0018 + 2 de SDD-DTF-0024 + 1 de SDD-DTF-0028) | Duas mutações reais em `table_with_header`, cada uma restaurada com `git checkout -- _framework/scripts/validate_state.py`: (a) `if in_fence: continue` → `if in_fence: pass` (deixa de pular linha cercada) — `2 failed, 11 passed` (`test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` e `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` falham); (b) `in_fence = not in_fence` → `in_fence = True` (cerca nunca fecha, mutação M2 que reprovou a verificação anterior PR #77) — `1 failed, 12 passed` (`test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` falha). Restaurado nas duas vezes, `13 passed` | sim |
+| 2 | `python3 _framework/scripts/render_prompts.py --check` | `✅ .../validate_state.py: sincronizado`, exit 0 (entre as demais 21 renderizações/cópias, todas `em dia`/`sincronizado`) | Sem sensor dedicado — checagem estática de sincronismo; a cópia já estava sincronizada nesta sessão | sim |
+| 3 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.23s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelos sensores do critério 1 | sim |
 | 4 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, `21 files already formatted`, `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
 
 ## Rastreabilidade

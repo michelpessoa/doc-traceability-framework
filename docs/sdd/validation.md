@@ -415,6 +415,55 @@ Nenhum quanto ao escopo desta SDD.
 - Um commit alcançável só por `git log --all` (fora do log de `HEAD`) nem sempre é ancestral do estado atual do repositório — vale checar com `git merge-base --is-ancestor` antes de tratar seu conteúdo como se já estivesse no arquivo em disco, especialmente quando ele conflita com o que está lá.
 - `docs/sdd/validation.md` é um arquivo compartilhado por todas as SDDs verificadas, cada uma com sua própria seção `# Verificação — SDD-...`; escrever nele exige `Read` do conteúdo existente e apensar a seção nova, nunca sobrescrever o arquivo inteiro (um `Write` ingênuo apaga o histórico de verificações anteriores).
 
+# Verificação — SDD-DTF-0024
+
+- **Veredito:** PASS
+- **Diff verificado:** `ae3fb0e^..ae3fb0e` (commit de implementação `ae3fb0e`, PR #70, já mergeado em `main`) — `origin/main` não foi usado como base porque a mudança já está nele. Cobertura fechada depois por `SDD-DTF-0028` (commit `e1a6563`/`5fcf523`, PR #81, também já em `main`), considerada nesta verificação porque é pré-requisito para fechar o gap que reprovou a tentativa anterior (abaixo).
+- **Verificador independente:** sim — sessão separada da que implementou, sem ler o histórico dela. Havia uma tabela de evidência pré-existente na SDD (deixada pela sessão implementadora, "ainda não rodado — pendente, sessão separada"): tratada como dado mais fraco e descartada; toda a evidência abaixo foi rodada do zero nesta sessão.
+
+## Contexto: tentativa de verificação anterior (PR #77, fechado sem merge)
+
+Antes desta sessão, uma verificação independente anterior (PR #77) já tinha rodado os 4 critérios com PASS, mas achou uma mutação sobrevivente no sensor: `in_fence = True` fixo na abertura de cerca (a cerca "nunca fecha") não derrubava nenhum teste — RF3 ("tabela real depois de bloco cercado fechado continua sendo contada") não tinha teste próprio. O humano (dono do repo) pediu para segurar o flip para `implemented` até fechar esse gap; o PR foi fechado sem merge, com o comentário registrando que `SDD-DTF-0028` fecharia a lacuna. `SDD-DTF-0028` foi criada, mergeada (PR #81, commit `5fcf523`) e adiciona exatamente `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada`. Esta verificação parte desse estado (já em `main`) e reproduz o sensor que faltava antes de assinar PASS.
+
+A tabela completa de evidência (comandos, saídas e sensor) está na seção "Evidência de verificação" da própria `SDD-DTF-0024.md`, reescrita com a saída real desta sessão. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF5 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.96s`, exit 0 | ver duas mutações abaixo | Sim |
+| 2. Skill sincronizada | `python3 _framework/scripts/render_prompts.py --check` | exit 0, `validate_state.py: sincronizado` (21 arquivos/cópias, todos em dia) | estático, sem sensor dedicado | Sim |
+| 3. Regressão geral | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; `81 passed in 3.23s` | regressão, coberta pelos sensores do critério 1 | Sim |
+| 4. Paridade CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files` | estático, sem sensor dedicado | Sim |
+
+### Sensores (mutações reais em `_framework/scripts/validate_state.py`, restauradas por `git checkout -- <arquivo>`, nunca commitadas; `git status --short` vazio ao final das duas)
+
+| Mutação | O que quebra | Resultado |
+|---|---|---|
+| M1: `if in_fence: continue` → `if in_fence: pass` (linha cercada deixa de ser pulada) | RF1 (ignora linha dentro de cerca) | `2 failed, 11 passed` — falham `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` e `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` |
+| M2: `in_fence = not in_fence` → `in_fence = True` (cerca nunca fecha) | RF3 (tabela real depois de cerca fechada continua sendo contada) — mutação que sobreviveu na verificação anterior (PR #77) | `1 failed, 12 passed` — falha `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` (o teste que `SDD-DTF-0028` adicionou) |
+
+M2 é a mutação que reprovava antes de `SDD-DTF-0028`: reproduzida aqui, ela agora **falha** o teste novo — o gap está fechado.
+
+## Conformidade requisito ↔ código (SDD-DTF-0024)
+
+- RF1/RF2: `table_with_header` com `in_fence: bool = False`; `if line.startswith("```"): in_fence = not in_fence; continue` (a própria linha da crase nunca vira linha de tabela, RF2); `if in_fence: continue` logo depois (RF1).
+- RF3: comportamento de linhas de tabela reais fora de cerca não muda (mesmo `if not line.startswith("|"): continue` e resto do laço); coberto por `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` (SDD-DTF-0028) e pelo sensor M2 acima.
+- RF4: `table_rows` sem alteração nesta implementação (só o import mudou no arquivo de teste); continua delegando para `table_with_header(section)[1]`.
+- RF5(a): `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` isola `table_rows` com tabela real + bloco cercado com linha shell `|`.
+- RF5(b): `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia` roda fim a fim via `_with_evidence`/`check_sdd`-like helper, confirmando que não dispara "critério(s) de aceite mas só N linha(s) de evidência".
+- Cópia da skill (`_framework/skills/doc-traceability-framework/scripts/validate_state.py`) sincronizada (`render_prompts.py --check` exit 0).
+- Direção inversa: `git show --stat ae3fb0e` lista `_framework/scripts/tests/test_validate_state.py`, `_framework/scripts/validate_state.py`, a cópia gerada da skill, `docs/sdd/SDD-DTF-0024.md`, `docs/sdd/registry.md` e `docs/sdd/registry.yaml` — todos previstos na "Verificação de escopo" da SDD (os dois últimos são bookkeeping padrão de criação de SDD, não scope creep). Nenhuma outra função de `validate_state.py` tocada; `check_evidence`, `check_scope`, `check_sdd` intactos, como as instruções à IA implementadora exigiam.
+- Fora de escopo respeitado: o ajuste editorial de `SDD-DTF-0018` (pipe movido de linha) não foi revertido; nenhum bump de `framework.version`; nenhuma sincronização de projeto externo neste PR.
+
+## Descompassos encontrados
+
+Nenhum descompasso de implementação. Um ponto de processo, já registrado e fechado antes desta sessão:
+
+1. **Tentativa de verificação anterior fechada sem merge (PR #77), por decisão correta do humano.** O sensor da mutação M2 (cerca que nunca fecha) sobrevivia porque RF3 não tinha teste dedicado — achado real, não falso alarme. O humano pediu para segurar `implemented` até fechar o gap em vez de aceitar o PASS com mutante sobrevivente; `SDD-DTF-0028` fechou exatamente esse gap antes desta verificação rodar. Nenhuma ação adicional necessária aqui — o gap já está fechado e confirmado pelo sensor M2 acima.
+
+## Lições
+
+- Confirmação positiva de uma prática já registrada (lição da SDD-DTF-0027): mutação sobrevivente não é motivo para forçar PASS mesmo com os 4 critérios numéricos passando — o veredito certo foi segurar `implemented` e abrir uma SDD pequena dedicada a fechar a cobertura, e só then reverificar. O processo (verify-sdd + SDD de acompanhamento) funcionou como desenhado.
+- Red flag reafirmada: RF que descreve um caso de borda ("tabela real depois de bloco cercado *fechado*") precisa de teste próprio que morra se a lógica de "fechar" for removida — um teste que só cobre "durante a cerca" não discrimina "depois da cerca".
 # Verificação — SDD-DTF-0029
 
 - **Veredito:** PASS
