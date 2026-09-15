@@ -261,3 +261,13 @@ documents:
     relates_to: [SDD-DTF-0020]
     path: "docs/sdd/SDD-DTF-0027.md"
     tags: [tooling, harness, hooks, check_hooks, bugfix]
+  - id: SDD-DTF-0028
+    type: SDD
+    title: "test_validate_state: tabela real depois de bloco cercado fechado discrimina mutação em in_fence"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0024]
+    path: "docs/sdd/SDD-DTF-0028.md"
+    tags: [tooling, testes, validate_state, gate_scope_verification]
