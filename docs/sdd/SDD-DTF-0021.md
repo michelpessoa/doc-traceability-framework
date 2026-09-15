@@ -2,7 +2,7 @@
 id: SDD-DTF-0021
 type: SDD
 title: "Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
