@@ -221,3 +221,13 @@ documents:
     relates_to: [SDD-DTF-0019]
     path: "docs/sdd/SDD-DTF-0023.md"
     tags: [tooling, validadores, artefatos]
+  - id: SDD-DTF-0027
+    type: SDD
+    title: "check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR}"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0020]
+    path: "docs/sdd/SDD-DTF-0027.md"
+    tags: [tooling, harness, hooks, check_hooks, bugfix]
