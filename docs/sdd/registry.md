@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 21:41. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 21:44. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **20**
 
@@ -28,4 +28,4 @@ Total de documentos: **20**
 | `SDD-DTF-0017` | QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0018` | validate_state: não retroatividade por data de criação e checagem de evidência por coluna | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0016 |
 | `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
-| `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | in_review | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
+| `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |

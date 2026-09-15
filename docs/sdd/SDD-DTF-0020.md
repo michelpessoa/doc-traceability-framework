@@ -2,7 +2,7 @@
 id: SDD-DTF-0020
 type: SDD
 title: "Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
