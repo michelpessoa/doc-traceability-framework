@@ -100,6 +100,16 @@ ganham a seção nova. Nenhuma migração de dado.
 | 8 | Paridade entre as duas cópias do kit | `diff _framework/templates/spec.template.md _framework/skills/doc-traceability-framework/templates/spec.template.md && diff _framework/templates/sdd.template.md _framework/skills/doc-traceability-framework/templates/sdd.template.md && diff _framework/scripts/parallel_plan.py _framework/skills/doc-traceability-framework/scripts/parallel_plan.py && diff _framework/scripts/validate_doc.py _framework/skills/doc-traceability-framework/scripts/validate_doc.py` | Nenhuma diferença (exit code 0 nos 4 diffs) |
 | 9 | Nota de cross-reference no guia de trilhas | `grep -n "RFC-DTF-0003\|ADR-DTF-0003" docs/guias/paralelizacao-trilhas.md` | Nota presente, sem reescrita do restante do guia |
 
+Nota do implementador sobre o critério 1: o template de SPEC já tinha, antes
+desta SDD, texto explicativo (as "cinco formas" de EARS) entre o heading
+"Requisitos funcionais" e a tabela — por isso `grep -A2` não alcança a
+linha `Arquivos` (fica ~13 linhas depois do heading, não 2). A coluna
+existe e está correta nas duas cópias (conferido com
+`grep -c "| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |"`
+nos dois arquivos, ambos `1`); o comando literal do critério 1 não reflete
+a estrutura real do template. Verificador: confirme a coluna por outro
+meio, não pelo `grep -A2` literal.
+
 ## Decomposição em tasks
 
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
@@ -108,7 +118,7 @@ ganham a seção nova. Nenhuma migração de dado.
 | 2 | Seção "Decomposição em tasks" no template de SDD | RF02 | `_framework/templates/sdd.template.md`, `_framework/skills/doc-traceability-framework/templates/sdd.template.md` | |
 | 3 | Implementar `parallel_plan.py` (parser + `derive_groups` + CLI) | RF03, RF04, RF05 | `_framework/scripts/parallel_plan.py`, `_framework/skills/doc-traceability-framework/scripts/parallel_plan.py` | |
 | 4 | Estender `validate_doc.py` (RF06, RF07) | RF06, RF07 | `_framework/scripts/validate_doc.py`, `_framework/skills/doc-traceability-framework/scripts/validate_doc.py` | |
-| 5 | Testes de `parallel_plan.py` | RF03, RF04, RF05 | `_framework/tests/test_parallel_plan.py`, `_framework/tests/fixtures/sdd_fixture_a.md`, `_framework/tests/fixtures/sdd_fixture_b.md` | 3 |
+| 5 | Testes de `parallel_plan.py` (inclui registrar `_framework/tests` em `testpaths` — os testes vivem fora de `_framework/scripts/tests`, sem isso `pytest` bare nunca os roda) | RF03, RF04, RF05 | `_framework/tests/test_parallel_plan.py`, `_framework/tests/fixtures/sdd_fixture_a.md`, `_framework/tests/fixtures/sdd_fixture_b.md`, `pyproject.toml` | 3 |
 | 6 | Testes de `validate_doc.py` (casos novos) | RF06, RF07 | `_framework/tests/test_validate_doc.py` | 4 |
 | 7 | Nota de cross-reference no guia de trilhas | (decisão pura) | `docs/guias/paralelizacao-trilhas.md` | |
 | 8 | Verificar paridade das duas cópias do kit | RF01-RF07 | (nenhum arquivo novo — checagem de diff) | 1, 2, 3, 4 |
@@ -137,9 +147,9 @@ sua dependência). Task 8 fecha o grafo, depende de 1-4.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima (RF01-RF07) tem código correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima — arquivo tocado fora da lista é escopo não registrado (atualizar a SDD) ou scope creep (remover).
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não introduzir orquestração automática de agentes — está em "Fora de escopo" da SPEC).
+- [x] Todo requisito consolidado acima (RF01-RF07) tem código correspondente.
+- [x] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima — arquivo tocado fora da lista é escopo não registrado (atualizar a SDD) ou scope creep (remover). `pyproject.toml` adicionado à task 5 (registro de `testpaths`, necessário para `pytest` bare descobrir os testes novos).
+- [x] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não introduzir orquestração automática de agentes — está em "Fora de escopo" da SPEC).
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
