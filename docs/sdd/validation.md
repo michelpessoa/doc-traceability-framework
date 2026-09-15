@@ -241,3 +241,50 @@ No checkout principal do kit, em `main` com PR #61 (`de1c893` ou posterior) e Cl
 
 - Red flag: sensor de configuração que compara prefixo de string num campo que o harness aceita em duas formas (exec e shell). A regra precisa ser escrita por forma, com teste para cada exemplo da documentação oficial, ou o requisito precisa restringir explicitamente uma forma.
 - Red flag: especificação técnica que troca "sem o prefixo" (RF) por "sem começar por" (pseudocódigo) — o implementador segue o pseudocódigo e os testes só cobrem o caso em que as duas leituras coincidem.
+
+# Verificação — SDD-DTF-0023
+
+- **Veredito:** PASS
+- **Diff verificado:** 756c83b..e31be1e (PR #67, commit de implementação 291d548)
+- **Verificador independente:** sim (sub-agent separado, sem ler a sessão que implementou)
+
+A tabela completa de evidência (comandos, saídas e sensores dos critérios 1–6) está na seção "Evidência de verificação" da própria `SDD-DTF-0023.md`. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1 | `pytest test_operational_artifacts.py -v` | 3 passed | M1a, M1b, M1c, M3 → falham; restaurado → passa | Sim |
+| 2 | `python3 -c "... 'validation-*.md' in d['operational_artifacts'] ..."` | `True True` | chave renomeada → `False True` | Sim |
+| 3 | bloco C3 (antes = `756c83b`) | antes `exit=1` com `validation-EVM-0013.md: sem bloco de front-matter`; depois `exit=0` | o bloco é o sensor | Sim |
+| 4 | `pytest test_discover.py -v` | 1 passed | M4a–M4e → falham; 2 mutações sobrevivem (ver lições) | Sim |
+| 5 | bloco C5 (antes = `756c83b`) | antes 3 diretórios (`.claude/worktrees/a/docs/sdd`, `docs/sdd`, `node_modules/pkg/docs`); depois `['docs/sdd']` | o bloco é o sensor | Sim |
+| 6 | ruff check, ruff format --check, mypy, pytest, render_prompts --check, check_renderings, framework_check --auto | exit 0 na cadeia; 72 passed | regressão | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0023)
+
+- RF1: `framework_lib.is_operational_artifact` com `fnmatch.fnmatchcase`; `iter_documents` usa a função. Docstring atualizada.
+- RF2: `workflow-rules.yaml` ganha só `validation-*.md` (purpose e `declared_in` idênticos à spec), depois de `validation.md`.
+- RF3: `_FALLBACK_OPERATIONAL_ARTIFACTS = ("LESSONS.md", "HANDOFF.md", "validation.md", "validation-*.md")`.
+- RF4: `framework_check.discover` com `os.walk` e poda de `.git`, `_framework`, `node_modules` e `root/.claude/worktrees`; `sorted` nos dirnames e no retorno.
+- Cópias em `_framework/skills/doc-traceability-framework/` byte-idênticas às fontes (`cmp`), `render_prompts.py --check` exit 0.
+- Direção inversa: `git diff --stat 756c83b e31be1e` lista 8 arquivos, todos na checklist de escopo. Nenhuma dependência, abstração ou flag sem requisito.
+
+Casos de borda conferidos à mão (sem teste automatizado próprio):
+- `.claude/agents/x/registry.yaml` descoberto; `docs/.claude/worktrees/b/registry.yaml` (worktrees não relativo à raiz) descoberto; `.git/y/registry.yaml` podado. Saída: `['.claude/agents/x', 'docs/.claude/worktrees/b']`.
+- `Validation-EVM-0013.md` maiúsculo via `framework_check.py <dir>`: reprovado com "sem bloco de front-matter", enquanto `validation-EVM-0014.md` no mesmo diretório é pulado.
+- `registry_tools.py validate <dir>`: aviso "existe em disco mas não está em nenhuma entrada" só para `Validation-EVM-0013.md`; herda o comportamento.
+- `framework_check.py <dir>` explícito em `.../.claude/worktrees/a/docs`: valida o diretório (cabeçalho `===` e problema reportado).
+- `docs/node_modules_notes`: coberto pelo teste do critério 4.
+- Evidência real no checkout principal do kit (só leitura, com o `framework_check.py` desta branch, cwd = raiz principal com 1 worktree em `.claude/worktrees/`): `discover` de `756c83b` acha 8 diretórios, 4 deles dentro de `.claude/worktrees`; o de `e31be1e` acha 4, nenhum em worktree. `framework_check.py --auto` lá: 4 diretórios, exit 0.
+
+## Descompassos encontrados (SDD-DTF-0023)
+
+Nenhum descompasso de implementação. Observações:
+
+1. **Formatação (não é descompasso):** `ruff` colapsou o `dirnames[:] = sorted(...)` da spec numa linha só e deixou uma linha em branco (não duas) entre os imports e `PRUNED_DIR_NAMES`. Sem efeito de comportamento; `ruff check` e `ruff format --check` passam.
+2. **Blocos C3 e C5 da SDD envelheceram no merge:** usam `origin/main` como "antes", o que só vale antes do merge do PR. Depois do merge, a primeira execução usaria o código novo e o critério não discriminaria. Nesta verificação o "antes" foi `756c83b`.
+3. **Cobertura do teste de RF4 incompleta, sem impacto no veredito:** duas mutações sobrevivem a `test_discover.py`: podar `worktrees` por nome em qualquer nível (em vez de só `root/.claude/worktrees`) e tirar `.git` da poda. RF4 exige as duas coisas; o comportamento correto foi conferido à mão acima. O teste segue exatamente a spec da SDD, que não prevê esses casos.
+
+## Lições (SDD-DTF-0023)
+
+- Red flag: critério de aceite "antes/depois" que referencia `origin/main` como estado anterior. Ele só discrimina até o merge; use o SHA da base (ou `git merge-base`) para que a verificação pós-merge continue válida.
+- Red flag: requisito com qualificador ("relativo a `root`", lista de nomes podados) cujo teste só exercita os casos sem ambiguidade. Cada qualificador precisa de um caso que falhe se ele for ignorado; senão o sensor mostra mutações sobreviventes.

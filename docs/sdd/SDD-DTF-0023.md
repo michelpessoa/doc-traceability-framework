@@ -2,7 +2,7 @@
 id: SDD-DTF-0023
 type: SDD
 title: "Varredura dos validadores em repositório de projeto: validation-*.md como artefato operacional e --auto sem node_modules nem worktrees"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
@@ -236,15 +236,15 @@ git worktree remove --force "$tmp/antes"
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF1–RF4 têm código e teste correspondentes.
-- [ ] Arquivos tocados só entre: `_framework/scripts/framework_lib.py`,
+- [x] RF1–RF4 têm código e teste correspondentes.
+- [x] Arquivos tocados só entre: `_framework/scripts/framework_lib.py`,
       `_framework/scripts/framework_check.py`,
       `_framework/rules/workflow-rules.yaml`,
       `_framework/scripts/tests/test_operational_artifacts.py`,
       `_framework/scripts/tests/test_discover.py`, cópias
       geradas em `_framework/skills/doc-traceability-framework/`, e esta
       SDD e o registry (status/evidência).
-- [ ] Nenhuma mudança de regra, gate ou script além do descrito.
+- [x] Nenhuma mudança de regra, gate ou script além do descrito.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
@@ -252,10 +252,18 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** —
+Verificação independente completa em `docs/sdd/validation.md` (seção SDD-DTF-0023). Veredito: **PASS**. Diff verificado: `756c83b..e31be1e` (PR #67).
+
+**Verificador independente:** sim (sub-agent separado, sem acesso à sessão que implementou; worktree própria na branch `docs/sdd-dtf-0023-verificacao` a partir de `e31be1e`)
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/scripts/tests/test_operational_artifacts.py -v` | `3 passed in 0.10s`, exit 0 | M1a (`iter_documents` volta a `path.name in OPERATIONAL_ARTIFACTS`) → 1 failed; M1b (`fnmatchcase(name.lower(), pattern.lower())`) → 2 failed; M1c (`is_operational_artifact` retorna `False`) → 2 failed; M3 (fallback sem `validation-*.md`) → 1 failed; restaurado por cópia → 3 passed | Sim |
+| 2 | `python3 -c "import yaml; d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml')); print('validation-*.md' in d['operational_artifacts'], 'validation.md' in d['operational_artifacts'])"` | `True True`, exit 0 | M2 (chave renomeada no yaml) → comando imprime `False True` e o teste do critério 1 cai para 2 failed; restaurado | Sim |
+| 3 | bloco C3 em script bash (`scratchpad/c3c5.sh`), com `antes` = `756c83b` em vez de `origin/main` (que já contém a implementação) | antes: `validation-EVM-0013.md: sem bloco de front-matter` + aviso "existe em disco mas não está em nenhuma entrada do registry", `exit=1`; depois (HEAD): `Todas as verificações do framework passaram`, `exit=0` | o próprio bloco é o sensor (código anterior reprova, atual aprova) | Sim |
+| 4 | `python3 -m pytest _framework/scripts/tests/test_discover.py -v` | `1 passed in 0.09s`, exit 0 | M4a (sem `node_modules` na poda) → failed; M4b (sem poda de `.claude/worktrees`) → failed; M4c (sem `_framework`) → failed; M4d (poda extra de `docs`) → failed; M4e (`return found[::-1]`) → failed; restaurado → passed. Não discriminam (sobreviventes): poda de `worktrees` por nome em qualquer nível e retirada de `.git` da poda — conferidos à mão (ver validation.md) | Sim |
+| 5 | bloco C5 em script bash (`scratchpad/c3c5.sh`), `antes` = `756c83b` | antes: `['.claude/worktrees/a/docs/sdd', 'docs/sdd', 'node_modules/pkg/docs']`; depois: `['docs/sdd']` | o próprio bloco é o sensor | Sim |
+| 6 | `bash -c 'ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts && python3 -m pytest && python3 _framework/scripts/render_prompts.py --check && python3 _framework/scripts/check_renderings.py && python3 _framework/scripts/framework_check.py --auto'` | `All checks passed!`; `21 files already formatted`; mypy `no issues found in 21 source files`; `72 passed`; render `sincronizado`; `5 renderização(ões) concordam`; `--auto`: 4 diretórios, `Todas as verificações do framework passaram`; exit 0 da cadeia | sem sensor próprio (regressão) | Sim |
 
 ## Rastreabilidade
 

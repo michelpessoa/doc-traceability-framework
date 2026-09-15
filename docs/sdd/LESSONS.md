@@ -66,3 +66,126 @@ intenção). Fica registrado caso o mesmo padrão se repita em outra SDD.
 
 **Escopo desta lição:** um projeto, uma ocorrência. Mesma política de
 `lessons_policy` acima — não vira SPEC até repetir.
+
+---
+
+## 2026-09-14 — Descompassos das verificações independentes de SDD-DTF-0018 a 0023
+
+Oito descompassos apontados pelos verificadores (`validation.md`,
+seções de SDD-DTF-0018, 0019, 0020, 0021 e 0023). Nenhum reprovou
+implementação; todos seguem em aberto, cada um com a correção proposta.
+
+### 1. SDD-DTF-0018 — RF4 em prosa diverge do pseudocódigo
+
+**O que falhou:** RF4 diz "sem coluna reconhecível como **comando** →
+linha inteira"; o pseudocódigo (e o código, commit `16ae117`) só cai para
+a linha inteira quando não há **nenhuma** coluna comando/saída/passou.
+Com cabeçalho `# | Critério | Saída | Passou?`, "n/a" em Critério deixa de
+ser apontado. O teste só cobria `a | b | c`, onde as duas leituras
+coincidem.
+
+**Red flag:** requisito em prosa e pseudocódigo descrevendo o mesmo
+fallback com gatilhos diferentes, sem teste que separe as duas leituras.
+
+**Correção proposta:** ajustar o texto do RF4 ao implementado (edição de
+SDD `implemented`, sem mudança de código).
+
+### 2. `table_rows` conta linha de bloco de código como linha de tabela
+
+**O que falhou:** ao validar `SDD-DTF-0018`, `validate_state.py` acusou 6
+critérios para 5 linhas de evidência: a continuação `  | grep -c ...` do
+bloco C2, dentro de bloco cercado, virou critério. Contornado só
+editorialmente (pipe no fim da linha anterior).
+
+**Red flag:** parser markdown por "linha começa com `|`" sem saber de
+blocos cercados.
+
+**Correção proposta:** SDD small para `table_with_header` ignorar linhas
+dentro de blocos cercados. Até lá, em SDD, pipe de shell no fim da linha.
+
+### 3. SDD-DTF-0020 — `check_hooks` reprova comando válido em forma de shell
+
+**O que falhou:** a regra 3 exige que a string inteira de `command`
+comece por `${CLAUDE_PROJECT_DIR}/`. Reprova `"python3
+${CLAUDE_PROJECT_DIR}/..."` e `"python3 \"$CLAUDE_PROJECT_DIR\"/..."` (forma
+do exemplo da documentação oficial), e mascara a regra 4 (script
+inexistente). O kit não é afetado (gerador usa `args`); projeto com
+settings escrito à mão teria CI reprovado.
+
+**Red flag:** especificação técnica ("sem começar por") mais estreita que
+o RF06 ("sem `${CLAUDE_PROJECT_DIR}/`"), validada só contra o settings
+gerado.
+
+**Correção proposta:** decidir entre (a) RF06 exigir só a forma sem shell
+ou (b) SDD small tokenizando com `shlex` e aceitando as variantes.
+
+### 4. SDD-DTF-0021 — justificativa do here-string está errada
+
+**O que falhou:** a SDD (e o HANDOFF da sessão) afirmam que em `printf |
+while` o `exit 2` "só sai do subshell". Executado: com `set -e` o status
+do `while` (último do pipe) encerra o script com exit 2, com ou sem
+`pipefail`. A mutação para pipe é equivalente e nenhum teste falha; só o
+`grep` do critério 3 protege a escolha.
+
+**Red flag:** afirmação sobre semântica de shell escrita sem rodar no
+cabeçalho real do script; sensor que não consegue falhar indica mutação
+equivalente.
+
+**Correção proposta:** corrigir a frase na SDD para "sem `set -e` o exit
+sairia só do subshell; o here-string não depende disso". Here-string
+mantido.
+
+### 5. SDD-DTF-0021 — caso de borda com `;` dentro de aspas não bloqueia
+
+**O que falhou:** a SDD afirma que `git commit -m "a; git push origin
+main"` "vira segmento e bloqueia". Executado: exit 0 — o segmento termina
+com aspas (`git push origin main"`) e nenhum padrão casa. Idem `bash -c
+"cd x; git push origin main"`. O `.githooks/pre-push` continua barrando o
+push real.
+
+**Red flag:** caso de borda com resultado afirmado fora da tabela de
+testes.
+
+**Correção proposta (decisão do dono):** (a) corrigir o caso de borda na
+SDD como limite aceito, coberto pelo pre-push; ou (b) SDD small apertando
+os padrões com fronteira que aceite aspas, com teste dedicado.
+
+### 6. `verify-sdd.md` sugere `git stash` como espaço descartável
+
+**O que falhou:** o passo 3 do procedimento sugere `git stash` para
+mutações de sensor; o stash é compartilhado entre worktrees e sessões. Em
+2026-09-14 havia até 3 verificadores em paralelo no mesmo repositório.
+
+**Red flag:** instrução de procedimento que assume um único checkout.
+
+**Correção proposta:** SDD small trocando por "restaurar por cópia ou
+`git checkout -- <arquivo>` na própria worktree".
+
+### 7. SDD-DTF-0023 — blocos C3 e C5 usam `origin/main` como estado "antes"
+
+**O que falhou:** depois do merge do PR #67, `origin/main` já contém a
+implementação e os blocos deixam de discriminar. O verificador rodou com
+a base `756c83b`.
+
+**Red flag:** critério de aceite comparativo ancorado em ref móvel.
+
+**Correção proposta:** em SDD nova, bloco "antes/depois" usa o SHA da
+base registrado na redação (ou `git merge-base`), nunca `origin/main`.
+Candidata a red flag no template de SDD se repetir.
+
+### 8. SDD-DTF-0023 — `test_discover.py` não pega duas mutações
+
+**O que falhou:** podar `worktrees` em qualquer nível (em vez de só
+`root/.claude/worktrees`) e tirar `.git` da poda passam no teste. O
+código está correto (conferido à mão); a tabela de testes da SDD não
+previu esses casos.
+
+**Red flag:** requisito com duas restrições ("só relativo a `root`",
+"não desce em `.git`") e fixture que só exercita uma delas.
+
+**Correção proposta:** junto com a próxima SDD que tocar `discover`,
+acrescentar `docs/worktrees/registry.yaml` (deve ser descoberto) e
+`.git/x/registry.yaml` (não deve) à fixture.
+
+**Escopo:** um projeto (kit), uma ocorrência cada. Nenhum vira regra
+global (`lessons_policy`).
