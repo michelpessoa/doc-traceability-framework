@@ -2,7 +2,7 @@
 id: SDD-DTF-0021
 type: SDD
 title: "Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-14"
@@ -222,8 +222,8 @@ python3 -c 'import json; print(json.dumps({"tool_input": {"command": "git -C /re
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF07 e RF08 têm código e teste correspondentes.
-- [ ] Arquivos tocados só entre: `_framework/rules/workflow-rules.yaml`,
+- [x] RF07 e RF08 têm código e teste correspondentes.
+- [x] Arquivos tocados só entre: `_framework/rules/workflow-rules.yaml`,
       `_framework/scripts/render_prompts.py`,
       `_framework/scripts/guard_bash.sh` (gerado),
       `_framework/scripts/check_commit.py`,
@@ -231,7 +231,7 @@ python3 -c 'import json; print(json.dumps({"tool_input": {"command": "git -C /re
       `_framework/scripts/tests/test_check_commit.py`, cópias geradas em
       `_framework/skills/doc-traceability-framework/`, e esta SDD e o
       registry (status/evidência).
-- [ ] Nenhuma mudança em hooks do `.claude/settings.json`, nos
+- [x] Nenhuma mudança em hooks do `.claude/settings.json`, nos
       `.githooks/`, nas mensagens de `deny` ou em regra/gate além do
       descrito.
 
@@ -241,10 +241,18 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** —
+Verificação independente completa em `docs/sdd/validation.md` (seção SDD-DTF-0021). Veredito: **PASS**, com descompassos não bloqueantes registrados lá. Diff verificado: `36f05e2^1..36f05e2` (commits `42fce27`, `0a02f4a`).
+
+**Verificador independente:** sim (subagente separado, sem acesso à sessão que implementou)
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/scripts/tests/test_guard_bash.py -v` | `18 passed in 0.45s` (17 casos parametrizados + stdin inválido) | M1 sem `re.split` (comando inteiro): 3 failed; M2 sem normalizar `git -C`: 3 failed; M3 `*` inicial de volta no padrão push-main: 2 failed; restaurado: 18 passed | Sim |
+| 2 | `python3 -m pytest _framework/scripts/tests/test_check_commit.py -v` | `4 passed in 0.56s` | M5 sem filtro de pais: 1 failed; M6 `merge_in_progress` sempre False: 1 failed; M7 sempre True: 1 failed; restaurado: 4 passed | Sim |
+| 3 | `python3 _framework/scripts/render_prompts.py --check && grep -cF 'done <<<"$segments"' _framework/scripts/guard_bash.sh` | todos `em dia`/`sincronizado`, exit 0; contagem `1` | M8 gerador sem here-string: `--check` com `❌ divergente`; M4 laço trocado por `printf` em pipe: os 18 testes do critério 1 seguem verdes (ver validation.md), só o grep deste critério cai para `0` | Sim |
+| 4 | bloco C4 da SDD, executado de arquivo de script | linha 1 `exit=0`; linha 2 `guard_bash: bloqueado — push direto em main. Abra PR.` e `exit=2` | coberto pelos sensores M1 e M2 (mesmos casos no teste do critério 1) | Sim |
+| 5 | `python3 _framework/scripts/check_commit.py --last 30` | `✅ 17 mensagem(ns) de commit no formato esperado.`, exit 0, sem warning (30 entradas menos 13 merges) | M5 cobre o filtro de pais usado aqui; checagem sobre histórico real, sem sensor próprio | Sim |
+| 6 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts && python3 -m pytest && python3 _framework/scripts/check_renderings.py && python3 _framework/scripts/framework_check.py --auto` | `All checks passed!`; `19 files already formatted`; `Success: no issues found in 19 source files`; `68 passed`; `5 renderização(ões) concordam`; `Todas as verificações do framework passaram.` — exit 0 em todos | regressão geral e estático, sem sensor dedicado | Sim |
 
 ## Rastreabilidade
 
