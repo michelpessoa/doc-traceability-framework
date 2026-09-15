@@ -274,7 +274,7 @@ documents:
   - id: SDD-DTF-0029
     type: SDD
     title: "test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-15"
     updated: "2026-09-15"

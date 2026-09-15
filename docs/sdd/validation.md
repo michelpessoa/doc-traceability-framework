@@ -414,3 +414,40 @@ Nenhum quanto ao escopo desta SDD.
 - Ao localizar o diff a verificar, checar primeiro se a mudança já está em `origin/main` (`git log --grep "Refs: SDD-..."`) antes de rodar `git merge-base HEAD origin/main` — se a mudança já foi mergeada, o merge-base correto é o pai do commit de merge da própria mudança (`<commit>^`), não `origin/main`, que deixaria de discriminar o "antes" assim que a mudança entra nele.
 - Um commit alcançável só por `git log --all` (fora do log de `HEAD`) nem sempre é ancestral do estado atual do repositório — vale checar com `git merge-base --is-ancestor` antes de tratar seu conteúdo como se já estivesse no arquivo em disco, especialmente quando ele conflita com o que está lá.
 - `docs/sdd/validation.md` é um arquivo compartilhado por todas as SDDs verificadas, cada uma com sua própria seção `# Verificação — SDD-...`; escrever nele exige `Read` do conteúdo existente e apensar a seção nova, nunca sobrescrever o arquivo inteiro (um `Write` ingênuo apaga o histórico de verificações anteriores).
+
+# Verificação — SDD-DTF-0029
+
+- **Veredito:** PASS
+- **Diff verificado:** `5dab5de..b6ca3f4` (commit `b6ca3f4`, "docs(sdd): SPEC-less SDD-DTF-0029 — check_hooks: teste contra prefixo falso (#82)", já mergeado em `main`). `origin/main`/`main` não foi usado como base direta porque já contém a mudança (`HEAD` == `main` == `843599a`, filho de `b6ca3f4`); a base usada é o pai do commit que introduziu a mudança, `5dab5de` (commit imediatamente anterior a `b6ca3f4`).
+- **Verificador independente:** sim — subagente novo, sem contexto prévio da sessão que implementou; entrada foi só `docs/sdd/SDD-DTF-0029.md`, `_framework/procedures/verify-sdd.md` e o diff acima.
+
+Arquivos do diff: `_framework/scripts/tests/test_check_hooks.py` (+23 linhas, só o teste novo), `docs/sdd/SDD-DTF-0029.md`, `docs/sdd/registry.md`, `docs/sdd/registry.yaml` — todos previstos na "Verificação de escopo" da própria SDD. `_framework/scripts/check_hooks.py` não aparece no diff (RF4 confirmado por ausência).
+
+A tabela de evidência canônica foi reescrita na seção "Evidência de verificação" da própria `SDD-DTF-0029.md`, com a saída real desta sessão de verificação (a evidência anterior nessa tabela já constava "verificação independente completa fica para outra sessão" — tratada como dado mais fraco, refeita do zero aqui). Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF2, RF5 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 0.45s`, exit 0 (12º teste: `test_command_shell_prefixo_falso_reprova`) | ver critério 2 | Sim |
+| 2. RF3 — sensor de discriminação | `token.startswith(p)` trocado por `"CLAUDE_PROJECT_DIR" in token` no cálculo de `prefix` em `check_hooks.py` (edição direta na worktree, nunca commitada), suíte rodada, restaurado com `git checkout -- _framework/scripts/check_hooks.py` | Mutação: `2 failed, 10 passed` — falham `test_command_shell_com_prefixo_sem_chaves_entre_aspas` e `test_command_shell_prefixo_falso_reprova` (mensagem vira "script referenciado inexistente" em vez de "sem o prefixo", porque `prefix` deixa de ser `None`), exatamente como a SDD previa. Restaurado: `12 passed in 0.11s` | mutação manual real, discrimina (2 testes falham; restaurado, os 12 voltam a passar) | Sim |
+| 3. RF4 — sem mudança de produção | `git diff --stat main -- _framework/scripts/check_hooks.py` | saída vazia, exit 0 | confirma ausência de mudança de produção, sem sensor dedicado | Sim |
+| 4. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.29s`, exit 0 | regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5. Paridade com o CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | estático, sem sensor dedicado | Sim |
+| 6. Cópia da skill não afetada | `python3 _framework/scripts/render_prompts.py --check` | exit 0; todas as renderizações "em dia"/"sincronizado", inclusive `check_hooks.py: sincronizado` | confirma que a ausência de mudança em `check_hooks.py` não deixou a cópia divergente | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0029)
+
+- RF1: `test_command_shell_prefixo_falso_reprova` novo em `test_check_hooks.py`, chama `check_settings` com `command` contendo `$CLAUDE_PROJECT_DIR_FALSO/_framework/scripts/hook.py` (substring `CLAUDE_PROJECT_DIR`, prefixo inválido).
+- RF2: asserção exata — `len(problems) == 1`, `"PreToolUse" in problems[0] and "sem o prefixo" in problems[0]` — mesmo formato de `test_caminho_relativo` e `test_command_shell_sem_referencia_reprova`.
+- RF3: sensor rodado nesta sessão (critério 2 acima) confirma que a mutação de `check_hooks.py` (substring solta em vez de `startswith`) derruba o teste novo (e também `test_command_shell_com_prefixo_sem_chaves_entre_aspas`, efeito colateral já antecipado pela própria SDD).
+- RF4: `git diff --stat main -- _framework/scripts/check_hooks.py` vazio — nenhuma mudança de produção.
+- RF5: os 11 testes pré-existentes de `test_check_hooks.py` continuam passando, sem alteração de nome ou corpo (comparados linha a linha no diff `5dab5de..b6ca3f4`, que só adiciona o bloco do teste novo).
+- Direção inversa: `git diff --stat 5dab5de..b6ca3f4` lista exatamente `test_check_hooks.py`, `SDD-DTF-0029.md`, `registry.md`, `registry.yaml` — todos previstos na "Verificação de escopo" da SDD. Nenhuma abstração, dependência, flag ou refactor extra; `check_hooks.py`, `validate_state.py` e `test_validate_state.py` intocados, como a SDD exige.
+
+## Descompassos encontrados (SDD-DTF-0029)
+
+Nenhum. Todo requisito consolidado tem código correspondente; todo arquivo do diff está previsto na SDD; nenhum arquivo fora de escopo (`check_hooks.py`, `validate_state.py`) foi tocado.
+
+## Lições (SDD-DTF-0029)
+
+- Quando a mudança a verificar já está em `main` (aqui, `b6ca3f4` é ancestral direto de `HEAD`/`main`), o merge-base correto não é `git merge-base HEAD origin/main` (que devolveria o próprio `HEAD`, incluindo a mudança) — é o pai do commit que introduziu a mudança, localizável por `git log --all --grep` seguido de `git show --stat <commit>` para confirmar os arquivos e `git log -1 --format=%P <commit>` para o pai.
+- SDD `sizing: small` com evidência preenchida pela própria sessão implementadora (declarado explicitamente no texto da seção) ainda exige a verificação independente completa desta skill antes de `implemented` — a nota "verificação mecânica já rodada" não substitui o papel do verificador, só evita que a evidência fique com marcador enganoso de independência.
