@@ -464,3 +464,73 @@ Nenhum descompasso de implementação. Um ponto de processo, já registrado e fe
 
 - Confirmação positiva de uma prática já registrada (lição da SDD-DTF-0027): mutação sobrevivente não é motivo para forçar PASS mesmo com os 4 critérios numéricos passando — o veredito certo foi segurar `implemented` e abrir uma SDD pequena dedicada a fechar a cobertura, e só then reverificar. O processo (verify-sdd + SDD de acompanhamento) funcionou como desenhado.
 - Red flag reafirmada: RF que descreve um caso de borda ("tabela real depois de bloco cercado *fechado*") precisa de teste próprio que morra se a lógica de "fechar" for removida — um teste que só cobre "durante a cerca" não discrimina "depois da cerca".
+# Verificação — SDD-DTF-0029
+
+- **Veredito:** PASS
+- **Diff verificado:** `5dab5de..b6ca3f4` (commit `b6ca3f4`, "docs(sdd): SPEC-less SDD-DTF-0029 — check_hooks: teste contra prefixo falso (#82)", já mergeado em `main`). `origin/main`/`main` não foi usado como base direta porque já contém a mudança (`HEAD` == `main` == `843599a`, filho de `b6ca3f4`); a base usada é o pai do commit que introduziu a mudança, `5dab5de` (commit imediatamente anterior a `b6ca3f4`).
+- **Verificador independente:** sim — subagente novo, sem contexto prévio da sessão que implementou; entrada foi só `docs/sdd/SDD-DTF-0029.md`, `_framework/procedures/verify-sdd.md` e o diff acima.
+
+Arquivos do diff: `_framework/scripts/tests/test_check_hooks.py` (+23 linhas, só o teste novo), `docs/sdd/SDD-DTF-0029.md`, `docs/sdd/registry.md`, `docs/sdd/registry.yaml` — todos previstos na "Verificação de escopo" da própria SDD. `_framework/scripts/check_hooks.py` não aparece no diff (RF4 confirmado por ausência).
+
+A tabela de evidência canônica foi reescrita na seção "Evidência de verificação" da própria `SDD-DTF-0029.md`, com a saída real desta sessão de verificação (a evidência anterior nessa tabela já constava "verificação independente completa fica para outra sessão" — tratada como dado mais fraco, refeita do zero aqui). Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF2, RF5 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 0.45s`, exit 0 (12º teste: `test_command_shell_prefixo_falso_reprova`) | ver critério 2 | Sim |
+| 2. RF3 — sensor de discriminação | `token.startswith(p)` trocado por `"CLAUDE_PROJECT_DIR" in token` no cálculo de `prefix` em `check_hooks.py` (edição direta na worktree, nunca commitada), suíte rodada, restaurado com `git checkout -- _framework/scripts/check_hooks.py` | Mutação: `2 failed, 10 passed` — falham `test_command_shell_com_prefixo_sem_chaves_entre_aspas` e `test_command_shell_prefixo_falso_reprova` (mensagem vira "script referenciado inexistente" em vez de "sem o prefixo", porque `prefix` deixa de ser `None`), exatamente como a SDD previa. Restaurado: `12 passed in 0.11s` | mutação manual real, discrimina (2 testes falham; restaurado, os 12 voltam a passar) | Sim |
+| 3. RF4 — sem mudança de produção | `git diff --stat main -- _framework/scripts/check_hooks.py` | saída vazia, exit 0 | confirma ausência de mudança de produção, sem sensor dedicado | Sim |
+| 4. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `81 passed in 3.29s`, exit 0 | regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5. Paridade com o CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | estático, sem sensor dedicado | Sim |
+| 6. Cópia da skill não afetada | `python3 _framework/scripts/render_prompts.py --check` | exit 0; todas as renderizações "em dia"/"sincronizado", inclusive `check_hooks.py: sincronizado` | confirma que a ausência de mudança em `check_hooks.py` não deixou a cópia divergente | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0029)
+
+- RF1: `test_command_shell_prefixo_falso_reprova` novo em `test_check_hooks.py`, chama `check_settings` com `command` contendo `$CLAUDE_PROJECT_DIR_FALSO/_framework/scripts/hook.py` (substring `CLAUDE_PROJECT_DIR`, prefixo inválido).
+- RF2: asserção exata — `len(problems) == 1`, `"PreToolUse" in problems[0] and "sem o prefixo" in problems[0]` — mesmo formato de `test_caminho_relativo` e `test_command_shell_sem_referencia_reprova`.
+- RF3: sensor rodado nesta sessão (critério 2 acima) confirma que a mutação de `check_hooks.py` (substring solta em vez de `startswith`) derruba o teste novo (e também `test_command_shell_com_prefixo_sem_chaves_entre_aspas`, efeito colateral já antecipado pela própria SDD).
+- RF4: `git diff --stat main -- _framework/scripts/check_hooks.py` vazio — nenhuma mudança de produção.
+- RF5: os 11 testes pré-existentes de `test_check_hooks.py` continuam passando, sem alteração de nome ou corpo (comparados linha a linha no diff `5dab5de..b6ca3f4`, que só adiciona o bloco do teste novo).
+- Direção inversa: `git diff --stat 5dab5de..b6ca3f4` lista exatamente `test_check_hooks.py`, `SDD-DTF-0029.md`, `registry.md`, `registry.yaml` — todos previstos na "Verificação de escopo" da SDD. Nenhuma abstração, dependência, flag ou refactor extra; `check_hooks.py`, `validate_state.py` e `test_validate_state.py` intocados, como a SDD exige.
+
+## Descompassos encontrados (SDD-DTF-0029)
+
+Nenhum. Todo requisito consolidado tem código correspondente; todo arquivo do diff está previsto na SDD; nenhum arquivo fora de escopo (`check_hooks.py`, `validate_state.py`) foi tocado.
+
+## Lições (SDD-DTF-0029)
+
+- Quando a mudança a verificar já está em `main` (aqui, `b6ca3f4` é ancestral direto de `HEAD`/`main`), o merge-base correto não é `git merge-base HEAD origin/main` (que devolveria o próprio `HEAD`, incluindo a mudança) — é o pai do commit que introduziu a mudança, localizável por `git log --all --grep` seguido de `git show --stat <commit>` para confirmar os arquivos e `git log -1 --format=%P <commit>` para o pai.
+- SDD `sizing: small` com evidência preenchida pela própria sessão implementadora (declarado explicitamente no texto da seção) ainda exige a verificação independente completa desta skill antes de `implemented` — a nota "verificação mecânica já rodada" não substitui o papel do verificador, só evita que a evidência fique com marcador enganoso de independência.
+# Verificação — SDD-DTF-0028
+
+- **Veredito:** PASS
+- **Diff verificado:** `10719aa..5fcf523` (commit `5fcf5231860a18137f47dd70fa5af3dcffd860c6`, "test(validate_state): tabela real depois de bloco cercado fechado discrimina mutação em in_fence (#81)", já mergeado em `main`). `origin/main` não foi usado como base porque a mudança já está nele nesse ponto — o pai direto do commit de implementação (`10719aa`) é o "antes" real.
+- **Verificador independente:** sim — sessão nova, sem ler o histórico da sessão que implementou. A seção "Evidência de verificação" pré-existente na SDD dizia explicitamente que a verificação independente completa "fica para outra sessão"; toda a evidência abaixo foi rodada do zero nesta sessão, não copiada dela.
+
+A tabela completa de evidência (comandos, saídas e sensor) foi reescrita na seção "Evidência de verificação" da própria `SDD-DTF-0028.md` com a saída real desta sessão. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF2, RF5 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `13 passed in 0.99s`, exit 0 (12 pré-existentes + `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada`) | ver critério 2 | Sim |
+| 2. RF3 — sensor de discriminação | `in_fence = not in_fence` editado para `in_fence = True` em `table_with_header` (`_framework/scripts/validate_state.py`, espaço descartável, nunca commitado), suíte rodada, restaurado com `git checkout -- _framework/scripts/validate_state.py` | Mutação: `1 failed, 12 passed` — falha só `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` (`AssertionError`, falta a linha `['2', '\`pytest -k outro\`', ...]`). Restaurado: `13 passed in 0.65s` | mutação manual introduzida e revertida nesta sessão, discrimina de fato (falha estreitada ao teste novo, os outros 12 seguem verdes) | Sim |
+| 3. RF4 — sem mudança de produção | `git diff --stat main -- _framework/scripts/validate_state.py` | saída vazia, exit 0 | confirma nenhuma alteração de produção nesta SDD | Sim |
+| 4. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; `81 passed in 3.26s`, exit 0 | regressão geral; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5. Paridade com o CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | estático, sem sensor dedicado | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0028)
+
+- RF1: teste novo `test_tabela_real_depois_de_bloco_cercado_fechado_e_contada` em `_framework/scripts/tests/test_validate_state.py`, chama `table_rows` com seção contendo, nesta ordem, tabela real com cabeçalho (`HEADER_5`), bloco cercado ` ```bash ` com linha `|`-like dentro, fechamento do bloco, e uma segunda linha de tabela real depois — exatamente como especificado.
+- RF2: asserção é `==` contra lista de listas completa, incluindo a linha posterior ao bloco cercado — não um "contém" ou "não vazio".
+- RF3: sensor rodado nesta sessão (critério 2 acima) confirma que a mutação M2 (`in_fence` nunca volta a `False`) derruba só o teste novo; sem a mutação, os 13 passam.
+- RF4: `git diff --stat main -- _framework/scripts/validate_state.py` vazio — nenhuma mudança em código de produção.
+- RF5: os 12 testes pré-existentes de `test_validate_state.py` continuam passando (parte do `13 passed`).
+- Direção inversa: `git diff --stat 10719aa..5fcf523` lista exatamente `_framework/scripts/tests/test_validate_state.py`, `docs/sdd/SDD-DTF-0028.md`, `docs/sdd/registry.md` e `docs/sdd/registry.yaml` — todos previstos na "Verificação de escopo" da própria SDD (arquivo de teste + a documentação de rastreabilidade). Nenhum arquivo fora da lista, nenhuma abstração, dependência, flag ou refactor sem requisito correspondente.
+- Fora de escopo respeitado: `validate_state.py`, `check_hooks.py` e seus testes, e a cópia da skill `_framework/skills/doc-traceability-framework/` não aparecem alterados no diff.
+
+## Descompassos encontrados (SDD-DTF-0028)
+
+Nenhum. Requisitos, especificação técnica e critérios de aceite têm código correspondente identificável nas duas direções; nenhum arquivo do diff fica de fora da lista declarada na SDD.
+
+## Lições (SDD-DTF-0028)
+
+- SDD de sizing `small` com evidência preenchida pela própria sessão implementadora ("verificação independente fica para outra sessão") é um sinal saudável quando declarado explicitamente — evita a armadilha de tratar a tabela pré-existente como prova; bastou rodar tudo de novo do zero para confirmar.
+- Quando o commit de implementação já está em `main` (ex.: `git log --all --grep` aponta um commit que `git log --oneline main` também lista), o "antes" correto para o diff é o pai direto desse commit (`<sha>^1`), não `git merge-base HEAD origin/main` — este último, rodado depois do merge, aponta para o próprio commit da mudança e deixa de discriminar.
