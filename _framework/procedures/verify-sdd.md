@@ -37,7 +37,8 @@ sessão, declare isso na tabela de evidência — verificação não-independent
 ### 2. Evidência fresca
 
 Para cada linha de "Critérios de aceite", rode o comando **nesta sessão**
-e registre a saída real na tabela "Evidência de verificação".
+e registre a saída real na tabela "Evidência de verificação"
+**da própria SDD** — é essa tabela que o gate 16 e `validate_state.py` leem.
 
 Não aceite, de você mesma nem de subagente: "deve passar", "rodei antes",
 "o teste existe", "assumo que sim". Se não tem a saída, não tem evidência.
@@ -63,6 +64,24 @@ código.
 
 ### 4. Veredito
 
+Na SDD, a seção "Evidência de verificação" fica assim:
+
+```markdown
+## Evidência de verificação (preencher antes de status `implemented`)
+
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
+
+| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim |
+```
+
+`validation.md` complementa essa tabela com veredito, descompassos e
+lições — **não a substitui**. SDD `implemented` com a tabela vazia é
+gate 16 violado, mesmo com `validation.md` PASS ao lado.
+
 Escreva `validation.md` ao lado da SDD:
 
 ```markdown
@@ -87,18 +106,25 @@ entra no LESSONS.md do projeto)
 dois caminhos possíveis — atualizar a SDD para o escopo real acordado, ou
 remover o código fora de escopo. **A escolha é dele, não sua.**
 
-`PASS` autoriza mover a SDD para `implemented` e atualizar o registry.
+`PASS` autoriza o passo 5.
 
-## Checagem mecânica complementar
+### 5. Checagem mecânica antes de mudar status
 
-```
-python3 _framework/scripts/validate_state.py docs/sdd
-```
+1. Mude `status` para `implemented` no front-matter da SDD e no
+   `docs/sdd/registry.yaml`.
+2. Rode só no arquivo verificado:
 
-Confere o que dá para conferir de fora: tabela preenchida, uma linha por
-critério, sem resultado assumido, checklist de escopo marcada. Passar
-nele é necessário e não suficiente — ele não sabe se o comando foi mesmo
-rodado nesta sessão, e não roda o sensor.
+   ```
+   python3 _framework/scripts/validate_state.py docs/sdd/SDD-{PROJETO}-{SEQ}.md
+   ```
+
+3. Exit diferente de 0: volte `status` para `approved` (SDD e registry)
+   antes de qualquer commit, corrija a tabela ou a checklist de escopo
+   e rode de novo. Não commite `implemented` com exit diferente de 0.
+
+Passar é necessário e não suficiente — o script não sabe se o comando
+foi mesmo rodado nesta sessão e não roda o sensor. Rodar no diretório
+inteiro mistura problemas de outras SDDs com os desta.
 
 ## Red flags
 
@@ -110,3 +136,4 @@ rodado nesta sessão, e não roda o sensor.
 | "O sensor é overhead, o teste é bom" | Custa um comando. A alternativa é confiar sem verificar |
 | "Faltou pouca coisa, marco implemented" | Faltando é parcial. Mantenha `approved` |
 | "O subagente disse que passou" | Relato próprio não é verificação independente |
+| "O PASS está no validation.md, a tabela da SDD é repetição" | A SDD é o que a próxima sessão lê. Tabela vazia com status implemented é contradição no artefato autoritativo |
