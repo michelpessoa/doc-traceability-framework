@@ -2,7 +2,7 @@
 id: SDD-DTF-0027
 type: SDD
 title: "check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR}"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -220,16 +220,18 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 A tabela fica **nesta seção**; `docs/sdd/validation.md` é o relatório
 complementar.
 
-**Verificador independente:** não — mesma sessão que implementou (correção pontual `sizing: small`, sem RFC/SPEC; a verificação independente completa fica a critério de uma sessão `verify-sdd` posterior, antes de mover para `implemented`). Evidência abaixo é rodada real desta sessão de implementação, comandos e saída literais.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim — sessão nova, sem ler o histórico da sessão que implementou. A tabela e os comandos abaixo foram refeitos do zero nesta sessão; a versão anterior (marcada "não independente") foi descartada como insumo.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `11 passed in 0.11s`, exit 0 (7 casos pré-existentes + 3 novos + `test_valido_sem_problema`) | ver critério 2 | sim |
-| 2 | Bloco C2: reverter `PROJECT_DIR_PREFIXES` para `("${CLAUDE_PROJECT_DIR}/",)` e rodar a suíte; depois restaurar | Mutação: `1 failed, 10 passed` — `test_command_shell_com_prefixo_sem_chaves_entre_aspas` falha com `assert ['PreToolUse ...OJECT_DIR/).'] == []`. Extra: remover a tokenização com `shlex` (voltar a tratar `command` como token único) derruba as duas: `2 failed, 9 passed`. Restaurado: `11 passed in 0.10s` | mutações manuais acima, restauradas por cópia do arquivo original (nunca commitadas) | sim |
-| 3 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; `.../scripts/check_hooks.py: sincronizado` (depois de rodar `render_prompts.py` sem `--check` uma vez, que reportou `divergente` antes) | Rodado `--check` antes da sincronização: reportou `divergente` corretamente (sensor natural) | sim |
-| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `75 passed in 3.23s`/`3.24s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelo sensor do critério 2 | sim |
-| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted` (após `ruff format` corrigir 1 arquivo de teste); `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
-| 6 | `python3 _framework/scripts/check_renderings.py` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` (2 avisos pré-existentes sobre PRD/TS legados, não relacionados a esta SDD), exit 0 | Regressão geral, sem sensor dedicado | sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 0.58s`, exit 0 (11 do escopo desta SDD + 1 de SDD-DTF-0029, follow-up já mergeado no mesmo arquivo) | ver critério 2 | Sim |
+| 2 | Bloco C2: `PROJECT_DIR_PREFIXES` editado para `("${CLAUDE_PROJECT_DIR}/",)` (só a forma com chaves), suíte rodada, depois restaurado com `git checkout -- _framework/scripts/check_hooks.py` | Mutação: `1 failed, 11 passed` — `test_command_shell_com_prefixo_sem_chaves_entre_aspas` falha (`assert ['PreToolUse ...OJECT_DIR/).'] == []`). Restaurado: `12 passed in 0.11s`, `PROJECT_DIR_PREFIXES` de volta com as duas formas | mutação manual, discrimina (falha estreitada, passa restaurada) | Sim |
+| 3 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; `.../scripts/check_hooks.py: sincronizado`, entre as demais renderizações "em dia"/"sincronizado" | checagem mecânica de sincronismo, sem sensor de mutação dedicado | Sim |
+| 4 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`, exit 0; suíte `81 passed in 3.60s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | Sim |
+| 6 | `python3 _framework/scripts/check_renderings.py` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` (2 avisos pré-existentes sobre PRD/TS legados, não relacionados a esta SDD), exit 0 | Regressão geral, sem sensor dedicado | Sim |
 
 ## Rastreabilidade
 

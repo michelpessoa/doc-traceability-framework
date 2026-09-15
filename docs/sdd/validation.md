@@ -373,3 +373,44 @@ Nenhum descompasso de implementação. Duas observações de histórico, ambas j
 
 - Red flag: critério de aceite com `grep` cujo padrão atravessa uma quebra de linha do arquivo alvo. `grep` casa linha a linha; um padrão que "lê certo" na prosa pode nunca casar no arquivo. Todo padrão de critério estático precisa ser rodado contra o arquivo real na hora de escrever o critério — e contra a versão anterior, para provar que ele também sabe dizer "não".
 - Red flag: critério estático que nunca foi rodado contra o estado "antes". Ausência de sensor de mutação de código (arquivo sem lógica executável) não dispensa a discriminação: o bloco antes/depois ancorado em SHA fixo faz o mesmo papel e custa um `git show`.
+
+# Verificação — SDD-DTF-0027
+
+- **Veredito:** PASS
+- **Diff verificado:** `f8ee505^..f8ee505` (commit `fix(hooks): check_hooks aceita variantes de shell de ${CLAUDE_PROJECT_DIR} (SDD-DTF-0027) (#73)`, já mergeado em `main`). `origin/main` não foi usado como base porque a mudança já está nele — nesse ponto `origin/main` deixa de representar o "antes" e o comparativo para de discriminar. Arquivos comparados: `_framework/scripts/check_hooks.py`, `_framework/scripts/tests/test_check_hooks.py`, `_framework/skills/doc-traceability-framework/scripts/check_hooks.py` (mais `docs/sdd/SDD-DTF-0027.md`, `registry.yaml`/`registry.md` de status, previstos na checklist de escopo).
+- **Verificador independente:** sim — sessão nova, sem ler o histórico da sessão que implementou. A seção "Evidência de verificação" pré-existente na própria SDD estava marcada explicitamente "Verificador independente: não" e foi tratada como dado mais fraco, não como insumo: toda a evidência abaixo foi rodada do zero nesta sessão.
+
+A tabela completa de evidência (comandos, saídas e sensor) foi escrita na seção "Evidência de verificação" da própria `SDD-DTF-0027.md`, reescrita com a saída real desta sessão. Resumo:
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF5 (testes) | `python3 -m pytest _framework/scripts/tests/test_check_hooks.py -v` | `12 passed in 0.58s` (11 do escopo desta SDD + 1 de SDD-DTF-0029, follow-up já mergeado no mesmo arquivo) | ver critério 2 | Sim |
+| 2. Regra 3 não afrouxa | `PROJECT_DIR_PREFIXES` editado para `("${CLAUDE_PROJECT_DIR}/",)` (só a forma com chaves), suíte rodada, depois restaurado com `git checkout -- _framework/scripts/check_hooks.py` | Mutação: `1 failed, 11 passed` — `test_command_shell_com_prefixo_sem_chaves_entre_aspas` falha (`caminho '$CLAUDE_PROJECT_DIR/...' sem o prefixo`). Restaurado: `12 passed in 0.11s` | mutação manual, discrimina (falha estreitada, passa restaurada) | Sim |
+| 3. Cópia da skill sincronizada | `python3 _framework/scripts/render_prompts.py --check` | exit 0, `.../scripts/check_hooks.py: sincronizado` entre as demais renderizações "em dia"/"sincronizado" | checagem mecânica de sincronismo, sem sensor de mutação dedicado | Sim |
+| 4. Regressão geral (self-host) | `python3 _framework/scripts/framework_check.py --auto` e `python3 -m pytest` | `✅ Todas as verificações do framework passaram.`, exit 0; `81 passed in 3.60s` | regressão geral, sem sensor dedicado; lógica nova coberta pelo sensor do critério 2 | Sim |
+| 5. Paridade com CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`; `21 files already formatted`; `Success: no issues found in 21 source files`, exit 0 | estático, sem sensor dedicado | Sim |
+| 6. Renderizações consistentes | `python3 _framework/scripts/check_renderings.py` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` (2 avisos pré-existentes sobre tipos legados PRD/TS, não relacionados a esta SDD) | regressão geral, sem sensor dedicado | Sim |
+
+## Conformidade requisito ↔ código (SDD-DTF-0027)
+
+- RF1: `import shlex` adicionado; `_tokens(hook)` nova, tokeniza `command` com `shlex.split` e cai para `[command]` em `ValueError`; o laço de `check_settings` para as regras 3 e 4 itera `_tokens(hook)` em vez de `_items(hook)`.
+- RF2: `PROJECT_DIR_PREFIXES = ("${CLAUDE_PROJECT_DIR}/", "$CLAUDE_PROJECT_DIR/")`, tupla com as duas formas; `prefix = next((p for p in PROJECT_DIR_PREFIXES if token.startswith(p)), None)`.
+- RF3: regra 3 dispara `"_framework/" in token and prefix is None` — continua reprovando sem nenhuma das duas formas, mensagem ajustada citando as duas.
+- RF4: `_tokens` estende com os itens de `args` diretamente (`a for a in args if isinstance(a, str)`), sem passar por `shlex` de novo.
+- RF5: `try/except ValueError` em `_tokens` cai para `[command]` (token único) em aspas malformadas.
+- `_items()` permanece intacta, usada só na checagem `--report-only` (regra 2), como a especificação exige.
+- Direção inversa: `git diff --stat f8ee505^..f8ee505` lista exatamente `check_hooks.py`, `test_check_hooks.py`, a cópia gerada da skill, a própria SDD e `registry.yaml`/`registry.md` — todos previstos na "Verificação de escopo" da SDD. Nenhuma abstração, dependência, flag ou refactor sem requisito correspondente.
+- Fora de escopo respeitado: regra 4 não mudou além de operar sobre os mesmos tokens da regra 3; `render_prompts.py`, `workflow-rules.yaml`, `validate_state.py`, `test_discover.py`, `verify-sdd.md` não aparecem no diff; `args` não é retokenizado com `shlex`; regras 1, 2 e 5 de `check_settings` inalteradas.
+
+## Descompassos encontrados (SDD-DTF-0027)
+
+Nenhum quanto ao escopo desta SDD.
+
+- O risco nomeado na SDD (`"$CLAUDE_PROJECT_DIR_FALSO/x.py"` como prefixo falso por substring) não tinha teste dedicado no commit `f8ee505` — mas já foi coberto por um follow-up separado e já mergeado, `SDD-DTF-0029` (`test_command_shell_prefixo_falso_reprova`, commit `b6ca3f4`), fora do escopo desta verificação e tratado como SDD própria.
+- Existe no histórico do repositório um commit órfão, `6a8bac6` ("docs(sdd): verificação independente da SDD-DTF-0027, status implemented"), que **não é ancestral de `HEAD`** (`git merge-base --is-ancestor 6a8bac6 HEAD` → não). Não foi usado como insumo desta verificação — toda a evidência acima foi refeita nesta sessão a partir do procedimento normativo, ignorando esse commit e a seção de evidência marcada "não independente" que estava na SDD.
+
+## Lições (SDD-DTF-0027)
+
+- Ao localizar o diff a verificar, checar primeiro se a mudança já está em `origin/main` (`git log --grep "Refs: SDD-..."`) antes de rodar `git merge-base HEAD origin/main` — se a mudança já foi mergeada, o merge-base correto é o pai do commit de merge da própria mudança (`<commit>^`), não `origin/main`, que deixaria de discriminar o "antes" assim que a mudança entra nele.
+- Um commit alcançável só por `git log --all` (fora do log de `HEAD`) nem sempre é ancestral do estado atual do repositório — vale checar com `git merge-base --is-ancestor` antes de tratar seu conteúdo como se já estivesse no arquivo em disco, especialmente quando ele conflita com o que está lá.
+- `docs/sdd/validation.md` é um arquivo compartilhado por todas as SDDs verificadas, cada uma com sua própria seção `# Verificação — SDD-...`; escrever nele exige `Read` do conteúdo existente e apensar a seção nova, nunca sobrescrever o arquivo inteiro (um `Write` ingênuo apaga o histórico de verificações anteriores).
