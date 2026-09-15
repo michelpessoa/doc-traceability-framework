@@ -221,3 +221,13 @@ documents:
     relates_to: [SDD-DTF-0019]
     path: "docs/sdd/SDD-DTF-0023.md"
     tags: [tooling, validadores, artefatos]
+  - id: SDD-DTF-0025
+    type: SDD
+    title: "test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0023]
+    path: "docs/sdd/SDD-DTF-0025.md"
+    tags: [tooling, testes, discover]
