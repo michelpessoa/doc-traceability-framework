@@ -604,3 +604,47 @@ Nenhum. Requisitos, especificação técnica e critérios de aceite têm código
 
 - SDD de sizing `small` com evidência preenchida pela própria sessão implementadora ("verificação independente fica para outra sessão") é um sinal saudável quando declarado explicitamente — evita a armadilha de tratar a tabela pré-existente como prova; bastou rodar tudo de novo do zero para confirmar.
 - Quando o commit de implementação já está em `main` (ex.: `git log --all --grep` aponta um commit que `git log --oneline main` também lista), o "antes" correto para o diff é o pai direto desse commit (`<sha>^1`), não `git merge-base HEAD origin/main` — este último, rodado depois do merge, aponta para o próprio commit da mudança e deixa de discriminar.
+
+# Verificação — SDD-DTF-0030
+
+- **Veredito:** PASS
+- **Diff verificado:** `f145ac9..415bda5` (commit `415bda5`, "feat(sdd): SDD-DTF-0030 paralelismo derivado implementado", mergeado via PR #90 no merge `faf9762`). `f145ac9` é o commit imediatamente anterior — "docs(sdd): SDD-DTF-0030 paralelismo derivado (#84)" — que só criou a SDD em `approved`, sem código.
+- **Verificador independente:** sim — sessão separada da que implementou, sem ler o histórico dela; entrada foi só `docs/sdd/SDD-DTF-0030.md` e os arquivos do diff acima.
+
+A tabela de evidência canônica está dentro da SDD (seção "Evidência de verificação"); este arquivo é o relatório complementar.
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF01 — coluna `Arquivos` no template de SPEC | comando literal da SDD (`grep -A2 ... \| grep "Arquivos"`) + checagem alternativa (`grep -c` da linha de cabeçalho completa) nas duas cópias | literal: exit 1, vazio; alternativa: `1` nas duas cópias | sem teste automatizado | sim (via alternativa) |
+| 2. RF02 — seção na posição certa | `grep -n "Decomposição em tasks\|Especificação técnica consolidada\|Critérios de aceite" _framework/templates/sdd.template.md` (e cópia) | ordem idêntica nas duas cópias, "Decomposição em tasks" entre as outras duas | sem teste automatizado | sim |
+| 3. RF03/RF04 — `derive_groups` | `python3 -m pytest _framework/tests/test_parallel_plan.py -v` | `11 passed` | `if overlap or dependency:` → `if False:`: 4 testes falham; `git checkout --`, `11 passed` de novo | sim |
+| 4. RF05 — linha vazia | `python3 -m pytest _framework/tests/test_parallel_plan.py::test_linha_vazia_gera_aviso -v` | `1 passed` | branch do aviso removido em `parse_tasks`: `1 failed`; restaurado, `1 passed` | sim |
+| 5. RF06 — gate coluna vazia | `python3 -m pytest _framework/tests/test_validate_doc.py::test_gate_arquivos_vazio_falha -v` | `1 passed` | `if not files:` → `if False and not files:` em `check_files_column`: `1 failed`; restaurado, `1 passed` | sim |
+| 6. RF07 — dispensa por sizing | `python3 -m pytest _framework/tests/test_validate_doc.py::test_gate_dispensa_tasks_sizing_small -v` | `1 passed` | dispensa por `sizing == "small"` removida em `check_tasks_section`: `1 failed`; restaurado, `1 passed` | sim |
+| 7. CLI ponta a ponta | `python3 _framework/scripts/parallel_plan.py _framework/tests/fixtures/sdd_fixture_a.md _framework/tests/fixtures/sdd_fixture_b.md` | 2 grupos, 2 pares bloqueados, aviso de linha vazia em stderr, sem traceback | coberto indiretamente por `test_cli_ponta_a_ponta_sem_traceback` (ver critério 3) | sim |
+| 8. Paridade das duas cópias | `diff` dos 4 pares (spec.template.md, sdd.template.md, parallel_plan.py, validate_doc.py) | 4 diffs vazios, exit 0 | sem teste automatizado | sim |
+| 9. Cross-reference no guia | `grep -n "RFC-DTF-0003\|ADR-DTF-0003" docs/guias/paralelizacao-trilhas.md` | linha 8, nota presente, restante do guia intocado | sem teste automatizado | sim |
+
+Regressão geral e paridade com CI, rodadas nesta sessão: `python3 -m pytest` bare → `99 passed in 4.07s` (inclui os 11 de `test_parallel_plan.py` e os 7 de `test_validate_doc.py` via `testpaths` estendido em `pyproject.toml`); `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` → `All checks passed!`, `22 files already formatted`, `Success: no issues found in 22 source files`; `python3 _framework/scripts/framework_check.py --auto` → `✅ Todas as verificações do framework passaram.` — todos exit 0.
+
+## Conformidade requisito ↔ código (SDD-DTF-0030)
+
+- RF01: `_framework/templates/spec.template.md` (e cópia) — cabeçalho `| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |` com nota explicativa acima da tabela.
+- RF02: `_framework/templates/sdd.template.md` (e cópia) — seção "Decomposição em tasks" entre "Especificação técnica consolidada" e "Critérios de aceite / definição de pronto".
+- RF03/RF04: `derive_groups` em `parallel_plan.py` bloqueia por `files_overlap` (com `fnmatch`, casa glob nas duas direções) ou por `depends_on` declarado, mesmo sem overlap — confirmado pelo sensor do critério 3 (a mutação que desliga o `if` derruba exatamente os 4 testes que cobrem overlap, depends_on, glob e o CLI ponta a ponta).
+- RF05: `parse_tasks` gera warning e usa `continue` para excluir a linha do cálculo quando `files_cell` é vazio (e diferente de `(decisão pura)`) — confirmado pelo sensor do critério 4.
+- RF06: `check_files_column` em `validate_doc.py`, chamado tanto para SPEC (`Requisitos funcionais`) quanto para SDD (`Decomposição em tasks`) dentro do mesmo loop de `check_document` (não é função paralela desconectada) — confirmado pelo sensor do critério 5.
+- RF07: `check_tasks_section` dispensa a seção quando `fm.get("sizing") == "small"` ou quando há ≤1 RF-ID em "Requisitos consolidados" — confirmado pelo sensor do critério 6; `test_gate_dispensa_tasks_rf_unico`, `test_gate_tasks_ausente_sem_dispensa_falha` e `test_gate_nao_retroativo_para_sdd_ja_implementada` (não exigidos pela tabela de critérios, mas presentes no diff) também passam, cobrindo os dois lados da dispensa e o caso não-retroativo.
+- Casos de borda da SPEC: `test_path_inexistente_no_disco_nao_e_erro` e `test_mesmo_rf_arquivos_diferentes_e_paralelizavel` passam; `files_overlap` de fato não chama `stat` (só `fnmatch`/igualdade de string).
+- Direção inversa: `git diff --stat f145ac9..415bda5` lista exatamente os arquivos das 8 tasks da "Decomposição em tasks" da própria SDD (duas cópias de cada template/script, `_framework/tests/*`, `pyproject.toml`, `docs/guias/paralelizacao-trilhas.md`) mais a própria `SDD-DTF-0030.md` (registro da implementação) — nenhum arquivo fora da lista. `docs/sdd/SDD-DTF-0020.md` e `docs/sdd/validation.md` (proibidos nas instruções à IA implementadora) não aparecem no diff verificado. Nenhuma abstração, dependência, feature flag ou orquestração automática de agentes introduzida.
+
+## Descompassos encontrados (SDD-DTF-0030)
+
+1. **Comando literal do critério 1 não reflete a estrutura do template (não bloqueante, já registrado pelo implementador).** Confirmado nesta sessão: `grep -A2 "Requisitos funcionais" _framework/templates/spec.template.md | grep "Arquivos"` dá exit 1 porque o texto explicativo das "cinco formas EARS" ocupa ~11 linhas entre o heading e a tabela, não 2. A coluna existe de fato — verificado por meio independente do que a nota do implementador sugere (`grep -c` da linha de cabeçalho completa da tabela, não só `grep -c "Arquivos"`, para não aceitar um falso-positivo de substring): `1` nas duas cópias. Sugestão para o humano: corrigir o comando do critério 1 na SDD para algo que resista a texto explicativo entre heading e tabela (ex.: `grep -A20 heading | grep '| Arquivos |'`), ou apontar direto para a linha do cabeçalho.
+
+Nenhum outro descompasso: todo RF01-RF07 tem código correspondente; todo arquivo do diff está na tabela "Decomposição em tasks"; nenhuma abstração ou refactor sem requisito.
+
+## Lições (SDD-DTF-0030)
+
+- Red flag reaproveitável: critério de aceite por `grep -A<N>` contra um template que já tem prosa explicativa entre o heading e o elemento buscado. O número de linhas do `-A` vira contrato implícito não escrito em nenhum RF, e quebra silenciosamente assim que alguém edita a prosa entre os dois. Ao escrever critério de aceite sobre estrutura de tabela/seção, preferir grep pelo próprio conteúdo-alvo (`| Arquivos |` no cabeçalho) a contar linhas a partir de um heading vizinho.
+- Sensor de discriminação em `derive_groups`/`parse_tasks`/`check_files_column`/`check_tasks_section` funcionou de primeira nas 4 mutações — função pura sem estado global facilita a mutação pontual (um `if` por vez) e a checagem exata de qual teste cai.

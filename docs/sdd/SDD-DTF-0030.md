@@ -2,7 +2,7 @@
 id: SDD-DTF-0030
 type: SDD
 title: "Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -153,12 +153,21 @@ sua dependência). Task 8 fecha o grafo, depende de 1-4.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
 
-**Verificador independente:** {a preencher}
+**Verificador independente:** sim — sessão separada da que implementou, sem ler o histórico dela; entrada foi só esta SDD e os arquivos do diff `f145ac9..415bda5` (commit `415bda5`, mergeado via PR #90). Verificação em 2026-09-15.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `grep -A2 "Requisitos funcionais" _framework/templates/spec.template.md \| grep "Arquivos"` (literal) + `grep -c "\| RF-ID \| Requisito \| Critério de aceite (EARS) \| Arquivos \|" _framework/templates/spec.template.md _framework/skills/doc-traceability-framework/templates/spec.template.md` (checagem alternativa) | Literal: exit 1, nenhuma saída (texto EARS entre o heading e a tabela empurra a linha `Arquivos` para ~13 linhas depois, não 2). Alternativo: `1` nas duas cópias — coluna presente no cabeçalho da tabela | sem teste automatizado | Sim (via checagem alternativa; comando literal do critério não bate com a estrutura real do template, confirmado nesta sessão — ver nota do implementador e descompasso 1 em `validation.md`) |
+| 2 | `grep -n "Decomposição em tasks\|Especificação técnica consolidada\|Critérios de aceite" _framework/templates/sdd.template.md` (e cópia) | `49:## Especificação técnica consolidada`, `52:## Decomposição em tasks`, `63:## Critérios de aceite / definição de pronto` — idêntico nas duas cópias | sem teste automatizado | Sim |
+| 3 | `python3 -m pytest _framework/tests/test_parallel_plan.py -v` | `11 passed in 0.26s` | mutação `if overlap or dependency:` → `if False:` em `derive_groups`: 4 testes falham (`test_interseccao_bloqueia_mesmo_sem_depends_on`, `test_depends_on_bloqueia_sem_interseccao_de_arquivo`, `test_glob_casa_com_path_exato`, `test_cli_ponta_a_ponta_sem_traceback`); restaurado com `git checkout --`, `11 passed` de novo | Sim |
+| 4 | `python3 -m pytest _framework/tests/test_parallel_plan.py::test_linha_vazia_gera_aviso -v` | `1 passed` | mutação: removido o branch `if not files_cell: warnings.append(...); continue` em `parse_tasks`: `1 failed` (`assert False`); restaurado, `1 passed` | Sim |
+| 5 | `python3 -m pytest _framework/tests/test_validate_doc.py::test_gate_arquivos_vazio_falha -v` | `1 passed` | mutação `if not files:` → `if False and not files:` em `check_files_column`: `1 failed`; restaurado, `1 passed` | Sim |
+| 6 | `python3 -m pytest _framework/tests/test_validate_doc.py::test_gate_dispensa_tasks_sizing_small -v` | `1 passed` | mutação `if fm.get("sizing") == "small":` → `if False:` em `check_tasks_section`: `1 failed` (RF07 disparado indevidamente); restaurado, `1 passed` | Sim |
+| 7 | `python3 _framework/scripts/parallel_plan.py _framework/tests/fixtures/sdd_fixture_a.md _framework/tests/fixtures/sdd_fixture_b.md` | 2 grupos paralelizáveis, 2 pares bloqueados (`... Criar handler <-> ... Testes do handler (depends_on)`, `... Criar handler <-> ... Utilitário compartilhado (src/shared/utils.py)`), aviso de linha vazia em stderr, sem traceback | sem teste automatizado dedicado (coberto indiretamente por `test_cli_ponta_a_ponta_sem_traceback`, ver critério 3) | Sim |
+| 8 | `diff` dos 4 pares de arquivo (spec.template.md, sdd.template.md, parallel_plan.py, validate_doc.py, cada um entre `_framework/` e `_framework/skills/doc-traceability-framework/`) | Nenhuma diferença nos 4 diffs, exit 0 | sem teste automatizado | Sim |
+| 9 | `grep -n "RFC-DTF-0003\|ADR-DTF-0003" docs/guias/paralelizacao-trilhas.md` | `8:> pensado à mão pelo time. \`RFC-DTF-0003\`/\`ADR-DTF-0003\` (paralelismo` — nota presente, restante do guia intocado | sem teste automatizado | Sim |
 
 ## Rastreabilidade
 | Campo | Valor |
