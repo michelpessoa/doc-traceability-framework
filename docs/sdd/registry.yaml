@@ -254,7 +254,7 @@ documents:
   - id: SDD-DTF-0027
     type: SDD
     title: "check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR}"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-15"
     updated: "2026-09-15"
