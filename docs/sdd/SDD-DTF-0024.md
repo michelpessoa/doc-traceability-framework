@@ -2,7 +2,7 @@
 id: SDD-DTF-0024
 type: SDD
 title: "table_with_header não conta linha de bloco cercado como linha de tabela"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -171,18 +171,23 @@ novos:
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou
-(esta sessão implementou e não marca `implemented` — só `approved`).
+Verificação independente completa em `docs/sdd/validation.md`. Veredito:
+**PASS** (com descompassos não bloqueantes de cobertura de teste — ver
+`validation.md` e `LESSONS.md`).
 
-**Verificador independente:** ainda não rodado — pendente, sessão
-separada.
+**Verificador independente:** sim — sessão separada da que implementou,
+contexto limpo, sem ler o histórico da sessão implementadora. Entrada:
+`docs/sdd/SDD-DTF-0024.md` e o diff `fb430c5..ae3fb0e` (PR #70). Todos os
+comandos abaixo rodados em 2026-09-15 na branch
+`docs/sdd-dtf-0024-verificacao`, a partir de `a415235`.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `12 passed in 0.62s`, exit 0 (2 testes novos: `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` e `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia`, mais os 10 já existentes de SDD-DTF-0018) | Reverti temporariamente `table_with_header` para a versão sem o flag `in_fence` (espaço descartável, não commitado): `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` falhou (`AssertionError`, linha extra `['grep -c -e algo']` contada), os outros 11 continuaram passando; restaurada a versão corrigida, `12 passed` | sim |
-| 2 | `python3 _framework/scripts/render_prompts.py --check` | Antes de sincronizar: `❌ .../validate_state.py: divergente`, exit 1. Depois de rodar `render_prompts.py` sem `--check`: `✅ .../validate_state.py: sincronizado`, exit 0 | Estado divergente observado de fato antes da sincronização (não simulado) | sim |
-| 3 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; suíte `74 passed in 3.41s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelos sensores do critério 1 | sim |
+| 1 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `12 passed in 1.41s`, exit 0 — inclui os 2 testes novos `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` e `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia` | M1 (reverter o bloco `in_fence` de `table_with_header`, restaurado por `git checkout --`): `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` falha com `AssertionError: Left contains one more item: ['grep -c -e algo']` → `1 failed, 11 passed`; restaurado, `12 passed`. M2 (`in_fence = True`, cerca nunca fecha) e M3 (sem `continue` na linha da crase) **sobrevivem** aos 12 testes — ver descompassos 1 e 2 | sim |
+| 2 | `python3 _framework/scripts/render_prompts.py --check` | `✅ .../skills/doc-traceability-framework/scripts/validate_state.py: sincronizado.` (e os outros 9 arquivos sincronizados), exit 0 | Cópia da skill conferida contra a fonte pelo próprio `--check`; sem sensor dedicado nesta sessão | sim |
+| 3 | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.` (docs/sdd: 26 documentos ok em registry, seção 15 e seção 16); suíte `79 passed in 3.34s`, exit 0 | Regressão geral, sem sensor dedicado; lógica nova coberta pelo sensor M1 do critério 1 | sim |
 | 4 | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, `21 files already formatted`, `Success: no issues found in 21 source files`, exit 0 | Checagem estática de paridade com o CI, sem sensor dedicado | sim |
+| 5 | Sonda do bug real (fora da tabela original): `check_sdd` numa SDD cuja seção **Critérios de aceite** contém bloco cercado com `  \| grep -c -e "SDD-EVM-000"` | Com o fix: `problemas: []`. Com `table_with_header` revertido (M1): `SDD-TST-0002: 2 critério(s) de aceite mas só 1 linha(s) de evidência` | A própria sonda é o sensor: reproduz o falso positivo do `SDD-DTF-0018` descrito no resumo executivo e confirma que o fix o elimina | sim |
 
 ## Rastreabilidade
 

@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 07:05. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 07:37. Não editar manualmente. Framework v2.1.0._
 
 Total de documentos: **26**
 
@@ -31,7 +31,7 @@ Total de documentos: **26**
 | `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
 | `SDD-DTF-0021` | Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0020 |
 | `SDD-DTF-0023` | Varredura dos validadores em repositório de projeto: validation-*.md como artefato operacional e --auto sem node_modules nem worktrees | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0019 |
-| `SDD-DTF-0024` | table_with_header não conta linha de bloco cercado como linha de tabela | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0018 |
+| `SDD-DTF-0024` | table_with_header não conta linha de bloco cercado como linha de tabela | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0018 |
 | `SDD-DTF-0025` | test_discover: fixture discrimina poda de worktrees fora de .claude/ e descida em .git | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0023 |
 | `SDD-DTF-0026` | verify-sdd: sensor de mutação sem git stash compartilhado e diff ancorado em SHA fixo, não em origin/main | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0019, SDD-DTF-0023 |
 | `SDD-DTF-0027` | check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR} | approved | Michel Pessoa | 2026-09-15 | SDD-DTF-0020 |

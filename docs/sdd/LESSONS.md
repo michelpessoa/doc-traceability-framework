@@ -216,7 +216,77 @@ acrescentar `docs/worktrees/registry.yaml` (deve ser descoberto) e
 **Escopo:** um projeto (kit), uma ocorrência cada. Nenhum vira regra
 global (`lessons_policy`).
 
-**Nota sobre status das SDDs de correção (0024–0027):** todas
-`approved`, código já mergeado em `main`. Ainda não `implemented` —
-falta verificação independente (quem implementou não verifica), em
-sessão separada.
+**Nota sobre status das SDDs de correção (0024–0027):** código de todas
+já mergeado em `main`. `SDD-DTF-0024` virou `implemented` em 2026-09-15
+(verificação independente — ver seção abaixo e `validation.md`). `0025`,
+`0026` e `0027` seguem `approved` — falta verificação independente (quem
+implementou não verifica), em sessão separada.
+
+## 2026-09-15 — Descompassos da verificação independente de SDD-DTF-0024
+
+Veredito **PASS** (código correto, bug real eliminado — ver
+`docs/sdd/validation.md`). Os itens abaixo são de cobertura de teste,
+mesma família do item 8, e não bloquearam o status.
+
+### 9. SDD-DTF-0024 — teste fim a fim de RF5(b) não pode falhar
+
+**O que falhou:** `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia`
+põe o bloco cercado na seção *Evidência de verificação*. Mas
+`check_evidence` só reporta "N critério(s) de aceite mas só M linha(s)"
+quando `len(rows) < n_criteria`, e o bug **infla** `len(rows)` — ali ele
+suprime o problema, nunca o dispara. O teste passa com
+`table_with_header` revertido. O caso real do `SDD-DTF-0018` tinha a
+cerca na seção **Critérios de aceite**, onde a inflação de `n_criteria`
+é que produz o falso positivo. O resumo executivo da SDD descreve o caso
+certo; a especificação técnica especificou a seção errada, e o
+implementador seguiu a spec.
+
+**Red flag:** teste de regressão escrito para o lado do limiar em que o
+bug não se manifesta. Se a falha infla uma contagem e o validador só
+reprova quando ela falta, a fixture precisa pôr o dado inflado do lado
+que dispara a comparação. Pergunte sempre qual mutação derruba o teste
+novo; se não houver nenhuma, ele não é teste de regressão.
+
+**Red flag (segunda ordem):** SDD que descreve o bug num lugar e
+especifica o teste em outro. A divergência entre resumo executivo e spec
+técnica da mesma SDD vira buraco de cobertura silencioso.
+
+**Correção proposta:** SDD small acrescentando a
+`test_validate_state.py` o caso com bloco cercado na seção *Critérios de
+aceite* (1 linha de tabela real + cerca com `  | grep -c ...`, 1 linha de
+evidência), que deve falhar com `table_with_header` revertido. A sonda
+usada na verificação está em `docs/sdd/validation.md`, seção
+SDD-DTF-0024, critério 5.
+
+### 10. SDD-DTF-0024 — RF3 sem teste próprio: mutação sobrevive
+
+**O que falhou:** trocar `in_fence = not in_fence` por `in_fence = True`
+(cerca que nunca fecha) quebra RF3 de verdade — uma linha de tabela real
+*depois* de uma cerca fechada passa a ser descartada — e sobrevive aos 12
+testes. Nas duas fixturas novas a cerca é a última coisa da seção, então
+nada exercita "tabela depois da cerca". Comportamento correto conferido à
+mão na verificação.
+
+**Red flag:** requisito de preservação ("o comportamento para X não
+muda") cuja fixture não exercita X *em conjunto* com a construção nova.
+Cerca no fim da seção não testa tabela depois da cerca.
+
+**Correção proposta:** na mesma SDD do item 9, fixture com tabela antes
+**e** depois de um bloco cercado na mesma seção.
+
+### 11. SDD-DTF-0024 — RF2 é inobservável por construção
+
+**O que falhou:** nada, e é esse o ponto. Remover o `continue` da linha
+da crase não muda nenhum resultado: a linha começa com ` ``` ` e nunca
+com `|`, então cai no `if not line.startswith("|")` seguinte. O requisito
+existe, o código o implementa, e nenhuma mutação pode discriminá-lo.
+
+**Red flag:** requisito que descreve uma garantia já implicada por outra
+linha do mesmo laço. Não é defeito — mas registre como inobservável em
+vez de alegar que "o teste cobre", senão o sensor vira ruído verde
+declarado como cobertura.
+
+**Correção proposta:** nenhuma. Registrado por transparência.
+
+**Escopo:** um projeto (kit), uma ocorrência cada. Nenhum vira regra
+global (`lessons_policy`).

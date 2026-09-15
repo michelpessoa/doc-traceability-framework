@@ -288,3 +288,50 @@ Nenhum descompasso de implementação. Observações:
 
 - Red flag: critério de aceite "antes/depois" que referencia `origin/main` como estado anterior. Ele só discrimina até o merge; use o SHA da base (ou `git merge-base`) para que a verificação pós-merge continue válida.
 - Red flag: requisito com qualificador ("relativo a `root`", lista de nomes podados) cujo teste só exercita os casos sem ambiguidade. Cada qualificador precisa de um caso que falhe se ele for ignorado; senão o sensor mostra mutações sobreviventes.
+
+# Verificação — SDD-DTF-0024
+
+- **Veredito:** PASS (com descompassos não bloqueantes de cobertura de teste, decisão do humano abaixo)
+- **Diff verificado:** `fb430c5..ae3fb0e` (PR #70, commit de implementação `ae3fb0e`)
+- **Verificador independente:** sim — sessão separada da que implementou, contexto limpo, sem ler o histórico dela. Verificação em 2026-09-15 na branch `docs/sdd-dtf-0024-verificacao`, a partir de `a415235`.
+
+A tabela de evidência canônica está na seção "Evidência de verificação" da própria `SDD-DTF-0024.md`; este arquivo é o relatório complementar.
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| 1. RF1–RF5 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | `12 passed in 1.41s`, exit 0 | M1 derruba `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela`; M2 e M3 sobrevivem | Sim |
+| 2. Skill sincronizada | `python3 _framework/scripts/render_prompts.py --check` | 10 arquivos `sincronizado`, exit 0 | sem sensor dedicado | Sim |
+| 3. Regressão geral | `python3 _framework/scripts/framework_check.py --auto && python3 -m pytest` | `✅ Todas as verificações do framework passaram.`; `79 passed in 3.34s` | regressão | Sim |
+| 4. Paridade CI | `ruff check _framework/scripts && ruff format --check _framework/scripts && mypy _framework/scripts` | `All checks passed!`, `21 files already formatted`, `Success: no issues found in 21 source files` | estático | Sim |
+| 5. Sonda do bug real | `check_sdd` com bloco cercado na seção *Critérios de aceite* | com fix `[]`; com M1 `2 critério(s) de aceite mas só 1 linha(s) de evidência` | a sonda é o sensor | Sim |
+
+## Sensores do critério 1 (mutações em `_framework/scripts/validate_state.py`, restauradas por `git checkout -- <arquivo>` na própria worktree, conferidas contra cópia em `/tmp/.../validate_state.py.orig`, nunca commitadas)
+
+| Mutação | Efeito real no comportamento | Teste que falhou | Resultado |
+|---|---|---|---|
+| M1: remove o bloco `in_fence` inteiro (volta ao código de `fb430c5`) | linha `  \| grep ...` dentro de cerca volta a contar como linha de tabela | `test_bloco_cercado_com_pipe_nao_conta_como_linha_de_tabela` | 1 failed, 11 passed |
+| M2: `in_fence = not in_fence` → `in_fence = True` (cerca nunca fecha) | **quebra RF3**: linha de tabela real *depois* de uma cerca fechada é descartada (`table_rows` devolve 1 linha em vez de 2) | nenhum | **12 passed — mutação sobrevive** |
+| M3: remove o `continue` da linha da crase | nenhum efeito observável: a linha começa com ` ``` `, nunca com `\|`, e cai no `if not line.startswith("\|")` seguinte | nenhum | 12 passed — RF2 é inobservável por construção |
+
+## Conformidade requisito ↔ código (SDD-DTF-0024)
+
+- **RF1**: `table_with_header` tem `in_fence = False` no laço; `if line.startswith("```"): in_fence = not in_fence; continue` e `if in_fence: continue` antes do `if not line.startswith("|")`. Confere com a spec técnica linha a linha. Discriminado por M1.
+- **RF2**: a linha da crase faz `continue` e nunca entra em `rows`. Implementado como especificado, mas **inobservável**: nenhuma mutação pode discriminá-lo (ver M3).
+- **RF3**: comportamento de tabelas reais fora de cerca preservado — os 10 testes pré-existentes de `SDD-DTF-0018` continuam passando, e a sonda direta confirma que uma tabela *depois* de cerca fechada é extraída (`[['1',...],['2',...]]`). **Sem teste automatizado próprio** (ver M2).
+- **RF4**: `table_rows` inalterada, ainda `return table_with_header(section)[1]`, mesma assinatura; o teste novo (a) a chama diretamente.
+- **RF5**: dois testes novos em `test_validate_state.py`, exatamente os dois descritos na spec técnica. O (a) discrimina; o (b) não (ver descompasso 1).
+- **Direção inversa**: `git diff --stat fb430c5 ae3fb0e` lista 6 arquivos — `validate_state.py`, `tests/test_validate_state.py` e a cópia gerada da skill (os três da checklist de escopo), mais `docs/sdd/SDD-DTF-0024.md`, `registry.md` e `registry.yaml` (a própria SDD e seu registro). Nenhum arquivo fora da SDD, nenhuma abstração, dependência, flag ou refactor sem requisito. `check_evidence`, `check_scope` e `check_sdd` intocadas, como a SDD exige.
+
+## Descompassos encontrados (SDD-DTF-0024)
+
+Nenhum descompasso de implementação: o código faz exatamente o que a especificação técnica descreve, e a sonda do critério 5 confirma que o bug real (falso positivo de `SDD-DTF-0018`) foi de fato eliminado. Os dois pontos abaixo são de **cobertura de teste**, mesma família do descompasso 3 de `SDD-DTF-0023`, e não bloqueiam o veredito.
+
+1. **O teste fim a fim de RF5(b) não pode falhar por causa deste bug.** `test_bloco_cercado_nao_gera_descompasso_criterios_x_evidencia` põe o bloco cercado na seção *Evidência de verificação* e afirma que não aparece "N critério(s) de aceite mas só M linha(s)". Mas `check_evidence` só reporta esse problema quando `len(rows) < n_criteria`, e o bug **infla** `len(rows)` — na seção de evidência ele suprime o problema, nunca o dispara. O teste passa com o código quebrado (confirmado sob M1). O caso real do `SDD-DTF-0018` tinha a cerca na seção **Critérios de aceite**, onde a inflação de `n_criteria` é que dispara o falso positivo. A spec técnica da própria SDD especificou a seção errada, e o implementador a seguiu fielmente. A sonda do critério 5 cobre o caso certo, mas só nesta verificação — não virou teste no repositório.
+2. **RF3 não tem teste automatizado próprio.** M2 (cerca que nunca fecha) quebra RF3 de verdade — descarta linha de tabela real depois de uma cerca fechada — e sobrevive aos 12 testes. Nenhuma fixture tem tabela *depois* de bloco cercado na mesma seção; nas duas fixturas novas a cerca é a última coisa da seção. Comportamento correto conferido à mão nesta verificação.
+3. **RF2 é inobservável (não é defeito do teste).** A linha de abertura/fechamento começa com ` ``` ` e nunca com `|`, então o `continue` dedicado não muda nenhum resultado: M3 sobrevive porque não há comportamento a discriminar. Registrado por transparência, sem ação proposta.
+
+## Lições (SDD-DTF-0024)
+
+- Red flag: teste fim a fim escrito para o lado do limiar em que o bug não se manifesta. Quando a falha **infla** uma contagem e o validador só reprova quando ela **falta**, a fixture tem que pôr o dado inflado do lado que dispara a comparação — senão o teste é verde permanente. Antes de aceitar um teste de regressão, pergunte qual mutação o derruba; se não houver nenhuma, ele não é teste de regressão.
+- Red flag: SDD que descreve o bug real num lugar (resumo executivo: cerca na tabela de *critérios*) e especifica o teste em outro (spec técnica: cerca na seção de *evidência*). O implementador segue a spec técnica; a divergência entre as duas seções da mesma SDD vira buraco de cobertura silencioso.
+- Red flag: requisito de preservação ("o comportamento para X não muda") sem fixture que exercite X *em conjunto* com a construção nova. Cerca no fim da seção não testa "tabela depois da cerca".
