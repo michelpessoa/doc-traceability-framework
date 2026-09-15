@@ -1,4 +1,4 @@
-"""Testes de `mechanization` em render_prompts.py — ver SDD-DTF-0009.
+"""Testes de `mechanization` em render_prompts.py — ver SDD-DTF-0009 e SDD-DTF-0020.
 
 Cobre os RF01-RF04 e RF07 com fixtures mínimas de `rules`, sem depender
 do workflow-rules.yaml real (que muda com o tempo) para os casos
@@ -38,7 +38,11 @@ def test_build_claude_settings_agrupa_por_evento():
                 mechanization={
                     "artifact_type": "hook_sessionstart",
                     "matcher": "*",
-                    "prompt": "faça pickup",
+                    "hook_command": [
+                        "python3",
+                        "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_session_start.py",
+                        "pickup",
+                    ],
                 },
             ),
             _cap(
@@ -46,7 +50,7 @@ def test_build_claude_settings_agrupa_por_evento():
                 mechanization={
                     "artifact_type": "hook_pretooluse",
                     "matcher": "Bash",
-                    "hook_command": ["bash", "_framework/scripts/guard_bash.sh"],
+                    "hook_command": ["bash", "${CLAUDE_PROJECT_DIR}/_framework/scripts/guard_bash.sh"],
                 },
             ),
             _cap("create_document"),  # sem mechanization — não deve gerar nada
@@ -55,8 +59,82 @@ def test_build_claude_settings_agrupa_por_evento():
     settings = json.loads(build_claude_settings(rules))
     assert sorted(settings["hooks"].keys()) == ["PreToolUse", "SessionStart"]
     assert settings["hooks"]["SessionStart"][0]["matcher"] == "*"
-    assert settings["hooks"]["SessionStart"][0]["hooks"][0]["type"] == "prompt"
+    assert settings["hooks"]["SessionStart"][0]["hooks"][0]["type"] == "command"
     assert settings["hooks"]["PreToolUse"][0]["hooks"][0]["command"] == "bash"
+
+
+def test_sessionstart_gera_dois_grupos_command_do_yaml_real():
+    """RF04/RF05 (SDD-DTF-0020): SessionStart com um grupo por matcher, na
+    ordem das capacidades, todos `type: "command"` com CLAUDE_PROJECT_DIR."""
+    rules = load_rules(find_rules_file(Path(__file__).resolve().parents[3]))
+    settings = json.loads(build_claude_settings(rules))
+    session_start = settings["hooks"]["SessionStart"]
+    assert [g["matcher"] for g in session_start] == ["*", "compact"]
+    assert [g["hooks"][0]["args"][-1] for g in session_start] == ["pickup", "post-compact"]
+    all_hooks = [h for groups in settings["hooks"].values() for g in groups for h in g["hooks"]]
+    assert {h["type"] for h in all_hooks} == {"command"}
+    framework_args = [a for h in all_hooks for a in h["args"] if "_framework/" in a]
+    assert framework_args and all(a.startswith("${CLAUDE_PROJECT_DIR}/") for a in framework_args)
+
+
+def test_build_claude_settings_mesmo_evento_matchers_distintos():
+    rules = {
+        "capabilities": [
+            _cap("a", mechanization={"artifact_type": "hook_sessionstart", "matcher": "*", "hook_command": ["x", "1"]}),
+            _cap(
+                "b",
+                mechanization={"artifact_type": "hook_sessionstart", "matcher": "compact", "hook_command": ["x", "2"]},
+            ),
+            _cap("c", mechanization={"artifact_type": "hook_sessionstart", "matcher": "*", "hook_command": ["x", "3"]}),
+        ]
+    }
+    groups = json.loads(build_claude_settings(rules))["hooks"]["SessionStart"]
+    assert [g["matcher"] for g in groups] == ["*", "compact"]
+    assert [h["args"] for h in groups[0]["hooks"]] == [["1"], ["3"]]
+
+
+def test_validate_mechanizations_rejeita_prompt_em_hook():
+    rules = {
+        "capabilities": [
+            _cap(
+                "pickup_handoff",
+                mechanization={"artifact_type": "hook_sessionstart", "matcher": "*", "prompt": "faça pickup"},
+            ),
+        ]
+    }
+    with pytest.raises(SystemExit, match="pickup_handoff"):
+        validate_mechanizations(rules)
+
+
+def test_validate_mechanizations_rejeita_caminho_framework_relativo():
+    rules = {
+        "capabilities": [
+            _cap(
+                "enforce_branch_before_commit",
+                mechanization={
+                    "artifact_type": "hook_pretooluse",
+                    "matcher": "Bash",
+                    "hook_command": ["bash", "_framework/scripts/guard_bash.sh"],
+                },
+            ),
+        ]
+    }
+    with pytest.raises(SystemExit, match="enforce_branch_before_commit"):
+        validate_mechanizations(rules)
+
+
+def test_validate_mechanizations_ignora_command_fora_de_hook():
+    """audit_repo_adherence (artifact_type: command) roda como Bash do modelo,
+    não como hook — caminho relativo é aceito ali."""
+    rules = {
+        "capabilities": [
+            _cap(
+                "audit_repo_adherence",
+                mechanization={"artifact_type": "command", "hook_command": ["python3", "_framework/scripts/x.py"]},
+            ),
+        ]
+    }
+    validate_mechanizations(rules)
 
 
 def test_build_claude_agent_e_command():

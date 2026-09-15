@@ -871,7 +871,7 @@ capabilities:
       vendor: "claude-code"
       artifact_type: "hook_pretooluse"
       matcher: "Bash"
-      hook_command: ["bash", "_framework/scripts/guard_bash.sh"]
+      hook_command: ["bash", "${CLAUDE_PROJECT_DIR}/_framework/scripts/guard_bash.sh"]
     enforcement_patterns:
       - pattern: '*"push --force"*|*"push -f "*|*"push -f"|*" -f "*"origin main"*'
         message: "force-push detectado. Use PR normal."
@@ -887,7 +887,7 @@ capabilities:
       vendor: "claude-code"
       artifact_type: "hook_posttooluse"
       matcher: "Edit|Write"
-      hook_command: ["python3", "_framework/scripts/framework_check.py", "--auto", "--report-only"]
+      hook_command: ["python3", "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_post_edit.py"]
   - id: enforce_scope_verification
     description: "Antes de mover uma SDD para implemented, rodar gate_scope_verification (seção 16): confirmar que todo requisito consolidado foi implementado, que todo arquivo tocado está listado na SDD, que não há código extra sem requisito correspondente, e preencher a tabela de evidência de verificação com comando+saída reais desta sessão — nunca marcar critério como passado de memória."
   - id: verify_sdd_independently
@@ -916,7 +916,7 @@ capabilities:
       vendor: "claude-code"
       artifact_type: "hook_sessionstart"
       matcher: "*"
-      prompt: "Se existir HANDOFF.md na raiz do repositório, use a skill pickup antes de qualquer outra coisa: confirme o status real dos ids citados e releia do disco os arquivos que vai alterar, em vez de confiar no que o handoff anotou."
+      hook_command: ["python3", "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_session_start.py", "pickup"]
   - id: write_handover
     trigger: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso) com trabalho do fluxo ainda pela frente."
     produces: "HANDOFF.md no repositório correto (projeto ou central, conforme o procedimento), com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer."
@@ -928,9 +928,9 @@ capabilities:
     procedure: "procedures/handover.md"
     mechanization:
       vendor: "claude-code"
-      artifact_type: "hook_precompact"
-      matcher: "*"
-      prompt: "O contexto desta sessão está prestes a ser compactado. Antes disso, use a skill handover para gerar/atualizar HANDOFF.md referenciando os ids dos documentos em vez de reescrever o conteúdo deles — não deixe o estado de rastreabilidade se perder na compactação."
+      artifact_type: "hook_sessionstart"
+      matcher: "compact"
+      hook_command: ["python3", "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_session_start.py", "post-compact"]
 
 ##############################################################################
 # 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD
