@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-08 19:40. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-14 21:08. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **17**
+Total de documentos: **18**
 
 
-## SDD (17)
+## SDD (18)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -26,3 +26,4 @@ Total de documentos: **17**
 | `SDD-DTF-0015` | Consolida config do ruff em pyproject.toml (sensor de formatter só olha lá) | implemented | Michel Pessoa | 2026-09-04 | SDD-DTF-0014 |
 | `SDD-DTF-0016` | RULE_SINCE por data de criação do documento, não por framework_version do registry | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0017` | QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing | implemented | Michel Pessoa | 2026-09-08 | — |
+| `SDD-DTF-0018` | validate_state: não retroatividade por data de criação e checagem de evidência por coluna | in_review | Michel Pessoa | 2026-09-14 | SDD-DTF-0016 |
