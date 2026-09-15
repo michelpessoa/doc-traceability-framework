@@ -873,13 +873,13 @@ capabilities:
       matcher: "Bash"
       hook_command: ["bash", "${CLAUDE_PROJECT_DIR}/_framework/scripts/guard_bash.sh"]
     enforcement_patterns:
-      - pattern: '*"push --force"*|*"push -f "*|*"push -f"|*" -f "*"origin main"*'
+      - pattern: '"git push"*--force*|"git push"*" -f"|"git push"*" -f "*'
         message: "force-push detectado. Use PR normal."
-      - pattern: '*"push"*"origin main"*|*"push"*" main"*'
+      - pattern: '"git push"*" main"|"git push"*" main "*|"git push"*":main"*|"git push"*" main:"*'
         message: "push direto em main. Abra PR."
-      - pattern: '*"reset --hard"*'
+      - pattern: '"git reset --hard"*'
         message: "reset --hard é destrutivo. Confirme com o usuário antes."
-      - pattern: '*"rm -rf ."*|*"rm -rf /"*|*"rm -rf ~"*'
+      - pattern: '"rm -rf ."*|"rm -rf /"*|"rm -rf ~"*'
         message: "rm -rf de escopo amplo. Confirme com o usuário antes."
   - id: enforce_content_quality_gate
     description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
