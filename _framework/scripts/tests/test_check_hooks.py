@@ -40,6 +40,42 @@ def test_valido_sem_problema(tmp_path):
     assert check_settings(_settings(tmp_path, hooks)) == []
 
 
+def test_command_shell_com_prefixo_com_chaves(tmp_path):
+    """SDD-DTF-0027: "python3 ${CLAUDE_PROJECT_DIR}/x.py" como `command` único (sem `args`)."""
+    hooks = {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": f"python3 {SCRIPT_ARG}"}]}]}
+    assert check_settings(_settings(tmp_path, hooks)) == []
+
+
+def test_command_shell_com_prefixo_sem_chaves_entre_aspas(tmp_path):
+    """SDD-DTF-0027: forma do exemplo oficial de hooks, `"$CLAUDE_PROJECT_DIR"/x.py`."""
+    hooks = {
+        "PreToolUse": [
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": 'python3 "$CLAUDE_PROJECT_DIR"/_framework/scripts/hook.py',
+                    }
+                ],
+            }
+        ]
+    }
+    assert check_settings(_settings(tmp_path, hooks)) == []
+
+
+def test_command_shell_sem_referencia_reprova(tmp_path):
+    """SDD-DTF-0027: shlex tokeniza, mas continua reprovando sem qualquer referência ao diretório do projeto."""
+    hooks = {
+        "PreToolUse": [
+            {"matcher": "Bash", "hooks": [{"type": "command", "command": "python3 _framework/scripts/hook.py"}]}
+        ]
+    }
+    problems = check_settings(_settings(tmp_path, hooks))
+    assert len(problems) == 1
+    assert "PreToolUse" in problems[0] and "sem o prefixo" in problems[0]
+
+
 def test_prompt_em_sessionstart(tmp_path):
     hooks = {"SessionStart": [{"matcher": "*", "hooks": [{"type": "prompt", "prompt": "faça pickup"}]}]}
     problems = check_settings(_settings(tmp_path, hooks))

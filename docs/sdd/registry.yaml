@@ -251,3 +251,13 @@ documents:
     relates_to: [SDD-DTF-0019, SDD-DTF-0023]
     path: "docs/sdd/SDD-DTF-0026.md"
     tags: [procedimento, verify_sdd, gate_scope_verification]
+  - id: SDD-DTF-0027
+    type: SDD
+    title: "check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR}"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0020]
+    path: "docs/sdd/SDD-DTF-0027.md"
+    tags: [tooling, harness, hooks, check_hooks, bugfix]
