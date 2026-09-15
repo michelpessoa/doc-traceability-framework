@@ -2,11 +2,11 @@
 id: SDD-DTF-0001
 type: SDD
 title: "Superfície de entrada: AGENTS.md, QUICKSTART.md e expurgo de PRD/TS"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-08-29"
-updated: "2026-08-29"
+updated: "2026-09-15"
 relates_to: [SPEC-DTF-0001, ADR-DTF-0001]
 source_docs:
   - id: "SPEC-DTF-0001"
@@ -156,31 +156,30 @@ remoção de `ai_targets`.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima tem código correspondente.
-- [ ] Todo arquivo tocado aparece em "Especificação técnica consolidada"
+- [x] Todo requisito consolidado acima tem código correspondente.
+- [x] Todo arquivo tocado aparece em "Especificação técnica consolidada"
       ou "Instruções específicas".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra.
+- [x] Nenhuma abstração, config, feature flag ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** não — mesma sessão que implementou. Esta
-tabela registra os comandos rodados de fato na sessão de implementação;
-não substitui a verificação independente exigida pelo
-`gate_scope_verification`, que precisa acontecer antes de `implemented`.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| 1 | `render_prompts.py` e em seguida `render_prompts.py --check` | `AGENTS.md: gerado` / `QUICKSTART.md: gerado`, depois `em dia` nos dois; exit 0 | ver #8 | sim |
-| 2 | `wc -l < AGENTS.md` | `108` (limite 120) | sem teste — medição direta | sim |
-| 3 | `grep -o -E "small\|medium\|SDD\|SPEC" AGENTS.md \| sort -u` | `SDD SPEC medium small` — os quatro termos presentes; `check_renderings.py` confirma 6 Iron Laws no arquivo | sem teste — medição direta | sim |
-| 4 | `wc -l < QUICKSTART.md` | `45` (limite 80) | sem teste — medição direta | sim |
-| 5 | `check_renderings.py` | `4 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis)`; exit 0. 2 warnings pré-existentes em `prompts/cursor/doc-framework.mdc` (cita PRD/TS sem marcar como legado) — texto escrito à mão, some na etapa 2 | sem teste — comando é o próprio validador | sim |
-| 6 | `python3 -c "...assert 'PRD' not in d and 'TS' not in d"` | `ok`, sem AssertionError | assert é o sensor: falharia se a chave permanecesse | sim |
-| 7 | `framework_check.py --auto` | `✅ Todas as verificações do framework passaram` — 42 docs EVM, ABSTRACTCLINIC e DTF, incluindo documentos `type: PRD` e `type: TS` | sem teste — comando é o próprio validador | sim |
-| 7b | `from framework_lib import ID_PATTERN; assert ID_PATTERN.search('PRD-EVM-0001') and ID_PATTERN.search('TS-EVM-0001')` | `ok`. Antes da união em `_derive_constants` o mesmo assert falhava | assert é o sensor: falha se os legados saírem de `DOC_TYPES` | sim |
-| 8 | `echo "linha intrusa" >> AGENTS.md` e `render_prompts.py --check` | `exit=1`; regenerado em seguida | **é o sensor**: edição manual introduzida de propósito, check reprovou, estado restaurado | sim |
-| 9 | `diff -r --exclude=__pycache__` entre os dois `_framework/` | sem saída | diff vazio é o sinal; divergência apareceria como lista de arquivos | sim |
-| 10 | `render_prompts.py` duas vezes seguidas + `git status --porcelain` | segunda execução não produziu diferença nova | sem teste — comparação direta | sim |
+| 1 | `python3 _framework/scripts/render_prompts.py && python3 _framework/scripts/render_prompts.py --check` | Todas as linhas `✅ ... em dia.`/`sincronizado.`, exit 0 nas duas | ver #8 | Sim |
+| 2 | `wc -l < AGENTS.md` | `119` (limite 120) | sem teste automatizado — medição direta | Sim |
+| 3 | `grep -c -E "small\|medium\|SDD\|SPEC" AGENTS.md` | `19` (≥ 4 exigido) | sem teste automatizado — medição direta | Sim |
+| 4 | `wc -l < QUICKSTART.md` | `57` (limite 80) | sem teste automatizado — medição direta | Sim |
+| 5 | `python3 _framework/scripts/check_renderings.py` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` exit 0; 2 avisos pré-existentes sobre `prompts/cursor/doc-framework.mdc` citar PRD/TS sem marcar legado | mutação `legacy_types = []` faz os 2 avisos sumirem em silêncio; restaurado via `git checkout --`, avisos voltam | Sim |
+| 6 | `python3 -c "import yaml;d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml'))['document_types'];assert 'PRD' not in d and 'TS' not in d"` | sem saída, exit 0 | mutação: chave `PRD: {}` injetada em `document_types` — `AssertionError`, exit 1; restaurado, exit 0 | Sim |
+| 7 | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` (projetos de exemplo sob framework 1.7.0 e 2.0.0, anteriores à 2.1.0) | sem sensor — comando é o próprio validador de regressão | Sim |
+| 7b | `cd _framework/scripts && python3 -c "from framework_lib import ID_PATTERN; assert ID_PATTERN.search('PRD-EVM-0001') and ID_PATTERN.search('TS-EVM-0001')"` | sem saída, exit 0 | mutação: `_derive_constants` sem a união com `legacy_document_types` — `AssertionError`, exit 1; restaurado, exit 0 | Sim |
+| 8 | `echo "linha intrusa" >> AGENTS.md && python3 _framework/scripts/render_prompts.py --check` | `❌ AGENTS.md: divergente do gerado`, exit 1; restaurado com `git checkout -- AGENTS.md`, exit 0 | **é o sensor**: edição manual introduzida de propósito, check reprovou, estado restaurado | Sim |
+| 9 | `diff AGENTS.md` / `diff QUICKSTART.md` entre `doc-traceability-central` e este repositório | sem saída nos dois — artefatos desta SDD em paridade. `diff -r` completo do `_framework/` diverge por SDDs posteriores ainda não sincronizadas para `doc-traceability-central`, não por regressão desta SDD | sem sensor — comparação direta | Sim (para o escopo desta SDD) |
+| 10 | `render_prompts.py` duas vezes seguidas + `git status --porcelain` comparado entre as execuções | ambas deixam a árvore limpa, sem diferença nova na segunda | sem teste — comparação direta | Sim |
 
 ## Rastreabilidade
 
