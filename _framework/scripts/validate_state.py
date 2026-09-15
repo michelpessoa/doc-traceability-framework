@@ -25,10 +25,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from framework_lib import (  # noqa: E402
     iter_documents,
+    load_rules,
     project_version,
     read_frontmatter,
     report,
-    rule_applies,
+    rule_applies_since_date,
 )
 
 # Em que versão cada exigência do gate 16 entrou. Mesma mecânica de
@@ -61,6 +62,11 @@ def table_rows(section: str) -> list[list[str]]:
     Extrai as linhas de dados de uma tabela markdown, descartando cabeçalho,
     separador e linhas vazias.
     """
+    return table_with_header(section)[1]
+
+
+def table_with_header(section: str) -> tuple[list[str], list[list[str]]]:
+    """(cabeçalho normalizado em minúsculas, linhas de dados)."""
     rows = []
     for line in section.splitlines():
         line = line.strip()
@@ -72,7 +78,9 @@ def table_rows(section: str) -> list[list[str]]:
         if all(set(c) <= set("-: ") for c in cells if c):
             continue  # separador
         rows.append(cells)
-    return rows[1:] if rows else []  # descarta cabeçalho
+    if not rows:
+        return [], []
+    return [h.lower() for h in rows[0]], rows[1:]
 
 
 def section_body(body: str, heading: str) -> str | None:
@@ -89,9 +97,6 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
     if version is None:
         version = project_version(path)
 
-    def applies(rule: str) -> bool:
-        return rule_applies(RULE_SINCE[rule], version)
-
     try:
         fm, body = read_frontmatter(path)
     except ValueError as exc:
@@ -99,6 +104,13 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
 
     if not fm or fm.get("type") != "SDD":
         return [], []
+
+    # Não retroatividade por data de criação da SDD, igual a
+    # validate_doc.check_document (SDD-DTF-0016, SDD-DTF-0018).
+    rules = load_rules()
+
+    def applies(rule: str) -> bool:
+        return rule_applies_since_date(rules, RULE_SINCE[rule], fm.get("created"), version)
 
     doc_id = fm.get("id") or path.name
     status = fm.get("status")
@@ -142,7 +154,13 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
         ]
 
     problems = []
-    rows = table_rows(evidence)
+    header, rows = table_with_header(evidence)
+    # Colunas por cabeçalho, não por posição: "#", "Critério" e "Sensor" não
+    # são resultado — "n/a (checagem estática)" em Sensor é declaração
+    # permitida por verify-sdd. Sem cabeçalho reconhecível, linha inteira
+    # (nunca mais permissivo por falta de cabeçalho).
+    cmd_idx = next((i for i, h in enumerate(header) if "comando" in h), None)
+    checked_idx = [i for i, h in enumerate(header) if any(k in h for k in ("comando", "saída", "saida", "passou"))]
     if not rows:
         problems.append(
             f"{doc_id}: 'Evidência de verificação' está vazia e o status é "
@@ -155,7 +173,8 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
         )
 
     for row in rows:
-        joined = " | ".join(row).lower()
+        scope_cells = [row[i] for i in checked_idx if i < len(row)] if checked_idx else row
+        joined = " | ".join(scope_cells).lower()
         for term in ASSUMED_EVIDENCE:
             if term in joined:
                 problems.append(
@@ -163,7 +182,8 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
                     f"('{term}') — evidence_standard exige comando rodado e saída real."
                 )
                 break
-        if len(row) >= 2 and not row[1].strip():
+        col = cmd_idx if cmd_idx is not None else 1
+        if len(row) > col and not row[col].strip():
             problems.append(f"{doc_id}: linha de evidência sem comando rodado.")
 
     return problems
