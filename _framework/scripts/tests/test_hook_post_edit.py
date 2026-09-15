@@ -122,8 +122,9 @@ def test_readme_sem_front_matter(tmp_path):
 
 
 def test_tipo_fora_do_framework(tmp_path):
-    fm = FRONTMATTER.format(id="NOTE-1", type="NOTE", status="implemented", created="2026-09-01")
-    path = _doc(tmp_path, "nota.md", fm + "TBD\n")
+    # Front-matter que check_document reprovaria (sem owner/created, status
+    # inválido): prova que o validador nem é chamado fora dos tipos do framework.
+    path = _doc(tmp_path, "nota.md", '---\nid: NOTE-1\ntype: NOTE\ntitle: "x"\nstatus: publicado\n---\n\nTBD\n')
     result = _run(path)
     assert (result.returncode, result.stdout, result.stderr) == (0, "", "")
 
