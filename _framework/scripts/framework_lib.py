@@ -13,6 +13,7 @@ acessível (fallback embutido só para uso fora do repositório).
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
 
+import fnmatch
 import re
 from pathlib import Path
 
@@ -104,7 +105,7 @@ _FALLBACK_STATUSES = {
 _FALLBACK_INCIDENT_STATUSES = {"open", "mitigated", "resolved", "closed"}
 # Arquivos que o framework manda criar dentro das pastas de documento mas
 # que não são documento: sem front-matter, sem id, fora do registry.
-_FALLBACK_OPERATIONAL_ARTIFACTS = ("LESSONS.md", "HANDOFF.md")
+_FALLBACK_OPERATIONAL_ARTIFACTS = ("LESSONS.md", "HANDOFF.md", "validation.md", "validation-*.md")
 
 
 def _derive_constants():
@@ -171,16 +172,21 @@ def read_frontmatter(path: Path):
     return fm, text[m.end() :]
 
 
+def is_operational_artifact(name: str) -> bool:
+    """Nome casa com alguma chave de operational_artifacts (glob, sensível a maiúsculas)."""
+    return any(fnmatch.fnmatchcase(name, pattern) for pattern in OPERATIONAL_ARTIFACTS)
+
+
 def iter_documents(docs_dir: Path):
     """
     Percorre os .md de documento sob docs_dir, ignorando registry.md,
     qualquer arquivo dentro de templates/ (templates têm placeholder por
     desenho — validar template como documento é falso positivo garantido)
-    e os artefatos operacionais (LESSONS.md, HANDOFF.md), que o framework
-    manda criar sem front-matter.
+    e os artefatos operacionais (LESSONS.md, HANDOFF.md, validation*.md),
+    que o framework manda criar sem front-matter.
     """
     for path in sorted(docs_dir.rglob("*.md")):
-        if path.name == "registry.md" or path.name in OPERATIONAL_ARTIFACTS:
+        if path.name == "registry.md" or is_operational_artifact(path.name):
             continue
         if "templates" in path.parts:
             continue

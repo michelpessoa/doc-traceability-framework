@@ -405,6 +405,9 @@ operational_artifacts:
   validation.md:
     purpose: "Veredito da verificação independente de uma SDD, ao lado dela. Complementa, nunca substitui, a tabela 'Evidência de verificação' dentro da SDD. Sem front-matter, mesmo formato de artefato descartável que HANDOFF.md e LESSONS.md."
     declared_in: "capabilities.verify_sdd_independently"
+  validation-*.md:
+    purpose: "Relatório de verificação independente por SDD (ex.: validation-EVM-0013.md), para projeto que guarda um relatório por SDD em vez de sobrescrever validation.md. Mesmo formato e mesmo papel de validation.md."
+    declared_in: "capabilities.verify_sdd_independently"
 
 decision_gates:
   rfc_to_adr:
