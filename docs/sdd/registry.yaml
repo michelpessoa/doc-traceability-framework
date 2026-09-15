@@ -171,3 +171,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0017.md"
     tags: [documentacao, ux, onboarding]
+  - id: SDD-DTF-0018
+    type: SDD
+    title: "validate_state: não retroatividade por data de criação e checagem de evidência por coluna"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-14"
+    updated: "2026-09-14"
+    relates_to: [SDD-DTF-0016]
+    path: "docs/sdd/SDD-DTF-0018.md"
+    tags: [tooling, gate_scope_verification, non_retroactive]
