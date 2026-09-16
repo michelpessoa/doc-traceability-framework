@@ -291,3 +291,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0030.md"
     tags: [paralelismo, sdd, spec, execucao, tooling]
+  - id: SDD-DTF-0031
+    type: SDD
+    title: "check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-15"
+    updated: "2026-09-15"
+    relates_to: [SDD-DTF-0030]
+    path: "docs/sdd/SDD-DTF-0031.md"
+    tags: [bugfix, validate_doc, ears, gate_content_quality]

@@ -258,6 +258,11 @@ def check_ears(doc_id: str, section: str | None) -> list:
     Checa a coluna "Critério de aceite" da tabela de requisitos funcionais
     contra a notação EARS. Linha sem RF-ID ou sem critério preenchido é
     ignorada — isso é trabalho do check de RF-ID, não deste.
+
+    Critério é sempre a 3a coluna (índice 2): RF-ID | Requisito | Critério
+    [| Arquivos]. A coluna `Arquivos` (SDD-DTF-0030) é opcional e sempre
+    vem depois — usar `cells[-1]` aqui pegaria `Arquivos` em vez do
+    critério em toda SPEC que já adotou a coluna nova.
     """
     if not section:
         return []
@@ -269,7 +274,7 @@ def check_ears(doc_id: str, section: str | None) -> list:
         cells = [c.strip() for c in line.strip("|").split("|")]
         if len(cells) < 3:
             continue
-        rf_id, criterion = cells[0], cells[-1]
+        rf_id, criterion = cells[0], cells[2]
         if not RF_ID.search(rf_id) or not criterion:
             continue
         if not EARS_RESPONSE.search(criterion):

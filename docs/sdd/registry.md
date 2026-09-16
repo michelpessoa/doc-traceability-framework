@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 12:50. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-15 21:25. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **29**
+Total de documentos: **30**
 
 
-## SDD (29)
+## SDD (30)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -28,7 +28,7 @@ Total de documentos: **29**
 | `SDD-DTF-0017` | QUICKSTART e guia não-técnico ficam consistentes sobre os 4 níveis de sizing | implemented | Michel Pessoa | 2026-09-08 | — |
 | `SDD-DTF-0018` | validate_state: não retroatividade por data de criação e checagem de evidência por coluna | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0016 |
 | `SDD-DTF-0019` | verify-sdd: a tabela de evidência vive na SDD e a checagem mecânica na SDD verificada vira passo obrigatório | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0018 |
-| `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | approved | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
+| `SDD-DTF-0020` | Hooks do harness que alcançam o modelo: SessionStart por stdout, PostToolUse por exit 2 e sensor de configuração | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0009, SDD-DTF-0018, SDD-DTF-0019 |
 | `SDD-DTF-0021` | Guardrails sem falso positivo: guard_bash por subcomando e check_commit ignorando merge real | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0009, SDD-DTF-0020 |
 | `SDD-DTF-0023` | Varredura dos validadores em repositório de projeto: validation-*.md como artefato operacional e --auto sem node_modules nem worktrees | implemented | Michel Pessoa | 2026-09-14 | SDD-DTF-0019 |
 | `SDD-DTF-0024` | table_with_header não conta linha de bloco cercado como linha de tabela | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0018 |
@@ -37,4 +37,5 @@ Total de documentos: **29**
 | `SDD-DTF-0027` | check_hooks: tokenizar command com shlex pra aceitar variantes de shell de ${CLAUDE_PROJECT_DIR} | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0020 |
 | `SDD-DTF-0028` | test_validate_state: tabela real depois de bloco cercado fechado discrimina mutação em in_fence | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0024 |
 | `SDD-DTF-0029` | test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0027 |
-| `SDD-DTF-0030` | Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py | approved | Michel Pessoa | 2026-09-15 | — |
+| `SDD-DTF-0030` | Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py | implemented | Michel Pessoa | 2026-09-15 | — |
+| `SDD-DTF-0031` | check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas | draft | Michel Pessoa | 2026-09-15 | SDD-DTF-0030 |
