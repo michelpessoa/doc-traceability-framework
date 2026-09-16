@@ -94,6 +94,35 @@ def test_gate_arquivos_vazio_falha(tmp_path):
     assert any("Arquivos vazia" in p and "RF06" in p for p in problems)
 
 
+def test_ears_nao_confunde_coluna_arquivos_com_criterio(tmp_path):
+    """Regressão: check_ears usava cells[-1] como critério, que virou a
+    coluna Arquivos (SDD-DTF-0030) em vez do critério real (cells[2])."""
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`"), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert not any("não está em EARS" in p for p in problems)
+
+
+def test_ears_ainda_pega_criterio_malformado_com_coluna_arquivos(tmp_path):
+    """Sensor: com critério real quebrado (sem 'deve'), o problema tem que
+    aparecer citando o critério, não o conteúdo da coluna Arquivos."""
+    path = tmp_path / "spec.md"
+    broken = SPEC_FRONTMATTER + (
+        "\n## Objetivo\nTeste.\n\n## Requisitos funcionais\n"
+        "| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |\n"
+        "|---|---|---|---|\n"
+        "| RF01 | Algo | falta o verbo de obrigação | `caminho/qualquer.py` |\n"
+        "\n## Contratos técnicos\n`foo.py`\n\n## Estratégia de teste\nTeste.\n"
+        "\n## Fora de escopo\nNada.\n"
+    )
+    path.write_text(broken, encoding="utf-8")
+    problems, _ = check_document(path)
+    matches = [p for p in problems if "não está em EARS" in p and "RF01" in p]
+    assert matches, problems
+    assert "falta o verbo de obrigação" in matches[0]
+    assert "caminho/qualquer.py" not in matches[0]
+
+
 def test_arquivos_decisao_pura_nao_falha_spec(tmp_path):
     path = tmp_path / "spec.md"
     path.write_text(_spec("(decisão pura)"), encoding="utf-8")
