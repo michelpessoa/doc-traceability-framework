@@ -2,7 +2,7 @@
 id: SDD-DTF-0031
 type: SDD
 title: "check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
