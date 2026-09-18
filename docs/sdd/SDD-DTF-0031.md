@@ -2,7 +2,7 @@
 id: SDD-DTF-0031
 type: SDD
 title: "check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-15"
@@ -68,18 +68,22 @@ sempre o critério, independente de haver ou não a 4a coluna
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01 com código correspondente.
-- [ ] Único arquivo de produto tocado: `validate_doc.py` (2 cópias) + arquivo de teste.
-- [ ] Nenhuma mudança em `check_files_column` nem em qualquer outra função — escopo é só `check_ears`.
+- [x] RF01 com código correspondente.
+- [x] Único arquivo de produto tocado: `validate_doc.py` (2 cópias) + arquivo de teste.
+- [x] Nenhuma mudança em `check_files_column` nem em qualquer outra função — escopo é só `check_ears`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0031.md`. Veredito: **PASS**.
 
-**Verificador independente:** {a preencher}
+**Verificador independente:** sim (subagente `verify-sdd`, sessão separada da implementação; commit fea49ae66f5b3a2fa85c4a3f48fc3b6052bddd42 não foi escrito por esta sessão)
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/tests/test_validate_doc.py::test_ears_nao_confunde_coluna_arquivos_com_criterio -v` | `1 passed in 0.31s` | Com `cells[-1]` restaurado (revertido em `/tmp`, aplicado nas 2 cópias): `AssertionError: assert not True` (teste falha) | Sim |
+| 2 | `python3 -m pytest _framework/tests/test_validate_doc.py::test_ears_ainda_pega_criterio_malformado_com_coluna_arquivos -v` | `1 passed in 0.14s` | Com bug reintroduzido: `AssertionError: 'caminho/qualquer.py' in matches[0]` (teste falha) | Sim |
+| 3 | `python3 -m pytest _framework/ -q` | `101 passed in 4.54s` | sem teste automatizado específico (suíte inteira; cobertura indireta pelos itens 1 e 2) | Sim |
+| 4 | `diff _framework/scripts/validate_doc.py _framework/skills/doc-traceability-framework/scripts/validate_doc.py` | (sem saída, exit code 0) | sem teste automatizado (checagem estrutural, não comportamental) | Sim |
 
 ## Rastreabilidade
 | Campo | Valor |
