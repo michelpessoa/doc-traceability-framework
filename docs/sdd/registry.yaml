@@ -311,3 +311,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0032.md"
     tags: [ci, gate_scope_verification, sdd-verifier, enforcement, incidente]
+  - id: SDD-DTF-0033
+    type: SDD
+    title: "Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0033.md"
+    tags: [verify-sdd, sdd-verifier, paralelismo, autonomia, enforcement]
