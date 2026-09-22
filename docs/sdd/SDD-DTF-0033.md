@@ -2,7 +2,7 @@
 id: SDD-DTF-0033
 type: SDD
 title: "Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -183,18 +183,40 @@ Task 6 depende de 4 e 5 (testa o resultado das duas). Task 7 depende de
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima (RF01-RF08) tem código correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não automatizar contagem de rodadas, não mudar o teto — fora de escopo, ver "Instruções específicas").
+- [x] Todo requisito consolidado acima (RF01-RF08) tem código correspondente.
+- [x] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima.
+- [x] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não automatizar contagem de rodadas, não mudar o teto — fora de escopo, ver "Instruções específicas").
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-(Preencher pela skill `verify-sdd`, em sessão separada da que implementou.)
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0033.md`. Veredito: **PASS**.
 
-**Verificador independente:** {a preencher}
+**Verificador independente:** sim
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|---|
+| 1 | 1 | `grep -n "Autoridade de despacho\|merge-base" _framework/procedures/verify-sdd.md` | linhas 19, 24, 25, 30 — item de autoridade e regra de merge-base para paralelismo presentes na seção "Entrada" | sem teste automatizado (checagem estática de texto) | Sim |
+| 1 | 2 | `grep -n "Rodada" _framework/procedures/verify-sdd.md` | linhas 92, 97, 104 — coluna `Rodada` no cabeçalho da tabela de exemplo | sem teste automatizado (checagem estática de texto) | Sim |
+| 1 | 3 | `grep -n "Escalonado ao humano\|3 rodadas\|3ª rodada" _framework/procedures/verify-sdd.md` | linhas 98, 103 — teto de 3 rodadas e bloco de exemplo "Escalonado ao humano" presentes | sem teste automatizado (checagem estática de texto) | Sim |
+| 1 | 4 | `grep -n "despachou a própria verificação\|fatia de task paralela" _framework/procedures/verify-sdd.md` | linhas 170, 171 — as 2 linhas novas de "Red flags" presentes | sem teste automatizado (checagem estática de texto) | Sim |
+| 1 | 5 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py::test_tres_rodadas_sem_escalonamento_reprova -v` (caminho corrigido — ver nota) | `1 passed in 0.13s` | mutação `len(failed) >= 3` → `> 3` em `check_verification_rounds`: teste passou a **falhar** (`assert False`); revertido via `cp` de backup, teste voltou a passar | Sim |
+| 1 | 6 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py::test_tres_rodadas_com_escalonamento_passa -v` (caminho corrigido) | `1 passed in 0.16s` | mesma mutação acima cobre este teste indiretamente (grupo de testes de `check_verification_rounds`); comportamento de "com escalonamento passa" não regrediu após reversão | Sim |
+| 1 | 7 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py::test_duas_rodadas_sem_escalonamento_passa -v` (caminho corrigido) | `1 passed in 0.15s` | idem — teste do teto abaixo do limite, sem sensor de mutação dedicado além do já aplicado à função | Sim |
+| 1 | 8 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py::test_tabela_sem_coluna_rodada_trata_como_unica -v` (caminho corrigido) | `1 passed in 0.13s` | idem | Sim |
+| 1 | 9 | `python3 -m pytest _framework/tests/test_kit_parity.py::test_validate_state_paridade -v` | `1 passed in 0.01s` | mutação: linha `# tmp` acrescentada só no arquivo bundlado — teste passou a **falhar** (`AssertionError` no `read_bytes() ==`); revertido com `git checkout --`, teste voltou a passar | Sim |
+| 1 | 10 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` (caminho corrigido) | `18 passed in 0.82s` (nenhuma regressão nos testes existentes do gate 16) | ver sensores dos itens 5 e 9, que cobrem a lógica nova exercitada por esta suíte | Sim |
+| 1 | 11 | `grep -n "verify-sdd.md" .claude/agents/sdd-verifier.md` | linha 6 — referência ao procedimento normativo presente e correta | sem teste automatizado (checagem estática de texto) | Sim |
+
+**Nota sobre o caminho dos comandos:** os critérios #5-#10 na tabela
+"Critérios de aceite" citam `_framework/tests/test_validate_state.py`,
+mas os testes de `validate_state.py` sempre viveram (antes desta SDD e
+depois) em `_framework/scripts/tests/test_validate_state.py` — mesmo
+diretório do próprio script. O comando literal da SDD falha por
+arquivo inexistente (`ERROR: file or directory not found`); o caminho
+correto, usado nesta verificação, é o que já está em uso no
+repositório para este arquivo. É um erro de path na redação da SDD/SPEC,
+não um defeito de implementação — a IA implementadora usou o local
+correto e existente. Ver `validation-SDD-DTF-0033.md` para detalhe.
 
 ## Rastreabilidade
 | Campo | Valor |
