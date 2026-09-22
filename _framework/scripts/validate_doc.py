@@ -393,7 +393,7 @@ def check_sweep_section(doc_id: str, body: str) -> list:
             "(STRAT-DTF-0003 item 10)."
         ]
 
-    rows = {}
+    rows: dict[str, list[str]] = {}
     for line in section.splitlines():
         line = line.strip()
         if not line.startswith("|"):
@@ -408,21 +408,21 @@ def check_sweep_section(doc_id: str, body: str) -> list:
 
     problems = []
     for category in SWEEP_CATEGORIES:
-        cells = rows.get(category)
-        if cells is None:
+        row = rows.get(category)
+        if row is None:
             problems.append(
                 f"{doc_id}: 'Requisitos transversais (sweep)' sem linha para "
                 f"'{category}' (STRAT-DTF-0003 item 10)."
             )
             continue
-        destino = cells[1] if len(cells) > 1 else ""
+        destino = row[1] if len(row) > 1 else ""
         if not destino:
             problems.append(
                 f"{doc_id}: sweep '{category}' com coluna Destino vazia — "
                 "use um RF-ID ou 'n/a' (STRAT-DTF-0003 item 10)."
             )
         elif destino.lower() == "n/a":
-            motivo = cells[2] if len(cells) > 2 else ""
+            motivo = row[2] if len(row) > 2 else ""
             if not motivo:
                 problems.append(
                     f"{doc_id}: sweep '{category}' marcado 'n/a' sem motivo "
