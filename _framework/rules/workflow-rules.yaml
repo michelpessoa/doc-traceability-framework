@@ -1250,6 +1250,15 @@ gate_scope_verification:
     relata o descompasso ao humano responsável e propõe (a) atualizar a
     SDD para refletir o escopo real acordado, ou (b) remover o código
     fora de escopo — a decisão de qual caminho é do humano, não da IA.
+  ci_gate: >
+    Camada 2 (CI, obrigatória, tool-agnostic, opt-in por projeto):
+    _framework/scripts/ci_gate_verify_sdd.py bloqueia merge de PR que muda
+    uma SDD para `implemented` sem `validation-SDD-{ID}.md` de veredito
+    PASS real, cobertura completa de RF-ID e critérios de aceite não
+    afrouxados entre `approved` e `implemented` — com válvula de escape
+    para incidente ativo validada contra o registry central via checkout
+    raso (SDD-DTF-0032, ADR-DTF-0004, ADR-DTF-0005). Complementa, nunca
+    substitui, a verificação de sessão (itens 1-6 acima).
 
 ##############################################################################
 # 17. SKILL DE TRANSFERÊNCIA DE CONTEXTO: HANDOVER / PICKUP
