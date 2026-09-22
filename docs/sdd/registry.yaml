@@ -304,7 +304,7 @@ documents:
   - id: SDD-DTF-0032
     type: SDD
     title: "Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry"
-    status: draft
+    status: in_review
     owner: "Michel Pessoa"
     created: "2026-09-22"
     updated: "2026-09-22"
@@ -314,7 +314,7 @@ documents:
   - id: SDD-DTF-0033
     type: SDD
     title: "Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py"
-    status: draft
+    status: in_review
     owner: "Michel Pessoa"
     created: "2026-09-22"
     updated: "2026-09-22"

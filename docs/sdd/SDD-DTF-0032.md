@@ -2,7 +2,7 @@
 id: SDD-DTF-0032
 type: SDD
 title: "Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry"
-status: draft
+status: in_review
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
