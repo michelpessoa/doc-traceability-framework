@@ -4,7 +4,7 @@
   Implementa as mesmas regras de _framework/rules/workflow-rules.yaml e
   _framework/prompts/universal.md.
 -->
-# Framework de Documentação & Rastreabilidade para IA (v2.1.0)
+# Framework de Documentação & Rastreabilidade para IA (v2.2.0)
 
 Este repositório de código é o **repositório de projeto** dentro de um
 modelo de dois repositórios: um **repositório central** guarda Strategy
@@ -112,7 +112,7 @@ central).
 
 <!-- BEGIN GENERATED: núcleo do framework — não edite à mão -->
 
-## Núcleo canônico (framework 2.1.0)
+## Núcleo canônico (framework 2.2.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.

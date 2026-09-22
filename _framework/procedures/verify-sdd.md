@@ -20,6 +20,9 @@ sessão, declare isso na tabela de evidência — verificação não-independent
   despacha esta verificação — nunca uma sessão que implementou só uma
   trilha/task paralela isolada (RFC-DTF-0006/ADR-DTF-0006).
 - A SDD (`docs/sdd/SDD-*.md`) com status `approved`.
+- `source_docs` da SDD (SPEC e, quando existir, ADR de origem) — a SDD é
+  compilada a partir deles, nunca escrita do zero, e este procedimento
+  verifica a SDD contra eles antes de qualquer outra coisa (passo 0).
 - O diff da implementação (`git diff <base>..HEAD`), onde `<base>` é um
   SHA fixo — o `merge-base` capturado no momento da redação (`git
   merge-base HEAD origin/main`, rodado **antes** de qualquer merge da
@@ -33,6 +36,50 @@ sessão, declare isso na tabela de evidência — verificação não-independent
   o raciocínio dela é herdar os pontos cegos dela.
 
 ## Procedimento
+
+### 0. Fidelidade à origem
+
+Antes de comparar código com a SDD, confirme que a SDD sob verificação é
+fiel ao(s) documento(s) que a originaram — uma SDD pode passar por todos
+os passos seguintes e ainda assim entregar algo diferente do que a
+SPEC/ADR aprovados decidiram (RFC-DTF-0007, lição do SPEC-DTF-0009:
+`relates_to` apontou para as SDDs erradas por meses sem nenhum gate
+detectar). Quatro pontos, nesta ordem:
+
+1. **Existência/status/url de `source_docs`** (mecanizado):
+
+   ```
+   python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-{PROJETO}-{SEQ}.md <central_docs_dir>
+   ```
+
+   Cada entrada de `source_docs` existe no registry central, está
+   `approved` ou `implemented`, e a url aponta pro mesmo arquivo que o
+   `path` do registry resolve. Exit diferente de 0 é achado bloqueante —
+   pare aqui, o resto do procedimento verificaria a SDD contra a origem
+   errada sem saber.
+2. **Todo RF-ID da SPEC (Parte 1) tem requisito correspondente na SDD** —
+   não precisa ser 1:1 textual, mas nenhum RF pode ficar sem
+   representação alguma. RF ausente é achado bloqueante, mesma
+   severidade de um requisito sem código (passo 1 abaixo).
+3. **Nenhum critério de aceite foi relaxado na consolidação** (ex.: SPEC
+   exige status 4xx específico, SDD generaliza para "erro tratado").
+4. **Todo contrato técnico da Parte 2 da SPEC** (assinatura, schema, onde
+   vive) é descrito da mesma forma na SDD — divergência aqui é achado
+   bloqueante, porque a IA implementadora só lê a SDD, nunca a SPEC.
+
+Itens 2-4 dependem de leitura humana/IA — não há parser confiável de
+"requisito equivalente" entre dois documentos em prosa (ADR-DTF-0007).
+Dúvida quanto a "isso é resumo legítimo ou relaxamento indevido" é
+achado bloqueante por padrão, mesmo espírito de `NEEDS CLARIFICATION`.
+
+Registre o resultado como uma linha adicional na mesma tabela de
+"Evidência de verificação" da SDD, identificada por "Fidelidade à
+origem" (não um RF-ID) — mesmo formato comando+saída das demais linhas.
+Mecanizado (RF04-06, SPEC-DTF-0014): `validate_state.py` reprova SDD
+`implemented` com `source_docs` não vazio e nenhuma linha de evidência
+identificável como "Fidelidade à origem" — SDD sem `source_docs`
+(sizing `small`) ou anterior a esta convenção não é afetada
+(não-retroativo).
 
 ### 1. Conformidade com a spec (as duas direções)
 

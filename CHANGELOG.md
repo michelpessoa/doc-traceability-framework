@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.1.0** (`2026-08-29`).
+Versão corrente: **2.2.0** (`2026-09-22`).
+
+## 2.2.0
+
+RFC-DTF-0007/ADR-DTF-0007/SPEC-DTF-0014: `verify-sdd` ganha o passo "0. Fidelidade à origem", antes do passo 1 atual — confirma que a SDD sob verificação é fiel ao(s) documento(s) em `source_docs`, não só que o código bate com a SDD. Parte mecanizada (`check_source_docs.py`: existência, status e url de cada entrada de `source_docs`) e parte de checklist estruturado não-mecanizado (todo RF-ID representado, nenhum critério relaxado, todo contrato técnico descrito igual). `validate_state.py` passa a exigir, em SDD `implemented` com `source_docs` não vazio, uma linha de evidência identificável como "Fidelidade à origem" — não-retroativo por `created` estritamente posterior a esta versão (comparação `>`, não `>=`: `created` só tem granularidade de dia, e SDD-DTF-0036 foi criada no mesmo dia desta mudança).
 
 ## 2.1.0
 

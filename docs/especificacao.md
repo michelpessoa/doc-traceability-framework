@@ -1,4 +1,4 @@
-# Especificação do framework (v2.1.0)
+# Especificação do framework (v2.2.0)
 
 Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `_framework/rules/workflow-rules.yaml`. Não edite à mão — o CI reprova.
@@ -20,7 +20,7 @@ Para narrativa e exemplos, veja `docs/guias/`. Para começar a usar,
 
 **Referência entre repositórios** — Como o repositório de projeto não tem os arquivos do repositório central presentes localmente, toda referência de uma SDD a um documento de origem (SPEC, ADR) DEVE incluir não só o id mas também a URL completa do arquivo no repositório central — sem isso, a rastreabilidade quebra ao atravessar repositórios. Ver frontmatter_schema.type_specific_fields.SDD.source_docs.
 
-## Núcleo canônico (framework 2.1.0)
+## Núcleo canônico (framework 2.2.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from validate_state import check_sdd, check_verification_rounds, table_rows  # noqa: E402
+from validate_state import check_sdd, check_source_fidelity, check_verification_rounds, table_rows  # noqa: E402
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 
@@ -339,6 +339,89 @@ def test_criterios_sem_coluna_perfil_esperado_nao_reprova(tmp_path):
     table = HEADER_PERFIL + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |  | automatizado |\n"
     problems = _with_criteria_and_evidence(tmp_path, CRITERIA, table)
     assert not any("Assertion" in p or "Perfil" in p for p in problems)
+
+
+def _sdd_com_source_docs(tmp_path: Path, created: str, source_docs_yaml: str, body: str) -> Path:
+    path = tmp_path / "SDD-TST-0002.md"
+    path.write_text(
+        "---\n"
+        "id: SDD-TST-0002\n"
+        "type: SDD\n"
+        'title: "teste"\n'
+        "status: implemented\n"
+        f'created: "{created}"\n' + source_docs_yaml + "\n---\n\n# teste\n\n" + body,
+        encoding="utf-8",
+    )
+    return path
+
+
+SOURCE_DOCS_YAML = 'source_docs:\n  - id: "SPEC-DTF-0014"\n    url: "https://x/SPEC-DTF-0014.md"\n'
+
+EVIDENCE_COM_FIDELIDADE = HEADER_5 + (
+    "| Fidelidade à origem | check_source_docs.py SDD-TST-0002.md central/ | "
+    "RF01-06 representados, nenhum critério relaxado | sem teste automatizado | Sim |\n"
+    "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |\n"
+)
+EVIDENCE_SEM_FIDELIDADE = HEADER_5 + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |\n"
+
+
+def test_check_source_fidelity_unit_source_docs_vazio_nao_reprova():
+    assert check_source_fidelity("SDD-TST-0002", [], EVIDENCE_SEM_FIDELIDADE) == []
+
+
+def test_check_source_fidelity_unit_evidence_none_nao_reprova():
+    assert check_source_fidelity("SDD-TST-0002", [{"id": "SPEC-DTF-0014"}], None) == []
+
+
+def test_check_source_fidelity_unit_com_linha_fidelidade_passa():
+    problems = check_source_fidelity("SDD-TST-0002", [{"id": "SPEC-DTF-0014"}], EVIDENCE_COM_FIDELIDADE)
+    assert problems == []
+
+
+def test_check_source_fidelity_unit_sem_linha_fidelidade_reprova():
+    problems = check_source_fidelity("SDD-TST-0002", [{"id": "SPEC-DTF-0014"}], EVIDENCE_SEM_FIDELIDADE)
+    assert any("Fidelidade à origem" in p for p in problems)
+
+
+def test_rf04_via_check_sdd_created_depois_da_regra_sem_linha_reprova(tmp_path):
+    """`created` estritamente posterior a 2026-09-22 (data da versão
+    2.2.0, RULE_SINCE['source_fidelity']) — regra se aplica."""
+    body = CRITERIA + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + EVIDENCE_SEM_FIDELIDADE
+    sdd = _sdd_com_source_docs(tmp_path, "2026-09-23", SOURCE_DOCS_YAML, body)
+    problems, _ = check_sdd(sdd, version="2.2.0")
+    assert any("Fidelidade à origem" in p for p in problems)
+
+
+def test_rf04_via_check_sdd_created_depois_da_regra_com_linha_passa(tmp_path):
+    body = CRITERIA + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + EVIDENCE_COM_FIDELIDADE
+    sdd = _sdd_com_source_docs(tmp_path, "2026-09-23", SOURCE_DOCS_YAML, body)
+    problems, _ = check_sdd(sdd, version="2.2.0")
+    assert not any("Fidelidade à origem" in p for p in problems)
+
+
+def test_rf05_source_docs_vazio_nao_exige_linha(tmp_path):
+    body = CRITERIA + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + EVIDENCE_SEM_FIDELIDADE
+    sdd = _sdd_com_source_docs(tmp_path, "2026-09-23", "source_docs: []\n", body)
+    problems, _ = check_sdd(sdd, version="2.2.0")
+    assert not any("Fidelidade à origem" in p for p in problems)
+
+
+def test_rf06_created_no_mesmo_dia_da_regra_nao_reprova_retroativamente(tmp_path):
+    """SDD-DTF-0036 foi criada em 2026-09-22, mesmo dia da versão 2.2.0
+    (RULE_SINCE['source_fidelity']) — sensor real do achado que motivou
+    `applies_strict` (>, não >=): sem a comparação estrita, esta SDD
+    (criada no mesmo dia) seria reprovada retroativamente."""
+    body = CRITERIA + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + EVIDENCE_SEM_FIDELIDADE
+    sdd = _sdd_com_source_docs(tmp_path, "2026-09-22", SOURCE_DOCS_YAML, body)
+    problems, _ = check_sdd(sdd, version="2.2.0")
+    assert not any("Fidelidade à origem" in p for p in problems)
+
+
+def test_rf06_created_antes_da_regra_nao_reprova(tmp_path):
+    body = CRITERIA + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + EVIDENCE_SEM_FIDELIDADE
+    sdd = _sdd_com_source_docs(tmp_path, "2026-09-01", SOURCE_DOCS_YAML, body)
+    problems, _ = check_sdd(sdd, version="2.2.0")
+    assert not any("Fidelidade à origem" in p for p in problems)
 
 
 def test_nenhum_validador_chama_rule_applies_direto():

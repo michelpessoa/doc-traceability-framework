@@ -1,4 +1,4 @@
-# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v2.1.0)
+# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v2.2.0)
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
 IA (ChatGPT, Gemini, Claude, etc.) antes de pedir para criar, avaliar ou
@@ -398,7 +398,7 @@ projeto" sem sinalizar que isso deveria primeiro atualizar
 
 <!-- BEGIN GENERATED: núcleo do framework — não edite à mão -->
 
-## Núcleo canônico (framework 2.1.0)
+## Núcleo canônico (framework 2.2.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.
