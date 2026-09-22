@@ -2,7 +2,7 @@
 id: SDD-DTF-0035
 type: SDD
 title: "Skills finas (handover/pickup/verify-sdd): checklist mínimo inline + itens A e G do tlc-spec-lean"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -134,16 +134,26 @@ já registrado em SDD-DTF-0034.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF05 todos com trecho correspondente no código/documento editado.
-- [ ] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
-- [ ] Nenhuma mudança em `workflow-rules.yaml`, `AGENTS.md`, `QUICKSTART.md`.
+- [x] RF01-RF05 todos com trecho correspondente no código/documento editado.
+- [x] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
+- [x] Nenhuma mudança em `workflow-rules.yaml`, `AGENTS.md`, `QUICKSTART.md`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** {preencher na sessão de verificação — quem implementou não verifica}
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
+**Verificador independente:** sim (sessão separada, sem histórico da sessão que implementou)
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|---|
+| 1 | 1 | `grep -l "Checklist mínimo" _framework/skills/handover/SKILL.md _framework/skills/pickup/SKILL.md _framework/skills/verify-sdd/SKILL.md` | 3 arquivos listados | sem teste automatizado | Sim |
+| 1 | 2 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k sensor -v` | 4 passed | condição `sensor_idx`/`row[sensor_idx].strip()` comentada em `check_evidence`; `test_sensor_vazio_reprova` falhou; restaurado e voltou a passar | Sim |
+| 1 | 3 | (mesmo comando do #2, inclui `test_tabela_sem_coluna_sensor_nao_reprova_retroativamente`) | incluído no `4 passed` acima | mesmo sensor do #2 (guard `sensor_idx is not None`) | Sim |
+| 1 | 4 | `python3 -m pytest _framework/tests/test_validate_doc.py -k vocabulario_vago -v` | 2 passed | 9 termos novos removidos de `BANNED_PLACEHOLDERS`; os 2 testes falharam; restaurado e voltaram a passar | Sim |
+| 1 | 5 | `grep -c "validate_state.py\|STRAT-DTF-0003 item" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim |
+| 1 | 6 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 34 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 34 documento(s) verificados: nenhuma SDD implemented sem evidência.` | sem teste automatizado | Sim |
+| 1 | 7 | `python3 -m pytest _framework/ -q` | `126 passed in 4.80s` | n/a (suíte completa; sensores por critério cobertos individualmente acima) | Sim |
+| 1 | 8 | `python3 _framework/scripts/render_prompts.py --check` | Todas as linhas `✅ ... sincronizado.`/`✅ ... em dia.` | sem teste automatizado | Sim |
 
 ## Rastreabilidade
 | Campo | Valor |
