@@ -341,3 +341,13 @@ documents:
     relates_to: [SDD-DTF-0034]
     path: "docs/sdd/SDD-DTF-0035.md"
     tags: [skills, handover, pickup, verify-sdd, tlc-spec-lean, qualidade]
+  - id: SDD-DTF-0036
+    type: SDD
+    title: "Evidência de verificação com file:line da asserção e perfil declarado por critério"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0036.md"
+    tags: [verify-sdd, gate_scope_verification, tlc-spec-lean, evidencia]
