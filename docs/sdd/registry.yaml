@@ -394,7 +394,7 @@ documents:
   - id: SDD-DTF-0041
     type: SDD
     title: "workflow-rules.yaml: frontmatter_schema não lista SPEC (tipo ativo desde 2.0.0)"
-    status: draft
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-22"
     updated: "2026-09-22"

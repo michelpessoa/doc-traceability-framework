@@ -2,7 +2,7 @@
 id: SDD-DTF-0041
 type: SDD
 title: "workflow-rules.yaml: frontmatter_schema não lista SPEC (tipo ativo desde 2.0.0)"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -105,14 +105,28 @@ escopo desta SDD, tarefa separada no repositório central).
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF03 todos com trecho correspondente em `workflow-rules.yaml`.
-- [ ] Único arquivo de produto tocado: `_framework/rules/workflow-rules.yaml`.
-- [ ] Nenhuma mudança em `document_types`, `legacy_document_types`,
+- [x] RF01-RF03 todos com trecho correspondente em `workflow-rules.yaml`.
+- [x] Único arquivo de produto tocado: `_framework/rules/workflow-rules.yaml`
+      (mais a cópia bundlada da skill, regenerada por `render_prompts.py`,
+      não editada à mão).
+- [x] Nenhuma mudança em `document_types`, `legacy_document_types`,
       `framework_lib.py`, `validate_doc.py` ou `framework.version`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-(a preencher pela sessão implementadora + verificação independente)
+(verificação independente pendente — tabela desta sessão implementadora
+abaixo, não substitui a verificação independente exigida por
+`gate_scope_verification`)
+
+| # | Critério (origem: RF-ID) | Comando de verificação | Resultado |
+|---|---|---|---|
+| 1 | RF01 | `grep -n "enum\[STRAT, RFC, ADR, SPEC, PRD, TS, SDD, BASE, INC, PM\]" _framework/rules/workflow-rules.yaml` | linha 663 |
+| 2 | RF02 | `python3 -c "import yaml; d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml')); f=d['frontmatter_schema']['type_specific_fields']['SPEC']; assert set(f)=={'parent_rfc','parent_adr','sizing'}"` | `OK`, sem erro |
+| 3 | RF03 | `python3 -c "import yaml; d=yaml.safe_load(open('_framework/rules/workflow-rules.yaml')); assert 'SPEC' in d['frontmatter_schema']['type_specific_fields']['SDD']['source_docs']"` | `OK`, sem erro |
+| 4 | YAML parseável | `python3 -c "import yaml; yaml.safe_load(open('_framework/rules/workflow-rules.yaml'))"` | `OK`, sem erro |
+| 5 | Suíte completa | `python3 -m pytest _framework/ -q` | `180 passed in 27.03s` |
+| 6 | `render_prompts.py --check` | `python3 _framework/scripts/render_prompts.py --check \| grep "❌"` | 1ª rodada: falhou (cópia bundlada da skill divergente); rodado `render_prompts.py` (sem `--check`) para regenerar; 2ª rodada: sem saída (exit 1) |
+| 7 | `framework_check.py --auto` | `python3 _framework/scripts/framework_check.py --auto` | `✅ Todas as verificações do framework passaram.` (kit + example project-repo-checkout) |
 
 ## Rastreabilidade
 
