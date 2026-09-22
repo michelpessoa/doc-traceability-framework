@@ -149,6 +149,7 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
 
     if applies("evidence_required"):
         problems += check_evidence(doc_id, evidence, n_criteria)
+        problems += check_verification_rounds(doc_id, evidence, body)
 
     if applies("scope_checklist"):
         problems += check_scope(doc_id, scope)
@@ -198,6 +199,48 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
             problems.append(f"{doc_id}: linha de evidência sem comando rodado.")
 
     return problems
+
+
+def check_verification_rounds(doc_id: str, evidence: str | None, body: str) -> list:
+    """RF07 (SDD-DTF-0033): teto de 3 rodadas de correção-e-reverificação.
+
+    Agrupa as linhas da tabela de evidência por coluna `Rodada`; qualquer
+    linha != PASS numa rodada torna aquela rodada "não-PASS". 3+ rodadas
+    não-PASS sem a seção `## Escalonado ao humano` no corpo do documento
+    reprova, mesmo que o veredito do topo diga PASS. Tabela sem coluna
+    `Rodada` (arquivo pré-SPEC-DTF-0012) é tratada como rodada única —
+    nunca atinge o teto, não-retroativo por construção.
+    """
+    if not evidence:
+        return []
+    header, rows = table_with_header(evidence)
+    if not rows:
+        return []
+    rodada_idx = next((i for i, h in enumerate(header) if "rodada" in h), None)
+    passou_idx = next((i for i, h in enumerate(header) if "passou" in h), None)
+    if rodada_idx is None or passou_idx is None:
+        return []
+
+    rounds_failed: dict[str, bool] = {}
+    for row in rows:
+        if rodada_idx >= len(row):
+            continue
+        rodada = row[rodada_idx].strip()
+        if not rodada:
+            continue
+        passed = row[passou_idx].strip().lower() if passou_idx < len(row) else ""
+        is_pass = passed in ("sim", "yes", "pass")
+        rounds_failed.setdefault(rodada, False)
+        if not is_pass:
+            rounds_failed[rodada] = True
+
+    failed = [r for r, bad in rounds_failed.items() if bad]
+    if len(failed) >= 3 and "## Escalonado ao humano" not in body:
+        return [
+            f"{doc_id}: {len(failed)} rodada(s) de verificação sem PASS e sem "
+            "seção '## Escalonado ao humano' — teto de 3 rodadas exige escalonamento (RF07)."
+        ]
+    return []
 
 
 def check_scope(doc_id: str, scope: str | None) -> list:
