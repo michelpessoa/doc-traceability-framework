@@ -39,3 +39,4 @@ Total de documentos: **30**
 | `SDD-DTF-0029` | test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0027 |
 | `SDD-DTF-0030` | Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py | implemented | Michel Pessoa | 2026-09-15 | — |
 | `SDD-DTF-0031` | check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0030 |
+| `SDD-DTF-0032` | Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry | draft | Michel Pessoa | 2026-09-22 | — |
