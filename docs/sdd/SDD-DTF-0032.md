@@ -2,7 +2,7 @@
 id: SDD-DTF-0032
 type: SDD
 title: "Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -208,18 +208,35 @@ escrito).
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] Todo requisito consolidado acima (RF01-RF10) tem código correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não implementar Camada 1 nem o despacho do `sdd-verifier` — fora de escopo, ver "Instruções específicas").
+- [x] Todo requisito consolidado acima (RF01-RF10) tem código correspondente.
+- [x] Todo arquivo tocado pela implementação aparece na tabela "Decomposição em tasks" acima.
+- [x] Nenhuma abstração, config, feature flag ou refactor extra sem requisito consolidado (ex.: não implementar Camada 1 nem o despacho do `sdd-verifier` — fora de escopo, ver "Instruções específicas").
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-(Preencher pela skill `verify-sdd`, em sessão separada da que implementou.)
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0032.md`. Veredito: **PASS**.
 
-**Verificador independente:** {a preencher}
+**Verificador independente:** sim
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
+| 1 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_parse_frontmatter_base_head -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 2 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_validation_ausente_reprova -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 3 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_rf_sem_cobertura_reprova -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 4 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_linha_fail_reprova_apesar_de_veredito_pass -v` | 1 passed | `check_evidence_rows()` mutado p/ `return []`: teste falhou (`gate.passed` virou True); restaurado, voltou a passar | Sim |
+| 5 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_criterio_afrouxado_reprova -v` | 1 passed | `check_criteria_frozen()` mutado p/ `justified = True` sempre: teste falhou; restaurado, voltou a passar | Sim |
+| 6 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_criterio_reordenado_nao_reprova -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 7 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_override_inc_valido_libera -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 8 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_override_inc_invalido_reprova -v` | 1 passed | checagem de status `closed` mutada p/ `if False:`: teste falhou; restaurado, voltou a passar | Sim |
+| 9 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_falha_credencial_exit_2 -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 10 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_log_override_aceito -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 11 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_frontmatter_malformado_exit_2 -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 12 | `python3 -m pytest _framework/tests/test_kit_parity.py::test_ci_gate_verify_sdd_paridade -v` | 1 passed | checagem estrutural, sem sensor aplicável | Sim |
+| 13 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py::test_cli_pr_fixture_duas_sdds -v` | 1 passed | sem mutação manual nesta rodada | Sim |
+| 14 | `grep -n "ci_gate_verify_sdd" _framework/rules/workflow-rules.yaml` | linha 1255, seção `gate_scope_verification` | checagem textual | Sim |
+| 15 | `python3 _framework/scripts/render_prompts.py --check` | exit 0, todos os alvos "em dia"/"sincronizado" | checagem mecânica de sincronia | Sim |
+| 16 | `python3 -c "import yaml; yaml.safe_load(open('_framework/templates/ci/verify-sdd-gate.yml.example'))"` | sem exceção | checagem estrutural | Sim |
+| 17 | `grep -n "incident-override\|credencial" docs/guias/gate-ci-verify-sdd.md` | 6 ocorrências | checagem textual | Sim |
 
 ## Rastreabilidade
 | Campo | Valor |
