@@ -35,18 +35,25 @@ Este SKILL.md resume o suficiente para operar no dia a dia.
 
 ## Modelo de dois repositórios — confirme onde você está antes de agir
 
-- **Repositório central**: guarda `docs/{PROJECT_CODE}/` de todos os
-  projetos, mas só os tipos STRAT, RFC, ADR, SPEC, BASE, INC, PM. É o
-  histórico institucional completo, de todos os projetos, para sempre.
-- **Repositório de cada projeto** (o repositório de código): guarda
-  apenas `docs/sdd/` — as SDDs desse projeto nascem e vivem ali, porque é
-  o único documento pensado para uma IA ler no momento de implementar.
+- **Repositório central**: `docs/{PROJECT_CODE}/` de todos os projetos,
+  só os tipos STRAT/RFC/ADR/SPEC/BASE/INC/PM — histórico institucional
+  permanente.
+- **Repositório de cada projeto**: apenas `docs/sdd/` — a SDD é o único
+  tipo pensado para uma IA ler no momento de implementar.
 
 Se não souber em qual repositório você está operando, pergunte antes de
 criar qualquer documento — criar o tipo errado no repositório errado
 quebra o modelo inteiro.
 
-## Os 9 tipos de documento
+**Modo greenfield** (`repository_status: none_yet` no registry central):
+o projeto ainda não tem repositório de código. STRAT, RFC, ADR e SPEC
+rodam inteiros no repositório central mesmo assim; SDD fica bloqueada
+enquanto durar, porque SDD vive em `docs/sdd/` do repositório de
+projeto, que ainda não existe. Ao criar o repositório, num único ato:
+preencha `repository` com a URL e `repository_status: active` no
+central, e crie `docs/sdd/registry.yaml` vazio no repositório novo.
+
+## Os tipos de documento (8 ativos + 2 legados: PRD, TS)
 
 | Tipo | Quando usar | Repositório | Pasta |
 |---|---|---|---|
@@ -65,14 +72,11 @@ sempre parta de um template, nunca escreva um documento do zero.
 
 ## O fluxo principal e o gate de decisão RFC → ADR
 
-```
-[SIZING: qual o blast radius?]
-  small   ->                                      SDD
-  medium  ->                             SPEC ->  SDD
-  large   ->        RFC -> [gate] -> ADR -> SPEC ->  SDD
-  complex -> STRAT -> RFC -> [gate] -> ADR -> SPEC ->  SDD
-SDD (repositório do projeto) -> input direto para a IA implementar
-```
+`small` -> SDD; `medium` -> SPEC -> SDD; `large` -> RFC -> [gate] -> ADR
+-> SPEC -> SDD; `complex` acrescenta STRAT antes da RFC. SDD nasce no
+repositório do projeto e é o input direto para a IA implementar. Ver
+`sizing` em `references/workflow-rules.yaml` (seção 19) para os
+critérios exatos de cada nível.
 
 **Antes de qualquer coisa, declare o sizing.** `small` = toca ~3 arquivos,
 nenhum critério do gate se aplica, comportamento externo não muda → vai
@@ -86,20 +90,21 @@ front-matter. Ver `sizing` em `references/workflow-rules.yaml` (seção 19).
 > `small` tem menos documento, não menos gate: ordem, branch, qualidade de
 > conteúdo e verificação de escopo continuam valendo integralmente.
 
-Nem toda RFC aprovada precisa gerar um ADR. Depois que uma RFC é
-aprovada, avalie o gate perguntando se QUALQUER um destes critérios é
-verdadeiro: (1) introduz ou altera um padrão arquitetural; (2) decisão de
-alto custo ou difícil reversão; (3) trade-off técnico relevante entre
-alternativas viáveis; (4) impacto cross-team; (5) troca ou introdução de
-tecnologia/vendor/dependência externa relevante. Se algum for verdadeiro,
-crie um ADR antes da SPEC; se nenhum for, pule direto para a SPEC.
-RFC rejeitada → `archived`, sem downstream. Registre
-sempre `decision_gate_criteria_met` no front-matter da RFC.
+Nem toda RFC aprovada precisa gerar um ADR: avalie os 5 critérios de
+`decision_gates.rfc_to_adr.criteria` em `references/workflow-rules.yaml`
+(seção 3) — qualquer um verdadeiro exige ADR antes da SPEC; nenhum
+verdadeiro, pule direto para a SPEC. RFC rejeitada → `archived`, sem
+downstream. Registre sempre `decision_gate_criteria_met` no front-matter
+da RFC.
 
 Quando a SPEC (e o ADR, se existir) estiver `approved`, compile a SDD
 **no repositório do projeto** a partir dela — nunca
 escreva a SDD do zero. `source_docs` é uma lista de `{id, url}`, porque
 os documentos de origem estão no repositório central, não no do projeto.
+Para a seção "Decomposição em tasks" da SDD, o grafo de dependências
+entre tasks pode ser derivado automaticamente com `scripts/parallel_plan.py`
+— ver `docs/guias/paralelizacao-trilhas.md` para o padrão de execução em
+paralelo por trilha quando os módulos forem independentes.
 
 ## Gate obrigatório: nunca implemente antes de SPEC/SDD existirem
 
@@ -136,7 +141,7 @@ Se o usuário pedir para pular direto pro código, não obedeça em
 silêncio: avise que isso viola o gate e peça confirmação explícita
 antes de implementar sem os documentos. Diferente da auditoria (abaixo),
 que tolera desvio de terceiros e descobre depois sem bloquear nada, este
-gate vale para você mesma — pular a ordem aqui é erro a evitar, não
+gate vale para quem executa este framework — pular a ordem aqui é erro a evitar, não
 desvio a tolerar. Única exceção: incidente ativo (`INC` em
 `open`/`mitigated`).
 
@@ -172,11 +177,21 @@ não obedeça em silêncio: avise que viola o gate e peça confirmação
 explícita. Única exceção: incidente ativo, e mesmo aí prefira branch
 dedicada (ex.: `hotfix/INC-EVM-0003`) a commit direto em main.
 
+Este gate também é mecanizado: o hook PreToolUse em `Bash`, wireado no
+repositório central (arquivo `guard_bash.sh` na pasta `scripts/` do
+framework, fora do bundle desta skill), bloqueia push direto em main e
+force-push independente de a IA seguir ou não a instrução acima —
+camada de enforcement que não depende da LLM.
+
 ## Ciclo de vida de status
 
-`draft → in_review → approved → implemented|rejected|superseded →
-archived` para STRAT, RFC, ADR, SPEC, SDD, BASE e PM. Um ADR
-`approved` é imutável — mudança de entendimento gera um **novo** ADR.
+`draft → in_review → approved → rejected → implemented → superseded →
+archived`, para STRAT, RFC, ADR, SPEC, SDD, BASE e PM. Transições
+válidas: draft → in_review, archived; in_review → approved, rejected,
+draft; approved → implemented, superseded, archived; rejected →
+archived; implemented → superseded, archived; superseded → archived.
+Um ADR `approved` é imutável — mudança de entendimento gera um **novo**
+ADR.
 
 INC é a exceção: usa `open → mitigated → resolved → closed`, porque é um
 evento operacional, não uma decisão para aprovar.
@@ -185,27 +200,22 @@ evento operacional, não uma decisão para aprovar.
 
 Se o pedido envolver um projeto com código já em produção que nunca usou
 este framework, **não invente um processo — use `prompts/onboarding-bootstrap.md`**,
-que está bundlado nesta skill. Resumo: uma IA lê o repositório de código,
-gera um único `BASE` (retrato do estado atual) e propõe ADRs
-reconstruídos (`provenance: reconstructed`, sempre começando em
-`in_review`, nunca `approved` sem revisão humana). Só depois dessa
-revisão o projeto passa a operar no fluxo normal, com a primeira RFC
-começando em `-0001`. Não reconstrua SPEC do passado — o
-código já é a especificação do que existe.
+que está bundlado nesta skill. Não reconstrua SPEC do passado — o
+código já é a especificação do que existe. Ver `onboarding` (seção 4) em
+`references/workflow-rules.yaml` para as duas fases completas (BASE +
+ADRs reconstruídos em `in_review` até revisão humana, depois cutover
+para RFC-0001 normal).
 
 ## Incidentes e postmortem
 
 Fluxo separado do funil principal — nunca abra uma RFC para tratar um
 incidente em andamento.
 
-1. Crie um `INC` com severidade objetiva: SEV1 (indisponibilidade
-   total/crítica, perda de dados, incidente de segurança) e SEV2
-   (degradação relevante sem workaround) exigem postmortem completo;
-   SEV3 (impacto limitado, workaround existe) exige postmortem leve;
-   SEV4 (impacto mínimo) tem postmortem opcional.
-2. Regra de recorrência: se a mesma causa raiz (`root_cause_key`) se
-   repetir em até 90 dias, o postmortem passa a ser obrigatório mesmo em
-   SEV4 — um problema pequeno que se repete é, na prática, estrutural.
+1. Crie um `INC` com severidade objetiva (`severity_scale`, seção 5 de
+   `references/workflow-rules.yaml`: SEV1/SEV2 exigem postmortem
+   completo, SEV3 leve, SEV4 opcional).
+2. Regra de recorrência: mesma causa raiz (`root_cause_key`) repetida em
+   até 90 dias torna o postmortem obrigatório mesmo em SEV4.
 3. Ao fechar o incidente, crie o `PM` (`source_incident` aponta para o
    INC) com os action items.
 4. Triagem de cada action item: ajuste pontual sem nenhum critério do
@@ -226,26 +236,23 @@ documentados aplica os mesmos 5 critérios do gate RFC→ADR — se algum se
 aplica, propõe um ADR reconstruído (igual ao onboarding, nunca aprovado
 sem revisão humana, com `tags: [audit]`); se nenhum se aplica, não gera
 documento algum. `scripts/registry_tools.py audit` automatiza o
-cruzamento a partir de um log de commits.
+cruzamento a partir de um log de commits, e `scripts/framework_check.py --auto`
+roda a auditoria de ponta a ponta sem exigir o log preparado à mão.
 
 ## IDs, front-matter e registry
 
 - ID: `{TYPE}-{PROJECT_CODE}-{SEQ4}` (ex.: `RFC-CHECKOUT-0007`),
-  sequencial por tipo dentro do projeto, nunca reutilizado.
-- Front-matter comum: `id, type, title, status, project, owner, created,
-  updated, relates_to, supersedes, superseded_by, tags`, mais campos
-  específicos do tipo — ver seção 8 de `references/workflow-rules.yaml`.
-- Repositório central: `docs/{PROJECT_CODE}/registry.yaml` (fonte da
-  verdade) + `docs/{PROJECT_CODE}/registry.md` (gerado). Repositório de
-  projeto: `docs/sdd/registry.yaml` + `docs/sdd/registry.md`. Regenere
-  a visão legível com `python3 scripts/generate_registry_md.py <docs_dir>`.
+  sequencial por tipo dentro do projeto, nunca reutilizado. Front-matter:
+  ver `frontmatter_schema` (seção 8 de `references/workflow-rules.yaml`).
+- Registry: `docs/{PROJECT_CODE}/registry.yaml` (central) ou
+  `docs/sdd/registry.yaml` (projeto); regenere a `registry.md` de cada
+  um com `python3 scripts/generate_registry_md.py <docs_dir>`.
 - Três ferramentas prontas em `scripts/registry_tools.py`: `validate`
   (detecta ids órfãos, referências quebradas, status inválidos), `trace
   <ID>` (imprime a cadeia completa de rastreabilidade) e `audit
   <git_log_file> <docs_dir...>` (cruza commits com os registries).
-- Regra inegociável: ao criar ou alterar qualquer documento, atualize o
-  front-matter DO documento e a entrada correspondente no registry certo
-  (central ou de projeto) na mesma resposta/tarefa.
+- Regra inegociável: front-matter e registry atualizam juntos, na mesma
+  resposta — nunca divergem.
 
 ## O que fazer em cada pedido comum
 
@@ -302,21 +309,16 @@ gate de verificação de escopo antes de mudar o status (seção acima).
 | "Critérios juntos no fim dá no mesmo" | Bucket solto não permite verificar cobertura 1:1 |
 | "Rodei a checklist mentalmente" | O scan é busca literal. Rode `validate_doc.py` |
 
-Mecanizado por `_framework/scripts/validate_doc.py` — a autorrevisão
+Mecanizado por `scripts/validate_doc.py` — a autorrevisão
 continua sua, mas deixou de ser a única checagem.
 
 Os gates de ordem (acima) não garantem qualidade de conteúdo — uma SPEC
 `approved` pode ser vago o bastante pra SDD sair genérica. Antes de mover
-SPEC ou SDD de `draft` para `in_review`, rode autorrevisão:
-todo requisito tem RF-ID + critério de aceite em EARS;
-todo contrato técnico (TS) tem assinatura/schema exato + arquivo/módulo
-onde vive; casos de borda/erro listados explicitamente, não "tratar
-apropriadamente"; nenhum placeholder ("TBD", "definir depois", "seguir
-padrão" sem nomear o arquivo); ambiguidade real vira `NEEDS
-CLARIFICATION: <pergunta>` em vez de suposição silenciosa — documento não
-vai a `approved` com isso pendente; a SDD compilada não adiciona nem
-empobrece o que está em `source_docs`. Ver `gate_content_quality` em
-`references/workflow-rules.yaml` (seção 15).
+SPEC ou SDD de `draft` para `in_review`, rode a autorrevisão completa de
+`gate_content_quality` (seção 15 de `references/workflow-rules.yaml`):
+RF-ID + critério EARS por requisito, contrato técnico com schema exato,
+bordas explícitas, zero placeholder, `NEEDS CLARIFICATION: <pergunta>`
+para ambiguidade real.
 
 ## Gate obrigatório: verificação de escopo antes de SDD "implemented"
 
@@ -334,37 +336,34 @@ empobrece o que está em `source_docs`. Ver `gate_content_quality` em
 > **QUEM IMPLEMENTOU NÃO VERIFICA.**
 
 Rode a skill `verify-sdd` numa sessão ou subagente separado da que
-implementou: ela confere requisito↔código nas duas direções, roda cada
+implementou — o mecanismo concreto de despacho é o agente
+`sdd-verifier`, que materializa a regra "quem implementou não verifica"
+em vez de depender da mesma sessão se autoavaliar: ela confere
+requisito↔código nas duas direções, roda cada
 critério registrando comando e saída reais, e aplica o **sensor de
 discriminação** — quebrar o comportamento em espaço descartável e
 confirmar que o teste falha. Teste que passa com a implementação quebrada
 é ruído verde. Complemento mecânico:
-`_framework/scripts/validate_state.py`.
+`scripts/validate_state.py`.
 
-Antes de mover SDD de `approved` para `implemented`: todo requisito
-consolidado tem código correspondente (senão mantenha `approved`); todo
-arquivo tocado pela implementação está listado na SDD (senão é escopo não
-registrado — atualize a SDD — ou scope creep — remova antes do commit);
-nenhuma abstração/dependência/flag extra sem requisito na SDD; a tabela
-"Evidência de verificação" preenchida com comando+saída reais desta
-sessão para cada critério — nunca "deve passar" de memória. Descompasso
-encontrado não avança status silenciosamente: relate ao humano e proponha
-atualizar a SDD ou remover o código fora de escopo. Ver
-`gate_scope_verification` em `references/workflow-rules.yaml` (seção 16).
+Antes de mover SDD de `approved` para `implemented`, rode o checklist
+completo de `gate_scope_verification` (seção 16 de
+`references/workflow-rules.yaml`): requisito↔código nas duas direções,
+zero scope creep, tabela "Evidência de verificação" com comando+saída
+reais desta sessão. Descompasso encontrado não avança status
+silenciosamente — relate ao humano.
 
 ## Handover/pickup: transferindo contexto entre sessões
 
 Ao terminar planejamento (SDD compilada) antes de implementação rodar em
 sessão/agente separado, ou perto de ~45% de uso de contexto com trabalho
-pela frente, use a skill `handover` para gerar `HANDOFF.md` (seções
-fixas: Goal, Status, Ids relacionados, Files touched, Key decisions, Open
-threads/blockers, Next step, Don't do) — referenciando ids do framework
-em vez de reescrever conteúdo. A sessão seguinte usa `pickup`: relê do
-disco os arquivos de "Files touched" antes de alterar, reconhece em
-poucas linhas, e segue direto pro "Next step". Não substitui nenhum gate
-— SDD `approved`, branch dedicada e verificação de escopo continuam
-obrigatórios. Ver `handover_protocol` em `references/workflow-rules.yaml`
-(seção 17).
+pela frente, use a skill `handover` para gerar `HANDOFF.md`,
+referenciando ids do framework em vez de reescrever conteúdo. A sessão
+seguinte usa `pickup`: relê do disco os arquivos tocados antes de
+alterar, reconhece em poucas linhas, e segue direto pro "Next step". Não
+substitui nenhum gate — SDD `approved`, branch dedicada e verificação de
+escopo continuam obrigatórios. Ver `handover_protocol` em
+`references/workflow-rules.yaml` (seção 17).
 
 ## Falha de execução vira lição local, não versão nova do framework
 
