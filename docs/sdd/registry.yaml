@@ -331,3 +331,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0034.md"
     tags: [skill, doc-traceability-framework, consistencia, cobertura, enxugamento]
+  - id: SDD-DTF-0035
+    type: SDD
+    title: "Skills finas (handover/pickup/verify-sdd): checklist mínimo inline + itens A e G do tlc-spec-lean"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: [SDD-DTF-0034]
+    path: "docs/sdd/SDD-DTF-0035.md"
+    tags: [skills, handover, pickup, verify-sdd, tlc-spec-lean, qualidade]

@@ -70,6 +70,19 @@ BANNED_PLACEHOLDERS = [
     "tratamento de erro apropriado",
     "preencher depois",
     "detalhar depois",
+    # Vocabulário vago em critério de aceite (STRAT-DTF-0003, item G,
+    # lição do tlc-spec-lean): descreve o resultado desejado sem dizer
+    # como verificá-lo — mesma categoria de placeholder que "tratar
+    # erros apropriadamente" acima, só que sem o "erros".
+    "de forma eficiente",
+    "de forma apropriada",
+    "de forma robusta",
+    "de maneira eficiente",
+    "com desempenho adequado",
+    "o mais rápido possível",
+    "gracefully",
+    "properly",
+    "efficiently",
 ]
 
 NEEDS_CLARIFICATION = re.compile(r"NEEDS CLARIFICATION", re.IGNORECASE)

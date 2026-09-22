@@ -44,6 +44,11 @@ sessão, declare isso na tabela de evidência — verificação não-independent
   coisa silenciosa.
 - Alguma abstração, dependência, feature flag ou refactor sem requisito
   correspondente? "Já que eu estava ali" não é requisito.
+- Vocabulário vago no critério que você está prestes a marcar como
+  cumprido ("gracefully", "de forma eficiente", "corretamente")? Isso é
+  gate_content_quality, não gate_scope_verification — mas se passou pelo
+  primeiro (STRAT-DTF-0003, item G, `validate_doc.py`), sinalize antes de
+  aceitar o critério como verificável.
 
 ### 2. Evidência fresca
 
@@ -76,7 +81,9 @@ ele é ruído verde. Registre o resultado do sensor na tabela.
 
 Se não houver teste automatizado para um critério, diga isso
 explicitamente em vez de marcar o critério como verificado por leitura de
-código.
+código. Mecanizado (STRAT-DTF-0003, item A): `validate_state.py` reprova
+`implemented` com a coluna `Sensor` vazia — "sem teste automatizado" é
+declaração válida, célula em branco não é.
 
 ### 4. Veredito
 

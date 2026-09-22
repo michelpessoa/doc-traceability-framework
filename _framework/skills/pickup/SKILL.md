@@ -14,5 +14,14 @@ description: >
 
 # Pickup
 
+Checklist mínimo, antes de abrir o procedimento inteiro:
+
+- Confirme o status real de cada id citado — não confie no status
+  anotado no HANDOFF, ele pode estar desatualizado.
+- Releia do disco todo arquivo de "Files touched" antes de alterar.
+- Respeite "Don't do" — são caminhos já descartados.
+- Se o "Next step" for implementar e a SDD não estiver `approved`, isso
+  é bloqueio, mesmo que o HANDOFF sugira continuar.
+
 Procedimento normativo: `_framework/procedures/pickup.md` (a partir da
 raiz do repositório) — leia-o inteiro antes de retomar o trabalho.
