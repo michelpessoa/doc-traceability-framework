@@ -1,5 +1,5 @@
 project: "DTF"
-framework_version: "2.1.0"
+framework_version: "2.2.0"
 documents:
   - id: SDD-DTF-0001
     type: SDD
@@ -351,3 +351,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0036.md"
     tags: [verify-sdd, gate_scope_verification, tlc-spec-lean, evidencia]
+  - id: SDD-DTF-0037
+    type: SDD
+    title: "verify-sdd ganha passo 0: fidelidade da SDD a source_docs (SPEC/ADR de origem)"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0037.md"
+    tags: [verify-sdd, gate_scope_verification, tlc-ai-dev-flow, rastreabilidade, source_docs]

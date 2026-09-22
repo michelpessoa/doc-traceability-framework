@@ -30,6 +30,7 @@ from framework_lib import (  # noqa: E402
     read_frontmatter,
     report,
     rule_applies_since_date,
+    version_date,
 )
 
 # Em que versão cada exigência do gate 16 entrou. Mesma mecânica de
@@ -39,6 +40,7 @@ from framework_lib import (  # noqa: E402
 RULE_SINCE = {
     "evidence_required": "1.7.0",
     "scope_checklist": "1.7.0",
+    "source_fidelity": "2.2.0",
 }
 
 # Frases que denunciam evidência de memória em vez de execução — o
@@ -123,6 +125,24 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
     def applies(rule: str) -> bool:
         return rule_applies_since_date(rules, RULE_SINCE[rule], fm.get("created"), version)
 
+    def applies_strict(rule: str) -> bool:
+        """Mesma ideia de `applies`, mas `>` em vez de `>=` (RF06,
+        SPEC-DTF-0014): `created` só tem granularidade de dia, e uma
+        regra nova aplicada com `>=` no dia da própria mudança reprovaria
+        retroativamente qualquer SDD implementada nesse mesmo dia — no
+        caso desta regra, SDD-DTF-0036, criada no mesmo dia da versão
+        2.2.0. Janela de tolerância declarada explicitamente aqui: a
+        regra vale a partir do dia SEGUINTE ao changelog, nunca no mesmo
+        dia (não-retroativo por construção, sem precisar excluir ids à mão)."""
+        since_date = version_date(rules, RULE_SINCE[rule])
+        created = fm.get("created")
+        if since_date and created:
+            return str(created) > since_date
+        # Sem `date` conhecida ou sem `created`: cai no mesmo fallback de
+        # `rule_applies_since_date` (nunca chama `rule_applies` direto —
+        # ver test_nenhum_validador_chama_rule_applies_direto).
+        return rule_applies_since_date(rules, RULE_SINCE[rule], created, version)
+
     doc_id = fm.get("id") or path.name
     status = fm.get("status")
 
@@ -151,6 +171,8 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
         problems += check_evidence(doc_id, evidence, n_criteria)
         problems += check_verification_rounds(doc_id, evidence, body)
         problems += check_evidence_profile(doc_id, criteria, evidence)
+        if applies_strict("source_fidelity"):
+            problems += check_source_fidelity(doc_id, fm.get("source_docs") or [], evidence)
 
     if applies("scope_checklist"):
         problems += check_scope(doc_id, scope)
@@ -320,6 +342,31 @@ def check_evidence_profile(doc_id: str, criteria: str | None, evidence: str | No
             )
 
     return problems
+
+
+def check_source_fidelity(doc_id: str, source_docs: list, evidence: str | None) -> list:
+    """RF04-06 (SPEC-DTF-0014): passo "0. Fidelidade à origem" do
+    verify-sdd precisa deixar rastro na própria SDD — sem isso, o passo
+    existe no procedimento mas nada garante que rodou. Registrado como
+    uma linha (não um RF-ID) na tabela de Evidência, identificada pelo
+    texto "Fidelidade à origem" (substring, case-insensitive).
+
+    RF05: `source_docs` vazio (sizing `small`, sem SPEC/ADR de origem) —
+    nada a exigir. RF06 (não-retroatividade por `created`) é aplicado
+    pelo chamador (`applies_strict`), não aqui — ver seu docstring.
+    """
+    if not source_docs or not evidence:
+        return []
+
+    _, rows = table_with_header(evidence)
+    found = any("fidelidade à origem" in " | ".join(row).lower() for row in rows)
+    if not found:
+        return [
+            f"{doc_id}: `source_docs` não vazio mas 'Evidência de verificação' não "
+            "tem nenhuma linha identificável como 'Fidelidade à origem' — passo 0 "
+            "do verify-sdd não deixou rastro (RF04, SPEC-DTF-0014)."
+        ]
+    return []
 
 
 def check_scope(doc_id: str, scope: str | None) -> list:
