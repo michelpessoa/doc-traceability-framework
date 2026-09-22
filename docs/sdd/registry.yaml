@@ -391,3 +391,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0040.md"
     tags: [guia-tecnico, documentacao, drift, verify-sdd, gate-ci]
+  - id: SDD-DTF-0041
+    type: SDD
+    title: "workflow-rules.yaml: frontmatter_schema não lista SPEC (tipo ativo desde 2.0.0)"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0041.md"
+    tags: [workflow-rules, frontmatter_schema, drift, spec]
