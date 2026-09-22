@@ -15,5 +15,13 @@ description: >
 
 # Handover
 
+Checklist mínimo, antes de abrir o procedimento inteiro:
+
+- Todas as seções fixas presentes: Goal, Status, Ids relacionados, Files
+  touched, Key decisions, Open threads/blockers, Next step, Don't do.
+- Referencie ids do framework em vez de reescrever o conteúdo deles.
+- Não substitui gate algum — SDD `approved` e branch dedicada continuam
+  obrigatórios do lado de quem retomar.
+
 Procedimento normativo: `_framework/procedures/handover.md` (a partir da
 raiz do repositório) — leia-o inteiro antes de gerar o HANDOFF.md.

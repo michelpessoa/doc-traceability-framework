@@ -206,6 +206,31 @@ def test_check_verification_rounds_sem_evidencia():
     assert check_verification_rounds("SDD-TST-0001", None, "") == []
 
 
+def test_sensor_vazio_reprova(tmp_path):
+    """STRAT-DTF-0003 item A: coluna Sensor vazia é evidência assumida,
+    igual a 'n/a' na saída — declare o resultado ou 'sem teste
+    automatizado', célula em branco não."""
+    table = HEADER_5 + "| 1 | `pytest` | 1 passed |  | Sim |\n"
+    problems = _with_evidence(tmp_path, table)
+    assert any("'Sensor' vazia" in p for p in problems)
+
+
+def test_sensor_sem_teste_automatizado_e_valido(tmp_path):
+    table = HEADER_5 + "| 1 | `grep -n foo bar.md` | sem saída | sem teste automatizado | Sim |\n"
+    problems = _with_evidence(tmp_path, table)
+    assert not any("'Sensor' vazia" in p for p in problems)
+
+
+def test_tabela_sem_coluna_sensor_nao_reprova_retroativamente(tmp_path):
+    """Tabela de 4 colunas (sem Sensor) é o formato anterior a esta
+    convenção — a ausência da coluna não é reprovada, só a presença
+    vazia."""
+    header_sem_sensor = "| # | Comando rodado | Saída (resumo) | Passou? |\n|---|---|---|---|\n"
+    table = header_sem_sensor + "| 1 | `pytest` | 1 passed | Sim |\n"
+    problems = _with_evidence(tmp_path, table)
+    assert not any("Sensor" in p for p in problems)
+
+
 def test_nenhum_validador_chama_rule_applies_direto():
     offenders = [
         p.name

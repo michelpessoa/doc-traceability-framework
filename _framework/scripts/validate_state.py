@@ -172,6 +172,7 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
     # permitida por verify-sdd. Sem cabeçalho reconhecível, linha inteira
     # (nunca mais permissivo por falta de cabeçalho).
     cmd_idx = next((i for i, h in enumerate(header) if "comando" in h), None)
+    sensor_idx = next((i for i, h in enumerate(header) if "sensor" in h), None)
     checked_idx = [i for i, h in enumerate(header) if any(k in h for k in ("comando", "saída", "saida", "passou"))]
     if not rows:
         problems.append(
@@ -197,6 +198,20 @@ def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
         col = cmd_idx if cmd_idx is not None else 1
         if len(row) > col and not row[col].strip():
             problems.append(f"{doc_id}: linha de evidência sem comando rodado.")
+
+        # STRAT-DTF-0003 item A (lição do tlc-spec-lean): um teste que
+        # nunca foi provado capaz de falhar não é evidência de que
+        # discrimina — a coluna Sensor existe para registrar isso, e
+        # deixá-la vazia é o mesmo "assumido" que evidence_standard já
+        # proíbe na coluna de saída. "sem teste automatizado" é uma
+        # declaração válida (verify-sdd.md, seção 3) — só a ausência de
+        # qualquer texto é reprovada.
+        if sensor_idx is not None and len(row) > sensor_idx and not row[sensor_idx].strip():
+            problems.append(
+                f"{doc_id}: linha de evidência com coluna 'Sensor' vazia — "
+                "declare o resultado do sensor de discriminação ou "
+                "'sem teste automatizado' (STRAT-DTF-0003 item A)."
+            )
 
     return problems
 

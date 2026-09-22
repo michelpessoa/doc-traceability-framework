@@ -173,3 +173,27 @@ def test_gate_nao_retroativo_para_sdd_ja_implementada(tmp_path):
     path.write_text(text, encoding="utf-8")
     problems, _ = check_document(path)
     assert not any("RF07" in p for p in problems)
+
+
+def test_vocabulario_vago_reprova_documento_approved(tmp_path):
+    """STRAT-DTF-0003 item G: 'gracefully' etc. são placeholder tanto
+    quanto 'TBD' — descrevem o resultado desejado sem dizer como
+    verificá-lo. Só reprova (problems, não warnings) em status decidido."""
+    path = tmp_path / "spec.md"
+    text = _spec("`caminho/qualquer.py`").replace(
+        "O sistema deve fazer algo", "O sistema deve tratar o erro gracefully"
+    ).replace("status: draft", "status: approved")
+    path.write_text(text, encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("gracefully" in p for p in problems)
+
+
+def test_vocabulario_vago_em_draft_e_so_warning(tmp_path):
+    path = tmp_path / "spec.md"
+    text = _spec("`caminho/qualquer.py`").replace(
+        "O sistema deve fazer algo", "O sistema deve tratar o erro gracefully"
+    )
+    path.write_text(text, encoding="utf-8")
+    problems, warnings = check_document(path)
+    assert not any("gracefully" in p for p in problems)
+    assert any("gracefully" in w for w in warnings)
