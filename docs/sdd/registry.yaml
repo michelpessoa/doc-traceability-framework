@@ -381,3 +381,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0039.md"
     tags: [spec, sweep, requisitos-transversais, tlc-spec-lean, qualidade]
+  - id: SDD-DTF-0040
+    type: SDD
+    title: "guia-tecnico.md: corrige drift acumulado (7 adições recentes nunca refletidas)"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0040.md"
+    tags: [guia-tecnico, documentacao, drift, verify-sdd, gate-ci]
