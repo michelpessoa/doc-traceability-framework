@@ -321,3 +321,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0033.md"
     tags: [verify-sdd, sdd-verifier, paralelismo, autonomia, enforcement]
+  - id: SDD-DTF-0034
+    type: SDD
+    title: "SKILL.md principal: corrige inconsistências, cobre lacunas de cobertura e enxuga (itens 3-5 de STRAT-DTF-0003)"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0034.md"
+    tags: [skill, doc-traceability-framework, consistencia, cobertura, enxugamento]
