@@ -1,0 +1,65 @@
+# Workflow de exemplo (adoção opt-in) do gate de CI do verify-sdd
+# (SDD-DTF-0032, SPEC-DTF-0011, ADR-DTF-0004, ADR-DTF-0005).
+#
+# Copie para .github/workflows/verify-sdd-gate.yml no repositório DO
+# PROJETO (não no repositório central) e ajuste:
+#   - PROJECT_CODE: código do projeto no registry central (ex.: DTF).
+#   - central-repo: owner/repo do repositório central.
+#   - CENTRAL_REPO_TOKEN: credencial de leitura cross-repo (secret do
+#     repositório), só necessária para a válvula de escape (RF07) —
+#     sem ela, o núcleo do gate (RF02-RF05) continua funcionando
+#     normalmente.
+#
+# Este workflow nunca é aplicado automaticamente a nenhum projeto
+# existente — sem o passo abaixo no repositório do projeto, o gate não
+# roda (rollout opt-in, SPEC-DTF-0011).
+name: verify-sdd-gate
+
+on:
+  pull_request:
+    paths:
+      - "docs/sdd/SDD-*.md"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do PR (histórico completo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Checkout raso (RF07): só o registry.yaml do projeto, do
+      # repositório central. Roda sempre — o script só lê o arquivo
+      # quando a válvula de escape é de fato usada (label +
+      # incident-override no corpo do PR); sem uso, o passo é
+      # inofensivo e barato (--depth 1, sparse-checkout de 1 arquivo).
+      - name: Checkout raso do registry central (RF07)
+        uses: actions/checkout@v4
+        with:
+          repository: ORGANIZACAO/doc-traceability-central
+          token: ${{ secrets.CENTRAL_REPO_TOKEN }}
+          path: central-registry-checkout
+          sparse-checkout: |
+            docs/PROJECT_CODE/registry.yaml
+          sparse-checkout-cone-mode: false
+          depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml --break-system-packages
+
+      - name: Gate de CI do verify-sdd
+        env:
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          echo "${{ github.event.pull_request.body }}" > /tmp/pr-body.txt
+          python3 _framework/scripts/ci_gate_verify_sdd.py \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --project-code PROJECT_CODE \
+            --central-registry-path central-registry-checkout/docs/PROJECT_CODE/registry.yaml \
+            --pr-labels "$PR_LABELS" \
+            --pr-body-file /tmp/pr-body.txt
