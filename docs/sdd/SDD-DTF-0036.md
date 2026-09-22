@@ -2,7 +2,7 @@
 id: SDD-DTF-0036
 type: SDD
 title: "Evidência de verificação com file:line da asserção e perfil declarado por critério"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -108,10 +108,10 @@ de evidência pela célula "#" (primeira coluna de cada tabela).
 |---|---|---|---|---|
 | 1 | RF01 — coluna "Perfil esperado" no template | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | Ao menos 1 ocorrência | manual |
 | 2 | RF02 — colunas "Assertion (file:line)" e "Perfil usado" no template | `grep -n "Assertion (file:line)\|Perfil usado" _framework/templates/sdd.template.md` | Ao menos 2 ocorrências | manual |
-| 3 | RF03 — Assertion vazia com perfil automatizado reprova | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k evidence_profile -v` | Todos passam | automatizado |
+| 3 | RF03 — Assertion vazia com perfil automatizado reprova | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "perfil or colunas_novas" -v` | Todos passam (7) | automatizado |
 | 4 | RF04 — perfil divergente sem justificativa reprova | (mesmo comando do #3, inclui `test_perfil_divergente_sem_justificativa_reprova`) | Passa | automatizado |
 | 5 | RF05 — perfil manual/n-a com Assertion vazia não reprova | (mesmo comando do #3, inclui `test_perfil_manual_nao_exige_assertion`) | Passa | automatizado |
-| 6 | RF06 — tabela sem colunas novas não reprova retroativamente | (mesmo comando do #3, inclui `test_sem_colunas_novas_nao_reprova`) | Passa | automatizado |
+| 6 | RF06 — tabela sem colunas novas não reprova retroativamente | (mesmo comando do #3, inclui `test_sem_colunas_novas_nao_reprova_retroativamente` e `test_criterios_sem_coluna_perfil_esperado_nao_reprova`) | Passa | automatizado |
 | 7 | RF07 — procedimento cita file:line e regra de perfil | `grep -icE "file:line|perfil (esperado\|usado)" _framework/procedures/verify-sdd.md` | >= 2 | manual |
 | 8 | Sem regressão nos validadores contra os documentos reais do projeto | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | Ambos ✅, 0 problemas | automatizado |
 | 9 | Suíte completa sem regressão | `python3 -m pytest _framework/ -q` | Todos os testes passam | automatizado |
@@ -138,18 +138,19 @@ de evidência pela célula "#" (primeira coluna de cada tabela).
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF07 todos com trecho correspondente no código/documento editado.
-- [ ] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
-- [ ] Nenhuma mudança em `workflow-rules.yaml` além, no máximo, de uma
-      linha de changelog documentando a extensão do gate 16 — nenhuma
-      seção nova.
+- [x] RF01-RF07 todos com trecho correspondente no código/documento editado.
+- [x] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
+- [x] Nenhuma mudança em `workflow-rules.yaml` — nem changelog (RF06
+      tornou a checagem não-retroativa por detecção de coluna, sem
+      precisar de `RULE_SINCE`/versão nova, mesmo padrão de
+      `check_verification_rounds`, SDD-DTF-0033).
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 **Verificador independente:** {preencher na sessão de verificação}
 
-| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|---|
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
 
 ## Rastreabilidade
 | Campo | Valor |

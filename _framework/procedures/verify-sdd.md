@@ -85,6 +85,17 @@ código. Mecanizado (STRAT-DTF-0003, item A): `validate_state.py` reprova
 `implemented` com a coluna `Sensor` vazia — "sem teste automatizado" é
 declaração válida, célula em branco não é.
 
+Comando rodado e saída real não provam que o teste checa o valor certo —
+registre em "Assertion (file:line)" o caminho e a linha exatos da
+asserção (não do comando) que resolve o critério, ex. `test_foo.py:42`
+(STRAT-DTF-0003, item 7/E4). Em "Perfil usado", repita o "Perfil
+esperado" declarado no critério (`automatizado`/`manual`/`n/a`); se
+divergir — por exemplo, um critério que devia ter teste automatizado
+virou checagem manual entre uma rodada e outra — declare o motivo entre
+parênteses. Mecanizado: `validate_state.py` reprova perfil `automatizado`
+sem `Assertion` preenchida e reprova divergência sem justificativa
+(STRAT-DTF-0003, item 7/E5).
+
 ### 4. Veredito
 
 Na SDD, a seção "Evidência de verificação" fica assim:
@@ -96,9 +107,9 @@ Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PAS
 
 **Verificador independente:** sim
 
-| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|---|
-| 1 | 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim |
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim | `<arquivo>:<linha>` ou `n/a` | `<automatizado\|manual\|n/a>` |
 ```
 
 `Rodada` é o número da tentativa de correção-e-reverificação,

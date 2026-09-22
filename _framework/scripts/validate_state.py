@@ -150,6 +150,7 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
     if applies("evidence_required"):
         problems += check_evidence(doc_id, evidence, n_criteria)
         problems += check_verification_rounds(doc_id, evidence, body)
+        problems += check_evidence_profile(doc_id, criteria, evidence)
 
     if applies("scope_checklist"):
         problems += check_scope(doc_id, scope)
@@ -256,6 +257,63 @@ def check_verification_rounds(doc_id: str, evidence: str | None, body: str) -> l
             "seção '## Escalonado ao humano' — teto de 3 rodadas exige escalonamento (RF07)."
         ]
     return []
+
+
+def check_evidence_profile(doc_id: str, criteria: str | None, evidence: str | None) -> list:
+    """STRAT-DTF-0003 item 7 (E4/E5, tlc-spec-lean): comando+saída não prova
+    que a asserção testada é a certa, e perfil automatizado pode virar
+    manual sem ninguém perceber entre rodadas.
+
+    Não-retroativo por construção (mesmo padrão de
+    check_verification_rounds): sem as colunas "Assertion (file:line)" e
+    "Perfil usado" no cabeçalho de evidência, a função não entra no loop —
+    SDD anterior a esta checagem nunca é afetada.
+    """
+    if not criteria or not evidence:
+        return []
+
+    c_header, c_rows = table_with_header(criteria)
+    num_idx = 0  # "#" é sempre a primeira coluna, nas duas tabelas
+    perfil_esperado_idx = next((i for i, h in enumerate(c_header) if "perfil esperado" in h), None)
+    if perfil_esperado_idx is None:
+        return []
+
+    esperado_por_criterio = {
+        row[num_idx].strip(): row[perfil_esperado_idx].strip().lower()
+        for row in c_rows
+        if len(row) > perfil_esperado_idx and row[num_idx].strip()
+    }
+
+    e_header, e_rows = table_with_header(evidence)
+    assertion_idx = next((i for i, h in enumerate(e_header) if "assertion" in h or "file:line" in h), None)
+    perfil_usado_idx = next((i for i, h in enumerate(e_header) if "perfil usado" in h), None)
+    if assertion_idx is None or perfil_usado_idx is None:
+        return []
+
+    problems = []
+    for row in e_rows:
+        if num_idx >= len(row):
+            continue
+        esperado = esperado_por_criterio.get(row[num_idx].strip())
+        if esperado is None:
+            continue
+
+        if esperado == "automatizado" and (len(row) <= assertion_idx or not row[assertion_idx].strip()):
+            problems.append(
+                f"{doc_id}: critério #{row[num_idx].strip()} com perfil esperado "
+                "'automatizado' e 'Assertion (file:line)' vazia — comando rodado "
+                "não prova que testa a asserção certa (STRAT-DTF-0003 item 7/E4)."
+            )
+
+        usado = row[perfil_usado_idx].strip() if len(row) > perfil_usado_idx else ""
+        if usado and usado.split("(")[0].strip().lower() != esperado and "(" not in usado:
+            problems.append(
+                f"{doc_id}: critério #{row[num_idx].strip()} com 'Perfil usado' "
+                f"('{usado}') divergente do 'Perfil esperado' ('{esperado}') sem "
+                "justificativa entre parênteses (STRAT-DTF-0003 item 7/E5)."
+            )
+
+    return problems
 
 
 def check_scope(doc_id: str, scope: str | None) -> list:

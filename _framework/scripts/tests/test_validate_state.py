@@ -231,6 +231,85 @@ def test_tabela_sem_coluna_sensor_nao_reprova_retroativamente(tmp_path):
     assert not any("Sensor" in p for p in problems)
 
 
+CRITERIA_PERFIL_AUTOMATIZADO = """## Critérios de aceite / definição de pronto
+
+| # | Critério | Comando | Resultado esperado | Perfil esperado |
+|---|---|---|---|---|
+| 1 | RF1 | `pytest` | exit 0 | automatizado |
+"""
+
+CRITERIA_PERFIL_MANUAL = """## Critérios de aceite / definição de pronto
+
+| # | Critério | Comando | Resultado esperado | Perfil esperado |
+|---|---|---|---|---|
+| 1 | RF1 | revisão visual | ok | manual |
+"""
+
+HEADER_PERFIL = (
+    "| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |\n"
+    "|---|---|---|---|---|---|---|\n"
+)
+
+
+def _with_criteria_and_evidence(tmp_path: Path, criteria: str, table: str, created: str = "2026-09-01") -> list:
+    body = criteria + "\n" + SCOPE_OK + "\n## Evidência de verificação\n\n" + table
+    problems, _ = check_sdd(_sdd(tmp_path, created, body), version="2.1.0")
+    return problems
+
+
+def test_perfil_automatizado_sem_assertion_reprova(tmp_path):
+    """STRAT-DTF-0003 item 7/E4: perfil automatizado sem file:line da
+    asserção não prova que o comando testa o valor certo."""
+    table = HEADER_PERFIL + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |  | automatizado |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_AUTOMATIZADO, table)
+    assert any("Assertion (file:line)' vazia" in p for p in problems)
+
+
+def test_perfil_automatizado_com_assertion_passa(tmp_path):
+    table = HEADER_PERFIL + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim | test_foo.py:42 | automatizado |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_AUTOMATIZADO, table)
+    assert problems == []
+
+
+def test_perfil_divergente_sem_justificativa_reprova(tmp_path):
+    """STRAT-DTF-0003 item 7/E5: trocar automatizado por manual sem
+    justificar é o que esta checagem pega."""
+    table = HEADER_PERFIL + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim | test_foo.py:42 | manual |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_AUTOMATIZADO, table)
+    assert any("'Perfil usado'" in p and "divergente" in p for p in problems)
+
+
+def test_perfil_divergente_com_justificativa_passa(tmp_path):
+    table = HEADER_PERFIL + (
+        "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim | n/a | "
+        "manual (motivo: sensor de mutação incompatível com CI atual) |\n"
+    )
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_AUTOMATIZADO, table)
+    assert not any("divergente" in p for p in problems)
+
+
+def test_perfil_manual_nao_exige_assertion(tmp_path):
+    table = HEADER_PERFIL + "| 1 | revisão visual | ok | n/a | Sim | n/a | manual |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_MANUAL, table)
+    assert problems == []
+
+
+def test_sem_colunas_novas_nao_reprova_retroativamente(tmp_path):
+    """Evidência no formato anterior a esta SDD (sem Assertion/Perfil
+    usado) não é afetada — não retroativo por construção."""
+    table = HEADER_5 + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_AUTOMATIZADO, table)
+    assert not any("Assertion" in p or "Perfil" in p for p in problems)
+
+
+def test_criterios_sem_coluna_perfil_esperado_nao_reprova(tmp_path):
+    """SDD anterior a esta convenção, sem 'Perfil esperado' nos
+    critérios — sem valor esperado, não há o que comparar."""
+    table = HEADER_PERFIL + "| 1 | `pytest` | 1 passed | teste reintroduzido | Sim |  | automatizado |\n"
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA, table)
+    assert not any("Assertion" in p or "Perfil" in p for p in problems)
+
+
 def test_nenhum_validador_chama_rule_applies_direto():
     offenders = [
         p.name
