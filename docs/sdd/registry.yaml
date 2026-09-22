@@ -301,3 +301,13 @@ documents:
     relates_to: [SDD-DTF-0030]
     path: "docs/sdd/SDD-DTF-0031.md"
     tags: [bugfix, validate_doc, ears, gate_content_quality]
+  - id: SDD-DTF-0032
+    type: SDD
+    title: "Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry"
+    status: draft
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0032.md"
+    tags: [ci, gate_scope_verification, sdd-verifier, enforcement, incidente]
