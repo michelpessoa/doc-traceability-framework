@@ -16,6 +16,9 @@ sessão, declare isso na tabela de evidência — verificação não-independent
 
 ## Entrada
 
+- Autoridade de despacho: só quem tem a feature inteira que vai a PR
+  despacha esta verificação — nunca uma sessão que implementou só uma
+  trilha/task paralela isolada (RFC-DTF-0006/ADR-DTF-0006).
 - A SDD (`docs/sdd/SDD-*.md`) com status `approved`.
 - O diff da implementação (`git diff <base>..HEAD`), onde `<base>` é um
   SHA fixo — o `merge-base` capturado no momento da redação (`git
@@ -23,7 +26,9 @@ sessão, declare isso na tabela de evidência — verificação não-independent
   própria mudança) ou o SHA específico citado na SDD/PR. **Nunca
   `origin/main`** direto: é uma ref móvel, e assim que a mudança sendo
   verificada é mergeada, `origin/main` passa a contê-la — o "antes" deixa
-  de existir e qualquer bloco comparativo para de discriminar.
+  de existir e qualquer bloco comparativo para de discriminar. Em
+  features com paralelismo, o diff é sempre `<merge-base>..HEAD` da
+  branch consolidada — nunca o diff de uma task/trilha isolada.
 - Nada mais. **Não leia o histórico da sessão que implementou** — herdar
   o raciocínio dela é herdar os pontos cegos dela.
 
@@ -84,10 +89,24 @@ Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PAS
 
 **Verificador independente:** sim
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
-| 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim |
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|---|
+| 1 | 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim |
 ```
+
+`Rodada` é o número da tentativa de correção-e-reverificação,
+começando em 1. Teto de 3 rodadas: se o veredito não for `PASS` na 3ª
+rodada, a sessão para de tentar sozinha e escreve, na SDD, a seção
+abaixo em vez de despachar uma 4ª tentativa:
+
+```markdown
+## Escalonado ao humano
+Rodadas tentadas: 3. Veredito de cada uma: <FAIL, FAIL, FAIL | resumo>.
+Motivo de cada falha: <resumo por rodada>.
+```
+
+Histórico de rodadas anteriores não é sobrescrito — a tabela de
+evidência mantém as linhas de todas as rodadas, não só a última.
 
 `validation.md` complementa essa tabela com veredito, descompassos e
 lições — **não a substitui**. SDD `implemented` com a tabela vazia é
@@ -148,3 +167,5 @@ inteiro mistura problemas de outras SDDs com os desta.
 | "Faltou pouca coisa, marco implemented" | Faltando é parcial. Mantenha `approved` |
 | "O subagente disse que passou" | Relato próprio não é verificação independente |
 | "O PASS está no validation.md, a tabela da SDD é repetição" | A SDD é o que a próxima sessão lê. Tabela vazia com status implemented é contradição no artefato autoritativo |
+| "Eu tenho a feature inteira, então eu mesma despacho e verifico" | Builder despachou a própria verificação da feature — quem implementou não verifica, mesmo tendo a visão completa |
+| "Só implementei minha task, mas testo com o diff dela" | Diff de entrada é fatia de task paralela, não a feature consolidada — não discrimina o todo |

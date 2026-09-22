@@ -17,3 +17,12 @@ def test_ci_gate_verify_sdd_paridade():
     assert original.is_file()
     assert bundled.is_file()
     assert original.read_bytes() == bundled.read_bytes()
+
+
+def test_validate_state_paridade():
+    """RF08 (SDD-DTF-0033)."""
+    original = REPO_ROOT / "_framework" / "scripts" / "validate_state.py"
+    bundled = REPO_ROOT / "_framework" / "skills" / "doc-traceability-framework" / "scripts" / "validate_state.py"
+    assert original.is_file()
+    assert bundled.is_file()
+    assert original.read_bytes() == bundled.read_bytes()

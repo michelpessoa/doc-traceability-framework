@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from validate_state import check_sdd, table_rows  # noqa: E402
+from validate_state import check_sdd, check_verification_rounds, table_rows  # noqa: E402
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 
@@ -154,6 +154,56 @@ def test_tabela_real_depois_de_bloco_cercado_fechado_e_contada():
         ["1", "`pytest`", "3 passed", "teste reintroduzido", "sim"],
         ["2", "`pytest -k outro`", "5 passed", "segunda evidência", "sim"],
     ]
+
+
+HEADER_RODADA = "| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |\n|---|---|---|---|---|---|\n"
+
+
+def test_tres_rodadas_sem_escalonamento_reprova(tmp_path):
+    table = HEADER_RODADA + (
+        "| 1 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        "| 2 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        "| 3 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+    )
+    problems = _with_evidence(tmp_path, table)
+    assert any("teto de 3 rodadas" in p for p in problems)
+
+
+def test_tres_rodadas_com_escalonamento_passa(tmp_path):
+    body = (
+        CRITERIA
+        + "\n"
+        + SCOPE_OK
+        + "\n## Evidência de verificação\n\n"
+        + HEADER_RODADA
+        + "| 1 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        + "| 2 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        + "| 3 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        + "\n## Escalonado ao humano\n"
+        + "Rodadas tentadas: 3. Veredito de cada uma: FAIL, FAIL, FAIL.\n"
+        + "Motivo de cada falha: resumo.\n"
+    )
+    problems, _ = check_sdd(_sdd(tmp_path, "2026-09-01", body), version="2.1.0")
+    assert not any("teto de 3 rodadas" in p for p in problems)
+
+
+def test_duas_rodadas_sem_escalonamento_passa(tmp_path):
+    table = HEADER_RODADA + (
+        "| 1 | 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+        "| 2 | 1 | `pytest` | 3 passed | teste reintroduzido | Sim |\n"
+    )
+    problems = _with_evidence(tmp_path, table)
+    assert not any("teto de 3 rodadas" in p for p in problems)
+
+
+def test_tabela_sem_coluna_rodada_trata_como_unica(tmp_path):
+    table = HEADER_5 + "| 1 | `pytest` | 1 failed | teste reintroduzido | Não |\n"
+    problems = _with_evidence(tmp_path, table)
+    assert not any("teto de 3 rodadas" in p for p in problems)
+
+
+def test_check_verification_rounds_sem_evidencia():
+    assert check_verification_rounds("SDD-TST-0001", None, "") == []
 
 
 def test_nenhum_validador_chama_rule_applies_direto():
