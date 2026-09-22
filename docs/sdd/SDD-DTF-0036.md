@@ -44,7 +44,7 @@ sem novo padrão arquitetural, sem troca de tecnologia).
 
 | RF-ID | Requisito |
 |---|---|
-| RF01 | Template de SDD ganha coluna "Perfil esperado" (`automatizado` \| `manual` \| `n/a`) na tabela de Critérios de aceite / definição de pronto. |
+| RF01 | Template de SDD ganha coluna "Perfil esperado" (`automatizado`, `manual` ou `n/a`) na tabela de Critérios de aceite / definição de pronto. |
 | RF02 | Template de SDD ganha colunas "Assertion (file:line)" e "Perfil usado" na tabela de Evidência de verificação. |
 | RF03 | SDD `implemented` com linha de evidência cujo critério correspondente tem perfil esperado `automatizado` e célula "Assertion (file:line)" vazia → `validate_state.py` reporta problema. |
 | RF04 | "Perfil usado" divergente de "Perfil esperado" do critério correspondente, sem justificativa entre parênteses na célula → `validate_state.py` reporta problema. |
@@ -68,7 +68,11 @@ Arquivos tocados (produto):
 Detecção de coluna por substring no cabeçalho, case-insensitive — mesmo
 padrão de `cmd_idx`/`sensor_idx` já existentes em `check_evidence`,
 nunca por posição fixa. Correspondência entre linha de critério e linha
-de evidência pela célula "#" (primeira coluna de cada tabela).
+de evidência pela célula "#" — também localizada por cabeçalho exato
+(`h.strip() == "#"`), nunca por posição, porque a tabela de Evidência
+pode ter uma coluna "Rodada" antes de "#" (SDD-DTF-0033); assumir
+posição fixa aqui foi o achado da rodada 2 de verificação desta mesma
+SDD.
 
 - RF01/RF02: acrescentar as colunas nas duas tabelas do template, com
   uma linha de instrução curta acima de cada uma.
@@ -106,13 +110,13 @@ de evidência pela célula "#" (primeira coluna de cada tabela).
 
 | # | Critério (origem: RF-ID) | Comando de verificação | Resultado esperado | Perfil esperado |
 |---|---|---|---|---|
-| 1 | RF01 — coluna "Perfil esperado" no template | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | Ao menos 1 ocorrência | manual |
-| 2 | RF02 — colunas "Assertion (file:line)" e "Perfil usado" no template | `grep -n "Assertion (file:line)\|Perfil usado" _framework/templates/sdd.template.md` | Ao menos 2 ocorrências | manual |
+| 1 | RF01 — coluna "Perfil esperado" no template | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | Ao menos 1 ocorrência | automatizado |
+| 2 | RF02 — colunas "Assertion (file:line)" e "Perfil usado" no template | `grep -n -e "Assertion (file:line)" -e "Perfil usado" _framework/templates/sdd.template.md` | Ao menos 2 ocorrências | automatizado |
 | 3 | RF03 — Assertion vazia com perfil automatizado reprova | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "perfil or colunas_novas" -v` | Todos passam (7) | automatizado |
 | 4 | RF04 — perfil divergente sem justificativa reprova | (mesmo comando do #3, inclui `test_perfil_divergente_sem_justificativa_reprova`) | Passa | automatizado |
 | 5 | RF05 — perfil manual/n-a com Assertion vazia não reprova | (mesmo comando do #3, inclui `test_perfil_manual_nao_exige_assertion`) | Passa | automatizado |
 | 6 | RF06 — tabela sem colunas novas não reprova retroativamente | (mesmo comando do #3, inclui `test_sem_colunas_novas_nao_reprova_retroativamente` e `test_criterios_sem_coluna_perfil_esperado_nao_reprova`) | Passa | automatizado |
-| 7 | RF07 — procedimento cita file:line e regra de perfil | `grep -icE "file:line|perfil (esperado\|usado)" _framework/procedures/verify-sdd.md` | >= 2 | manual |
+| 7 | RF07 — procedimento cita file:line e regra de perfil | `grep -icE -e "file:line" -e "perfil esperado" -e "perfil usado" _framework/procedures/verify-sdd.md` | >= 2 | automatizado |
 | 8 | Sem regressão nos validadores contra os documentos reais do projeto | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | Ambos ✅, 0 problemas | automatizado |
 | 9 | Suíte completa sem regressão | `python3 -m pytest _framework/ -q` | Todos os testes passam | automatizado |
 | 10 | Bundle da skill principal sincronizado | `python3 _framework/scripts/render_prompts.py --check` | Sem divergência | automatizado |
@@ -171,23 +175,23 @@ duas linhas para o texto de "Resultado esperado". Isso faz
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
-| 1 | 1 | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 69, 77, 116) | sem teste automatizado | Sim | n/a | manual |
-| 1 | 2 | `grep -n "Assertion (file:line)\|Perfil usado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 111, 115x2, 121) | sem teste automatizado | Sim | n/a | manual |
+| 1 | 1 | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 69, 77, 116) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:77` | automatizado |
+| 1 | 2 | `grep -n -e "Assertion (file:line)" -e "Perfil usado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 111, 115x2, 121) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:121` | automatizado |
 | 1 | 3 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "perfil or colunas_novas" -v` | 7 passed | mutação: neutralizei `esperado == "automatizado"` (linha 301) para sempre `False` → `test_perfil_automatizado_sem_assertion_reprova` FALHOU; revertido (`cp` de cópia guardada) → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:265` | automatizado |
 | 1 | 4 | (mesmo comando do #3) | inclui `test_perfil_divergente_sem_justificativa_reprova` passando | mutação: invertida a comparação de divergência (`!=` → `==`, linha 309) → teste FALHOU; revertido → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:279` | automatizado |
 | 1 | 5 | (mesmo comando do #3) | inclui `test_perfil_manual_nao_exige_assertion` passando | mutação: removida a guarda `esperado == "automatizado"` da checagem de RF03 (linha 301), deixando a exigência de Assertion valer para todo perfil → `test_perfil_manual_nao_exige_assertion` **NÃO falhou** (a célula de evidência do teste usa `n/a` literal, não vazia, então a condição `not row[assertion_idx].strip()` continua False com ou sem a guarda). Confirmado por chamada direta de `check_sdd` com célula de Assertion realmente vazia + perfil manual: comportamento da implementação está correto (RF05 funciona), mas o teste empacotado não discrimina essa mutação — é ruído verde | **Não** (sensor não discrimina) | `_framework/scripts/tests/test_validate_state.py:294` | automatizado (nota: teste não cai sob a mutação testada; ver descompasso no validation.md) |
 | 1 | 6 | (mesmo comando do #3) | inclui `test_sem_colunas_novas_nao_reprova_retroativamente` e `test_criterios_sem_coluna_perfil_esperado_nao_reprova` passando | mutação 1: neutralizada a guarda de colunas ausentes (linha 290) → `test_sem_colunas_novas_nao_reprova_retroativamente` FALHOU; revertido → voltou a passar. mutação 2: neutralizada a guarda `perfil_esperado_idx is None` (linha 278) → `test_criterios_sem_coluna_perfil_esperado_nao_reprova` FALHOU; revertido → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:302` e `:310` | automatizado |
-| 1 | 7 | `grep -icE "file:line\|perfil (esperado\|usado)" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim | n/a | manual |
+| 1 | 7 | `grep -icE -e "file:line" -e "perfil esperado" -e "perfil usado" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim | `_framework/procedures/verify-sdd.md:89` | automatizado |
 | 1 | 8 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 35 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 35 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 | sem mutação aplicada nesta rodada (checagem de integração fim-a-fim, não unitária) | Sim | `_framework/scripts/validate_doc.py:385`, `_framework/scripts/validate_state.py:358` | automatizado |
 | 1 | 9 | `python3 -m pytest _framework/ -q` | `133 passed` | cobertura por mutação já registrada nas linhas 3-6 desta tabela; suíte agregada não tem asserção única própria | Sim | n/a (suíte agregada — ver linhas 3-6 para as asserções que a compõem) | automatizado (nota: sem assertion única — divergência justificada pela natureza agregada do comando) |
 | 1 | 10 | `python3 _framework/scripts/render_prompts.py --check` | Todos os arquivos gerados/bundlados reportam "sincronizado"/"em dia", exit 0 | sem mutação aplicada nesta rodada | Sim | `_framework/scripts/render_prompts.py:708` | automatizado |
-| 2 | 1 | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 69, 77, 116) | sem teste automatizado | Sim | n/a | manual |
-| 2 | 2 | `grep -n "Assertion (file:line)\|Perfil usado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 111, 115, 121) | sem teste automatizado | Sim | n/a | manual |
+| 2 | 1 | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 69, 77, 116) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:77` | automatizado |
+| 2 | 2 | `grep -n -e "Assertion (file:line)" -e "Perfil usado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 111, 115, 121) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:121` | automatizado |
 | 2 | 3 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "perfil or colunas_novas" -v` | 7 passed | mutação: `esperado == "automatizado"` neutralizada (linha 301) → `test_perfil_automatizado_sem_assertion_reprova` continua coberto pelo comportamento; reconfirmado nesta rodada revertendo e voltando a passar | Sim | `_framework/scripts/tests/test_validate_state.py:265` | automatizado |
 | 2 | 4 | (mesmo comando do #3) | inclui `test_perfil_divergente_sem_justificativa_reprova` | mutação: linha 309 `!=` trocado por `==` → teste FALHOU (`AssertionError`); revertido (`cp` de cópia guardada) → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:279` | automatizado |
-| 2 | 5 | (mesmo comando do #3) | inclui `test_perfil_manual_nao_exige_assertion` | **Núcleo da rodada 2.** Fixture corrigido no commit `05018cd`: célula "Assertion" agora de fato vazia (`\|  \|`), não `n/a` literal. Mutação: guarda `esperado == "automatizado"` removida da linha 301 (`if (len(row) <= assertion_idx or not row[assertion_idx].strip()):`) → `test_perfil_manual_nao_exige_assertion` **FALHOU** (`assert ['SDD-TST-0001: ... vazia ...'] == []`); revertido (`cp` de cópia guardada, diff vazio confirmado) → voltou a passar. Sensor agora discrimina de fato — achado da rodada 1 corrigido | **Sim** | `_framework/scripts/tests/test_validate_state.py:294` | automatizado |
+| 2 | 5 | (mesmo comando do #3) | inclui `test_perfil_manual_nao_exige_assertion` | **Núcleo da rodada 2.** Fixture corrigido no commit `05018cd`: célula "Assertion" agora de fato vazia (célula markdown vazia, sem `n/a`). Mutação: guarda `esperado == "automatizado"` removida da linha 301 (`if (len(row) <= assertion_idx or not row[assertion_idx].strip()):`) → `test_perfil_manual_nao_exige_assertion` **FALHOU** (`assert ['SDD-TST-0001: ... vazia ...'] == []`); revertido (`cp` de cópia guardada, diff vazio confirmado) → voltou a passar. Sensor agora discrimina de fato — achado da rodada 1 corrigido | **Sim** | `_framework/scripts/tests/test_validate_state.py:294` | automatizado |
 | 2 | 6 | (mesmo comando do #3) | inclui `test_sem_colunas_novas_nao_reprova_retroativamente` e `test_criterios_sem_coluna_perfil_esperado_nao_reprova` | mutação 1: guarda `assertion_idx is None or perfil_usado_idx is None` (linha 290) neutralizada para `if False:` → `test_sem_colunas_novas_nao_reprova_retroativamente` FALHOU (`TypeError`); revertido → voltou a passar. mutação 2: guarda `perfil_esperado_idx is None` (linha 278) neutralizada para `if False:` → `test_criterios_sem_coluna_perfil_esperado_nao_reprova` FALHOU (`TypeError`); revertido → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:302` e `:310` | automatizado |
-| 2 | 7 | `grep -icE "file:line\|perfil (esperado\|usado)" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim | n/a | manual |
+| 2 | 7 | `grep -icE -e "file:line" -e "perfil esperado" -e "perfil usado" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim | `_framework/procedures/verify-sdd.md:89` | automatizado |
 | 2 | 8 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 35 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 35 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 | checagem de integração, sem mutação nesta rodada | Sim | `_framework/scripts/validate_doc.py:385`, `_framework/scripts/validate_state.py:358` | automatizado |
 | 2 | 9 | `python3 -m pytest _framework/ -q` | `133 passed` | cobertura por mutação registrada nas linhas desta rodada (#3-6) | Sim | n/a (suíte agregada) | automatizado (nota: sem assertion única — natureza agregada do comando) |
 | 2 | 10 | `python3 _framework/scripts/render_prompts.py --check` | Todos os arquivos gerados/bundlados reportam "sincronizado"/"em dia", exit 0 | sem mutação aplicada nesta rodada | Sim | `_framework/scripts/render_prompts.py:708` | automatizado |

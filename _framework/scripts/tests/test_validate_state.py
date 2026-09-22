@@ -304,6 +304,35 @@ def test_sem_colunas_novas_nao_reprova_retroativamente(tmp_path):
     assert not any("Assertion" in p or "Perfil" in p for p in problems)
 
 
+HEADER_PERFIL_COM_RODADA = (
+    "| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |\n"
+    "|---|---|---|---|---|---|---|---|\n"
+)
+
+
+def test_evidencia_com_coluna_rodada_usa_numero_certo_do_criterio(tmp_path):
+    """Achado real, rodada 2 de verificação de SDD-DTF-0036: com a coluna
+    'Rodada' antes de '#', ler '#' pela posição 0 lê o número da rodada,
+    não do critério — critério #2 numa rodada #1 seria comparado por
+    engano contra o 'Perfil esperado' do critério #1. Aqui o critério #1
+    é `manual` e o #2 é `automatizado`; a linha da rodada 1 do critério
+    #2 tem perfil usado `automatizado` (bate com o #2, reprovaria por
+    engano contra o #1 se a coluna 'Rodada' fosse lida como '#')."""
+    criteria = (
+        "## Critérios de aceite / definição de pronto\n\n"
+        "| # | Critério | Comando | Resultado esperado | Perfil esperado |\n"
+        "|---|---|---|---|---|\n"
+        "| 1 | RF1 | `revisão` | ok | manual |\n"
+        "| 2 | RF2 | `pytest` | exit 0 | automatizado |\n"
+    )
+    table = HEADER_PERFIL_COM_RODADA + (
+        "| 1 | 1 | `revisão` | ok | sem teste automatizado | Sim | n/a | manual |\n"
+        "| 1 | 2 | `pytest` | 1 passed | teste reintroduzido | Sim | test_foo.py:10 | automatizado |\n"
+    )
+    problems = _with_criteria_and_evidence(tmp_path, criteria, table)
+    assert not any("Perfil usado" in p or "Assertion" in p for p in problems)
+
+
 def test_criterios_sem_coluna_perfil_esperado_nao_reprova(tmp_path):
     """SDD anterior a esta convenção, sem 'Perfil esperado' nos
     critérios — sem valor esperado, não há o que comparar."""

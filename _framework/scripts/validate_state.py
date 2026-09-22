@@ -273,34 +273,40 @@ def check_evidence_profile(doc_id: str, criteria: str | None, evidence: str | No
         return []
 
     c_header, c_rows = table_with_header(criteria)
-    num_idx = 0  # "#" é sempre a primeira coluna, nas duas tabelas
+    # "#" nem sempre é a primeira coluna: a tabela de Evidência ganha uma
+    # coluna "Rodada" antes dela quando há múltiplas rodadas de correção
+    # (SDD-DTF-0033) — buscar por cabeçalho exato, nunca por posição fixa
+    # (achado da rodada 2 de verificação de SDD-DTF-0036: `num_idx = 0`
+    # hardcoded lia a coluna "Rodada" como se fosse "#").
+    c_num_idx = next((i for i, h in enumerate(c_header) if h.strip() == "#"), None)
     perfil_esperado_idx = next((i for i, h in enumerate(c_header) if "perfil esperado" in h), None)
-    if perfil_esperado_idx is None:
+    if c_num_idx is None or perfil_esperado_idx is None:
         return []
 
     esperado_por_criterio = {
-        row[num_idx].strip(): row[perfil_esperado_idx].strip().lower()
+        row[c_num_idx].strip(): row[perfil_esperado_idx].strip().lower()
         for row in c_rows
-        if len(row) > perfil_esperado_idx and row[num_idx].strip()
+        if len(row) > perfil_esperado_idx and row[c_num_idx].strip()
     }
 
     e_header, e_rows = table_with_header(evidence)
+    e_num_idx = next((i for i, h in enumerate(e_header) if h.strip() == "#"), None)
     assertion_idx = next((i for i, h in enumerate(e_header) if "assertion" in h or "file:line" in h), None)
     perfil_usado_idx = next((i for i, h in enumerate(e_header) if "perfil usado" in h), None)
-    if assertion_idx is None or perfil_usado_idx is None:
+    if e_num_idx is None or assertion_idx is None or perfil_usado_idx is None:
         return []
 
     problems = []
     for row in e_rows:
-        if num_idx >= len(row):
+        if e_num_idx >= len(row):
             continue
-        esperado = esperado_por_criterio.get(row[num_idx].strip())
+        esperado = esperado_por_criterio.get(row[e_num_idx].strip())
         if esperado is None:
             continue
 
         if esperado == "automatizado" and (len(row) <= assertion_idx or not row[assertion_idx].strip()):
             problems.append(
-                f"{doc_id}: critério #{row[num_idx].strip()} com perfil esperado "
+                f"{doc_id}: critério #{row[e_num_idx].strip()} com perfil esperado "
                 "'automatizado' e 'Assertion (file:line)' vazia — comando rodado "
                 "não prova que testa a asserção certa (STRAT-DTF-0003 item 7/E4)."
             )
@@ -308,7 +314,7 @@ def check_evidence_profile(doc_id: str, criteria: str | None, evidence: str | No
         usado = row[perfil_usado_idx].strip() if len(row) > perfil_usado_idx else ""
         if usado and usado.split("(")[0].strip().lower() != esperado and "(" not in usado:
             problems.append(
-                f"{doc_id}: critério #{row[num_idx].strip()} com 'Perfil usado' "
+                f"{doc_id}: critério #{row[e_num_idx].strip()} com 'Perfil usado' "
                 f"('{usado}') divergente do 'Perfil esperado' ('{esperado}') sem "
                 "justificativa entre parênteses (STRAT-DTF-0003 item 7/E5)."
             )
