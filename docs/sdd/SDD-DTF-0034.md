@@ -2,7 +2,7 @@
 id: SDD-DTF-0034
 type: SDD
 title: "SKILL.md principal: corrige inconsistências, cobre lacunas de cobertura e enxuga (itens 3-5 de STRAT-DTF-0003)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -150,32 +150,34 @@ só cobre o repositório do kit).
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF10 todos com trecho correspondente no SKILL.md editado.
-- [ ] Único arquivo de produto tocado: `SKILL.md` + o teste novo
+- [x] RF01-RF10 todos com trecho correspondente no SKILL.md editado.
+- [x] Único arquivo de produto tocado: `SKILL.md` + o teste novo
       (`test_skill_md_consistency.py`) — qualquer outro arquivo tocado é
       escopo não registrado (atualizar esta SDD) ou scope creep (remover).
-- [ ] Nenhuma mudança em `workflow-rules.yaml`, `AGENTS.md`, `QUICKSTART.md`
+- [x] Nenhuma mudança em `workflow-rules.yaml`, `AGENTS.md`, `QUICKSTART.md`
       ou nos scripts de render/validate.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** {preencher na sessão de verificação — quem implementou (esta sessão) não verifica}
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
-| 1 | `grep -n "Os [0-9]\+ tipos" SKILL.md` | sem saída (exit 1) | — | Sim |
-| 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py::test_status_lifecycle_matches_yaml -v` | `1 passed in 0.12s` | — | Sim |
-| 3 | `grep -inE "você mesma\|voce mesma" SKILL.md` | sem saída (exit 1) | — | Sim |
-| 4 | `grep -n "_framework/\(scripts\|references\|templates\|prompts\)/" SKILL.md` | sem saída (exit 1) | — | Sim |
-| 5 | `grep -c "framework_check.py --auto" SKILL.md` | `1` | — | Sim |
-| 6 | `grep -c "parallel_plan.py" SKILL.md` | `1` | — | Sim |
-| 7 | `grep -icE "guard_bash.sh\|pre-commit" SKILL.md` | `1` | — | Sim |
-| 8 | `grep -c "sdd-verifier" SKILL.md` | `1` | — | Sim |
-| 9 | `grep -icE "repository_status\|greenfield" SKILL.md` | `2` | — | Sim |
-| 10 | `wc -l < SKILL.md` | `391` (< 392) | — | Sim |
-| 11 | `find . -maxdepth 3 -iname "SKILL.md" -path "*doc-traceability-framework*" -not -path "*/worktrees/*"` | só `_framework/skills/doc-traceability-framework/SKILL.md` — nenhuma segunda cópia local neste repositório | — | Sim, com nota: paridade só existe com `doc-traceability-central`, fora do escopo desta SDD (repositório separado) |
-| 12 | `python3 -m pytest _framework/ -q` | `121 passed in 4.87s` | — | Sim |
-| 13 | `python3 _framework/scripts/render_prompts.py --check` | todos os itens `✅ ... em dia/sincronizado`, nenhuma divergência; AGENTS.md/QUICKSTART.md não tocados | — | Sim |
+**Verificador independente:** sim — subagente separado da sessão implementadora (agente `sdd-verifier`), sem ler o histórico dela; entrada foi só esta SDD e o diff `419ff7b..d66430f` (merge-base `origin/main`).
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|---|
+| 1 | 1 | `grep -n "Os [0-9]\+ tipos" SKILL.md` | sem saída (exit 1) | sem teste automatizado | Sim |
+| 1 | 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py::test_status_lifecycle_matches_yaml -v` | `1 passed in 0.12s` | quebrei "Transições válidas" (removi `draft` de `in_review → approved, rejected, draft`); teste falhou (`AssertionError: ... {'approved', 'rejected'} ... {'approved', 'rejected', 'draft'}`); restaurado via `git checkout --`, `1 passed` de novo | Sim |
+| 1 | 3 | `grep -inE "você mesma\|voce mesma" SKILL.md` | sem saída (exit 1) | sem teste automatizado | Sim |
+| 1 | 4 | `grep -n "_framework/\(scripts\|references\|templates\|prompts\)/" SKILL.md` | sem saída (exit 1) | sem teste automatizado | Sim |
+| 1 | 5 | `grep -n "framework_check.py --auto" SKILL.md` | 1 ocorrência (linha 239) | sem teste automatizado | Sim |
+| 1 | 6 | `grep -n "parallel_plan.py" SKILL.md` | 1 ocorrência (linha 105) | sem teste automatizado | Sim |
+| 1 | 7 | `grep -inE "guard_bash.sh\|pre-commit" SKILL.md` | 1 ocorrência (linha 181) | sem teste automatizado | Sim |
+| 1 | 8 | `grep -n "sdd-verifier" SKILL.md` | 1 ocorrência (linha 340) | sem teste automatizado | Sim |
+| 1 | 9 | `grep -icE "repository_status\|greenfield" SKILL.md` | 2 ocorrências (linhas 48, 53) | sem teste automatizado | Sim |
+| 1 | 10 | `wc -l < SKILL.md` | `391` (< 392) | sem teste automatizado | Sim |
+| 1 | 11 | `find . -maxdepth 5 -iname "SKILL.md" -path "*doc-traceability-framework*" -not -path "*/worktrees/*" -not -path "*/node_modules/*"` | encontrada `.claude/skills/doc-traceability-framework/SKILL.md`, mas é symlink para o mesmo arquivo (`readlink -f` resolve igual; `diff` sem saída) — não é cópia divergente | sem teste automatizado | Sim, com nota: paridade real só existe com `doc-traceability-central`, fora do escopo desta SDD |
+| 1 | 12 | `python3 -m pytest _framework/ -q` | `121 passed in 4.65s` | — | Sim |
+| 1 | 13 | `python3 _framework/scripts/render_prompts.py --check` | todos os itens `✅ ... em dia/sincronizado`; `git diff --name-only <merge-base>..HEAD` confirma que AGENTS.md/QUICKSTART.md/workflow-rules.yaml não foram tocados | — | Sim |
 
 Sensor de discriminação (RF02): quebrei deliberadamente a frase
 "Transições válidas" no SKILL.md (removi `draft` de `in_review →
