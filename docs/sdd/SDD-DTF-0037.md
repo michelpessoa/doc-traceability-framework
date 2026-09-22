@@ -2,7 +2,7 @@
 id: SDD-DTF-0037
 type: SDD
 title: "verify-sdd ganha passo 0: fidelidade da SDD a source_docs (SPEC/ADR de origem)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -167,10 +167,21 @@ estabelecida do arquivo).
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0037.md`. Veredito: **PASS**.
+
 **Verificador independente:** sim
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0037.md /home/michel/doc-traceability-central/docs/DTF` | `✅ source_docs de SDD-DTF-0037.md conferem com o registry central.` exit 0. Checklist itens 2-4 (leitura de SPEC-DTF-0014/ADR-DTF-0007): todo RF01-RF06 da SPEC representado 1:1 na SDD (mesmos ids); nenhum critério de aceite relaxado (RF06 é o único ponto de atenção — SPEC pede "mesma técnica de `check_evidence_profile`, não por versão/data", SDD usa `RULE_SINCE`+`applies_strict` por data; a própria SDD documenta essa divergência explicitamente na seção "Especificação técnica consolidada" como decisão de desenho justificada, o que a EARS de RF06 permite via "sem uma janela de tolerância declarada explicitamente na SDD" — não tratado como relaxamento silencioso); todo contrato técnico da Parte 2 (assinaturas `check_sdd_source_docs`, `check_source_fidelity`, tratamento de erro) descrito de forma idêntica na SDD. | sem teste automatizado (checklist de leitura humana/IA, itens 2-4 são não-mecanizados por decisão de ADR-DTF-0007) | Sim | n/a | manual |
+| 1 | 1 | `grep -n "^### 0. Fidelidade à origem" -A1 _framework/procedures/verify-sdd.md` e `grep -n "^### 1. Conformidade com a spec" _framework/procedures/verify-sdd.md` (dois comandos separados) | `40:### 0. Fidelidade à origem` / `84:### 1. Conformidade com a spec (as duas direções)` — linha de "0." (40) menor que "1." (84) | sem teste automatizado | Sim | n/a | manual |
+| 1 | 2 | `python3 -m pytest _framework/scripts/tests/test_check_source_docs.py -v` | `11 passed in 0.16s` | Mutação real: `if status not in OK_STATUSES:` → `if False:` em `check_source_docs.py`; `test_status_fora_de_approved_implemented_reprova` caiu (`assert 0 == 1`); revertido via cópia guardada, suíte voltou a 11 passed | Sim | `_framework/scripts/tests/test_check_source_docs.py:63` | automatizado |
+| 1 | 3 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "fidelidade or rf04 or rf05 or rf06" -v` | `7 passed, 31 deselected in 0.41s` | Mutação real: `found = any(...)` → `found = True` em `check_source_fidelity` (`validate_state.py`); 2 testes caíram (`test_check_source_fidelity_unit_sem_linha_fidelidade_reprova`, `test_rf04_via_check_sdd_created_depois_da_regra_sem_linha_reprova`); revertido, 7 passed novamente | Sim | `_framework/scripts/tests/test_validate_state.py:386` | automatizado |
+| 1 | 4 | (mesmo comando do #3, inclui `test_rf05_source_docs_vazio_nao_exige_linha`) | `PASSED` (dentro do mesmo run de 7 passed) | Mutação real: guard `if not source_docs or not evidence:` → `if not evidence:` (removeu checagem de `source_docs` vazio); `test_rf05_source_docs_vazio_nao_exige_linha` caiu (`assert not True`); revertido, suíte voltou a 7 passed | Sim | `_framework/scripts/tests/test_validate_state.py:409` | automatizado |
+| 1 | 5 | (mesmo comando do #3, inclui `test_rf06_created_no_mesmo_dia_da_regra_nao_reprova_retroativamente`) | `PASSED` (dentro do mesmo run de 7 passed) | Mutação real: `applies_strict` `str(created) > since_date` → `>=`; `test_rf06_created_no_mesmo_dia_da_regra_nao_reprova_retroativamente` caiu (exatamente o caso SDD-DTF-0036 criada no mesmo dia, reprovada retroativamente); revertido, suíte voltou a 7 passed | Sim | `_framework/scripts/tests/test_validate_state.py:420` | automatizado |
+| 1 | 6 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 36 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 36 documento(s) verificados: nenhuma SDD implemented sem evidência.` ambos exit 0 | coberto pelos sensores dos critérios 2-5 (checagem agregada, sem lógica nova própria) | Sim | n/a | automatizado |
+| 1 | 7 | `python3 -m pytest _framework/ -q` | `154 passed in 6.05s` | coberto pelos sensores dos critérios 2-5 | Sim | n/a | automatizado |
+| 1 | 8 | `python3 _framework/scripts/render_prompts.py --check` | Todos os alvos (`AGENTS.md`, `QUICKSTART.md`, `especificacao.md`, `CHANGELOG.md`, prompts universal/cursor/copilot, bundle da skill) reportados `✅ ... em dia/sincronizado.` exit 0 | sem teste de mutação dedicado (script determinístico de comparação byte-a-byte; ausência de sincronia já é o próprio sensor) | Sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
