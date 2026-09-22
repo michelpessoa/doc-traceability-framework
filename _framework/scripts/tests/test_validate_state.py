@@ -349,10 +349,7 @@ def _sdd_com_source_docs(tmp_path: Path, created: str, source_docs_yaml: str, bo
         "type: SDD\n"
         'title: "teste"\n'
         "status: implemented\n"
-        f'created: "{created}"\n'
-        + source_docs_yaml
-        + "\n---\n\n# teste\n\n"
-        + body,
+        f'created: "{created}"\n' + source_docs_yaml + "\n---\n\n# teste\n\n" + body,
         encoding="utf-8",
     )
     return path

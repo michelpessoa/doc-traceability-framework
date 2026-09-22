@@ -16,11 +16,7 @@ def _central(tmp_path: Path, status: str = "approved", path: str = REL_PATH) -> 
     (central / Path(path).parent).mkdir(parents=True, exist_ok=True)
     (central / path).write_text("---\nid: SPEC-DTF-0014\n---\n", encoding="utf-8")
     (central / "registry.yaml").write_text(
-        "documents:\n"
-        "  - id: SPEC-DTF-0014\n"
-        "    type: SPEC\n"
-        f"    status: {status}\n"
-        f'    path: "{path}"\n',
+        f'documents:\n  - id: SPEC-DTF-0014\n    type: SPEC\n    status: {status}\n    path: "{path}"\n',
         encoding="utf-8",
     )
     return central
