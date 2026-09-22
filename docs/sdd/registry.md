@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-17 22:06. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 12:55. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **30**
+Total de documentos: **32**
 
 
-## SDD (30)
+## SDD (32)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -39,5 +39,5 @@ Total de documentos: **30**
 | `SDD-DTF-0029` | test_check_hooks: token com prefixo de variável falso (substring, não prefixo válido) continua reprovado | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0027 |
 | `SDD-DTF-0030` | Paralelismo derivado: campo arquivos por RF, tabela de tasks na SDD, script parallel_plan.py | implemented | Michel Pessoa | 2026-09-15 | — |
 | `SDD-DTF-0031` | check_ears confunde coluna Arquivos com critério em SPEC de 4 colunas | implemented | Michel Pessoa | 2026-09-15 | SDD-DTF-0030 |
-| `SDD-DTF-0032` | Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry | approved | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0032` | Gate de CI do verify-sdd: presença+veredito+cobertura de RF-ID, cross-check de evidência e override de incidente validado contra o registry | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0033` | Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py | approved | Michel Pessoa | 2026-09-22 | — |
