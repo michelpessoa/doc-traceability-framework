@@ -2,7 +2,7 @@
 id: SDD-DTF-0039
 type: SDD
 title: "Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -111,20 +111,31 @@ quando `sizing: small`).
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF05 todos com trecho/arquivo correspondente na implementação.
-- [ ] Nenhum arquivo tocado fora da lista de "Especificação técnica
+- [x] RF01-RF05 todos com trecho/arquivo correspondente na implementação.
+- [x] Nenhum arquivo tocado fora da lista de "Especificação técnica
       consolidada" — se tocar outro, atualizar esta SDD ou remover
-      antes do commit.
-- [ ] Nenhuma categoria de sweep adicionada/removida além das 7 listadas.
-- [ ] `gate_content_quality` (workflow-rules.yaml) e `spec.template.md`
+      antes do commit. (`HANDOFF.md`, novo no diff, é artefato descartável
+      da skill `handover`, não produto — não conta como escopo tocado.)
+- [x] Nenhuma categoria de sweep adicionada/removida além das 7 listadas.
+- [x] `gate_content_quality` (workflow-rules.yaml) e `spec.template.md`
       (as duas cópias) não divergem entre si na descrição da seção nova.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS** (rodada 2 — passo 0 reaberto depois de STRAT-DTF-0003 virar `approved`).
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0039.md /home/michel/doc-traceability-central/docs/DTF` + leitura integral de STRAT-DTF-0003 (item 10 e seção "Comparação com o tlc-spec-lean", linha E8) | `❌ 1 problema(s) encontrado(s): SDD-DTF-0039: source_docs 'STRAT-DTF-0003' está com status 'draft' — esperado approved ou implemented.` Itens 2-4 do passo 0 (RF-ID↔requisito, nenhum critério relaxado, contratos técnicos) verificados por leitura: RF01-RF05 da SDD conferem fielmente com a descrição do item 10/E8 da STRAT (mesmas 7 categorias, mesma exigência de preencher Destino (RF-ID) ou declarar "não aplicável" com motivo), sem relaxamento identificado — mas não há "Parte 2" formal na STRAT para comparar contrato técnico byte a byte, pois é doc de direção, não SPEC (compatível com sizing `small`, que pula a SPEC). | n/a (checagem documental de status do source_doc, não de código) | **Não** — achado bloqueante | `_framework/scripts/check_source_docs.py:59-64` | automatizado |
+| 2 | Fidelidade à origem (recheck) | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0039.md /home/michel/doc-traceability-central/docs/DTF` — rodado depois de STRAT-DTF-0003 virar `approved` no arquivo e no `registry.yaml` do repositório central (PR michelpessoa/doc-traceability-central#121, ainda não mergeado, mas já refletido em disco em `/home/michel/doc-traceability-central`, que é a árvore que o script lê) | `✅ source_docs de SDD-DTF-0039.md conferem com o registry central.` Confirmado em disco: `docs/DTF/registry.yaml:28` e front-matter de `docs/DTF/00-strategy/STRAT-DTF-0003.md:4` ambos `status: approved`. Itens 2-4 do passo 0 (ver rodada 1) continuam válidos — nada mudou no conteúdo da STRAT além do `status`. | n/a (checagem documental de status do source_doc, não de código) | Sim | `_framework/scripts/check_source_docs.py:59-64` | automatizado |
+| 1 | 1 | `grep -n "Requisitos transversais (sweep)" _framework/templates/spec.template.md` | `75:## Requisitos transversais (sweep)` — 1 ocorrência | Mutação real: heading renomeado para "Requisitos transversais TEMP-SENSOR" via Edit → hook `hook_post_edit.py` (roda `validate_doc.py` no arquivo salvo) acusou `seção obrigatória ausente: 'Requisitos transversais (sweep)'`; restaurado o heading original, `git diff` vazio confirmado, hook voltou a não acusar ausência (avisos residuais de "Destino vazia" são esperados — é o próprio template com placeholders, não uma SPEC real) | Sim | `_framework/scripts/validate_doc.py:390-394` | automatizado |
+| 1 | 2 | `python3 -m pytest _framework/tests/test_validate_doc.py -k sweep -v` | `6 passed` | Mutação de código isolada: cópia de `validate_doc.py` em diretório fora do repositório (edição in-place do arquivo real foi bloqueada pelo classificador de segurança do ambiente de execução) com `check_sweep_section` forçado a `return []` incondicional, exercida via harness standalone reproduzindo as 6 fixtures do arquivo de teste → 4 de 6 (`test_sweep_ausente_falha`, `test_sweep_categoria_faltando_falha`, `test_sweep_destino_vazio_falha`, `test_sweep_na_sem_motivo_falha`) viraram FAIL; com a cópia original (não mutada) do módulo, as mesmas 4 voltaram a PASS. As 2 restantes (`completo_passa`, `nao_retroativo`) não discriminaram nesse harness isolado por dependerem de `workflow-rules.yaml` resolvido por caminho relativo ao script (ausente na cópia de scratchpad) — a execução real do pytest, dentro do repositório, já confirma as 6 passando (linha "Saída" desta própria linha). | Sim (4/6 diretas; 2/6 cobertas pela execução real in-repo) | `_framework/tests/test_validate_doc.py:224` (e 231/242/250/260/269) | automatizado |
+| 1 | 3 | `grep -n "Requisitos transversais (sweep)" _framework/rules/workflow-rules.yaml` | linhas 24 e 1181 — 2 ocorrências | Mutação real: linha 1181 alterada para "Requisitos transversais TEMP-SENSOR" via Edit → contagem caiu para 1 (abaixo do "ao menos 2" exigido); restaurado, `git diff` vazio confirmado, contagem voltou a 2 | Sim | n/a (grep de string literal, sem asserção de código) | automatizado |
+| 1 | 4 | `python3 _framework/scripts/render_prompts.py --check` | Todos os itens `✅`, `EXIT=0` (25 verificações, incl. cópias bundladas de `validate_doc.py` e `workflow-rules.yaml`) | Mutação real: linha extra `# TEMP-SENSOR-DTF-0039` acrescentada só na cópia bundlada de `validate_doc.py` via Edit → `❌ .../validate_doc.py: divergente de .../validate_doc.py.`, `EXIT=1`; restaurado, `git diff` vazio confirmado, `EXIT=0` de novo | Sim | `_framework/scripts/render_prompts.py:708` | automatizado |
+| 1 | 5 | `diff _framework/templates/spec.template.md _framework/skills/doc-traceability-framework/templates/spec.template.md` | Sem saída, exit 0 | Mutação real: sufixo " TEMP-SENSOR" acrescentado só na cópia bundlada via Edit → diff mostrou divergência na linha 75, exit 1; restaurado, `git diff` vazio confirmado, exit 0 de novo | Sim | n/a (diff de arquivo, sem asserção de código) | automatizado |
+| 1 | 6 | `python3 -m pytest _framework/ -q` | `180 passed in 26.44s` | Coberto pelos sensores individuais das linhas #1-5 acima; nenhuma mutação nova aplicada para esta linha | Sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

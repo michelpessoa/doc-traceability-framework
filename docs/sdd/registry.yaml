@@ -374,7 +374,7 @@ documents:
   - id: SDD-DTF-0039
     type: SDD
     title: "Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003)"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-22"
     updated: "2026-09-22"

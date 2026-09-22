@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 18:45. Não editar manualmente. Framework v2.2.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 19:04. Não editar manualmente. Framework v2.2.0._
 
 Total de documentos: **38**
 
@@ -46,4 +46,4 @@ Total de documentos: **38**
 | `SDD-DTF-0036` | Evidência de verificação com file:line da asserção e perfil declarado por critério | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0037` | verify-sdd ganha passo 0: fidelidade da SDD a source_docs (SPEC/ADR de origem) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0038` | Selftest dos validadores por mutação (selftest.py) + mecanização da contagem de recorrência de lições (lessons_check.py) | implemented | Michel Pessoa | 2026-09-22 | — |
-| `SDD-DTF-0039` | Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003) | approved | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0039` | Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003) | implemented | Michel Pessoa | 2026-09-22 | — |
