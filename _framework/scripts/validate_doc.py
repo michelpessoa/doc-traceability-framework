@@ -388,10 +388,7 @@ def check_sweep_section(doc_id: str, body: str) -> list:
     """
     section = section_body(body, "Requisitos transversais (sweep)")
     if section is None:
-        return [
-            f"{doc_id}: seção obrigatória ausente: 'Requisitos transversais (sweep)' "
-            "(STRAT-DTF-0003 item 10)."
-        ]
+        return [f"{doc_id}: seção obrigatória ausente: 'Requisitos transversais (sweep)' (STRAT-DTF-0003 item 10)."]
 
     rows: dict[str, list[str]] = {}
     for line in section.splitlines():
@@ -411,8 +408,7 @@ def check_sweep_section(doc_id: str, body: str) -> list:
         row = rows.get(category)
         if row is None:
             problems.append(
-                f"{doc_id}: 'Requisitos transversais (sweep)' sem linha para "
-                f"'{category}' (STRAT-DTF-0003 item 10)."
+                f"{doc_id}: 'Requisitos transversais (sweep)' sem linha para '{category}' (STRAT-DTF-0003 item 10)."
             )
             continue
         destino = row[1] if len(row) > 1 else ""
@@ -424,14 +420,10 @@ def check_sweep_section(doc_id: str, body: str) -> list:
         elif destino.lower() == "n/a":
             motivo = row[2] if len(row) > 2 else ""
             if not motivo:
-                problems.append(
-                    f"{doc_id}: sweep '{category}' marcado 'n/a' sem motivo "
-                    "(STRAT-DTF-0003 item 10)."
-                )
+                problems.append(f"{doc_id}: sweep '{category}' marcado 'n/a' sem motivo (STRAT-DTF-0003 item 10).")
         elif not RF_ID.search(destino):
             problems.append(
-                f"{doc_id}: sweep '{category}' com Destino '{destino}' não é "
-                "RF-ID nem 'n/a' (STRAT-DTF-0003 item 10)."
+                f"{doc_id}: sweep '{category}' com Destino '{destino}' não é RF-ID nem 'n/a' (STRAT-DTF-0003 item 10)."
             )
     return problems
 
