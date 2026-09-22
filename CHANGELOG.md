@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.2.0** (`2026-09-22`).
+Versão corrente: **2.3.0** (`2026-09-22`).
+
+## 2.3.0
+
+SDD-DTF-0039 (STRAT-DTF-0003, item 10, E8 do tlc-spec-lean): a SPEC ganha a seção "Requisitos transversais (sweep)" — lista fixa de categorias que ninguém escreve por padrão (autorização/ permissão, concorrência, idempotência, observabilidade, falha de dependência externa, validação de entrada, limite de volume/ rate), cada uma com `Destino` (RF-ID que cobre) ou `n/a` + motivo; célula vazia é gate. Mecanizado em `validate_doc.py` (`check_sweep_section`), não-retroativo por `created` (regra `sweep`, RULE_SINCE 2.3.0): SPEC redigida antes da seção existir no template não é reprovada por não a ter.
 
 ## 2.2.0
 

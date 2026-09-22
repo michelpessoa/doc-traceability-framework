@@ -22,6 +22,9 @@ Checa, por documento:
   9. SDD: toda linha de task tem coluna Arquivos preenchida; "Decomposição em
      tasks" ausente sem dispensa por sizing/RF único é gate (RF06/RF07,
      SDD-DTF-0030).
+  10. SPEC: seção "Requisitos transversais (sweep)" presente, com todas as
+      categorias fixas cobertas e Destino preenchido (RF-ID ou n/a + motivo),
+      não-retroativo (STRAT-DTF-0003 item 10, SDD-DTF-0039).
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
@@ -52,6 +55,7 @@ RULE_SINCE = {
     "rf_id": "1.7.0",
     "contract_where": "1.7.0",
     "ears": "2.0.0",
+    "sweep": "2.3.0",
 }
 
 # gate_content_quality item 4: termos que descrevem o que fazer sem mostrar
@@ -150,6 +154,20 @@ FILE_HINT = re.compile(r"[\w./-]+\.(?:ts|tsx|js|jsx|py|go|rs|java|kt|rb|sql|yaml
 DRAFTING_STATUSES = {"draft", "in_review"}
 
 TASK_NUM = re.compile(r"^\d+$")
+
+# STRAT-DTF-0003 item 10 (E8 do tlc-spec-lean): categorias de requisito
+# transversal que ninguém escreve por padrão. Lista fixa — mudar a lista
+# é mudança de regra (workflow-rules.yaml), não decisão de quem redige a
+# SPEC.
+SWEEP_CATEGORIES = [
+    "autorização / permissão",
+    "concorrência",
+    "idempotência",
+    "observabilidade",
+    "falha de dependência externa",
+    "validação de entrada",
+    "limite de volume / rate",
+]
 
 
 def scannable(body: str) -> str:
@@ -259,6 +277,8 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     drafting = status in DRAFTING_STATUSES
     if drafting and doc_type == "SPEC":
         problems += check_files_column(doc_id, doc_type, section_body(body, "Requisitos funcionais"))
+        if applies("sweep"):
+            problems += check_sweep_section(doc_id, body)
     if drafting and doc_type == "SDD":
         problems += check_files_column(doc_id, doc_type, section_body(body, "Decomposição em tasks"))
         problems += check_tasks_section(doc_id, fm, body)
@@ -353,6 +373,67 @@ def check_tasks_section(doc_id: str, fm: dict, body: str) -> list:
         f"{doc_id}: sem seção 'Decomposição em tasks' e não elegível para dispensa "
         f"(sizing != small, {len(rf_ids)} RFs consolidados) — gate RF07 (SDD-DTF-0030)."
     ]
+
+
+def check_sweep_section(doc_id: str, body: str) -> list:
+    """
+    STRAT-DTF-0003 item 10 (E8 tlc-spec-lean): toda SPEC tem a seção
+    "Requisitos transversais (sweep)" com uma linha por categoria de
+    SWEEP_CATEGORIES, e cada linha tem a coluna `Destino` preenchida —
+    RF-ID que cobre a categoria, ou `n/a` com motivo na coluna seguinte.
+    Não-retroativo: só se aplica a partir de RULE_SINCE["sweep"]
+    (`applies("sweep")`, checado por quem chama), então SPECs redigidas
+    antes da seção existir no template não são reprovadas por não terem
+    seção que não existia quando foram escritas.
+    """
+    section = section_body(body, "Requisitos transversais (sweep)")
+    if section is None:
+        return [
+            f"{doc_id}: seção obrigatória ausente: 'Requisitos transversais (sweep)' "
+            "(STRAT-DTF-0003 item 10)."
+        ]
+
+    rows = {}
+    for line in section.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        category = cells[0].lower()
+        if category in ("categoria", "---"):
+            continue
+        rows[category] = cells
+
+    problems = []
+    for category in SWEEP_CATEGORIES:
+        cells = rows.get(category)
+        if cells is None:
+            problems.append(
+                f"{doc_id}: 'Requisitos transversais (sweep)' sem linha para "
+                f"'{category}' (STRAT-DTF-0003 item 10)."
+            )
+            continue
+        destino = cells[1] if len(cells) > 1 else ""
+        if not destino:
+            problems.append(
+                f"{doc_id}: sweep '{category}' com coluna Destino vazia — "
+                "use um RF-ID ou 'n/a' (STRAT-DTF-0003 item 10)."
+            )
+        elif destino.lower() == "n/a":
+            motivo = cells[2] if len(cells) > 2 else ""
+            if not motivo:
+                problems.append(
+                    f"{doc_id}: sweep '{category}' marcado 'n/a' sem motivo "
+                    "(STRAT-DTF-0003 item 10)."
+                )
+        elif not RF_ID.search(destino):
+            problems.append(
+                f"{doc_id}: sweep '{category}' com Destino '{destino}' não é "
+                "RF-ID nem 'n/a' (STRAT-DTF-0003 item 10)."
+            )
+    return problems
 
 
 def collect(targets) -> list[Path]:
