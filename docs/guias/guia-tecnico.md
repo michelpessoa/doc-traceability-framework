@@ -43,9 +43,12 @@ _framework/
   skills/verify-sdd/                   (verificação independente)
   scripts/ (framework_check.py, registry_tools.py, validate_doc.py,
             validate_state.py, check_commit.py, check_renderings.py,
-            render_prompts.py, generate_registry_md.py, framework_lib.py)
-  guides/ (guia-tecnico.md, guia-nao-tecnico.md, paralelizacao-trilhas.md)
+            check_source_docs.py, ci_gate_verify_sdd.py, lessons_check.py,
+            selftest.py, parallel_plan.py, render_prompts.py,
+            generate_registry_md.py, framework_lib.py)
 docs/
+  guias/ (guia-tecnico.md, guia-nao-tecnico.md, paralelizacao-trilhas.md,
+          gate-ci-verify-sdd.md)
   {PROJECT_CODE}/
     00-strategy/
     01-rfc/
@@ -161,8 +164,12 @@ explícitos) — ver seção 7.
 
 ## 7. Os gates obrigatórios
 
-Quatro gates, todos não-opcionais, todos verificados pela IA (ou pessoa)
-que opera o framework — nenhum é imposto por CI:
+Quatro gates, todos não-opcionais, verificados primeiro pela IA (ou
+pessoa) que opera o framework. O gate de verificação de escopo tem
+também uma camada de CI obrigatória desde SDD-DTF-0032:
+`ci_gate_verify_sdd.py` bloqueia o merge de PR que muda uma SDD para
+`implemented` sem verificação independente válida — os outros três
+gates continuam dependendo só da sessão seguir a regra:
 
 **Gate de implementação** (`gate_implementation_before_code`, seção 13
 do YAML). Nenhuma linha de código de implementação antes da SPEC
@@ -188,6 +195,10 @@ autorrevisão que está no rodapé de cada template:
     necessário", "seguir o padrão do projeto" sem nomear o arquivo
 [ ] Ambiguidade real marcada como NEEDS CLARIFICATION, não suposta
 [ ] Nomes consistentes entre seções (criarPedido != criarNovoPedido)
+[ ] Sweep de requisitos transversais preenchido na SPEC (autorização,
+    concorrência, idempotência, observabilidade, falha de dependência
+    externa, validação de entrada, limite de volume/rate) — cada
+    categoria com `Destino` (RF-ID) ou `n/a` + motivo, nunca célula vazia
 ```
 
 Documento não vai para `approved` com `NEEDS CLARIFICATION` pendente —
@@ -274,6 +285,26 @@ python3 _framework/scripts/registry_tools.py trace docs/{PROJECT_CODE} RFC-CHECK
 
 # Regenerar a tabela legível (registry.md)
 python3 _framework/scripts/generate_registry_md.py docs/{PROJECT_CODE}
+
+# Passo 0 do verify-sdd: SDD é fiel a source_docs (id existe, status
+# approved/implemented, url bate com o path do registry central)
+python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-{PROJECT_CODE}-0001.md docs/{PROJECT_CODE}
+
+# Gate de CI obrigatório (seção 7): bloqueia merge de PR que muda SDD
+# para implemented sem verificação independente válida
+python3 _framework/scripts/ci_gate_verify_sdd.py
+
+# Selftest: reaplica mutações conhecidas nos próprios validadores e
+# confirma que cada uma ainda quebra a suíte de teste correspondente
+python3 _framework/scripts/selftest.py
+
+# Conta recorrência de "Chave de recorrência" entre LESSONS.md de
+# projetos diferentes — candidatas a virar regra global (seção 9.2)
+python3 _framework/scripts/lessons_check.py docs/sdd/LESSONS.md ../outro-projeto/LESSONS.md
+
+# Deriva o grafo de dependências entre tasks da SDD para execução em
+# paralelo por trilha (seção 14)
+python3 _framework/scripts/parallel_plan.py docs/sdd/SDD-{PROJECT_CODE}-0001.md
 ```
 
 Todos aceitam `--report-only` para listar sem falhar.
@@ -301,16 +332,35 @@ Não marque uma SDD como `implemented` na mesma sessão que a implementou.
 Rode a skill `verify-sdd` em sessão ou subagente separado — quem escreveu
 o código tem o resultado como conclusão desejada.
 
-Ela faz três coisas que o validator sozinho não faz:
+Antes do passo de conformidade com a spec, o procedimento roda o **passo
+0. Fidelidade à origem**: quando a SDD tem `source_docs`, confere se cada
+entrada existe no registry central, está `approved`/`implemented` e a
+`url` bate com o `path` do registry — mecanizado por
+`check_source_docs.py` (seção 9); a correspondência de conteúdo
+(requisito↔requisito, contrato↔contrato entre SPEC e SDD) continua
+checklist manual.
+
+Depois do passo 0, ela faz três coisas que o validator sozinho não faz:
 
 1. Confere requisito↔código nas **duas** direções: requisito sem código é
    SDD parcial (mantenha `approved`); arquivo tocado fora da SDD é escopo
    não registrado ou scope creep.
-2. Roda cada critério de aceite **nesta sessão** e registra a saída real.
+2. Roda cada critério de aceite **nesta sessão** e registra a saída real,
+   citando o `file:line` da asserção que resolve o critério e o perfil
+   declarado — colunas exigidas pela tabela de evidência desde
+   SDD-DTF-0036, não só "comando + saída".
 3. Aplica o **sensor de discriminação**: quebra o comportamento em espaço
    descartável (stash, cópia, worktree — nunca commit), confirma que o
    teste falha, e desfaz. Teste que passa com a implementação quebrada não
    verifica o critério.
+
+**Autoridade de despacho**: só quem tem a feature inteira que vai a PR
+despacha a verificação — nunca o próprio implementador, e num cenário de
+paralelismo (seção 14) nunca um verificador que só viu uma trilha.
+**Teto de 3 rodadas**: se o veredito não for PASS na 3ª rodada, a sessão
+para de tentar sozinha e escreve, na SDD, uma seção de escalonamento
+citando o motivo de cada rodada — não repete a 4ª vez sem intervenção
+humana.
 
 O resultado vai para um `validation.md` ao lado da SDD, com veredito
 PASS/FAIL, evidência por critério e resultado do sensor. `FAIL` não avança
@@ -323,6 +373,13 @@ concreto, a red flag que teria pegado antes, e a correção. **Não** proponha
 mudar `workflow-rules.yaml` por causa de uma violação isolada: uma lição só
 vira regra global se aparecer em dois projetos diferentes, tiver checagem
 mecânica possível, e couber como red flag ou item de validator existente.
+
+A contagem de "dois projetos diferentes" não precisa ser manual: marque a
+entrada com `**Chave de recorrência:** <slug>` e rode
+`lessons_check.py` (seção 9) apontando para os `LESSONS.md` de cada
+repositório — ele agrupa por slug e reporta como candidata a promoção
+todo slug que recorrer em 2+ arquivos distintos, sem decidir a promoção
+por você.
 
 Entre a v1.4.0 e a v1.7.0 cada falha de agente virou seção obrigatória
 nova; o arquivo de regras dobrou e a taxa de falha não caiu. É o padrão que

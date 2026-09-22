@@ -2,7 +2,7 @@
 id: SDD-DTF-0040
 type: SDD
 title: "guia-tecnico.md: corrige drift acumulado (7 adições recentes nunca refletidas)"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -127,13 +127,32 @@ sem divergência em `doc-traceability-central/docs/guias/guia-tecnico.md`
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF07 todos com trecho correspondente em `guia-tecnico.md`.
-- [ ] Único arquivo de produto tocado: `docs/guias/guia-tecnico.md`.
-- [ ] Nenhuma mudança em `workflow-rules.yaml`, scripts ou outros guias.
+- [x] RF01-RF07 todos com trecho correspondente em `guia-tecnico.md`.
+- [x] Único arquivo de produto tocado: `docs/guias/guia-tecnico.md`.
+- [x] Nenhuma mudança em `workflow-rules.yaml`, scripts ou outros guias.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-(a preencher pela sessão implementadora + verificação independente)
+(verificação independente pendente — ver seção de rastreabilidade;
+tabela desta sessão implementadora abaixo, não substitui a verificação
+independente exigida por `gate_scope_verification`)
+
+| # | Critério (origem: RF-ID) | Comando de verificação | Resultado |
+|---|---|---|---|
+| 1 | RF01 | `grep -n "nenhum é imposto por CI" docs/guias/guia-tecnico.md` | Sem saída (exit 1) |
+| 2 | RF01 | `grep -n "ci_gate_verify_sdd.py" docs/guias/guia-tecnico.md \| wc -l` | `3` |
+| 3 | RF02 | `grep -cE "check_source_docs\.py\|ci_gate_verify_sdd\.py\|lessons_check\.py\|selftest\.py\|parallel_plan\.py" docs/guias/guia-tecnico.md` | `10` |
+| 4 | RF03 | `grep -n "guides/" docs/guias/guia-tecnico.md` | Sem saída (exit 1) |
+| 5 | RF03 | `grep -n "gate-ci-verify-sdd.md" docs/guias/guia-tecnico.md` | linha 51 |
+| 6 | RF04 | `grep -inE "fidelidade . origem\|passo 0" docs/guias/guia-tecnico.md \| wc -l` | `3` |
+| 7 | RF04 | `grep -in "autoridade de despacho" docs/guias/guia-tecnico.md` | linha 357 |
+| 8 | RF04 | `grep -in "3 rodadas" docs/guias/guia-tecnico.md` | linha 360 |
+| 9 | RF05 | `grep -in "file:line" docs/guias/guia-tecnico.md` | linha 349 |
+| 10 | RF06 | `grep -in "sweep" docs/guias/guia-tecnico.md` | linha 198 |
+| 11 | RF07 | `grep -cE "lessons_check\.py\|Chave de recorrência" docs/guias/guia-tecnico.md` | `5` |
+| 12 | Markdown balanceado | `python3 -c "t=open('docs/guias/guia-tecnico.md').read(); assert t.count('\`\`\`')%2==0"` | Sem `AssertionError` |
+| 13 | Suíte completa | `python3 -m pytest _framework/ -q` | `180 passed in 27.17s` |
+| 14 | `render_prompts.py --check` | `python3 _framework/scripts/render_prompts.py --check \| grep "❌"` | Sem saída (exit 1) |
 
 ## Rastreabilidade
 
