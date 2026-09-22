@@ -1,0 +1,48 @@
+# mutations.yaml — mutações reais dos validadores do kit, usadas por
+# selftest.py (SDD-DTF-0038, RF01). Cada entrada reaproveita um par
+# find/replace já verificado matando o teste indicado — ver a tabela
+# "Mutações de mutations.yaml" em SDD-DTF-0038.md para a proveniência de
+# cada uma. Não editar find/replace sem reverificar manualmente que a
+# mutação ainda mata o teste (o código-fonte pode ter divergido).
+
+- validator: "_framework/scripts/validate_state.py"
+  test_file: "_framework/scripts/tests/test_validate_state.py"
+  description: "check_evidence_profile: guarda 'esperado == automatizado' antes de exigir Assertion preenchida (SDD-DTF-0036 RF03)"
+  find: 'if esperado == "automatizado" and (len(row) <= assertion_idx or not row[assertion_idx].strip()):'
+  replace: 'if (len(row) <= assertion_idx or not row[assertion_idx].strip()):'
+
+- validator: "_framework/scripts/validate_state.py"
+  test_file: "_framework/scripts/tests/test_validate_state.py"
+  description: "check_evidence_profile: comparação de divergência entre Perfil usado e Perfil esperado (SDD-DTF-0036 RF04)"
+  find: 'usado.split("(")[0].strip().lower() != esperado and "(" not in usado:'
+  replace: 'usado.split("(")[0].strip().lower() == esperado and "(" not in usado:'
+
+- validator: "_framework/scripts/validate_state.py"
+  test_file: "_framework/scripts/tests/test_validate_state.py"
+  description: "check_source_fidelity: guarda de source_docs vazio (SDD-DTF-0037 RF05)"
+  find: "if not source_docs or not evidence:"
+  replace: "if not evidence:"
+
+- validator: "_framework/scripts/validate_state.py"
+  test_file: "_framework/scripts/tests/test_validate_state.py"
+  description: "applies_strict: comparação estrita > vs >= para não-retroatividade (SDD-DTF-0037 RF06)"
+  find: "return str(created) > since_date"
+  replace: "return str(created) >= since_date"
+
+- validator: "_framework/scripts/check_source_docs.py"
+  test_file: "_framework/scripts/tests/test_check_source_docs.py"
+  description: "status fora de OK_STATUSES deixa de reprovar (SDD-DTF-0037 RF02/RF03)"
+  find: "if status not in OK_STATUSES:"
+  replace: "if False:"
+
+- validator: "_framework/scripts/check_hooks.py"
+  test_file: "_framework/scripts/tests/test_check_hooks.py"
+  description: "cálculo de prefixo aceita substring falsa em vez de prefixo válido (SDD-DTF-0029)"
+  find: "token.startswith(p)"
+  replace: '"CLAUDE_PROJECT_DIR" in token'
+
+- validator: "_framework/scripts/check_commit.py"
+  test_file: "_framework/scripts/tests/test_check_commit.py"
+  description: "checagem de Conventional Commits neutralizada (mutação nova, sem fonte anterior — decisão de SDD-DTF-0038)"
+  find: "if not m:"
+  replace: "if False:"

@@ -361,3 +361,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0037.md"
     tags: [verify-sdd, gate_scope_verification, tlc-ai-dev-flow, rastreabilidade, source_docs]
+  - id: SDD-DTF-0038
+    type: SDD
+    title: "Selftest dos validadores por mutação (selftest.py) + mecanização da contagem de recorrência de lições (lessons_check.py)"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0038.md"
+    tags: [selftest, lessons_policy, tlc-spec-lean, mecanizacao]
