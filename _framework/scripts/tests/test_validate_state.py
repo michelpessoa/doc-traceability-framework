@@ -289,7 +289,9 @@ def test_perfil_divergente_com_justificativa_passa(tmp_path):
 
 
 def test_perfil_manual_nao_exige_assertion(tmp_path):
-    table = HEADER_PERFIL + "| 1 | revisão visual | ok | n/a | Sim | n/a | manual |\n"
+    """Célula 'Assertion' de fato vazia (não 'n/a' literal) — sensor real:
+    sem a guarda `esperado == "automatizado"`, esta linha reprovaria."""
+    table = HEADER_PERFIL + "| 1 | revisão visual | ok | n/a | Sim |  | manual |\n"
     problems = _with_criteria_and_evidence(tmp_path, CRITERIA_PERFIL_MANUAL, table)
     assert problems == []
 
