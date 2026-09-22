@@ -381,7 +381,7 @@ def evaluate_sdd(
         return SddCheckResult(sdd_id, transition, "pass", [f"liberado por válvula de escape ({override.log.inc_id})."])
 
     reasons: list[str] = []
-    if override.applies and not override.ok:
+    if override.applies and not override.ok and override.error:
         reasons.append(override.error)
 
     presence = check_validation_presence(sdd_id, head)
