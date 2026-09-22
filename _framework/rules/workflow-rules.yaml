@@ -14,9 +14,22 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.2.0"
+  version: "2.3.0"
   last_updated: "2026-09-22"
   changelog:
+    - version: "2.3.0"
+      date: "2026-09-22"
+      summary: >
+        SDD-DTF-0039 (STRAT-DTF-0003, item 10, E8 do tlc-spec-lean): a
+        SPEC ganha a seção "Requisitos transversais (sweep)" — lista fixa
+        de categorias que ninguém escreve por padrão (autorização/
+        permissão, concorrência, idempotência, observabilidade, falha de
+        dependência externa, validação de entrada, limite de volume/
+        rate), cada uma com `Destino` (RF-ID que cobre) ou `n/a` + motivo;
+        célula vazia é gate. Mecanizado em `validate_doc.py`
+        (`check_sweep_section`), não-retroativo por `created` (regra
+        `sweep`, RULE_SINCE 2.3.0): SPEC redigida antes da seção existir
+        no template não é reprovada por não a ter.
     - version: "2.2.0"
       date: "2026-09-22"
       summary: >
@@ -1165,6 +1178,15 @@ gate_content_quality:
          redigir do zero (regra já existente, seção 3), e este gate
          proíbe também a direção inversa: a SDD empobrecer o que o PRD/TS
          já continha.
+      7. SPEC preenche a seção "Requisitos transversais (sweep)": cada
+         categoria fixa (autorização/permissão, concorrência,
+         idempotência, observabilidade, falha de dependência externa,
+         validação de entrada, limite de volume/rate) tem `Destino`
+         (RF-ID) ou `n/a` com motivo — célula vazia é o mesmo placeholder
+         do item 4, só que por omissão de categoria em vez de frase vaga
+         (STRAT-DTF-0003 item 10, SDD-DTF-0039). Não-retroativo: SPEC
+         redigida antes desta seção existir no template não é reprovada
+         por não a ter (`validate_doc.py`, regra `sweep`).
   self_review_checklist: >
     A IA que redige o documento roda esta checklist nela mesma, como
     último passo antes de propor a mudança de status — não é revisão de

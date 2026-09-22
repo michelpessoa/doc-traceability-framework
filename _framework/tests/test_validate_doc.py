@@ -46,9 +46,24 @@ tags: []
 """
 
 
-def _spec(arquivos_cell: str) -> str:
+SWEEP_TABLE_COMPLETA = """
+## Requisitos transversais (sweep)
+| Categoria | Destino (RF-ID ou n/a) | Motivo (obrigatório se n/a) |
+|---|---|---|
+| Autorização / permissão | n/a | sem controle de acesso nesta feature |
+| Concorrência | RF01 | |
+| Idempotência | n/a | operação read-only |
+| Observabilidade | n/a | sem log novo |
+| Falha de dependência externa | n/a | sem dependência externa |
+| Validação de entrada | n/a | sem entrada de usuário |
+| Limite de volume / rate | n/a | volume fixo e pequeno |
+"""
+
+
+def _spec(arquivos_cell: str, sweep: str = SWEEP_TABLE_COMPLETA, created: str = "2026-09-22") -> str:
+    fm = SPEC_FRONTMATTER.replace('created: "2026-09-15"', f'created: "{created}"')
     return (
-        SPEC_FRONTMATTER
+        fm
         + f"""
 ## Objetivo
 Teste.
@@ -57,7 +72,7 @@ Teste.
 | RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |
 |---|---|---|---|
 | RF01 | Algo | O sistema deve fazer algo | {arquivos_cell} |
-
+{sweep}
 ## Contratos técnicos
 `foo.py`
 
@@ -197,3 +212,58 @@ def test_vocabulario_vago_em_draft_e_so_warning(tmp_path):
     problems, warnings = check_document(path)
     assert not any("gracefully" in p for p in problems)
     assert any("gracefully" in w for w in warnings)
+
+
+# STRAT-DTF-0003 item 10 / SDD-DTF-0039: seção "Requisitos transversais (sweep)".
+
+
+def test_sweep_ausente_falha(tmp_path):
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`", sweep=""), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("Requisitos transversais (sweep)" in p for p in problems)
+
+
+def test_sweep_completo_passa(tmp_path):
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`"), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert not any("sweep" in p.lower() for p in problems)
+
+
+def test_sweep_categoria_faltando_falha(tmp_path):
+    """Sensor: remover uma linha da tabela (categoria 'Concorrência') tem
+    que ser pego — sem isso o gate não distingue tabela completa de
+    tabela parcial."""
+    sweep_incompleto = SWEEP_TABLE_COMPLETA.replace("| Concorrência | RF01 | |\n", "")
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`", sweep=sweep_incompleto), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("concorrência" in p.lower() for p in problems)
+
+
+def test_sweep_destino_vazio_falha(tmp_path):
+    sweep = SWEEP_TABLE_COMPLETA.replace("| Concorrência | RF01 | |\n", "| Concorrência |  |  |\n")
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`", sweep=sweep), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("Destino vazia" in p for p in problems)
+
+
+def test_sweep_na_sem_motivo_falha(tmp_path):
+    sweep = SWEEP_TABLE_COMPLETA.replace(
+        "| Observabilidade | n/a | sem log novo |\n", "| Observabilidade | n/a | |\n"
+    )
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`", sweep=sweep), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("sem motivo" in p for p in problems)
+
+
+def test_sweep_nao_retroativo_para_spec_antiga(tmp_path):
+    """SPEC criada antes de 2026-09-22 (data de introdução da regra) não é
+    reprovada por não ter a seção que ainda não existia no template."""
+    path = tmp_path / "spec.md"
+    path.write_text(_spec("`caminho/qualquer.py`", sweep="", created="2026-09-15"), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert not any("sweep" in p.lower() for p in problems)

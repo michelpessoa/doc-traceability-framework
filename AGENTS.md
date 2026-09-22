@@ -1,4 +1,4 @@
-# AGENTS.md — Framework de Documentação & Rastreabilidade (v2.2.0)
+# AGENTS.md — Framework de Documentação & Rastreabilidade (v2.3.0)
 
 Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `_framework/rules/workflow-rules.yaml`. Não edite à mão: o CI reprova
@@ -19,7 +19,7 @@ A SDD é a única exceção que vive no repositório de código, porque é o
 único documento pensado para ser lido por uma IA na hora de implementar.
 Antes de criar qualquer documento, confirme em qual dos dois você está.
 
-## Núcleo canônico (framework 2.2.0)
+## Núcleo canônico (framework 2.3.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.

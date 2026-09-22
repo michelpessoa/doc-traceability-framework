@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 16:22. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 19:04. Não editar manualmente. Framework v2.2.0._
 
-Total de documentos: **35**
+Total de documentos: **38**
 
 
-## SDD (35)
+## SDD (38)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -44,3 +44,6 @@ Total de documentos: **35**
 | `SDD-DTF-0034` | SKILL.md principal: corrige inconsistências, cobre lacunas de cobertura e enxuga (itens 3-5 de STRAT-DTF-0003) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0035` | Skills finas (handover/pickup/verify-sdd): checklist mínimo inline + itens A e G do tlc-spec-lean | implemented | Michel Pessoa | 2026-09-22 | SDD-DTF-0034 |
 | `SDD-DTF-0036` | Evidência de verificação com file:line da asserção e perfil declarado por critério | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0037` | verify-sdd ganha passo 0: fidelidade da SDD a source_docs (SPEC/ADR de origem) | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0038` | Selftest dos validadores por mutação (selftest.py) + mecanização da contagem de recorrência de lições (lessons_check.py) | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0039` | Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003) | implemented | Michel Pessoa | 2026-09-22 | — |

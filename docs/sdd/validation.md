@@ -1,32 +1,55 @@
-# Verificação — SDD-DTF-0035
+# Verificação — SDD-DTF-0039
 
-- **Veredito:** PASS
-- **Diff verificado:** d3a38a2fe0693b459d89c498883ddadf0115dc32..HEAD (merge-base capturado com `git merge-base HEAD origin/main`, branch `sdd/SDD-DTF-0035`, PR #104)
-- **Verificador independente:** sim (sessão separada, sem histórico da sessão que implementou)
+- **Veredito:** PASS (rodada 2)
+- **Diff verificado:** 75d0879941fd51a96f085c491dadf658baffb46b..1af0f8d (merge-base capturado com `git merge-base HEAD origin/main`, branch `sdd/SDD-DTF-0039`)
+- **Verificador independente:** sim (sessão separada, sem leitura do histórico da sessão que implementou)
+
+## Passo 0 — Fidelidade à origem
+
+### Rodada 1 — FAIL (bloqueante)
+
+| Item | Comando/verificação | Resultado |
+|---|---|---|
+| 1. Existência/status/url de `source_docs` (mecanizado) | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0039.md /home/michel/doc-traceability-central/docs/DTF` | `❌ 1 problema(s) encontrado(s): SDD-DTF-0039: source_docs 'STRAT-DTF-0003' está com status 'draft' — esperado approved ou implemented.` |
+| 2. Todo RF-ID da origem tem requisito correspondente na SDD | leitura manual | STRAT-DTF-0003 não é SPEC (não tem RF-ID formal); o item 10 da tabela de prioridade e a linha E8 da seção "Comparação com o tlc-spec-lean" são cobertos por RF01-RF05 da SDD sem lacuna aparente |
+| 3. Nenhum critério relaxado na consolidação | leitura manual | Sem relaxamento identificado — as 7 categorias, a exigência Destino/n/a+motivo e a não-retroatividade por `created` batem com a descrição da STRAT |
+| 4. Contrato técnico da Parte 2 igual na SDD | leitura manual | Não aplicável no sentido estrito — STRAT é doc de direção, sem "Parte 2" formal (compatível com sizing `small`, que pula a SPEC); a SDD é quem define o contrato técnico pela primeira vez, o que é o esperado nesse caminho |
+
+**Achado bloqueante (rodada 1):** `STRAT-DTF-0003` (a única entrada de `source_docs` desta SDD) seguia com `status: draft` no registry central, embora a própria STRAT já marcasse os itens 1-9 da sua tabela de prioridade como "Concluído" e o item 10 (origem desta SDD) como "Pendente" — nunca tinha chegado a `approved`. Por regra do passo 0 do `verify-sdd`, exit≠0 ali era bloqueante e impedia considerar a verificação completa, independente do restante.
+
+### Rodada 2 — PASS
+
+Reaberto a pedido do coordenador depois que STRAT-DTF-0003 virou `approved` (front-matter e `registry.yaml` do repositório central, PR michelpessoa/doc-traceability-central#121 — ainda não mergeado, mas o conteúdo em disco no worktree local, que é o que o script lê, já reflete `approved`).
+
+| Item | Comando/verificação | Resultado |
+|---|---|---|
+| 1. Existência/status/url de `source_docs` (mecanizado) | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0039.md /home/michel/doc-traceability-central/docs/DTF` | `✅ source_docs de SDD-DTF-0039.md conferem com o registry central.` Exit 0. Confirmado em disco: `docs/DTF/registry.yaml:28` (`status: approved`) e front-matter de `docs/DTF/00-strategy/STRAT-DTF-0003.md:4` (`status: approved`), ambos em `/home/michel/doc-traceability-central`. |
+| 2-4. | leitura manual | Sem mudança de conteúdo da STRAT além do campo `status` — as conclusões da rodada 1 (itens 2-4) continuam válidas |
+
+**Sem achado bloqueante nesta rodada.** Passo 0 completo e aprovado.
+
+## Passo 1-3 — Conformidade de código e evidência fresca
+
+Rodados nesta sessão (rodada 1, antes de saber do bloqueio do passo 0 — mantidos porque nada no código/testes mudou entre as rodadas):
 
 | Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
 |---|---|---|---|---|
-| RF01 — checklist inline nas 3 skills | `grep -l "Checklist mínimo" _framework/skills/handover/SKILL.md _framework/skills/pickup/SKILL.md _framework/skills/verify-sdd/SKILL.md` | 3 arquivos listados | sem teste automatizado (checagem textual/manual do conteúdo dos bullets) | Sim |
-| RF02 — Sensor vazio reprova | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k sensor -v` | 4 passed (`test_na_no_sensor_nao_reprova`, `test_sensor_vazio_reprova`, `test_sensor_sem_teste_automatizado_e_valido`, `test_tabela_sem_coluna_sensor_nao_reprova_retroativamente`) | Comentada a condição `if sensor_idx is not None and len(row) > sensor_idx and not row[sensor_idx].strip():` (prefixo `if False and ...`) em `check_evidence`; `test_sensor_vazio_reprova` falhou (`assert False`) com a implementação quebrada; restaurado via cópia (`/tmp/validate_state.py.bak`) e os 4 testes voltaram a passar | Sim |
-| RF03 — tabela sem coluna Sensor não reprova retroativamente | mesmo comando do critério RF02 (inclui `test_tabela_sem_coluna_sensor_nao_reprova_retroativamente`) | Incluído no `4 passed` acima | mesmo sensor do RF02 (o guard `sensor_idx is not None` é a lógica de RF03) | Sim |
-| RF04 — vocabulário vago reprova em decidido, warning antes | `python3 -m pytest _framework/tests/test_validate_doc.py -k vocabulario_vago -v` | 2 passed (`test_vocabulario_vago_reprova_documento_approved`, `test_vocabulario_vago_em_draft_e_so_warning`) | Removidos os 9 termos novos de `BANNED_PLACEHOLDERS` em `validate_doc.py`; os 2 testes falharam (`assert False` em ambos) com a lista quebrada; restaurado via cópia (`/tmp/validate_doc.py.bak`) e os 2 testes voltaram a passar | Sim |
-| RF05 — procedimento cita as duas mecanizações | `grep -c "validate_state.py\|STRAT-DTF-0003 item" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado (checagem de conteúdo textual, não comportamento executável) | Sim |
-| Sem regressão nos validadores contra os documentos reais | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 34 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 34 documento(s) verificados: nenhuma SDD implemented sem evidência.` | sem teste automatizado (execução direta do CLI contra o diretório real) | Sim |
-| Suíte completa sem regressão | `python3 -m pytest _framework/ -q` | `126 passed in 4.80s` | n/a — é a própria suíte, cada teste individual já tem seu sensor onde aplicável | Sim |
-| Bundle da skill principal sincronizado | `python3 _framework/scripts/render_prompts.py --check` | Todas as linhas `✅ ... sincronizado.` / `✅ ... em dia.`, incluindo `validate_doc.py` e `validate_state.py` | sem teste automatizado (checagem de paridade de arquivo, não comportamento) | Sim |
+| RF01 — seção nova no template | `grep -n "Requisitos transversais (sweep)" _framework/templates/spec.template.md` | `75:## Requisitos transversais (sweep)` | Mutação real do heading → hook `hook_post_edit.py` acusou seção ausente; restaurado, `git diff` vazio | Sim |
+| RF02/RF03 — gate mecanizado | `python3 -m pytest _framework/tests/test_validate_doc.py -k sweep -v` | `6 passed` | Mutação de código isolada (cópia fora do repo, `check_sweep_section` forçado a `return []`) → 4/6 testes falharam; restaurado → 4/6 voltaram a passar (as outras 2 dependem de path relativo não reproduzível fora do repo, mas passam na execução real in-repo) | Sim |
+| RF04 — `gate_content_quality` cita a seção | `grep -n "Requisitos transversais (sweep)" _framework/rules/workflow-rules.yaml` | linhas 24 e 1181 (2 ocorrências) | Mutação real de uma das linhas → contagem caiu para 1; restaurado → voltou a 2 | Sim |
+| RF05 — render_prompts sem divergência | `python3 _framework/scripts/render_prompts.py --check` | Todos os itens `✅`, exit 0 | Mutação real (linha extra só na cópia bundlada de `validate_doc.py`) → `❌ divergente`, exit 1; restaurado → exit 0 | Sim |
+| RF05 — cópias do template idênticas | `diff _framework/templates/spec.template.md _framework/skills/doc-traceability-framework/templates/spec.template.md` | sem saída, exit 0 | Mutação real (sufixo só na cópia bundlada) → diff detectou, exit 1; restaurado → exit 0 | Sim |
+| Suíte completa sem regressão | `python3 -m pytest _framework/ -q` | `180 passed in 26.44s` | Coberto pelos sensores acima | Sim |
+
+Todos os critérios de código (RF01-RF05 + suíte) passam com evidência fresca e sensor de discriminação real desta sessão. Com a rodada 2 do passo 0 também PASS, a verificação está completa e sem achado bloqueante.
 
 ## Descompassos encontrados
 
-Nenhum. RF01-RF05 têm código/prosa correspondente identificável; todo
-arquivo do diff (`d3a38a2..HEAD`) está na lista de "Arquivos tocados" da
-SDD (produto) ou é o próprio conjunto SDD/registry.yaml/registry.md/testes
-já esperado por essa verificação; nenhuma mudança em
-`workflow-rules.yaml`, `AGENTS.md` ou `QUICKSTART.md`; nenhuma abstração,
-flag ou refactor sem requisito correspondente.
+- Nenhum ao final da rodada 2. Na rodada 1, `source_docs: STRAT-DTF-0003` estava `draft` no registry central — descompasso de processo (SDD compilada a partir de STRAT ainda não aprovada), resolvido fora desta sessão pela promoção de STRAT-DTF-0003 a `approved` (PR central #121).
+- Nenhum arquivo fora de escopo: todos os arquivos do diff (`AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, prompts, `workflow-rules.yaml`, `validate_doc.py` (canônico e bundlado), `spec.template.md` (canônico e bundlado), `test_validate_doc.py`, `docs/especificacao.md`, `docs/sdd/registry.md`/`registry.yaml`) batem com a lista de "Especificação técnica consolidada" da SDD ou são housekeeping esperado de registry. Exceção informativa: `HANDOFF.md` (81 linhas, novo) não está na lista de arquivos tocados da SDD — mas é artefato descartável da skill `handover`, não produto, e o próprio `HANDOFF.md` já registrava a pendência do status da STRAT, então não é scope creep silencioso.
 
 ## Lições
 
-Nenhuma — implementação bateu com a SDD de primeira, sensores dos dois
-critérios com teste automatizado (RF02, RF04) discriminaram corretamente
-na primeira rodada (falharam com a implementação quebrada, passaram
-restaurada). Sem red flag nova para o LESSONS.md do projeto.
+- Sizing `small` que pula a SPEC e cita a STRAT diretamente em `source_docs` expôs uma lacuna: nada garantia que a STRAT de origem estivesse `approved` antes de uma SDD ser compilada dela — `check_source_docs.py` pegou isso mecanicamente na rodada 1 (funcionou como desenhado), mas o processo de redação da SDD não tinha esse gate antes de chegar a `approved`. Candidato a red flag em `verify-sdd.md`/checklist de quem redige a SDD: antes de declarar `source_docs` apontando para uma STRAT, confirmar que ela está `approved` (ou promovê-la nesse momento), não só que o item específico está documentado nela.
+- STRAT-DTF-0003 tinha 9 de 10 itens da própria tabela marcados "Concluído" mas o documento continuava `draft` até ser promovida fora desta sessão — sugere que o ciclo de vida de STRAT (opcional, mas com `status` formal) não tinha um passo definido de "quando todos os itens fecham, o que acontece com o status da STRAT". Resolvido neste caso pontual; fica como pergunta mais ampla para o humano decidir se vira regra (ex.: `framework_check.py` avisar quando todos os itens de uma STRAT `draft` estiverem "Concluído").
+- A rodada 2 confirma que o passo 0 do `verify-sdd` é sensível a mudança de estado fora do próprio repositório sendo verificado (repositório central) — reforça por que o script lê o registry central ao vivo em vez de confiar em cache/memória da sessão anterior.

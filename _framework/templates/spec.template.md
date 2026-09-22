@@ -72,6 +72,22 @@ conta como caso de borda.
 
 ## Requisitos não funcionais
 
+## Requisitos transversais (sweep)
+Lista fixa do que ninguém escreve por padrão — cada categoria abaixo
+precisa de uma linha, sempre. `Destino` é o RF-ID que cobre a categoria,
+ou `n/a` com o motivo na coluna seguinte; célula vazia nunca é aceitável
+(ausência de necessidade é `n/a` + motivo, não silêncio).
+
+| Categoria | Destino (RF-ID ou n/a) | Motivo (obrigatório se n/a) |
+|---|---|---|
+| Autorização / permissão | | |
+| Concorrência | | |
+| Idempotência | | |
+| Observabilidade | | |
+| Falha de dependência externa | | |
+| Validação de entrada | | |
+| Limite de volume / rate | | |
+
 ## Fora de escopo
 O que esta SPEC explicitamente NÃO cobre — é o que protege a implementação
 de crescer "enquanto está ali".

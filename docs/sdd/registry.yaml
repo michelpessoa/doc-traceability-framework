@@ -371,3 +371,13 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0038.md"
     tags: [selftest, lessons_policy, tlc-spec-lean, mecanizacao]
+  - id: SDD-DTF-0039
+    type: SDD
+    title: "Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003)"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-09-22"
+    updated: "2026-09-22"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0039.md"
+    tags: [spec, sweep, requisitos-transversais, tlc-spec-lean, qualidade]
