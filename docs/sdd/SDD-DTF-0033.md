@@ -2,7 +2,7 @@
 id: SDD-DTF-0033
 type: SDD
 title: "Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py"
-status: draft
+status: in_review
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
