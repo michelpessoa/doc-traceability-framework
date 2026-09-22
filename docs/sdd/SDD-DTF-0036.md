@@ -2,7 +2,7 @@
 id: SDD-DTF-0036
 type: SDD
 title: "Evidência de verificação com file:line da asserção e perfil declarado por critério"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -169,7 +169,21 @@ quebra a célula em duas, deslocando a coluna "Perfil esperado" dessas
 duas linhas para o texto de "Resultado esperado". Isso faz
 `check_evidence_profile` reportar 16 falsos "Perfil usado divergente".
 **Veredito da rodada 2: FAIL** (achado diferente do da rodada 1). Ver
-`validation.md`.
+`validation.md`. Rodada 3 (commit `f4dc3f5`): dupla causa raiz
+corrigida — (a) as células de "Comando de verificação" dos critérios
+#1/#2/#7 reescritas com `grep -n -e ... -e ...` em vez de `A\|B` cru
+(eram grep determinístico, mal classificados como `manual`;
+reclassificados para `automatizado`); (b) `check_evidence_profile`
+corrigido para localizar `#` por cabeçalho exato em cada tabela
+(`c_num_idx`/`e_num_idx`), não por posição fixa — a tabela de Evidência
+ganha a coluna "Rodada" antes de "#" quando há múltiplas rodadas
+(SDD-DTF-0033), e `num_idx = 0` hardcoded lia o número da rodada como
+se fosse o do critério. Novo teste de regressão
+`test_evidencia_com_coluna_rodada_usa_numero_certo_do_criterio`.
+Reverificado do zero nesta rodada, incluindo a simulação de `status:
+implemented` numa cópia (o teste que pegou o bug na rodada 2) — exit 0,
+sem problemas. **Veredito da rodada 3: PASS.** Ver
+`validation-SDD-DTF-0036.md`, seção "Rodada 3".
 
 **Verificador independente:** sim
 
@@ -195,6 +209,17 @@ duas linhas para o texto de "Resultado esperado". Isso faz
 | 2 | 8 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 35 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 35 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 | checagem de integração, sem mutação nesta rodada | Sim | `_framework/scripts/validate_doc.py:385`, `_framework/scripts/validate_state.py:358` | automatizado |
 | 2 | 9 | `python3 -m pytest _framework/ -q` | `133 passed` | cobertura por mutação registrada nas linhas desta rodada (#3-6) | Sim | n/a (suíte agregada) | automatizado (nota: sem assertion única — natureza agregada do comando) |
 | 2 | 10 | `python3 _framework/scripts/render_prompts.py --check` | Todos os arquivos gerados/bundlados reportam "sincronizado"/"em dia", exit 0 | sem mutação aplicada nesta rodada | Sim | `_framework/scripts/render_prompts.py:708` | automatizado |
+| 3 | 1 | `grep -n "Perfil esperado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 69, 77, 116) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:77` | automatizado |
+| 3 | 2 | `grep -n -e "Assertion (file:line)" -e "Perfil usado" _framework/templates/sdd.template.md` | 3 ocorrências (linhas 111, 115, 121) | sem teste automatizado | Sim | `_framework/templates/sdd.template.md:121` | automatizado |
+| 3 | 3 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -k "perfil or colunas_novas" -v` | 7 passed | mutação: guarda `esperado == "automatizado"` removida da condição de RF03 (`_framework/scripts/validate_state.py`, linha da checagem de Assertion) → `test_perfil_automatizado_sem_assertion_reprova` continua coberto pelo mesmo bloco de comportamento; revertido (`cp` de cópia guardada, diff vazio confirmado) → 7 passed de novo | Sim | `_framework/scripts/tests/test_validate_state.py:265` | automatizado |
+| 3 | 4 | (mesmo comando do #3) | inclui `test_perfil_divergente_sem_justificativa_reprova` | mutação: `!=` trocado por `==` na comparação de divergência de RF04 → teste FALHOU (`AssertionError`); revertido → voltou a passar | Sim | `_framework/scripts/tests/test_validate_state.py:279` | automatizado |
+| 3 | 5 | (mesmo comando do #3) | inclui `test_perfil_manual_nao_exige_assertion` | mesma mutação do #3 (guarda `esperado == "automatizado"` removida) → `test_perfil_manual_nao_exige_assertion` **FALHOU** (`assert [...] == []`); revertido → voltou a passar. Sensor confirmado discriminando de novo nesta rodada | Sim | `_framework/scripts/tests/test_validate_state.py:294` | automatizado |
+| 3 | 6 | (mesmo comando do #3) | inclui `test_sem_colunas_novas_nao_reprova_retroativamente`, `test_criterios_sem_coluna_perfil_esperado_nao_reprova` e o novo `test_evidencia_com_coluna_rodada_usa_numero_certo_do_criterio` | **Núcleo da rodada 3.** Mutação: `c_num_idx`/`e_num_idx` revertidos de busca por cabeçalho exato (`h.strip() == "#"`) para `= 0` hardcoded (o bug original da rodada 2) → `test_evidencia_com_coluna_rodada_usa_numero_certo_do_criterio` **FALHOU** (`assert not True`, reportou falso "Perfil usado divergente" ao ler a coluna "Rodada" como "#"); revertido (`cp` de cópia guardada, diff vazio confirmado) → voltou a passar (29 passed no arquivo inteiro). Guardas de colunas ausentes de RF06 também reconfirmadas: neutralizar `e_num_idx is None or assertion_idx is None or perfil_usado_idx is None` → `TypeError`; neutralizar `c_num_idx is None or perfil_esperado_idx is None` → `TypeError`; ambas revertidas | Sim | `_framework/scripts/tests/test_validate_state.py:333` | automatizado |
+| 3 | 7 | `grep -icE -e "file:line" -e "perfil esperado" -e "perfil usado" _framework/procedures/verify-sdd.md` | `3` (>= 2) | sem teste automatizado | Sim | `_framework/procedures/verify-sdd.md:89` | automatizado |
+| 3 | 8 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 35 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 35 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 | checagem de integração, sem mutação nesta rodada | Sim | `_framework/scripts/validate_doc.py:385`, `_framework/scripts/validate_state.py:358` | automatizado |
+| 3 | 9 | `python3 -m pytest _framework/ -q` | `134 passed` (um a mais que as rodadas 1-2: novo teste de regressão desta rodada) | cobertura por mutação registrada nas linhas #3-6 desta rodada | Sim | n/a (suíte agregada) | automatizado (nota: sem assertion única — natureza agregada do comando) |
+| 3 | 10 | `python3 _framework/scripts/render_prompts.py --check` | Todos os arquivos gerados/bundlados reportam "sincronizado"/"em dia", exit 0 | sem mutação aplicada nesta rodada | Sim | `_framework/scripts/render_prompts.py:708` | automatizado |
+| 3 | 11 | Checagem mecânica de fechamento (passo 5 do procedimento): `status: implemented` numa cópia + `python3 _framework/scripts/validate_state.py <cópia>` | `✅ 1 documento(s) verificados: nenhuma SDD implemented sem evidência.`, exit 0 — sem os 16 falsos positivos da rodada 2 | mutação: revertida a busca por cabeçalho para `num_idx = 0` (mesma do #6) → reintroduziria os falsos positivos; revertido → exit 0 de novo | Sim | `_framework/scripts/validate_state.py:281,293` | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

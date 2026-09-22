@@ -1,5 +1,105 @@
 # Verificação — SDD-DTF-0036
 
+## Rodada 3 (commit `f4dc3f5`) — teto de 3 rodadas
+
+- **Veredito:** PASS
+- **Diff verificado:** `bc88c9419bc51d44c02bdae1fead031bd877e12f..f4dc3f5` (merge-base recapturado com `git merge-base HEAD origin/main`, branch `sdd/SDD-DTF-0036`, agora no commit `f4dc3f5`)
+- **Verificador independente:** sim (sessão separada de todas as rodadas anteriores e de qualquer sessão de implementação/correção; histórico delas não foi lido)
+
+A rodada 2 (abaixo) achou FAIL na checagem mecânica de fechamento
+(passo 5 do procedimento): simular `status: implemented` e rodar
+`validate_state.py` de verdade produzia 16 falsos "Perfil usado
+divergente", com causa raiz dupla — (a) comandos `grep` com alternância
+regex crua (`A\|B`) dentro de células de tabela quebravam o parser
+ingênuo por `|`; (b) `check_evidence_profile` usava `num_idx = 0`
+hardcoded, assumindo que "#" é sempre a primeira coluna, quando a
+tabela de Evidência ganha uma coluna "Rodada" antes de "#" com múltiplas
+rodadas (SDD-DTF-0033) — lia o número da rodada como se fosse o número
+do critério.
+
+O commit `f4dc3f5` ("fix(validate_state): check_evidence_profile lia
+coluna Rodada como #") diz ter corrigido os dois problemas. Esta rodada
+reverificou do zero, sem assumir que o commit estava certo só por
+dizer isso:
+
+1. **Releitura completa da SDD** (agora com Rodada 1 e 2 na tabela de
+   evidência) **e do diff completo** `bc88c9419..HEAD` restrito a
+   `_framework` e `docs/sdd/SDD-DTF-0036.md`/`validation-SDD-DTF-0036.md`.
+   Também comparado `0f2417a..f4dc3f5` (o commit da rodada 2 até o
+   commit sob verificação) para isolar exatamente a correção proposta.
+
+2. **Todos os 10 critérios de aceite rodados de novo nesta sessão** —
+   ver "Rodada 3" na tabela de "Evidência de verificação" da SDD.
+   Nenhuma regressão; suíte agregada subiu de `133 passed` para
+   `134 passed` (um teste de regressão novo).
+
+3. **Passo decisivo repetido: simulação de `status: implemented`.**
+   Copiado `docs/sdd/SDD-DTF-0036.md` para um arquivo descartável
+   (`/tmp/verify0036/SDD-DTF-0036.md`), trocado `status: approved` por
+   `status: implemented` só na cópia, e rodado
+   `python3 _framework/scripts/validate_state.py <cópia>`:
+
+   ```
+   ✅ 1 documento(s) verificados: nenhuma SDD `implemented` sem evidência.
+   ```
+
+   Exit 0, sem nenhum problema — os 16 falsos positivos da rodada 2 não
+   reapareceram. Arquivo real da SDD nunca teve o status alterado
+   durante esta checagem.
+
+4. **Sensor de discriminação do teste de regressão novo**
+   (`test_evidencia_com_coluna_rodada_usa_numero_certo_do_criterio`,
+   `_framework/scripts/tests/test_validate_state.py:333`): revertida a
+   busca por cabeçalho para `num_idx = 0` hardcoded nas duas linhas
+   (`c_num_idx` e `e_num_idx`, mesmo bug da rodada 2) → o teste
+   **FALHOU** (`assert not True`); restaurado pelo backup guardado
+   (`cp`, nunca `git stash`, diff vazio confirmado contra a cópia
+   original) → voltou a passar (`29 passed` no arquivo inteiro). O
+   sensor discrimina de fato o bug que a rodada 2 encontrou.
+
+5. **RF03, RF04, RF05 e RF06 reconfirmados nesta rodada** (arquivo de
+   teste mudou de novo desde a rodada 2): cada guarda (`esperado ==
+   "automatizado"`, comparação de divergência `!=`, guardas de colunas
+   ausentes de critérios e de evidência) mutada individualmente,
+   confirmado que o teste correspondente falha, revertido, confirmado
+   que volta a passar. Ver linhas "Rodada 3" #3-6 na tabela da SDD para
+   o detalhe de cada mutação.
+
+6. **Grep por `\|` cru em célula de tabela** em `SDD-DTF-0036.md` e
+   `validation-SDD-DTF-0036.md`: todas as ocorrências restantes (`grep
+   -n '\|'` nos dois arquivos) são prosa fora de tabela — trechos que
+   *descrevem* o bug histórico (`"grep -n \"A\|B\""`, `` `\|` `` como
+   exemplo) — nenhuma dentro de célula `|...|`. As células reais dos
+   critérios #1/#2/#7 agora usam `grep -n -e "..." -e "..."` (verificado
+   diretamente nas linhas 111-119 do arquivo).
+
+7. **Duas cópias do kit sincronizadas:** `_framework/scripts/validate_state.py`
+   e `_framework/skills/doc-traceability-framework/scripts/validate_state.py`
+   idênticas (`diff` sem saída; `render_prompts.py --check` reporta
+   "sincronizado" para ambas).
+
+**Veredito final: PASS.** Nenhum descompasso novo encontrado. Status
+avança para `implemented` nesta rodada.
+
+## Descompassos encontrados nesta rodada
+
+Nenhum.
+
+## Lições desta rodada
+
+- Confirma a lição da rodada 2: um gate que só roda com `status ==
+  "implemented"` precisa ser exercido por simulação em cópia antes de
+  qualquer correção ser considerada resolvida — é o único jeito de
+  saber se a correção realmente fecha o ciclo, e foi repetido aqui como
+  passo decisivo em vez de confiar na mensagem do commit.
+- A causa raiz de "número errado por posição fixa" (`num_idx = 0`) é o
+  mesmo padrão de risco já visto em outras funções deste arquivo
+  (`cmd_idx`/`sensor_idx`) — qualquer nova coluna adicionada antes de
+  uma coluna existente é candidata a quebrar checagens que assumem
+  posição fixa; o padrão correto (busca por cabeçalho exato) já está
+  estabelecido no restante do arquivo e deveria ser o primeiro
+  candidato ao revisar código semelhante.
+
 ## Rodada 2 (commit `05018cd`)
 
 - **Veredito:** FAIL
