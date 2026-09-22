@@ -1358,6 +1358,17 @@ lessons_policy:
       falha antes, e a correção adotada. Sem entrada genérica do tipo
       "ter mais atenção" — se não dá para transformar em red flag ou em
       checagem de script, não é lição, é lamento.
+    recurrence_key_convention: >
+      Campo opcional, retrocompatível (entrada antiga sem ele continua
+      válida): `**Chave de recorrência:** <slug>` no corpo da entrada,
+      identificando a MESMA falha de forma estável entre repositórios
+      (slug curto, descritivo, não taxonomia fixa). `_framework/scripts/lessons_check.py`
+      (SDD-DTF-0038) lê esse campo em 2+ `LESSONS.md` e reporta como
+      candidata a promoção todo slug recorrente em arquivos distintos —
+      mecaniza a CONTAGEM do critério 1 abaixo, não a decisão de
+      promover. Entrada já promovida ganha `**Status da lição:**
+      confirmada` no corpo e sai da contagem (decisão humana já tomada,
+      não deve voltar a aparecer como candidata).
   when_a_lesson_becomes_a_rule: >
     Uma lição só sobe para este arquivo (virando regra global) se as três
     condições valerem juntas:
