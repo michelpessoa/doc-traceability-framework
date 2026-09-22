@@ -660,7 +660,7 @@ id_scheme:
 frontmatter_schema:
   common_fields:
     id: "string — obrigatório, segue id_scheme"
-    type: "enum[STRAT, RFC, ADR, PRD, TS, SDD, BASE, INC, PM] — obrigatório"
+    type: "enum[STRAT, RFC, ADR, SPEC, PRD, TS, SDD, BASE, INC, PM] — obrigatório"
     title: "string — obrigatório"
     status: "enum, ver status_lifecycle.states (ou incident_lifecycle.states se type=INC) — obrigatório"
     project: "string — PROJECT_CODE — obrigatório"
@@ -688,10 +688,15 @@ frontmatter_schema:
     TS:
       parent_rfc: "id da RFC de origem"
       parent_adr: "id do ADR de origem, ou null se o gate dispensou ADR"
+    SPEC:
+      parent_rfc: "id da RFC de origem, ou null se o sizing dispensou RFC"
+      parent_adr: "id do ADR de origem, ou null se o gate dispensou ADR"
+      sizing: "small | medium | large | complex — ver sizing (seção 19)"
     SDD:
       source_docs: >
-        lista de objetos { id, url } — PRD(s), TS(s) e ADR(s) que
-        originaram esta SDD. url é obrigatório porque esses documentos
+        lista de objetos { id, url } — SPEC(s) e ADR(s) que originaram
+        esta SDD em projeto sob 2.0.0+ (PRD(s)/TS(s) em projeto ainda
+        mapeado sob 1.x). url é obrigatório porque esses documentos
         vivem no repositório central, não no repositório do projeto onde
         a SDD está (ver repository_topology.cross_repo_reference).
       consumption_instructions: "texto curto — como uma IA deve usar este documento antes de implementar"
