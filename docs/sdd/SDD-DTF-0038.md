@@ -2,7 +2,7 @@
 id: SDD-DTF-0038
 type: SDD
 title: "Selftest dos validadores por mutação (selftest.py) + mecanização da contagem de recorrência de lições (lessons_check.py)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -176,16 +176,28 @@ hipotéticas):**
 
 ## Verificação de escopo (nada a mais, nada a menos)
 
-- [ ] RF01-RF07 todos com trecho correspondente no código.
-- [ ] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
-- [ ] Nenhuma abstração/config/feature flag extra além do que RF01-RF07 pedem.
+- [x] RF01-RF07 todos com trecho correspondente no código.
+- [x] Nenhum arquivo tocado fora da lista de "Arquivos tocados" acima.
+- [x] Nenhuma abstração/config/feature flag extra além do que RF01-RF07 pedem.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-**Verificador independente:** —
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0038.md`. Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0038.md /home/michel/doc-traceability-central/docs/DTF` (+ leitura de SPEC-DTF-0015 completa) | `✅ source_docs de SDD-DTF-0038.md conferem com o registry central.` — RF01-RF07 todos presentes na SDD, edge cases e contratos técnicos (Parte 2) idênticos à SPEC. RF01 tem divergência **deliberada e registrada**: SPEC pede reaproveitar exatamente os pares de SDD-DTF-0036/0037 para os 4 validadores; essas duas SDDs só cobrem `validate_state.py` (2 pares) e `check_source_docs.py` (1 par) — a SDD documenta em `consumption_instructions` e na tabela "Mutações de mutations.yaml" que a mutação de `check_hooks.py` vem de SDD-DTF-0029 e a de `check_commit.py` é nova sem fonte anterior, confirmada com o humano. Conferi origem de cada um dos 7 pares contra os documentos citados (SDD-DTF-0036 linhas 194-195, SDD-DTF-0037 linhas 178/180-181, SDD-DTF-0029 linha 141, validation-SDD-DTF-0037.md linha 34): todas as citações batem com find/replace/test_file reais. Registro é fiel, não é omissão. | n/a (checagem documental, não código) | Sim | n/a | n/a |
+| 1 | 1 | `python3 -m pytest _framework/scripts/tests/test_selftest.py -k mutations_yaml -v` | `1 passed` — confirma cobertura dos 4 validadores | Mutação real: removida a entrada `check_commit.py` de `mutations.yaml` → `test_mutations_yaml_cobre_os_4_validadores_com_5_campos` FALHOU (`AssertionError: 'check_commit.py'` faltando); restaurado via cópia guardada (`cp`), diff vazio confirmado → voltou a passar | Sim | `_framework/scripts/tests/test_selftest.py:60` | automatizado |
+| 1 | 2 | `python3 -m pytest _framework/scripts/tests/test_selftest.py -v` | `9 passed in 19.88s` | Mutação real em `selftest.py`: `apply_mutation` deixou de levantar `ValueError` quando `find` ausente (`if find not in original` → `if False`) → `test_apply_mutation_find_ausente_levanta_erro` e `test_run_mutation_find_ausente_reporta_erro_nao_sobrevivente` FALHARAM (2 de 9); restaurado via cópia guardada → 9 passed de novo | Sim | `_framework/scripts/tests/test_selftest.py:75` | automatizado |
+| 1 | 3 | (mesmo comando do #2, inclui `test_run_mutation_find_ausente_reporta_erro_nao_sobrevivente`) | `PASSED` (dentro do run de 9 passed) | Mesma mutação do #2 (guarda de `find` ausente removida) → `test_run_mutation_find_ausente_reporta_erro_nao_sobrevivente` FALHOU (`assert True is False`, outcome["survived"] deixou de ser `False`); restaurado → voltou a passar | Sim | `_framework/scripts/tests/test_selftest.py:119` | automatizado |
+| 1 | 4 | `python3 _framework/scripts/selftest.py` | `✅ 7 mutação(ões): todos os mutantes morreram.` exit 0 | Mutação real: corrompi o `find` da entrada `check_commit.py` em `mutations.yaml` (`if not m:` → `if not m_does_not_exist:`, simulando código-fonte divergido) → `selftest.py` reportou `❌ 1 problema(s)`, mutação não aplicável, exit 1; restaurado via cópia guardada, diff vazio confirmado → voltou a exit 0 com 7/7 mortos | Sim | `_framework/scripts/selftest.py:33` (guard de `find not in original`) | automatizado |
+| 1 | 5 | `python3 -m pytest _framework/scripts/tests/test_lessons_check.py -v` | `11 passed in 0.10s` | Mutação real em `lessons_check.py`: `find_candidates` deixou de filtrar `entry["confirmed"]` (`if entry["confirmed"]:` → `if False:`) → `test_find_candidates_exclui_confirmada` FALHOU (slug confirmado voltou a aparecer como candidata); restaurado via cópia guardada → 11 passed de novo | Sim | `_framework/scripts/tests/test_lessons_check.py:118` | automatizado |
+| 1 | 6 | (mesmo comando do #5, inclui `test_find_candidates_slug_em_dois_arquivos_e_candidata`, `test_find_candidates_slug_em_um_arquivo_so_nao_e_candidata`, `test_find_candidates_duas_ocorrencias_mesmo_arquivo_nao_conta`) | `PASSED` (dentro do run de 11 passed) | Mutação real: exigência de "2+ arquivos distintos" relaxada para "1+" (`len(...) >= 2` → `>= 1`) → `test_find_candidates_slug_em_um_arquivo_so_nao_e_candidata`, `test_find_candidates_duas_ocorrencias_mesmo_arquivo_nao_conta` e `test_find_candidates_exclui_confirmada` FALHARAM (3 de 11 — slug de arquivo único passou a ser reportado como candidata); restaurado via cópia guardada, diff vazio confirmado → 11 passed de novo | Sim | `_framework/scripts/tests/test_lessons_check.py:105` | automatizado |
+| 1 | 7 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | `✅ 37 documento(s) passaram no gate de qualidade de conteúdo.` / `✅ 37 documento(s) verificados: nenhuma SDD implemented sem evidência.` ambos exit 0 | sem teste automatizado novo (validadores pré-existentes, já sensor-testados em SDD-DTF-0036/0037; esta SDD não os modifica) | Sim | n/a | automatizado |
+| 1 | 8 | `python3 -m pytest _framework/ -q` | `174 passed in 25.89s` (rodado após todas as mutações desta tabela restauradas) | coberto pelos sensores individuais #1-6 acima | Sim | n/a | automatizado |
+| 1 | 9 | `python3 _framework/scripts/render_prompts.py --check` | `EXIT=0`, todos os arquivos `sincronizado`/`em dia` | Mutação real: acrescentei uma linha a `_framework/skills/doc-traceability-framework/scripts/lessons_check.py` (cópia bundlada) sem tocar no original → `render_prompts.py --check` reportou `❌ .../lessons_check.py: divergente`; restaurado via cópia guardada, diff vazio confirmado → voltou a `sincronizado`, exit 0 | Sim | `_framework/scripts/render_prompts.py` (checagem de sincronização, sem linha única de assertion — comparação de conteúdo) | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
