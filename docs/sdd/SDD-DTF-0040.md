@@ -2,7 +2,7 @@
 id: SDD-DTF-0040
 type: SDD
 title: "guia-tecnico.md: corrige drift acumulado (7 adições recentes nunca refletidas)"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-22"
@@ -133,9 +133,13 @@ sem divergência em `doc-traceability-central/docs/guias/guia-tecnico.md`
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-(verificação independente pendente — ver seção de rastreabilidade;
-tabela desta sessão implementadora abaixo, não substitui a verificação
-independente exigida por `gate_scope_verification`)
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
+
+Tabela desta sessão implementadora abaixo (rodada 0, informativa) seguida
+da rodada de verificação independente (rodada 1, autoritativa para o
+gate `gate_scope_verification`).
 
 | # | Critério (origem: RF-ID) | Comando de verificação | Resultado |
 |---|---|---|---|
@@ -153,6 +157,25 @@ independente exigida por `gate_scope_verification`)
 | 12 | Markdown balanceado | `python3 -c "t=open('docs/guias/guia-tecnico.md').read(); assert t.count('\`\`\`')%2==0"` | Sem `AssertionError` |
 | 13 | Suíte completa | `python3 -m pytest _framework/ -q` | `180 passed in 27.17s` |
 | 14 | `render_prompts.py --check` | `python3 _framework/scripts/render_prompts.py --check \| grep "❌"` | Sem saída (exit 1) |
+
+### Rodada 1 — verificação independente
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 | `grep -n "nenhum é imposto por CI" docs/guias/guia-tecnico.md` | sem saída, exit 1 | Reversão manual da frase (seção 7) fez o grep casar (exit 0); restaurado, voltou a exit 1 | Sim | `docs/guias/guia-tecnico.md:167` | manual |
+| 1 | 2 | `grep -n "ci_gate_verify_sdd.py" docs/guias/guia-tecnico.md` | linhas 46, 170, 295 | coberto pelo sensor do #1 (mesma edição) | Sim | `docs/guias/guia-tecnico.md:170` | manual |
+| 1 | 3 | `grep -cE "check_source_docs\.py\|ci_gate_verify_sdd\.py\|lessons_check\.py\|selftest\.py\|parallel_plan\.py" docs/guias/guia-tecnico.md` | `10` | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:46` | manual |
+| 1 | 4 | `grep -n "guides/" docs/guias/guia-tecnico.md` | sem saída, exit 1 | Reversão manual `docs/guias/`→`guides/` fez o grep casar (exit 0); restaurado, voltou a exit 1 | Sim | `docs/guias/guia-tecnico.md:50` | manual |
+| 1 | 5 | `grep -n "gate-ci-verify-sdd.md" docs/guias/guia-tecnico.md` | linha 51 | coberto pelo sensor do #4 | Sim | `docs/guias/guia-tecnico.md:51` | manual |
+| 1 | 6 | `grep -inE "fidelidade . origem\|passo 0" docs/guias/guia-tecnico.md` | 3 ocorrências (289, 336, 343) | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:336` | manual |
+| 1 | 7 | `grep -in "autoridade de despacho" docs/guias/guia-tecnico.md` | linha 357 | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:357` | manual |
+| 1 | 8 | `grep -in "3 rodadas" docs/guias/guia-tecnico.md` | linha 360 | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:360` | manual |
+| 1 | 9 | `grep -in "file:line" docs/guias/guia-tecnico.md` | linha 349 | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:349` | manual |
+| 1 | 10 | `grep -in "sweep" docs/guias/guia-tecnico.md` | linha 198 | Reversão manual "Sweep de requisitos transversais"→"Requisitos transversais" fez o grep falhar (exit 1); restaurado, voltou a casar | Sim | `docs/guias/guia-tecnico.md:198` | manual |
+| 1 | 11 | `grep -cE "lessons_check\.py\|Chave de recorrência" docs/guias/guia-tecnico.md` | `5` | sem teste automatizado | Sim | `docs/guias/guia-tecnico.md:377` | manual |
+| 1 | 12 | `python3 -c "t=open('docs/guias/guia-tecnico.md').read(); assert t.count('\`\`\`')%2==0"` | sem `AssertionError`, exit 0 | n/a — checagem estrutural | Sim | `n/a` | n/a |
+| 1 | 13 | `python3 -m pytest _framework/ -q` | `180 passed in 26.88s` | n/a — suíte pré-existente | Sim | `n/a` | automatizado |
+| 1 | 14 | `python3 _framework/scripts/render_prompts.py --check` | todos os arquivos "sincronizado", exit 0 | n/a | Sim | `n/a` | automatizado |
 
 ## Rastreabilidade
 
