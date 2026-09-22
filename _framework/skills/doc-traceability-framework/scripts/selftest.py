@@ -66,9 +66,7 @@ def run_mutation(mutation: dict, kit_root: Path) -> dict:
         try:
             target.write_text(original, encoding="utf-8")
         except OSError as exc:
-            raise SystemExit(
-                f"FALHA AO REVERTER {target} — estado mutado ficou no disco: {exc}"
-            ) from exc
+            raise SystemExit(f"FALHA AO REVERTER {target} — estado mutado ficou no disco: {exc}") from exc
 
 
 def main() -> int:

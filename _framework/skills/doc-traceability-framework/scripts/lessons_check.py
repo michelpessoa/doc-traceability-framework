@@ -66,9 +66,7 @@ def find_candidates(entries_by_file: dict[Path, list[dict]]) -> dict[str, list[d
             by_slug.setdefault(entry["slug"], []).append(entry)
 
     return {
-        slug: occurrences
-        for slug, occurrences in by_slug.items()
-        if len({occ["file"] for occ in occurrences}) >= 2
+        slug: occurrences for slug, occurrences in by_slug.items() if len({occ["file"] for occ in occurrences}) >= 2
     }
 
 
