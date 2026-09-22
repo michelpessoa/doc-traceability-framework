@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 15:17. Não editar manualmente. Framework v2.1.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 15:49. Não editar manualmente. Framework v2.1.0._
 
-Total de documentos: **34**
+Total de documentos: **35**
 
 
-## SDD (34)
+## SDD (35)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -43,3 +43,4 @@ Total de documentos: **34**
 | `SDD-DTF-0033` | Despacho do verify-sdd: seção de autoridade no procedimento, coluna de rodada na evidência, teto mecanizado em validate_state.py | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0034` | SKILL.md principal: corrige inconsistências, cobre lacunas de cobertura e enxuga (itens 3-5 de STRAT-DTF-0003) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0035` | Skills finas (handover/pickup/verify-sdd): checklist mínimo inline + itens A e G do tlc-spec-lean | implemented | Michel Pessoa | 2026-09-22 | SDD-DTF-0034 |
+| `SDD-DTF-0036` | Evidência de verificação com file:line da asserção e perfil declarado por critério | draft | Michel Pessoa | 2026-09-22 | — |
