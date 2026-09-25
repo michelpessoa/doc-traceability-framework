@@ -2,7 +2,7 @@
 id: SDD-DTF-0050
 type: SDD
 title: "Prompt do Cursor sem PRD+TS: fluxo e ids de exemplo em SPEC no texto de render_prompts.py, com teste de regressão"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
