@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 110 arquivos
+Total: 111 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -109,6 +109,7 @@ Total: 110 arquivos
 | `tests/test_gitattributes_generated.py` | Testes do .gitattributes que marca o bundle gerado | Ao alterar o .gitattributes dos arquivos gerados | 2-8 KB |
 | `tests/test_kit_parity.py` | Paridade byte a byte entre scripts originais e cópias da skill | Ao alterar um script copiado para a skill | <2 KB |
 | `tests/test_parallel_plan.py` | Testes do parallel_plan.py sobre SDDs fictícias | Ao alterar o cálculo de paralelismo das tasks | 2-8 KB |
+| `tests/test_prd_ts_texto.py` | Regressão de PRD e TS como passo do fluxo no texto bruto do YAML | Ao editar o texto do workflow-rules.yaml | 2-8 KB |
 | `tests/test_procedures_structure.py` | Testes da estrutura do procedimento verify-sdd.md | Ao reordenar ou editar o verify-sdd.md | 2-8 KB |
 | `tests/test_render_indexes.py` | Testes do render_indexes.py: mapa, INDEX do kit, SDDs, tetos e idempotência | Ao alterar qualquer índice gerado | 8-32 KB |
 | `tests/test_repo_hygiene.py` | Testes de higiene: caches fora da busca e do versionamento | Ao alterar .gitignore ou .claudeignore | <2 KB |

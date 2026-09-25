@@ -14,9 +14,19 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.3.1"
+  version: "2.3.2"
   last_updated: "2026-09-25"
   changelog:
+    - version: "2.3.2"
+      date: "2026-09-25"
+      summary: >
+        SPEC-DTF-0021: correção de texto, sem mudança de comportamento,
+        não-retroativa. Seção 3 (fluxo), seção 12 (capabilities), seções
+        14, 15 e 17 e mais oito trechos deixam de apresentar PRD e
+        Tech Spec como passo do fluxo novo e passam a SPEC; cláusula de
+        legado sob 1.x preservada. Nenhum gate, critério, sizing, ciclo
+        de status ou front-matter muda. Teste de regressão
+        test_prd_ts_texto.py.
     - version: "2.3.1"
       date: "2026-09-25"
       summary: >
@@ -233,7 +243,7 @@ repository_topology:
       também a URL completa do arquivo no repositório central — sem isso,
       a rastreabilidade quebra ao atravessar repositórios. Ver
       frontmatter_schema.type_specific_fields.SDD.source_docs.
-    format: "{ id: 'PRD-CHECKOUT-0002', url: 'https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-prd/PRD-CHECKOUT-0002.md' }"
+    format: "{ id: 'SPEC-CHECKOUT-0002', url: 'https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-spec/SPEC-CHECKOUT-0002.md' }"
   project_repo_url:
     description: >
       A URL do repositório de código de cada projeto (o project_repo desta
@@ -317,7 +327,7 @@ document_types:
   SDD:
     name: "Spec Driven Design"
     purpose: >
-      Documento compilado a partir de PRD + Tech Spec (+ ADR quando existir),
+      Documento compilado a partir da SPEC (+ ADR quando existir),
       escrito para ser consumido DIRETAMENTE por ferramentas de IA (Claude
       Code, Cursor, Copilot, agentes de implementação etc.) como input
       primário de geração/implementação de código. É o elo entre "decisão
@@ -360,7 +370,7 @@ document_types:
       Documento analítico pós-incidente: causa raiz, linha do tempo,
       fatores contribuintes e action items. Usa o ciclo de vida padrão
       (é um documento de decisão/aprendizado como os demais). Pode
-      originar novas RFCs ou PRDs/Tech Specs a partir dos action items.
+      originar novas RFCs ou SPECs a partir dos action items.
     repo: central
     folder: "docs/{PROJECT_CODE}/08-postmortems"
     template: "templates/pm.template.md"
@@ -372,13 +382,13 @@ document_types:
 ##############################################################################
 # Fluxo textual:
 #   Strategy Doc -> RFC -> [GATE: exige ADR?]
-#       -> sim: ADR -> PRD + Tech Spec -> SDD (no repo do projeto)
-#       -> não: PRD + Tech Spec -> SDD (no repo do projeto)
+#       -> sim: ADR -> SPEC -> SDD (no repo do projeto)
+#       -> não: SPEC -> SDD (no repo do projeto)
 #   SDD -> consumido por ferramentas de IA na implementação, no repo do projeto
 #   Loop: decisões com impacto estratégico realimentam o Strategy Doc
 #
 # Este foi o GAP corrigido na v1.0: antes, TODA RFC aprovada exigia ADR
-# antes de PRD/Tech Spec. Agora existe um gate explícito.
+# antes da SPEC. Agora existe um gate explícito.
 
 
 ##############################################################################
@@ -454,7 +464,7 @@ decision_gates:
   rfc_to_adr:
     description: >
       Após uma RFC ser aprovada (status = approved), avalia-se se ela exige
-      um ADR antes de seguir para PRD/Tech Spec, ou se pode seguir direto.
+      um ADR antes de seguir para a SPEC, ou se pode seguir direto.
     trigger: "RFC.status == approved"
     rule: "requires_adr = true SE qualquer critério abaixo for verdadeiro"
     criteria:
@@ -549,18 +559,18 @@ onboarding:
           reconstruídos aprovados) no docs/{PROJECT_CODE}/registry.yaml do
           repositório central, com tags=[onboarding] em cada entrada.
     what_not_to_do: >
-      Não reconstruir PRD ou Tech Spec do que já foi construído no
+      Não reconstruir SPEC do que já foi construído no
       passado — o código já é a especificação do que existe; o valor de
-      reconstruir está apenas no "porquê" (ADRs), não no "como" (PRD/TS).
+      reconstruir está apenas no "porquê" (ADRs), não no "como" (SPEC).
   phase_2_cutover:
     description: >
       A partir daqui, o projeto segue o fluxo principal normalmente, como
       se fosse um projeto novo — não há mais diferença de tratamento.
     steps:
       - step: 1
-        action: "A próxima demanda real do projeto vira RFC-{PROJECT_CODE}-0001 (numeração começa do zero para RFC, PRD, TS e SDD — só BASE e os ADRs reconstruídos carregam a marca de onboarding)."
+        action: "A próxima demanda real do projeto vira RFC-{PROJECT_CODE}-0001 (numeração começa do zero para RFC, SPEC e SDD — só BASE e os ADRs reconstruídos carregam a marca de onboarding)."
       - step: 2
-        action: "Segue normalmente: gate de decisão (seção 3), PRD/Tech Spec, e a primeira SDD nasce no repositório do projeto."
+        action: "Segue normalmente: gate de decisão (seção 3), SPEC, e a primeira SDD nasce no repositório do projeto."
 
 ##############################################################################
 # 5. INCIDENTES E POSTMORTEM (FLUXO APARTADO)
@@ -879,7 +889,7 @@ audit:
   non_goals:
     - "Não bloquear commit, PR ou merge."
     - "Não exigir que todo commit tenha referência — a auditoria mede e reporta, não força adesão."
-    - "Não reconstruir PRD/Tech Spec de commits passados, pela mesma razão do onboarding (o código já é a especificação do 'como')."
+    - "Não reconstruir SPEC de commits passados, pela mesma razão do onboarding (o código já é a especificação do 'como')."
 
 ##############################################################################
 # 12. CAPACIDADES QUE QUALQUER FERRAMENTA DE IA (CLAUDE, CURSOR, COPILOT,
@@ -889,11 +899,11 @@ capabilities:
   - id: create_document
     description: "Criar um novo documento de um tipo válido, a partir do template correto, no repositório correto (central ou de projeto), atribuindo id novo (sequencial), preenchendo front-matter e adicionando entrada no registry correspondente."
   - id: evaluate_rfc_gate
-    description: "Aplicar decision_gates.rfc_to_adr a uma RFC aprovada: checar os critérios, decidir requires_adr, atualizar o front-matter da RFC e o registry, e indicar o próximo passo correto (ADR, ou direto PRD/TS)."
+    description: "Aplicar decision_gates.rfc_to_adr a uma RFC aprovada: checar os critérios, decidir requires_adr, atualizar o front-matter da RFC e o registry, e indicar o próximo passo correto (ADR, ou direto SPEC)."
   - id: update_status
     description: "Mover um documento para um novo status respeitando status_lifecycle.allowed_transitions (ou incident_lifecycle se for INC), atualizando front-matter e registry juntos."
   - id: compile_sdd
-    description: "Compilar uma SDD no repositório do projeto a partir de PRD + Tech Spec (+ ADR se existir) do repositório central, populando source_docs com id+url e preparando o texto para consumo por ferramentas de IA de implementação."
+    description: "Compilar uma SDD no repositório do projeto a partir da SPEC (+ ADR se existir) do repositório central, populando source_docs com id+url e preparando o texto para consumo por ferramentas de IA de implementação."
   - id: trace
     description: "Dado um id, retornar a cadeia completa de documentos relacionados (ancestrais e descendentes), atravessando repositórios via url quando necessário."
   - id: validate_registry
@@ -905,7 +915,7 @@ capabilities:
   - id: evaluate_postmortem_requirement
     description: "Aplicar postmortem_policy (por severidade + recurrence_rule) a um INC para decidir se o postmortem é obrigatório completo, obrigatório leve ou opcional."
   - id: triage_postmortem_action_items
-    description: "Aplicar action_item_triage a cada action item de um PM, decidindo se vira PRD/TS direto ou uma nova RFC."
+    description: "Aplicar action_item_triage a cada action item de um PM, decidindo se vira SPEC direto ou uma nova RFC."
   - id: audit_repo_adherence
     description: "Executar audit (seção 11): cruzar commits/PRs do repositório do projeto com os registries conhecidos, classificar em coberto/referência quebrada/não documentado, e propor ADRs reconstruídos para o que for arquiteturalmente significativo, sem bloquear nada e sem exigir adesão perfeita à convenção de referência."
     mechanization:
@@ -913,9 +923,9 @@ capabilities:
       artifact_type: "command"
     mechanization_filename: "framework-check"
   - id: enforce_implementation_gate
-    description: "Antes de escrever ou alterar qualquer código de implementação para uma decisão coberta por este framework, verificar gate_implementation_before_code (seção 13): garantir que PRD/TS/SDD aplicáveis existam (criando-os primeiro, na mesma resposta, se faltarem) antes de tocar em código — nunca implementar primeiro e documentar depois."
+    description: "Antes de escrever ou alterar qualquer código de implementação para uma decisão coberta por este framework, verificar gate_implementation_before_code (seção 13): garantir que SPEC/SDD aplicáveis existam (criando-os primeiro, na mesma resposta, se faltarem) antes de tocar em código — nunca implementar primeiro e documentar depois."
   - id: enforce_branch_before_commit
-    description: "Antes de criar o primeiro commit de implementação de uma SDD/PRD/TS/ADR no repositório de projeto, verificar gate_branch_before_commit (seção 14): garantir que existe (ou criar) uma branch dedicada a partir de main e que o commit vai para essa branch — nunca commitar implementação direto em main. Ao final, abrir PR para main em vez de mergear localmente sem revisão."
+    description: "Antes de criar o primeiro commit de implementação de uma SDD/SPEC/ADR no repositório de projeto, verificar gate_branch_before_commit (seção 14): garantir que existe (ou criar) uma branch dedicada a partir de main e que o commit vai para essa branch — nunca commitar implementação direto em main. Ao final, abrir PR para main em vez de mergear localmente sem revisão."
     mechanization:
       vendor: "claude-code"
       artifact_type: "hook_pretooluse"
@@ -931,7 +941,7 @@ capabilities:
       - pattern: '"rm -rf ."*|"rm -rf /"*|"rm -rf ~"*'
         message: "rm -rf de escopo amplo. Confirme com o usuário antes."
   - id: enforce_content_quality_gate
-    description: "Antes de mover PRD, Tech Spec ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
+    description: "Antes de mover SPEC ou SDD de draft para in_review, rodar a autorrevisão de gate_content_quality (seção 15): checar granularidade requisito↔critério, ausência de placeholder, ausência de NEEDS CLARIFICATION pendente, e presença de 'onde' (arquivo/módulo) exato em todo item técnico."
     mechanization:
       vendor: "claude-code"
       artifact_type: "hook_posttooluse"
@@ -967,7 +977,7 @@ capabilities:
       matcher: "*"
       hook_command: ["python3", "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_session_start.py", "pickup"]
   - id: write_handover
-    trigger: "Ao encerrar uma sessão de planejamento (PRD/TS/SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso) com trabalho do fluxo ainda pela frente."
+    trigger: "Ao encerrar uma sessão de planejamento (SPEC e SDD compilados) antes de outra sessão/agente implementar, ou ao aproximar-se do limite de contexto configurado (padrão ~45% de uso) com trabalho do fluxo ainda pela frente."
     produces: "HANDOFF.md no repositório correto (projeto ou central, conforme o procedimento), com os ids dos documentos já produzidos, o próximo passo literal, e o que não fazer."
     invariants:
       - "Sobrescreve em lugar — não acumula versões antigas de HANDOFF."
@@ -1088,7 +1098,7 @@ gate_branch_before_commit:
         reality: "Sem branch não há check de CI nem janela de revisão. Um commit ruim já nasce integrado."
       - flag: "Estou sozinho no projeto, não tem quem revisar."
         reality: "O PR não existe só para revisão humana — é onde os status checks rodam e onde os ids ficam vinculados."
-      - flag: "Já tenho PRD/TS/SDD prontos, o gate está cumprido."
+      - flag: "Já tenho SPEC/SDD prontos, o gate está cumprido."
         reality: "Gate 13 e gate 14 são independentes. Cumprir um não dispensa o outro."
       - flag: "Faço o merge local agora e abro o PR depois."
         reality: "Depois do merge não existe mais PR a abrir. A ordem é o gate."
@@ -1097,7 +1107,7 @@ gate_branch_before_commit:
   applies_to: >
     Qualquer ferramenta de IA (ou pessoa) operando sob este framework que
     tenha acesso de escrita ao repositório de projeto (seção 1,
-    project_repo) para implementar uma SDD/PRD/TS/ADR já compilada.
+    project_repo) para implementar uma SDD/SPEC/ADR já compilada.
   rule: >
     OBRIGATÓRIO, não é sugestão. Antes do primeiro commit de implementação
     de uma decisão coberta por este framework, a IA DEVE:
@@ -1112,7 +1122,7 @@ gate_branch_before_commit:
          nunca por merge local direto nem push --force em main. A IA
          pode abrir o PR, mas não deve mergeá-lo sozinha sem sinal do
          humano responsável, salvo instrução explícita em contrário.
-      4. Referenciar no corpo do PR os ids relacionados (RFC/ADR/PRD/TS/
+      4. Referenciar no corpo do PR os ids relacionados (RFC/ADR/SPEC/
          SDD), no mesmo padrão de referência usado na auditoria (seção
          11), para que o PR funcione como o commit/PR "coberto" que essa
          auditoria espera encontrar.
@@ -1130,12 +1140,12 @@ gate_branch_before_commit:
     Fora de incidente ativo, não há exceção.
 
 ##############################################################################
-# 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DO PRD/TECH SPEC/SDD
+# 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DA SPEC E DA SDD
 ##############################################################################
 # Motivação: os gates 13/14 garantem ORDEM (documento antes de código,
-# branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Um PRD
-# ou Tech Spec podem existir, estar "approved", e ainda assim serem vagos
-# o bastante para que a SDD compilada a partir deles saia genérica. A
+# branch antes de commit) — nenhum garante QUALIDADE de conteúdo. Uma SPEC
+# pode existir, estar "approved" e ser vaga
+# o bastante para que a SDD compilada a partir dela saia genérica. A
 # qualidade observada em SDDs anteriores (ex.: SDD-EVM-0001/0009) veio de
 # disciplina espontânea da sessão que compilou, não de exigência do
 # framework — o que significa que não é reprodutível. Este gate torna
@@ -1161,10 +1171,11 @@ gate_content_quality:
     responsabilidade de quem redige, mas deixou de ser a única checagem:
     o script é o sinal externo, e roda em hook e CI.
   applies_to: >
-    PRD, Tech Spec e SDD, nesta ordem — a qualidade de uma SDD depende
-    diretamente da qualidade do PRD/TS de onde foi compilada.
+    SPEC e SDD, nesta ordem — a qualidade de uma SDD depende
+    diretamente da qualidade da SPEC de onde foi compilada.
+    Em projeto legado (sob 1.x), PRD e Tech Spec ocupam o lugar da SPEC.
   rule: >
-    OBRIGATÓRIO antes de mover PRD/TS/SDD de `draft` para `in_review`:
+    OBRIGATÓRIO antes de mover SPEC/SDD de `draft` para `in_review`:
       1. Todo requisito funcional (SPEC, Parte 1) tem RF-ID próprio e
          critério de aceite em notação EARS — não um bucket solto de
          critérios desconectado dos requisitos. EARS dá a gramática que
@@ -1176,12 +1187,11 @@ gate_content_quality:
            indesejada        "Se <condição>, então o sistema deve <resposta>"
            opcional          "Onde <capacidade>, o sistema deve <resposta>"
          Em PRD legado (projeto sob 1.x) isto é aviso, não erro.
-      2. Todo contrato técnico (Tech Spec) tem assinatura/schema exato e
+      2. Todo contrato técnico (SPEC, Parte 2) tem assinatura/schema exato e
          aponta o arquivo/módulo onde vive ("onde") — não descrição em
          prosa livre do tipo "no serviço de X".
       3. Todo caminho de erro/borda relevante está listado explicitamente
-         (PRD: "Casos de borda"; Tech Spec: "Casos de borda / tratamento
-         de erro") — "tratar erros apropriadamente" não é conteúdo, é
+         (SPEC: "Casos de borda / condições de erro") — "tratar erros apropriadamente" não é conteúdo, é
          placeholder.
       4. Nenhum placeholder do tipo "TBD", "definir depois", "ajustar
          conforme necessário", "seguir padrão do projeto" sem nomear o
@@ -1193,9 +1203,9 @@ gate_content_quality:
          não pode ir para `approved` com `NEEDS CLARIFICATION` pendente —
          só até `in_review`, e mesmo assim sinalizado ao humano revisor.
       6. A SDD compilada não introduz critério, contrato ou instrução que
-         não exista em nenhum PRD/TS de `source_docs` — compilar não é
+         não exista em nenhuma SPEC de `source_docs` — compilar não é
          redigir do zero (regra já existente, seção 3), e este gate
-         proíbe também a direção inversa: a SDD empobrecer o que o PRD/TS
+         proíbe também a direção inversa: a SDD empobrecer o que a SPEC
          já continha.
       7. SPEC preenche a seção "Requisitos transversais (sweep)": cada
          categoria fixa (autorização/permissão, concorrência,
@@ -1321,11 +1331,11 @@ gate_scope_verification:
 # 17. SKILL DE TRANSFERÊNCIA DE CONTEXTO: HANDOVER / PICKUP
 ##############################################################################
 # Motivação: o fluxo deste framework frequentemente separa quem planeja
-# (compila PRD/TS/SDD) de quem implementa (escreve código a partir da
+# (compila SPEC/SDD) de quem implementa (escreve código a partir da
 # SDD) — inclusive quando é a mesma pessoa, mas em sessões de IA
 # diferentes para não estourar o orçamento de contexto de uma sessão só.
 # Sem um formato padrão de passagem, a sessão implementadora reconstrói
-# contexto lendo tudo de novo (PRD/TS/SDD inteiros, histórico de decisão)
+# contexto lendo tudo de novo (SPEC/SDD inteiros, histórico de decisão)
 # ou herda uma sessão inchada. Handover resolve isso com um artefato de
 # passagem pequeno e padronizado — inspirado no padrão observado em
 # implementações públicas de "handover"/"pickup" (ex.:
@@ -1346,13 +1356,13 @@ handover_protocol:
     location: >
       Repositório de projeto (junto de docs/sdd/) quando o handover é
       para implementação; repositório central quando o handover é entre
-      etapas de documentação (ex.: RFC/ADR redigidos, PRD/TS pendentes).
+      etapas de documentação (ex.: RFC/ADR redigidos, SPEC pendente).
       Sobrescreve em lugar dentro do repositório (não acumula histórico
       de handovers antigos — o histórico real é o commit/PR, não o
       HANDOFF).
     required_sections: ["Goal", "Status", "Ids relacionados", "Files touched", "Key decisions", "Open threads / blockers", "Next step", "Don't do"]
   content_rule: >
-    HANDOFF referencia ids do framework (SDD-X, TS-X, PRD-X) em vez de
+    HANDOFF referencia ids do framework (SDD-X, SPEC-X) em vez de
     reescrever o conteúdo desses documentos — a sessão seguinte lê os
     documentos originais quando precisar de detalhe, o HANDOFF é só o
     mapa de "onde parei e o que fazer a seguir". Nunca duplica o que já

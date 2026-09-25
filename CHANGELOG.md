@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.3.1** (`2026-09-25`).
+Versão corrente: **2.3.2** (`2026-09-25`).
+
+## 2.3.2
+
+SPEC-DTF-0021: correção de texto, sem mudança de comportamento, não-retroativa. Seção 3 (fluxo), seção 12 (capabilities), seções 14, 15 e 17 e mais oito trechos deixam de apresentar PRD e Tech Spec como passo do fluxo novo e passam a SPEC; cláusula de legado sob 1.x preservada. Nenhum gate, critério, sizing, ciclo de status ou front-matter muda. Teste de regressão test_prd_ts_texto.py.
 
 ## 2.3.1
 

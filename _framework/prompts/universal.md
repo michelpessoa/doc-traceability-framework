@@ -1,4 +1,4 @@
-# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v2.3.1)
+# Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v2.3.2)
 
 <!-- BEGIN GENERATED: sumário -->
 **Sumário**
@@ -21,7 +21,7 @@
 - [16. Gate obrigatório: verificação de escopo antes de SDD "implemented"](#16-gate-obrigatório-verificação-de-escopo-antes-de-sdd-implemented) — 1285 bytes
 - [17. Handover/pickup: transferindo contexto entre sessões](#17-handoverpickup-transferindo-contexto-entre-sessões) — 1673 bytes
 - [18. Reuso em outro projeto](#18-reuso-em-outro-projeto) — 489 bytes
-- [Núcleo canônico (framework 2.3.1)](#núcleo-canônico-framework-231) — 3191 bytes
+- [Núcleo canônico (framework 2.3.2)](#núcleo-canônico-framework-232) — 3191 bytes
 <!-- END GENERATED -->
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
@@ -422,7 +422,7 @@ projeto" sem sinalizar que isso deveria primeiro atualizar
 
 <!-- BEGIN GENERATED: núcleo do framework — não edite à mão -->
 
-## Núcleo canônico (framework 2.3.1)
+## Núcleo canônico (framework 2.3.2)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.
