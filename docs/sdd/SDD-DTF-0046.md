@@ -2,7 +2,7 @@
 id: SDD-DTF-0046
 type: SDD
 title: "Bundle da skill como artefato gerado: .gitattributes com linguist-generated e templates sincronizados por render_prompts.py"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
