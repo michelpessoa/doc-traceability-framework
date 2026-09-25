@@ -601,8 +601,10 @@ def test_map_summaries_precedencia_override_sobre_banner():
         _sec("1", ["COM FONTE"], after=["Parágrafo automático."], yaml_body="a: 1"),
         _sec("2", ["SEM FONTE"], yaml_body="b: 1"),
         _sec("3", ["SÓ FONTE"], after=["Outro parágrafo automático."], yaml_body="c: 1"),
+        _sec("4", ["COM BANNER"], banner_body=["Corpo do banner. Outra frase."], yaml_body="d: 1"),
     )
-    sec = _by_id(doc, {"1": "Texto à mão um.", "2": "Texto à mão dois."})
+    sec = _by_id(doc, {"1": "Texto à mão um.", "2": "Texto à mão dois.", "4": "Texto à mão quatro."})
+    assert sec["4"].summary == "Texto à mão quatro."  # fonte 1 (corpo do banner) também perde para o override
     assert sec["1"].summary == "Texto à mão um."
     assert sec["2"].summary == "Texto à mão dois."
     assert sec["3"].summary == "Outro parágrafo automático."
