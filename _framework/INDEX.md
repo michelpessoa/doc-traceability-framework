@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 107 arquivos
+Total: 109 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -46,6 +46,7 @@ Total: 107 arquivos
 | `scripts/tests/test_lessons_check.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
 | `scripts/tests/test_operational_artifacts.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | <2 KB |
 | `scripts/tests/test_render_prompts_mechanization.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
+| `scripts/tests/test_render_prompts_sync.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
 | `scripts/tests/test_selftest.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
 | `scripts/tests/test_validate_state.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 8-32 KB |
 | `scripts/validate_doc.py` | Validador de documento ou de estado | Ao depurar reprovação de validação | 8-32 KB |
@@ -104,6 +105,7 @@ Total: 107 arquivos
 | `tests/fixtures/verify_sdd_pre_reorder.md` | Fixture de teste do kit | Ao alterar o teste que a usa | 8-32 KB |
 | `tests/test_ci_gate_verify_sdd.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |
 | `tests/test_gate_texto.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
+| `tests/test_gitattributes_generated.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_kit_parity.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
 | `tests/test_parallel_plan.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_procedures_structure.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |

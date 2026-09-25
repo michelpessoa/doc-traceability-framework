@@ -707,36 +707,55 @@ def write_full(path: Path, content: str, check: bool) -> bool:
 
 
 def _sync_file(src: Path, dest: Path, check: bool) -> bool:
-    """Copia src -> dest por igualdade de conteúdo (nunca por mtime)."""
-    content = src.read_text(encoding="utf-8")
-    if dest.is_file() and dest.read_text(encoding="utf-8") == content:
+    """Copia src -> dest por igualdade de bytes (nunca por mtime); rejeita symlink."""
+    if dest.is_symlink():
+        print(f"❌ {dest}: é symlink")
+        return False
+    content = src.read_bytes()
+    if dest.is_file() and dest.read_bytes() == content:
         print(f"✅ {dest}: sincronizado.")
         return True
     if check:
         print(f"❌ {dest}: divergente de {src}.")
         return False
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(content, encoding="utf-8")
+    dest.write_bytes(content)
     print(f"✅ {dest}: sincronizado.")
     return True
+
+
+def _bundle_orphans(src_dir: Path, dest_dir: Path) -> list[Path]:
+    """`*.md` de dest_dir sem original de mesmo nome em src_dir (ordenado)."""
+    if not dest_dir.is_dir():
+        return []
+    return [p for p in sorted(dest_dir.glob("*.md")) if not (src_dir / p.name).exists()]
 
 
 def sync_copies(root: Path, check: bool) -> bool:
     """Sincroniza a cópia dentro de skills/doc-traceability-framework/.
 
-    Essa cópia é renderização da skill Claude Code — nunca editada à mão.
-    Sem isto, as duas cópias divergem em silêncio (aconteceu: 5 scripts e
-    o YAML ficaram parados na v2.0.0 enquanto o original ia para 2.1.0).
+    Cobre scripts, o YAML de regras e templates (`templates/*.md`, não
+    recursivo). Essa cópia é renderização da skill Claude Code — nunca
+    editada à mão. Sem isto, as duas cópias divergem em silêncio
+    (aconteceu: 5 scripts e o YAML ficaram parados na v2.0.0 enquanto o
+    original ia para 2.1.0). Template órfão no bundle reprova e nunca é
+    apagado.
     """
     ok = True
-    skill_scripts = root / "skills/doc-traceability-framework/scripts"
+    skill = root / "skills/doc-traceability-framework"
+    skill_scripts = skill / "scripts"
     for src in sorted((root / "scripts").glob("*.py")):
         ok &= _sync_file(src, skill_scripts / src.name, check)
     ok &= _sync_file(
         root / "rules/workflow-rules.yaml",
-        root / "skills/doc-traceability-framework/references/workflow-rules.yaml",
+        skill / "references/workflow-rules.yaml",
         check,
     )
+    for src in sorted((root / "templates").glob("*.md")):
+        ok &= _sync_file(src, skill / "templates" / src.name, check)
+    for orphan in _bundle_orphans(root / "templates", skill / "templates"):
+        print(f"❌ {orphan}: órfão (sem original em {root}/templates) — remova à mão.")
+        ok = False
     return ok
 
 
