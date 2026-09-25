@@ -73,6 +73,11 @@ jobs:
       - name: Testes de paridade e consistência (_framework/tests)
         run: python3 -m pytest _framework/tests/ -v
 
+      - name: Índices de SDD e registry.md em dia
+        run: |
+          python3 _framework/scripts/render_indexes.py sdd docs/sdd --check
+          python3 _framework/scripts/generate_registry_md.py docs/sdd --check
+
       - name: Higiene de cache (ignorados e não rastreados)
         run: |
           for d in .ruff_cache .pytest_cache .mypy_cache _framework/scripts/__pycache__; do

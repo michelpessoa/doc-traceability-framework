@@ -26,3 +26,12 @@ def test_validate_state_paridade():
     assert original.is_file()
     assert bundled.is_file()
     assert original.read_bytes() == bundled.read_bytes()
+
+
+def test_render_indexes_paridade():
+    """RF13 (SDD-DTF-0043)."""
+    original = REPO_ROOT / "_framework" / "scripts" / "render_indexes.py"
+    bundled = REPO_ROOT / "_framework" / "skills" / "doc-traceability-framework" / "scripts" / "render_indexes.py"
+    assert original.is_file()
+    assert bundled.is_file()
+    assert original.read_bytes() == bundled.read_bytes()

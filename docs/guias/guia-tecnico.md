@@ -1,5 +1,28 @@
 # Guia de Uso — Framework de Documentação & Rastreabilidade (Técnico)
 
+<!-- BEGIN GENERATED: sumário -->
+**Sumário**
+
+- [1. Os dois repositórios](#1-os-dois-repositórios) — 714 bytes
+- [2. Estrutura de pastas](#2-estrutura-de-pastas) — 1468 bytes
+- [3. Criando um projeto novo](#3-criando-um-projeto-novo) — 864 bytes
+- [4. Criando um documento — passo a passo](#4-criando-um-documento--passo-a-passo) — 661 bytes
+- [4.1 Antes de tudo: qual o tamanho da mudança](#41-antes-de-tudo-qual-o-tamanho-da-mudança) — 925 bytes
+- [5. O gate RFC → ADR na prática](#5-o-gate-rfc--adr-na-prática) — 640 bytes
+- [6. Compilando a SDD](#6-compilando-a-sdd) — 1018 bytes
+- [7. Os gates obrigatórios](#7-os-gates-obrigatórios) — 3302 bytes
+- [8. Passagem de contexto entre sessões (handover/pickup)](#8-passagem-de-contexto-entre-sessões-handoverpickup) — 1622 bytes
+- [9. Scripts disponíveis](#9-scripts-disponíveis) — 3171 bytes
+- [9.1 Verificação independente antes de `implemented`](#91-verificação-independente-antes-de-implemented) — 2090 bytes
+- [9.2 Quando um gate for violado](#92-quando-um-gate-for-violado) — 968 bytes
+- [10. Onboarding de um projeto já existente](#10-onboarding-de-um-projeto-já-existente) — 773 bytes
+- [11. Auditoria de aderência (commits/PRs x registry)](#11-auditoria-de-aderência-commitsprs-x-registry) — 1580 bytes
+- [12. Incidentes e postmortem](#12-incidentes-e-postmortem) — 885 bytes
+- [13. Configurando as ferramentas de IA](#13-configurando-as-ferramentas-de-ia) — 782 bytes
+- [14. Paralelização por trilhas de negócio (opcional)](#14-paralelização-por-trilhas-de-negócio-opcional) — 608 bytes
+- [15. Erros comuns a evitar](#15-erros-comuns-a-evitar) — 1266 bytes
+<!-- END GENERATED -->
+
 > Guia narrativo, escrito à mão. A regra canônica vive em
 > `_framework/rules/workflow-rules.yaml`; em caso de divergência, o YAML
 > manda. A mesma regra em prosa gerada está em `docs/especificacao.md`.

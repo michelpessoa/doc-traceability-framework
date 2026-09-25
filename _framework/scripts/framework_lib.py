@@ -179,14 +179,15 @@ def is_operational_artifact(name: str) -> bool:
 
 def iter_documents(docs_dir: Path):
     """
-    Percorre os .md de documento sob docs_dir, ignorando registry.md,
+    Percorre os .md de documento sob docs_dir, ignorando registry.md e
+    INDEX.md (saídas geradas, sem front-matter),
     qualquer arquivo dentro de templates/ (templates têm placeholder por
     desenho — validar template como documento é falso positivo garantido)
     e os artefatos operacionais (LESSONS.md, HANDOFF.md, validation*.md),
     que o framework manda criar sem front-matter.
     """
     for path in sorted(docs_dir.rglob("*.md")):
-        if path.name == "registry.md" or is_operational_artifact(path.name):
+        if path.name in ("registry.md", "INDEX.md") or is_operational_artifact(path.name):
             continue
         if "templates" in path.parts:
             continue

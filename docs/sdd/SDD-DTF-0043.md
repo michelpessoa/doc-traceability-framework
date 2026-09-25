@@ -2,7 +2,7 @@
 id: SDD-DTF-0043
 type: SDD
 title: "Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -390,11 +390,11 @@ não colidirem com os do kit.
 | 2 | Módulo `render_indexes.py` com todos os contratos (mapa, índice do kit, índice de SDDs, sumário, tetos, `generate_all`, CLI) | RF01, RF02, RF03, RF04, RF05, RF06, RF07, RF09, RF10, RF13 | `_framework/scripts/render_indexes.py` | 1 |
 | 3 | `generate_registry_md.py`: `render_header`, sem timestamp, `--check`, e seus testes | RF08 | `_framework/scripts/generate_registry_md.py`, `_framework/scripts/tests/test_generate_registry_md.py` | |
 | 4 | Marcadores de sumário em `guia-tecnico.md` (logo após o primeiro `#`) | RF09 | `docs/guias/guia-tecnico.md` | |
-| 5 | Fiação em `render_prompts.py` (import, `generate_all` em `main()`, `build_toc` em `build_universal`, linha de RF12 em `build_agents`), ≤ 20 linhas adicionadas | RF11, RF12 | `_framework/scripts/render_prompts.py` | 2 |
+| 5 | Fiação em `render_prompts.py` (import, `generate_all` em `main()`, `build_toc` em `build_universal`, linha de RF12 em `build_agents`), ≤ 20 linhas adicionadas; e `iter_documents` de `framework_lib.py` passa a ignorar o `INDEX.md` gerado, como já ignora `registry.md` (escopo registrado na implementação: sem isso `validate_doc.py docs/sdd` reprova o `INDEX.md`) | RF11, RF12 | `_framework/scripts/render_prompts.py`, `_framework/scripts/framework_lib.py` | 2 |
 | 6 | Testes de `render_indexes` e extensão do teste de paridade | RF01, RF02, RF03, RF04, RF05, RF06, RF07, RF09, RF10, RF12, RF13 | `_framework/tests/test_render_indexes.py`, `_framework/tests/test_kit_parity.py` | 2, 5 |
 | 7 | Passos novos no CI | RF11 | `.github/workflows/framework-check.yml` | 2, 3 |
-| 8 | Gerar os índices e sincronizar cópias da skill (`render_prompts.py` e `render_indexes.py`) | RF01, RF03, RF06, RF08, RF09, RF12, RF13 | `_framework/INDEX.md`, `_framework/rules/workflow-rules.map.md`, `docs/sdd/INDEX.md`, `docs/sdd/registry.md`, `_framework/prompts/universal.md`, `AGENTS.md`, `docs/guias/guia-tecnico.md`, `_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `_framework/skills/doc-traceability-framework/scripts/render_prompts.py` | 1, 2, 3, 4, 5 |
-| 9 | Espelhar `_framework/` e `docs/guias/guia-tecnico.md` no central | RF01, RF03, RF09, RF13 | `central:_framework/INDEX.md`, `central:_framework/rules/kit-index.yaml`, `central:_framework/rules/workflow-rules.map.md`, `central:_framework/scripts/render_indexes.py`, `central:_framework/scripts/generate_registry_md.py`, `central:_framework/scripts/render_prompts.py`, `central:_framework/scripts/tests/test_generate_registry_md.py`, `central:_framework/tests/test_render_indexes.py`, `central:_framework/tests/test_kit_parity.py`, `central:_framework/prompts/universal.md`, `central:_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `central:_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `central:_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `central:docs/guias/guia-tecnico.md`, `central:AGENTS.md` | 8 |
+| 8 | Gerar os índices e sincronizar cópias da skill (`render_prompts.py` e `render_indexes.py`) | RF01, RF03, RF06, RF08, RF09, RF12, RF13 | `_framework/INDEX.md`, `_framework/rules/workflow-rules.map.md`, `docs/sdd/INDEX.md`, `docs/sdd/registry.md`, `_framework/prompts/universal.md`, `AGENTS.md`, `docs/guias/guia-tecnico.md`, `_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `_framework/skills/doc-traceability-framework/scripts/framework_lib.py` | 1, 2, 3, 4, 5 |
+| 9 | Espelhar `_framework/` e `docs/guias/guia-tecnico.md` no central | RF01, RF03, RF09, RF13 | `central:_framework/INDEX.md`, `central:_framework/rules/kit-index.yaml`, `central:_framework/rules/workflow-rules.map.md`, `central:_framework/scripts/render_indexes.py`, `central:_framework/scripts/generate_registry_md.py`, `central:_framework/scripts/render_prompts.py`, `central:_framework/scripts/tests/test_generate_registry_md.py`, `central:_framework/tests/test_render_indexes.py`, `central:_framework/tests/test_kit_parity.py`, `central:_framework/prompts/universal.md`, `central:_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `central:_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `central:_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `central:_framework/scripts/framework_lib.py`, `central:_framework/skills/doc-traceability-framework/scripts/framework_lib.py`, `central:docs/guias/guia-tecnico.md`, `central:AGENTS.md` | 8 |
 
 Ordem sugerida: tasks 1, 3 e 4 são independentes entre si (grupo
 paralelizável); 2 depois de 1; 5 depois de 2; 6 e 7 depois de 5/3; 8
@@ -487,16 +487,16 @@ relaxar) e do contrato/caso de erro da Parte 2. `pytest` roda de
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF13) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF13) tem código
       correspondente (nada da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou em "Instruções
       específicas" — se a implementação tocou um arquivo não listado
       aqui, ou é escopo que faltou registrar na SDD (atualize-a) ou é
       scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado ("já que estava ali").
-- [ ] `workflow-rules.yaml` intocado e `render_prompts.py` com ≤ 20 linhas
+- [x] `workflow-rules.yaml` intocado e `render_prompts.py` com ≤ 20 linhas
       adicionadas contra origin/main.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
@@ -504,10 +504,9 @@ tanto quanto SDD estourada são falha:
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
 quem escreveu o código tem o resultado como conclusão desejada. Para cada
 critério da tabela acima: comando rodado de fato nesta sessão e saída real,
-nunca "deve passar" nem resultado de memória. Esta SDD ainda não foi
-implementada; as linhas abaixo apenas reservam o critério a verificar.
+nunca "deve passar" nem resultado de memória. Verificação independente rodada em 2026-09-25 (rodada 1), veredito **PASS**.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** sim
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -521,30 +520,31 @@ entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
-| 1 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 2 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 3 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 4 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 5 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 6 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 7 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 8 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 9 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 10 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 11 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 12 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 13 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 14 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 15 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 16 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 17 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 18 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 19 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 20 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 21 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 22 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 23 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
-| 24 | (pendente de verificação) | (pendente) | (pendente) | (pendente) | (pendente) | (pendente) |
+| 1 | `python3 -m pytest _framework/tests/test_render_indexes.py -k kit_index_uma_linha_por_arquivo -v` | 1 passed, 25 deselected | n/a (RF01 sem sensor exigido) | sim | _framework/tests/test_render_indexes.py:test_kit_index_uma_linha_por_arquivo | automatizado |
+| 2 | `python3 -m pytest _framework/tests/test_render_indexes.py -k manifesto_orfao -v` | 6 passed, 20 deselected | sim: raise CoverageError desativado, 3 testes falharam, revertido | sim | _framework/tests/test_render_indexes.py:test_manifesto_orfao_* | automatizado |
+| 3 | `python3 -m pytest _framework/tests/test_render_indexes.py -k mapa_ids_batem_com_banners -v` | 5 passed, 21 deselected | sim: checagem de banner duplicado desativada, 1 falhou, revertido | sim | _framework/tests/test_render_indexes.py:test_mapa_ids_batem_com_banners* | automatizado |
+| 4 | `python3 -m pytest _framework/tests/test_render_indexes.py -k resumo_primeira_frase -v` | 1 passed, 25 deselected | n/a | sim | _framework/tests/test_render_indexes.py:test_resumo_primeira_frase | automatizado |
+| 5 | `python3 -m pytest _framework/tests/test_render_indexes.py -k secao_citada_inexistente -v` | 2 passed, 24 deselected | sim: comparacao de id desativada, 1 falhou, revertido | sim | _framework/tests/test_render_indexes.py:test_secao_citada_inexistente | automatizado |
+| 6 | `python3 -m pytest _framework/tests/test_render_indexes.py -k sdd_index_campos -v` | 2 passed, 24 deselected | n/a | sim | _framework/tests/test_render_indexes.py:test_sdd_index_campos* | automatizado |
+| 7 | `python3 -m pytest _framework/tests/test_render_indexes.py -k sdd_sem_secao_arquivos -v` | 2 passed, 24 deselected | sim: leitura da coluna da tabela de tasks desativada, 2 falharam, revertido | sim | _framework/tests/test_render_indexes.py:test_sdd_sem_secao_arquivos* | automatizado |
+| 8 | `python3 -m pytest _framework/scripts/tests/test_generate_registry_md.py -v` | 4 passed (header sem timestamp, versao corrente, fallback registry.yaml, --check) | n/a | sim | _framework/scripts/tests/test_generate_registry_md.py:test_check_sai_1_se_divergir_e_0_se_em_dia | automatizado |
+| 9 | `python3 -m pytest _framework/tests/test_render_indexes.py -k sumario_universal_e_guia -v` | 2 passed, 24 deselected | sim: filtro de bloco cercado desativado, 1 falhou, revertido | sim | _framework/tests/test_render_indexes.py:test_sumario_universal_e_guia* | automatizado |
+| 10 | `python3 -m pytest _framework/tests/test_render_indexes.py -k tetos -v` | 2 passed, 24 deselected | sim: teto do mapa e teto total do INDEX desativados um de cada vez, teste falhou nas duas, revertido | sim | _framework/tests/test_render_indexes.py:test_tetos | automatizado |
+| 11 | `python3 _framework/scripts/render_indexes.py --check` | ✅ por indice (guia, mapa, INDEX do kit, docs/sdd/INDEX); linha `mapa+maior seção = 12520 (13.7% do YAML)`; exit 0 | n/a | sim | _framework/tests/test_render_indexes.py:test_tetos_medicao_real | automatizado |
+| 12 | `python3 _framework/scripts/render_prompts.py --check` | 34 itens ✅, 0 ❌, exit 0 | n/a | sim | n/a | automatizado |
+| 13 | `git diff --numstat origin/main -- _framework/scripts/render_prompts.py` | `6	1	_framework/scripts/render_prompts.py` (6 adições) | n/a | sim | n/a | automatizado |
+| 14 | `grep -n -e "render_indexes.py sdd docs/sdd --check" -e "generate_registry_md.py docs/sdd --check" .github/workflows/framework-check.yml` | linhas 75 e 76 (2 ocorrências) | n/a | sim | n/a | automatizado |
+| 15 | `python3 _framework/scripts/render_indexes.py sdd docs/sdd --check && python3 _framework/scripts/generate_registry_md.py docs/sdd --check` | ✅ docs/sdd/registry.md: em dia; exit 0 nos dois | n/a | sim | n/a | automatizado |
+| 16 | `grep -c "_framework/INDEX.md" AGENTS.md` e `python3 -m pytest _framework/tests/test_render_indexes.py -k agents_aponta_indice -v` | grep -c retornou 1; 1 passed, 25 deselected; render_prompts.py --check exit 0 (criterio 12) | n/a | sim | _framework/tests/test_render_indexes.py:test_agents_aponta_indice | automatizado |
+| 17 | `python3 -m pytest _framework/tests/test_render_indexes.py -k idempotente -v` | 1 passed, 25 deselected | n/a | sim | _framework/tests/test_render_indexes.py:test_idempotente | automatizado |
+| 18 | `python3 -m pytest _framework/tests/test_kit_parity.py -k render_indexes -v` | 1 passed, 2 deselected | n/a | sim | _framework/tests/test_kit_parity.py:test_render_indexes_paridade | automatizado |
+| 19 | `grep -n -e 'LARGEST_SECTION_EXCLUDES = {"0"}' -e "SUMMARY_MAX = 100" _framework/scripts/render_indexes.py` | linhas 35 e 36 (2 ocorrências) | n/a | sim | n/a | automatizado |
+| 20 | `git diff --stat origin/main -- _framework/rules/workflow-rules.yaml` | sem saída | n/a | sim | n/a | automatizado |
+| 21 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | ✅ 44 documentos no gate de qualidade; ✅ 44 verificados, 0 problemas (exigiu framework_lib.iter_documents ignorar INDEX.md, escopo registrado na task 5) | n/a | sim | n/a | automatizado |
+| 22 | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0043.md /home/michel/doc-traceability-central/docs/DTF` | ✅ source_docs de SDD-DTF-0043.md conferem com o registry central. | n/a | sim | n/a | automatizado |
+| 23 | `diff -r -x __pycache__ -x .pytest_cache -x .ruff_cache -x .mypy_cache /home/michel/dtf-wt-0043/_framework /home/michel/dtf-central-wt-0043/_framework` | sem saída, exit 0 (reexecutado pelo verificador; o checkout /home/michel/doc-traceability-central está em branch antiga docs/spec-dtf-0020-bundle-gerado-v2 e ainda em v2.3.0, então o alvo válido é o worktree do central com o espelho, PR #141 aberto e não mergeado) | n/a | sim (contra o worktree, não contra o checkout principal do central) | n/a | automatizado (divergência: alvo do diff é o worktree do central) |
+| 24 | `python3 -m pytest _framework/ -q` | 217 passed | n/a | sim | n/a | automatizado |
+| 25 | Fidelidade à origem: `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0043.md /home/michel/dtf-central-wt-0043/docs/DTF`; RF01 a RF13 da SPEC-DTF-0016 conferidos contra a SDD | ✅ source_docs de SDD-DTF-0043.md conferem com o registry central, exit 0; RF01 a RF13 presentes na SDD sem relaxamento de EARS | n/a | sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

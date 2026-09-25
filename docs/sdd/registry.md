@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-25 08:17. Não editar manualmente. Framework v2.2.0._
+_Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.3.1._
 
 Total de documentos: **44**
 
@@ -50,6 +50,6 @@ Total de documentos: **44**
 | `SDD-DTF-0040` | guia-tecnico.md: corrige drift acumulado (7 adições recentes nunca refletidas) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0041` | workflow-rules.yaml: frontmatter_schema não lista SPEC (tipo ativo desde 2.0.0) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0042` | Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates | implemented | Michel Pessoa | 2026-09-25 | — |
-| `SDD-DTF-0043` | Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis | approved | Michel Pessoa | 2026-09-25 | SDD-DTF-0042 |
+| `SDD-DTF-0043` | Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0042 |
 | `SDD-DTF-0044` | Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável | implemented | Michel Pessoa | 2026-09-25 | — |
 | `SDD-DTF-0045` | Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade | approved | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |

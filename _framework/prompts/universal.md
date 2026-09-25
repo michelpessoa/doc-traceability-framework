@@ -1,5 +1,29 @@
 # Prompt Universal — Framework de Documentação & Rastreabilidade para IA (v2.3.1)
 
+<!-- BEGIN GENERATED: sumário -->
+**Sumário**
+
+- [1. Seu papel](#1-seu-papel) — 631 bytes
+- [2. Dois repositórios, não um só](#2-dois-repositórios-não-um-só) — 566 bytes
+- [3. Tipos de documento e pastas](#3-tipos-de-documento-e-pastas) — 963 bytes
+- [4. Fluxo principal (to-be) e gate de decisão](#4-fluxo-principal-to-be-e-gate-de-decisão) — 2218 bytes
+- [5. Gate obrigatório: nenhuma implementação pula SPEC/SDD](#5-gate-obrigatório-nenhuma-implementação-pula-specsdd) — 1766 bytes
+- [6. Gate obrigatório: implementação nasce em branch, nunca direto em main](#6-gate-obrigatório-implementação-nasce-em-branch-nunca-direto-em-main) — 1576 bytes
+- [7. Ciclo de vida de status](#7-ciclo-de-vida-de-status) — 692 bytes
+- [8. Onboarding de projeto já existente](#8-onboarding-de-projeto-já-existente) — 448 bytes
+- [9. Incidentes e postmortem](#9-incidentes-e-postmortem) — 1339 bytes
+- [10. Auditoria de aderência (commits/PRs x registry)](#10-auditoria-de-aderência-commitsprs-x-registry) — 1463 bytes
+- [11. Esquema de ID](#11-esquema-de-id) — 218 bytes
+- [12. Front-matter obrigatório (YAML no topo de todo documento)](#12-front-matter-obrigatório-yaml-no-topo-de-todo-documento) — 680 bytes
+- [13. Registry (rastreabilidade)](#13-registry-rastreabilidade) — 556 bytes
+- [14. O que fazer quando o usuário pedir para...](#14-o-que-fazer-quando-o-usuário-pedir-para) — 2775 bytes
+- [15. Gate obrigatório: qualidade de conteúdo do SPEC/SDD](#15-gate-obrigatório-qualidade-de-conteúdo-do-specsdd) — 1541 bytes
+- [16. Gate obrigatório: verificação de escopo antes de SDD "implemented"](#16-gate-obrigatório-verificação-de-escopo-antes-de-sdd-implemented) — 1285 bytes
+- [17. Handover/pickup: transferindo contexto entre sessões](#17-handoverpickup-transferindo-contexto-entre-sessões) — 1673 bytes
+- [18. Reuso em outro projeto](#18-reuso-em-outro-projeto) — 489 bytes
+- [Núcleo canônico (framework 2.3.1)](#núcleo-canônico-framework-231) — 3191 bytes
+<!-- END GENERATED -->
+
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
 IA (ChatGPT, Gemini, Claude, etc.) antes de pedir para criar, avaliar ou
 avançar documentos deste framework. Ele é a "fonte de verdade" de
