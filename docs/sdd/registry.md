@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.3.2._
 
-Total de documentos: **48**
+Total de documentos: **49**
 
 
-## SDD (48)
+## SDD (49)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -57,3 +57,4 @@ Total de documentos: **48**
 | `SDD-DTF-0047` | Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045 |
 | `SDD-DTF-0048` | Fechar a defasagem PRD/Tech Spec do YAML do kit: fluxo, gates 14, 15 e 17, capabilities e teste de regressão | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0042 |
 | `SDD-DTF-0049` | Título completo e resumo útil no mapa de seções e linhas específicas no INDEX do kit | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |
+| `SDD-DTF-0050` | Prompt do Cursor sem PRD+TS: fluxo e ids de exemplo em SPEC no texto de render_prompts.py, com teste de regressão | in_review | Michel Pessoa | 2026-09-25 | SDD-DTF-0042, SDD-DTF-0048 |
