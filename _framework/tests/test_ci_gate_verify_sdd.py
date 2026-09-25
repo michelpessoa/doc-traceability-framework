@@ -442,3 +442,13 @@ def test_cli_pr_fixture_duas_sdds(tmp_path):
     assert "SDD-DTF-0001" in result.stdout
     assert "SDD-DTF-0002" in result.stdout
     assert "Traceback" not in result.stderr
+
+
+def test_table_with_header_pipe_escapado():
+    """SDD-DTF-0047 RF06: pipe escapado numa célula não vira coluna extra."""
+    from ci_gate_verify_sdd import table_with_header
+
+    section = "| # | Comando | Saída |\n|---|---|---|\n| 1 | `grep a\\|b f` | ok |\n"
+    header, rows = table_with_header(section)
+    assert header == ["#", "comando", "saída"]
+    assert rows == [["1", "`grep a|b f`", "ok"]]

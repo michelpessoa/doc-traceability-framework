@@ -267,3 +267,21 @@ def test_sweep_nao_retroativo_para_spec_antiga(tmp_path):
     path.write_text(_spec("`caminho/qualquer.py`", sweep="", created="2026-09-15"), encoding="utf-8")
     problems, _ = check_document(path)
     assert not any("sweep" in p.lower() for p in problems)
+
+
+def test_pipe_escapado_em_tabela_de_rf(tmp_path):
+    """SDD-DTF-0047 RF05: pipe escapado na célula Requisito não desloca o critério EARS."""
+    path = tmp_path / "spec.md"
+    text = _spec("`caminho/qualquer.py`").replace("| RF01 | Algo |", "| RF01 | Algo \\| outro |")
+    path.write_text(text, encoding="utf-8")
+    problems, _ = check_document(path)
+    assert not any("não está em EARS" in p for p in problems), problems
+
+
+def test_pipe_escapado_em_tabela_de_arquivos(tmp_path):
+    """SDD-DTF-0047 RF05: com Arquivos vazio e pipe escapado antes, o gate ainda pega."""
+    path = tmp_path / "spec.md"
+    text = _spec("").replace("| RF01 | Algo |", "| RF01 | Algo \\| outro |")
+    path.write_text(text, encoding="utf-8")
+    problems, _ = check_document(path)
+    assert any("Arquivos vazia" in p and "RF06" in p for p in problems), problems

@@ -305,3 +305,18 @@ def report(problems, warnings, ok_message: str, report_only: bool = False) -> in
 
     print(ok_message)
     return 0
+
+
+_ESCAPED_PIPE = "\\|"
+_SENTINEL = "\x00"
+
+
+def split_table_row(line: str) -> list[str]:
+    """Células de uma linha de tabela markdown, com strip() em cada uma.
+
+    O par barra-pipe é conteúdo de célula (GFM) e volta desescapado como
+    um pipe simples. Sem par escapado, equivale a
+    [c.strip() for c in line.strip("|").split("|")].
+    """
+    masked = line.replace(_ESCAPED_PIPE, _SENTINEL)
+    return [c.strip().replace(_SENTINEL, "|") for c in masked.strip("|").split("|")]

@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 109 arquivos
+Total: 110 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -48,6 +48,7 @@ Total: 109 arquivos
 | `scripts/tests/test_render_prompts_mechanization.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
 | `scripts/tests/test_render_prompts_sync.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
 | `scripts/tests/test_selftest.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 2-8 KB |
+| `scripts/tests/test_table_cells.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | <2 KB |
 | `scripts/tests/test_validate_state.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 8-32 KB |
 | `scripts/validate_doc.py` | Validador de documento ou de estado | Ao depurar reprovação de validação | 8-32 KB |
 | `scripts/validate_state.py` | Validador de documento ou de estado | Ao depurar reprovação de validação | 8-32 KB |

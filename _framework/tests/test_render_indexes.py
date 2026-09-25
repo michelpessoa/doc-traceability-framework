@@ -431,3 +431,12 @@ def test_idempotente(tmp_path):
     assert {p: p.read_bytes() for p in root.rglob("*") if p.is_file()} == snapshot
     assert ri.generate_all(root, {}, check=True)
     assert all(b"\r" not in content for content in snapshot.values())
+
+
+def test_arquivos_tocados_com_pipe_escapado():
+    """SDD-DTF-0047 RF06: pipe escapado antes da coluna não desloca Arquivos tocados."""
+    body = (
+        "## Decomposição em tasks\n\n| # | Task | Arquivos tocados |\n|---|---|---|\n"
+        "| 1 | roda `grep a\\|b` | `src/z.py` |\n"
+    )
+    assert ri.extract_sdd_files(body) == ["src/z.py"]
