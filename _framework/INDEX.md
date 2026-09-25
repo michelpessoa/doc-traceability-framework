@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 110 arquivos
+Total: 111 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -109,6 +109,7 @@ Total: 110 arquivos
 | `tests/test_gitattributes_generated.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_kit_parity.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
 | `tests/test_parallel_plan.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
+| `tests/test_prd_ts_texto.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_procedures_structure.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_render_indexes.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |
 | `tests/test_repo_hygiene.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
