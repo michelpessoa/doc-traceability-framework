@@ -443,11 +443,9 @@ Antes de marcar `implemented`, confirme as duas direções:
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
-Esta SDD ainda não foi implementada: nenhuma linha abaixo tem comando
-rodado nem saída real. A verificação substitui cada "(pendente ...)" pela
-saída real; nunca "deve passar" nem resultado de memória.
+Linhas preenchidas pela sessão implementadora com saída real desta sessão; o `sdd-verifier` (sessão separada) refaz e confirma antes de `implemented`. Critério 14 é manual e segue pendente.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** não — mesma sessão que implementou (verificação independente pelo `sdd-verifier` ainda pendente)
 
 Coluna "Sensor": falha de comportamento introduzida em espaço
 descartável (lista em "Sensor de discriminação"); o teste tem que FALHAR
@@ -458,22 +456,22 @@ esperado" ou declara divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
-| 1 | `test $(wc -c < _framework/skills/doc-traceability-framework/SKILL.md) -le 9216 && echo OK` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "size_budget or iron_law or rationalization or pointers" -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 3 | `python3 _framework/scripts/check_renderings.py` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 4 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "references or moved_sections" -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 5 | `ls _framework/skills/doc-traceability-framework/references/` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 6 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k descriptions -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 7 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k repo_root_path -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 8 | `cd _framework/tests && cat "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md" \| head -1` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 9 | `python3 -m pytest _framework/tests/test_procedures_structure.py -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 10 | `grep -n '^### 5\.\|^## Escalonado\|^## Descompassos\|^## Lições' _framework/procedures/verify-sdd.md` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 11 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k layout -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 12 | `test -f .claude/skills/doc-traceability-framework/references/incidents.md && echo OK` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 13 | `diff -rq /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework \| grep -v __pycache__` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 14 | Manual (perfil `manual`): abrir sessão do Claude Code na raiz do kit e executar `/skills` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | manual |
-| 15 | `python3 _framework/scripts/render_prompts.py --check` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 16 | `python3 -m pytest _framework/tests -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
+| 1 | `test $(wc -c < _framework/skills/doc-traceability-framework/SKILL.md) -le 9216 && echo OK` | `wc -c` = 6158; imprime `OK` | sem teste (comando) | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:109 | automatizado |
+| 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "size_budget or iron_law or rationalization or pointers" -q` | 4 passed, 6 deselected | RF01 +3100 bytes, RF02 lei apagada: teste falhou; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:129 | automatizado |
+| 3 | `python3 _framework/scripts/check_renderings.py` | exit 0; 5 renderizações concordam (8 tipos, 6 Iron Laws, 4 níveis); 2 avisos preexistentes de PRD/TS em cursor | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 4 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "references or moved_sections" -q` | 2 passed, 8 deselected | RF03 incidents.md renomeado: teste falhou; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:161 | automatizado |
+| 5 | `ls _framework/skills/doc-traceability-framework/references/` | audit.md incidents.md onboarding.md workflow-rules.yaml | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 6 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k descriptions -q` | 1 passed (4 skills) | RF04 description alongada além de 450: falhou; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:205 | automatizado |
+| 7 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k repo_root_path -q` | 1 passed | RF05 `git rev-parse` trocado por `.`: falhou; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:218 | automatizado |
+| 8 | `cd _framework/tests && cat "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md" \| head -1` | `# Verificação independente de SDD` | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 9 | `python3 -m pytest _framework/tests/test_procedures_structure.py -q` | 2 passed | RF06 verify-sdd.md voltou à fixture: 2 falharam; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_procedures_structure.py:45 | automatizado |
+| 10 | `grep -n '^### 5\.\|^## Escalonado\|^## Descompassos\|^## Lições' _framework/procedures/verify-sdd.md` | 170:### 5.; 207:## Escalonado; 224:## Descompassos; 227:## Lições | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 11 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k layout -q` | 1 passed, 9 deselected | RF07 symlink de arquivo recriado: falhou; restaurado | Sim (sessão implementadora; aguarda verificador independente) | _framework/tests/test_skill_md_consistency.py:233 | automatizado |
+| 12 | `test -f .claude/skills/doc-traceability-framework/references/incidents.md && echo OK` | imprime `OK` | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 13 | `diff -rq /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework \| grep -v __pycache__` | sem saída (rodado contra os worktrees do kit e do central, pois o checkout principal ainda não tem esta mudança) | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 14 | Manual (perfil `manual`): abrir sessão do Claude Code na raiz do kit e executar `/skills` | PENDENTE: requer humano; não executado nesta sessão | sem teste rodado | Não | n/a | manual |
+| 15 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; alvos sincronizados | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
+| 16 | `python3 -m pytest _framework/tests -q` | 54 passed | sem teste | Sim (sessão implementadora; aguarda verificador independente) | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

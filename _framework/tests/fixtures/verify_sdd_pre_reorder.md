@@ -145,12 +145,30 @@ sem `Assertion` preenchida e reprova divergência sem justificativa
 
 ### 4. Veredito
 
-Na SDD, a seção "Evidência de verificação" segue o modelo M1, em "Modelos de registro".
+Na SDD, a seção "Evidência de verificação" fica assim:
+
+```markdown
+## Evidência de verificação (preencher antes de status `implemented`)
+
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim | `<arquivo>:<linha>` ou `n/a` | `<automatizado\|manual\|n/a>` |
+```
 
 `Rodada` é o número da tentativa de correção-e-reverificação,
 começando em 1. Teto de 3 rodadas: se o veredito não for `PASS` na 3ª
 rodada, a sessão para de tentar sozinha e escreve, na SDD, a seção
-do modelo M2, em "Modelos de registro", em vez de despachar uma 4ª tentativa.
+abaixo em vez de despachar uma 4ª tentativa:
+
+```markdown
+## Escalonado ao humano
+Rodadas tentadas: 3. Veredito de cada uma: <FAIL, FAIL, FAIL | resumo>.
+Motivo de cada falha: <resumo por rodada>.
+```
 
 Histórico de rodadas anteriores não é sobrescrito — a tabela de
 evidência mantém as linhas de todas as rodadas, não só a última.
@@ -159,7 +177,25 @@ evidência mantém as linhas de todas as rodadas, não só a última.
 lições — **não a substitui**. SDD `implemented` com a tabela vazia é
 gate 16 violado, mesmo com `validation.md` PASS ao lado.
 
-Escreva `validation.md` ao lado da SDD, conforme o modelo M3, em "Modelos de registro".
+Escreva `validation.md` ao lado da SDD:
+
+```markdown
+# Verificação — SDD-{PROJETO}-{SEQ}
+
+- **Veredito:** PASS | FAIL
+- **Diff verificado:** <base>..<head>
+- **Verificador independente:** sim | não (mesma sessão que implementou)
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+
+## Descompassos encontrados
+(requisito sem código, arquivo fora da SDD, código sem requisito — ou "nenhum")
+
+## Lições
+(o que causou cada descompasso, em forma de red flag reaproveitável —
+entra no LESSONS.md do projeto)
+```
 
 `FAIL` não avança status. Relate o descompasso ao humano e proponha os
 dois caminhos possíveis — atualizar a SDD para o escopo real acordado, ou
@@ -184,50 +220,6 @@ remover o código fora de escopo. **A escolha é dele, não sua.**
 Passar é necessário e não suficiente — o script não sabe se o comando
 foi mesmo rodado nesta sessão e não roda o sensor. Rodar no diretório
 inteiro mistura problemas de outras SDDs com os desta.
-
-### Modelos de registro
-
-**M1. Tabela de evidência na SDD**
-
-```markdown
-## Evidência de verificação (preencher antes de status `implemented`)
-
-Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
-
-**Verificador independente:** sim
-
-| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|---|
-| 1 | 1 | `<comando>` | `<saída real>` | <resultado do sensor ou "sem teste automatizado"> | Sim | `<arquivo>:<linha>` ou `n/a` | `<automatizado\|manual\|n/a>` |
-```
-
-**M2. Escalonado ao humano**
-
-```markdown
-## Escalonado ao humano
-Rodadas tentadas: 3. Veredito de cada uma: <FAIL, FAIL, FAIL | resumo>.
-Motivo de cada falha: <resumo por rodada>.
-```
-
-**M3. validation.md**
-
-```markdown
-# Verificação — SDD-{PROJETO}-{SEQ}
-
-- **Veredito:** PASS | FAIL
-- **Diff verificado:** <base>..<head>
-- **Verificador independente:** sim | não (mesma sessão que implementou)
-
-| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
-
-## Descompassos encontrados
-(requisito sem código, arquivo fora da SDD, código sem requisito — ou "nenhum")
-
-## Lições
-(o que causou cada descompasso, em forma de red flag reaproveitável —
-entra no LESSONS.md do projeto)
-```
 
 ## Red flags
 

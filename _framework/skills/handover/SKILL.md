@@ -1,16 +1,7 @@
 ---
 name: handover
 description: >
-  Gera HANDOFF.md para transferir contexto entre sessões ou agentes do
-  framework de rastreabilidade, referenciando ids dos documentos em vez de
-  reescrever o conteúdo deles. Use when o planejamento terminou e outra
-  sessão vai implementar, quando o uso de contexto da sessão atual passa de
-  ~45% com trabalho ainda pela frente, ou quando o usuário pedir para
-  "fazer o handover", "passar isso pro próximo", "documentar onde parei".
-  Do NOT use for retomar um handoff já existente (use `pickup`), para
-  gerar documentação permanente do projeto — HANDOFF.md é descartável e
-  sobrescreve em lugar —, nem como substituto de qualquer gate: a SDD
-  continua precisando estar approved antes de implementar.
+  Gera HANDOFF.md para transferir contexto entre sessões ou agentes, referenciando ids em vez de reescrever documentos. Use when o planejamento terminou e outra sessão vai implementar, o contexto passa de ~45% com trabalho pela frente, ou pedirem "faz o handover". Do NOT use for retomar handoff existente (`pickup`), documentação permanente, nem para dispensar gate: a SDD segue precisando de `approved`.
 ---
 
 # Handover
@@ -23,5 +14,4 @@ Checklist mínimo, antes de abrir o procedimento inteiro:
 - Não substitui gate algum — SDD `approved` e branch dedicada continuam
   obrigatórios do lado de quem retomar.
 
-Procedimento normativo: `_framework/procedures/handover.md` (a partir da
-raiz do repositório) — leia-o inteiro antes de gerar o HANDOFF.md.
+Procedimento normativo: `_framework/procedures/handover.md` na raiz do repositório. De qualquer diretório dentro dele: `cat "$(git rev-parse --show-toplevel)/_framework/procedures/handover.md"`. Leia-o inteiro antes de agir. Se o comando falhar ou o arquivo não existir, pergunte ao usuário onde está o repositório do kit ou do central; não improvise o procedimento.
