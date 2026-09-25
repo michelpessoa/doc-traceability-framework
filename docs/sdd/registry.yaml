@@ -404,7 +404,7 @@ documents:
   - id: SDD-DTF-0042
     type: SDD
     title: "Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"
@@ -414,7 +414,7 @@ documents:
   - id: SDD-DTF-0043
     type: SDD
     title: "Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"
@@ -424,7 +424,7 @@ documents:
   - id: SDD-DTF-0044
     type: SDD
     title: "Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"
@@ -434,7 +434,7 @@ documents:
   - id: SDD-DTF-0045
     type: SDD
     title: "Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"

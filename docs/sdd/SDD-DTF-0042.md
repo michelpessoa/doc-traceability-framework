@@ -2,7 +2,7 @@
 id: SDD-DTF-0042
 type: SDD
 title: "Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"

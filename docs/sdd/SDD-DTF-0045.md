@@ -2,7 +2,7 @@
 id: SDD-DTF-0045
 type: SDD
 title: "Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"

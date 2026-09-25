@@ -2,7 +2,7 @@
 id: SDD-DTF-0043
 type: SDD
 title: "Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"

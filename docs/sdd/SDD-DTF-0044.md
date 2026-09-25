@@ -2,7 +2,7 @@
 id: SDD-DTF-0044
 type: SDD
 title: "Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
