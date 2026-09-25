@@ -2,7 +2,7 @@
 id: SDD-DTF-0048
 type: SDD
 title: "Fechar a defasagem PRD/Tech Spec do YAML do kit: fluxo, gates 14, 15 e 17, capabilities e teste de regressão"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
