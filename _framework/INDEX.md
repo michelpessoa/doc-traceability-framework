@@ -111,7 +111,7 @@ Total: 111 arquivos
 | `tests/test_parallel_plan.py` | Testes do parallel_plan.py sobre SDDs fictícias | Ao alterar o cálculo de paralelismo das tasks | 2-8 KB |
 | `tests/test_prd_ts_texto.py` | Regressão de PRD e TS como passo do fluxo no texto bruto do YAML | Ao editar o texto do workflow-rules.yaml | 2-8 KB |
 | `tests/test_procedures_structure.py` | Testes da estrutura do procedimento verify-sdd.md | Ao reordenar ou editar o verify-sdd.md | 2-8 KB |
-| `tests/test_render_indexes.py` | Testes do render_indexes.py: mapa, INDEX do kit, SDDs, tetos e idempotência | Ao alterar qualquer índice gerado | 8-32 KB |
+| `tests/test_render_indexes.py` | Testes do render_indexes.py: mapa, INDEX do kit, SDDs, tetos e idempotência | Ao alterar qualquer índice gerado | >32 KB |
 | `tests/test_repo_hygiene.py` | Testes de higiene: caches fora da busca e do versionamento | Ao alterar .gitignore ou .claudeignore | <2 KB |
 | `tests/test_skill_md_consistency.py` | Testes de consistência entre SKILL.md e workflow-rules.yaml | Ao alterar o SKILL.md ou a tabela de sizing | 8-32 KB |
 | `tests/test_template_parity.py` | Paridade byte a byte dos templates entre original e bundle | Ao alterar um template | 2-8 KB |
