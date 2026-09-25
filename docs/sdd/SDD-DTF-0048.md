@@ -2,7 +2,7 @@
 id: SDD-DTF-0048
 type: SDD
 title: "Fechar a defasagem PRD/Tech Spec do YAML do kit: fluxo, gates 14, 15 e 17, capabilities e teste de regressão"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -672,24 +672,34 @@ ANTIGA=(-e 'PRD/TS/SDD' -e 'PRD/Tech Spec' -e 'SDD/PRD/TS/ADR' -e 'TS-X, PRD-X' 
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF13) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF13) tem código
       correspondente (nada da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou nas "Instruções
       específicas" — arquivo não listado é escopo a registrar aqui ou scope
       creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado ("já que estava ali").
+
+Nota da verificação independente (rodada 2): `docs/sdd/registry.md` aparece
+no diff `c74f45b..ad47261` e não estava registrado. É arquivo gerado a
+partir de `docs/sdd/registry.yaml` (que não mudou): só o rótulo `Framework
+v2.3.2` e o status `approved` das linhas SDD-DTF-0048 e SDD-DTF-0049,
+regenerados pelo fluxo normal. Fica registrado aqui como escopo gerado, não
+como scope creep.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
-quem escreveu o código tem o resultado como conclusão desejada. Para cada
-critério da tabela acima: comando rodado de fato nesta sessão e saída real,
-nunca "deve passar" nem resultado de memória. Nenhuma linha abaixo foi
-executada ainda: a SDD está em `draft` e a implementação não começou.
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0048.md`. Veredito: **PASS** (rodada 2).
 
-**Verificador independente:** não — nenhuma verificação rodou ainda (o `sdd-verifier` em sessão separada preenche esta seção depois da implementação)
+Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Base do diff: `c74f45b` (main antes da implementação); head verificado:
+`ad47261` (main com PR #126). Os comandos que citam `main` no critério
+rodaram contra `c74f45b` ("antes") e `ad47261` ("depois"); o central foi
+verificado em `b348b42` (antes) e `b54e9ba` (depois, PR #149). A rodada 1
+foi a que originou a SPEC-DTF-0023 e não deixou linhas nesta tabela.
+
+**Verificador independente:** sim
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável (`git checkout --` / `rm`,
@@ -705,22 +715,22 @@ entre parênteses.
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
-| 0 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0048.md /home/michel/doc-traceability-central/docs/DTF` | não executado pelo verificador (rodado apenas na compilação desta SDD, ver relatório do compilador) | n/a | pendente | n/a | automatizado |
-| 0 | A01 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A02 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A03 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A04 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A05 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A06 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A07 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A08 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A09 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A10 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A11 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A12 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A13 | não executado (implementação pendente) | não executado | não executado | pendente | não registrada | automatizado |
-| 0 | A14 | não executado (depende da SDD-DTF-0049 em main) | não executado | n/a | pendente | n/a | manual (motivo: depende de a outra frente existir em `main`; a SDD registra qual entrou primeiro e a saída real) |
-| 0 | A15 | não executado (implementação pendente) | não executado | n/a | pendente | n/a | automatizado |
+| 2 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0048.md <central>/docs/DTF` | `source_docs de SDD-DTF-0048.md conferem com o registry central.` exit 0. RF01 a RF13 da SPEC-DTF-0021 presentes na SDD com critério EARS idêntico; RF09/RF12/A05/A13/A15 e o teste da seção 0 conferem com RF01 a RF06 da SPEC-DTF-0023; nenhum critério relaxado | n/a (checagem de documento) | Sim | n/a | automatizado |
+| 2 | A01 | `SCAN` sobre o YAML de `c74f45b`, depois sobre o YAML atual | ANTES `(36, 68)`; DEPOIS `(0, 0)` | mutação de A05 (a) faz o teste falhar; `resumo` do trecho mutado dá `(1, 2)` | Sim | `_framework/tests/test_prd_ts_texto.py:95` | automatizado |
+| 2 | A02 | `sed -n '/^# 1\. TOPOLOGIA/,$p' ... ; grep -cE "${ANTIGA[@]}"` em `c74f45b` e no head | ANTES `19`; DEPOIS `3` (applies_when do onboarding, linhas 1001 e 1086 de comentário histórico, no head com deslocamento de +10 linhas pelo changelog) | mesmo sensor de A05 | Sim | `_framework/tests/test_prd_ts_texto.py:67` | automatizado |
+| 2 | A03 | `grep -n "^# 15\." _framework/rules/workflow-rules.yaml` | ANTES `1133:# 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DO PRD/TECH SPEC/SDD`; DEPOIS `1143:# 15. GATE OBRIGATÓRIO: QUALIDADE DE CONTEÚDO DA SPEC E DA SDD` | mesmo sensor de A05 (o teste varre a seção 15) | Sim | `_framework/tests/test_prd_ts_texto.py:67` | automatizado |
+| 2 | A04 | `python3 -m pytest _framework/tests/test_prd_ts_texto.py -v` | `4 passed in 0.04s`; 0 failed | mutações de A05 (a) e (b) e do banner `# 12.` (renomeado para `# 12x.`) fazem os testes falharem; restaurado, 4 passed | Sim | `_framework/tests/test_prd_ts_texto.py:84` | automatizado |
+| 2 | A05 | (a) `sed -i` de `Já tenho SPEC/SDD prontos` para `PRD/TS/SDD`, pytest, `git checkout --`; (b) idem em `(compila SPEC/SDD)`; (c) pytest de novo | (a) `2 failed, 2 passed`, `test_yaml_sem_prd_ts_como_passo` FAILED com `linha 1101 (seção 14)`; (b) `2 failed, 2 passed`, FAILED com `linha 1334 (seção 17)`; `test_gate_texto.py` segue `2 passed` nas duas; (c) `4 passed` | é o próprio sensor: os dois testes falham com a mutação e voltam a passar restaurados | Sim | `_framework/tests/test_prd_ts_texto.py:67` e `:95` | automatizado |
+| 2 | A06 | `python3 -m pytest _framework/tests/test_gate_texto.py -v` | `2 passed in 0.14s`; 0 failed | `SPEC` da regra de `gate_implementation_before_code` trocado por `PRD`: `test_gate_regra_sem_prd_ts_como_passo` FAILED (1 failed, 1 passed); restaurado, 2 passed | Sim | `_framework/tests/test_gate_texto.py:34` | automatizado |
+| 2 | A07 | Script `ESTRUTURA` (com `c74f45b` no lugar de `main`) | `22 True`, exit 0 | sem teste automatizado (comparação de dados de configuração, sem arquivo de teste) | Sim | `docs/sdd/SDD-DTF-0048.md:584` | automatizado |
+| 2 | A08 | `python3 -c "import yaml; ... print(f['version'], ...)"` | `2.3.2 2.3.2 2.3.1 True` | sem teste automatizado (leitura de dado de configuração) | Sim | `docs/sdd/SDD-DTF-0048.md:607` | automatizado |
+| 2 | A09 | `python3 _framework/scripts/render_prompts.py && python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | todas as linhas `em dia`/`sincronizado`; nenhuma `divergente`; `exit=0`; `git status --short` vazio após a regeneração (idempotente) | sem teste automatizado próprio (o `--check` é o verificador existente) | Sim | `docs/sdd/SDD-DTF-0048.md:608` | automatizado |
+| 2 | A10 | `grep -cE "${ANTIGA[@]}" docs/especificacao.md; grep -c "PRD + Tech Spec" ...map.md; grep -c "PRD+TS" ...doc-framework.mdc` | ANTES (`c74f45b`) `6`, `1`, `2`; DEPOIS `1`, `0`, `2` | sem teste automatizado (contagem por grep) | Sim | `docs/sdd/SDD-DTF-0048.md:609` | automatizado |
+| 2 | A11 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | `270 passed in 34.13s`; 0 failed | suíte existente; sensores dos testes novos em A04, A05 e A06 | Sim | `_framework/tests/test_prd_ts_texto.py:67` | automatizado |
+| 2 | A12 | No central, `framework_check.py --auto` e `validate_doc.py` em cada documento de ABSTRACTCLINIC, em `b348b42` e `b54e9ba`; `diff` dos pares; `git diff --stat b348b42` | `framework_check` `exit=0` nos dois; 17 documentos ABSTRACTCLINIC, todos `exit=0`; diff de `abs-*.txt` vazio; diff de `fc-*.txt` só com o caminho do worktree e o rótulo de versão do kit (`2.3.1` para `2.3.2`) mais um aviso informativo novo do DTF (`projeto opera sob framework 2.3.1; kit atual é 2.3.2`, porque o `framework_version` do registry do DTF ficou fora); `git diff --stat` do central lista só `docs/DTF/registry.md` (1 linha, rótulo `Framework v2.3.1` para `v2.3.2`), nenhum `registry.yaml`, `examples/` ou `_framework/scripts/*.py` | sem teste automatizado (comparação de saídas do validador existente) | Sim (em substância, ver validation-SDD-DTF-0048.md) | `docs/sdd/SDD-DTF-0048.md:611` | automatizado |
+| 2 | A13 | Comando de A13 corrigido (SPEC-DTF-0023), no central em `b54e9ba` contra o kit em `ad47261` | 13 linhas `igual ...` (8 de `_framework/` mais 5 da raiz, incluindo `prompts/copilot/copilot-instructions.md`); `render_prompts.py --check` `exit=0` | sem teste automatizado (comando de aceite) | Sim | `docs/sdd/SDD-DTF-0048.md:612` | automatizado |
+| 2 | A14 | Worktree do head do PR #127 (`2d50c83`, que contém `ad47261`): `git merge-base --is-ancestor ad47261 2d50c83`; `render_prompts.py`; `render_prompts.py --check; echo "exit=$?"`; `git status --short`; `git diff --name-only ad47261` | 0048 entrou no main primeiro; 0049 integrou o main por merge (`2d50c83`) e o CI `framework-check / validate` do PR #127 está `SUCCESS`, PR `MERGEABLE`/`CLEAN` e ainda `OPEN`; regenerar no head não muda nenhum arquivo; `--check` `exit=0`; diff contra `ad47261` traz `INDEX.md`, `kit-index.yaml`, `workflow-rules.map.md`, `render_indexes.py` (kit e bundle) e `test_render_indexes.py`, nenhum arquivo do YAML da 0048. Item "nenhuma edição à mão" não verificável por comando (manual) | n/a | Sim (parcial: o que é mecânico passou; a ausência de edição à mão e o merge da 0049 no main seguem manuais) | n/a | manual (motivo: depende de a outra frente existir em `main`; a SDD registra qual entrou primeiro e a saída real) |
+| 2 | A15 | `git diff --name-only c74f45b ad47261` no kit | 15 arquivos: YAML, teste novo, 11 gerados (`AGENTS.md`, `QUICKSTART.md`, `CHANGELOG.md`, `docs/especificacao.md`, `_framework/prompts/universal.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/copilot/copilot-instructions.md`, cópia do YAML no bundle, `workflow-rules.map.md`, `_framework/INDEX.md`; `guia-tecnico.md` ausente do diff, permitido pela SPEC-DTF-0023 RF06), a SDD e `docs/sdd/INDEX.md`; mais `docs/sdd/registry.md` (gerado, só rótulo de versão e status das SDDs 0048/0049, fora da lista); nenhum `registry.yaml`, `examples/` ou `_framework/scripts/*.py` | sem teste automatizado (lista de arquivos por `git diff`) | Sim (com a observação sobre `docs/sdd/registry.md`) | `docs/sdd/SDD-DTF-0048.md:614` | automatizado |
 
 ## Rastreabilidade
 
