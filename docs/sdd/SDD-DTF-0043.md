@@ -2,7 +2,7 @@
 id: SDD-DTF-0043
 type: SDD
 title: "Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -487,16 +487,16 @@ relaxar) e do contrato/caso de erro da Parte 2. `pytest` roda de
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF13) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF13) tem código
       correspondente (nada da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou em "Instruções
       específicas" — se a implementação tocou um arquivo não listado
       aqui, ou é escopo que faltou registrar na SDD (atualize-a) ou é
       scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado ("já que estava ali").
-- [ ] `workflow-rules.yaml` intocado e `render_prompts.py` com ≤ 20 linhas
+- [x] `workflow-rules.yaml` intocado e `render_prompts.py` com ≤ 20 linhas
       adicionadas contra origin/main.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
@@ -504,10 +504,9 @@ tanto quanto SDD estourada são falha:
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
 quem escreveu o código tem o resultado como conclusão desejada. Para cada
 critério da tabela acima: comando rodado de fato nesta sessão e saída real,
-nunca "deve passar" nem resultado de memória. Esta SDD ainda não foi
-implementada; as linhas abaixo apenas reservam o critério a verificar.
+nunca "deve passar" nem resultado de memória. Verificação independente rodada em 2026-09-25 (rodada 1), veredito **PASS**.
 
-**Verificador independente:** não — mesma sessão que implementou (verificação independente por sdd-verifier pendente; status permanece approved)
+**Verificador independente:** sim
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -543,8 +542,9 @@ entre parênteses.
 | 20 | `git diff --stat origin/main -- _framework/rules/workflow-rules.yaml` | sem saída | n/a | sim | n/a | automatizado |
 | 21 | `python3 _framework/scripts/validate_doc.py docs/sdd && python3 _framework/scripts/validate_state.py docs/sdd` | ✅ 44 documentos no gate de qualidade; ✅ 44 verificados, 0 problemas (exigiu framework_lib.iter_documents ignorar INDEX.md, escopo registrado na task 5) | n/a | sim | n/a | automatizado |
 | 22 | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0043.md /home/michel/doc-traceability-central/docs/DTF` | ✅ source_docs de SDD-DTF-0043.md conferem com o registry central. | n/a | sim | n/a | automatizado |
-| 23 | `diff -r -x __pycache__ -x .pytest_cache -x .ruff_cache -x .mypy_cache /home/michel/dtf-wt-0043/_framework /home/michel/dtf-central-wt-0043/_framework` | sem saída, exit 0 (worktree do central criada de origin/main com o espelho; o checkout /home/michel/doc-traceability-central está em branch antiga, por isso o worktree; PR do central aberto, não mergeado) | n/a | sim (contra o worktree, não contra o checkout principal do central) | n/a | automatizado (divergência: alvo do diff é o worktree do central) |
+| 23 | `diff -r -x __pycache__ -x .pytest_cache -x .ruff_cache -x .mypy_cache /home/michel/dtf-wt-0043/_framework /home/michel/dtf-central-wt-0043/_framework` | sem saída, exit 0 (reexecutado pelo verificador; o checkout /home/michel/doc-traceability-central está em branch antiga docs/spec-dtf-0020-bundle-gerado-v2 e ainda em v2.3.0, então o alvo válido é o worktree do central com o espelho, PR #141 aberto e não mergeado) | n/a | sim (contra o worktree, não contra o checkout principal do central) | n/a | automatizado (divergência: alvo do diff é o worktree do central) |
 | 24 | `python3 -m pytest _framework/ -q` | 217 passed | n/a | sim | n/a | automatizado |
+| 25 | Fidelidade à origem: `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0043.md /home/michel/dtf-central-wt-0043/docs/DTF`; RF01 a RF13 da SPEC-DTF-0016 conferidos contra a SDD | ✅ source_docs de SDD-DTF-0043.md conferem com o registry central, exit 0; RF01 a RF13 presentes na SDD sem relaxamento de EARS | n/a | sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
