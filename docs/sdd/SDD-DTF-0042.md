@@ -404,10 +404,7 @@ Antes de marcar `implemented`, confirme as duas direções:
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Pendente: SDD em `draft`, sem implementação. Preenchida pela skill
-`verify-sdd`, em sessão separada da que implementou. Para cada critério da
-tabela acima: comando rodado de fato nesta sessão e saída real, nunca
-"deve passar" nem resultado de memória.
+Implementação rodada em 2026-09-25 (branch `sdd/SDD-DTF-0042-defasagens`). Evidência abaixo registrada pelo implementador; a verificação independente e a marcação `implemented` cabem ao `sdd-verifier` em sessão separada.
 
 **Verificador independente:** o `sdd-verifier` registra aqui `sim` ou `não — mesma sessão que implementou` ao rodar a verificação
 
@@ -423,6 +420,20 @@ declare divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
+| 1 | `python3 /tmp/gate.py` (GATE) na `main` | ANTES: `campos com PRD/TS: ['rule', 'not_sufficient_alone', 'if_user_asks_to_skip', 'relationship_with_audit']`, `cita prd_ts_to_sdd: True`, `prd_ts_to_sdd existe: False`, `cita spec_to_sdd: False`; exit=1 | n/a | sim | n/a | automatizado |
+| 2 | `python3 /tmp/gate.py` (GATE) na branch | `campos com PRD/TS: []`, `cita prd_ts_to_sdd: False`, `prd_ts_to_sdd existe: False`, `cita spec_to_sdd: True`; exit=0 | n/a | sim | `_framework/tests/test_gate_texto.py:34` | automatizado |
+| 3 | `python3 -m pytest _framework/tests/test_gate_texto.py -v` | 2 passed in 0.15s | ver 5 | sim | `_framework/tests/test_gate_texto.py:34`, `:43` | automatizado |
+| 4 | comparação YAML `git show main:...` vs branch sem `framework`/`gate_implementation_before_code` | `True`, exit=0 | sem teste | sim | n/a | automatizado |
+| 5 | sed da mutação; pytest; `git checkout --`; pytest | mutado: `FAILED test_gate_regra_sem_prd_ts_como_passo`, `1 failed, 1 passed`; revertido: `2 passed` | falhou com a mutação | sim | `_framework/tests/test_gate_texto.py:34` | automatizado |
+| 6 | `python3 -c "..."` (framework.version etc.) | `2.3.1 2.3.1 True` | sem teste | sim | n/a | automatizado |
+| 7 | `render_prompts.py && render_prompts.py --check` | 0 linhas "divergente"; exit=0; `git status` sem diff extra | sem teste | sim | n/a | automatizado |
+| 8 | `grep -c "PRD e/ou Tech Spec" ...` | ANTES (main): `docs/especificacao.md:1`, `references/workflow-rules.yaml:1`, `universal.md:0`; DEPOIS: `:0` nos três | sem teste | sim | n/a | automatizado |
+| 9 | `framework_check.py --auto` antes/depois; `git diff --stat origin/main -- 'docs/**/registry.yaml' 'docs/**/registry.md' examples/` | exit=0 antes e depois; diff vazio contra `origin/main` (contra a `main` local, desatualizada, aparecia diff de registry alheio a esta SDD) | sem teste | sim | n/a | automatizado |
+| 10 | `cmp` original vs bundle do `sdd.template.md` | ANTES: `differ: byte 2863, line 69`, exit=1; DEPOIS: sem saída, exit=0 | ver 11 | sim | `_framework/tests/test_template_parity.py:29` | automatizado |
+| 11 | `pytest _framework/tests/test_template_parity.py -v`; sensor `echo x >> adr.template.md` no bundle | (a) 4 passed; sensor: `FAILED test_templates_md_paridade` com `['adr.template.md']`, `1 failed, 3 passed`; após desfazer: 4 passed | falhou com a mutação | sim | `_framework/tests/test_template_parity.py:37` | automatizado |
+| 12 | `cmp` x5 + `render_prompts.py --check` em `/home/michel/dtf-central-wt-0042` (worktree do central, PR central #138) | 5 linhas `igual ...`; exit=0 | sem teste | sim | n/a | automatizado |
+| 13 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 186 passed in 29.05s | sem teste | sim | n/a | automatizado |
+| 14 | `git status --porcelain \| grep -E "__pycache__\|\.pytest_cache"` | nenhuma linha; exit=1 do grep | n/a | sim | n/a | manual (motivo: depende do `.gitignore` da frente E) |
 
 ## Rastreabilidade
 
