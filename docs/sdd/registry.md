@@ -1,11 +1,11 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml` em 2026-09-22 19:04. Não editar manualmente. Framework v2.2.0._
+_Gerado automaticamente a partir de `registry.yaml` em 2026-09-25 07:26. Não editar manualmente. Framework v2.2.0._
 
-Total de documentos: **38**
+Total de documentos: **44**
 
 
-## SDD (38)
+## SDD (44)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -47,3 +47,9 @@ Total de documentos: **38**
 | `SDD-DTF-0037` | verify-sdd ganha passo 0: fidelidade da SDD a source_docs (SPEC/ADR de origem) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0038` | Selftest dos validadores por mutação (selftest.py) + mecanização da contagem de recorrência de lições (lessons_check.py) | implemented | Michel Pessoa | 2026-09-22 | — |
 | `SDD-DTF-0039` | Sweep de requisitos transversais na SPEC (item 10 de STRAT-DTF-0003) | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0040` | guia-tecnico.md: corrige drift acumulado (7 adições recentes nunca refletidas) | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0041` | workflow-rules.yaml: frontmatter_schema não lista SPEC (tipo ativo desde 2.0.0) | implemented | Michel Pessoa | 2026-09-22 | — |
+| `SDD-DTF-0042` | Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates | in_review | Michel Pessoa | 2026-09-25 | — |
+| `SDD-DTF-0043` | Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis | in_review | Michel Pessoa | 2026-09-25 | SDD-DTF-0042 |
+| `SDD-DTF-0044` | Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável | in_review | Michel Pessoa | 2026-09-25 | — |
+| `SDD-DTF-0045` | Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade | in_review | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |
