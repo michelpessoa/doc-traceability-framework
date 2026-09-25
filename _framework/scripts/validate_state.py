@@ -30,6 +30,7 @@ from framework_lib import (  # noqa: E402
     read_frontmatter,
     report,
     rule_applies_since_date,
+    split_table_row,
     version_date,
 )
 
@@ -85,7 +86,7 @@ def table_with_header(section: str) -> tuple[list[str], list[list[str]]]:
             continue
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if not any(cells):
             continue
         if all(set(c) <= set("-: ") for c in cells if c):

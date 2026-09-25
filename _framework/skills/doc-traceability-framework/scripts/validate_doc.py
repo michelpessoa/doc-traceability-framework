@@ -44,6 +44,7 @@ from framework_lib import (  # noqa: E402
     read_frontmatter,
     report,
     rule_applies_since_date,
+    split_table_row,
 )
 
 # Em que versão cada exigência entrou. Regra não vale retroativamente:
@@ -304,7 +305,7 @@ def check_ears(doc_id: str, section: str | None) -> list:
         line = line.strip()
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if len(cells) < 3:
             continue
         rf_id, criterion = cells[0], cells[2]
@@ -338,7 +339,7 @@ def check_files_column(doc_id: str, doc_type: str, section: str | None) -> list:
         line = line.strip()
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if doc_type == "SPEC":
             if len(cells) < 4 or not RF_ID.search(cells[0]):
                 continue
@@ -395,7 +396,7 @@ def check_sweep_section(doc_id: str, body: str) -> list:
         line = line.strip()
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if len(cells) < 2:
             continue
         category = cells[0].lower()

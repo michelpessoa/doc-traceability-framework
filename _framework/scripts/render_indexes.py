@@ -28,7 +28,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import find_rules_file, read_frontmatter  # noqa: E402
+from framework_lib import find_rules_file, read_frontmatter, split_table_row  # noqa: E402
 
 BANNER_RE = r"^# (\d+[a-z]?)\. (.+)$"
 FENCE_RE = r"^#{20,}$"
@@ -446,7 +446,7 @@ def extract_sdd_files(body: str) -> list[str]:
     for ln in _section_body(body, "Decomposição em tasks"):
         if not ln.startswith("|"):
             continue
-        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+        cells = split_table_row(ln.strip())
         if col is None:
             if "Arquivos tocados" in cells:
                 col = cells.index("Arquivos tocados")

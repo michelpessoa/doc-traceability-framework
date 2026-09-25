@@ -40,7 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import yaml  # noqa: E402
-from framework_lib import FRONTMATTER_RE  # noqa: E402
+from framework_lib import FRONTMATTER_RE, split_table_row  # noqa: E402
 
 RF_ID_RE = re.compile(r"\bRF-?\d+\b")
 INC_ID_RE = re.compile(r"\bINC-[A-Z0-9]+-\d{4}\b")
@@ -193,7 +193,7 @@ def table_with_header(section: str) -> tuple[list[str], list[list[str]]]:
             continue
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if not any(cells):
             continue
         if all(set(c) <= set("-: ") for c in cells if c):

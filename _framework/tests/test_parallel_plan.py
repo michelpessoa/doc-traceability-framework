@@ -119,3 +119,19 @@ def test_cli_json():
     data = json.loads(result.stdout)
     assert "parallel_groups" in data
     assert "blocked_pairs" in data
+
+
+def test_pipe_escapado_na_celula_de_task_nao_desloca_arquivos(tmp_path):
+    """SDD-DTF-0047 RF06: pipe escapado na célula da task não desloca Arquivos tocados."""
+    sdd = tmp_path / "SDD-X-0001.md"
+    sdd.write_text(
+        "---\nid: SDD-X-0001\ntype: SDD\n---\n\n## Decomposição em tasks\n\n"
+        "| # | Task | RF(s) | Arquivos tocados | Depende de (#) |\n|---|---|---|---|---|\n"
+        "| 1 | roda `grep a\\|b` | RF01 | src/a.py | |\n"
+        "| 2 | outra | RF02 | src/b.py | 1 |\n",
+        encoding="utf-8",
+    )
+    entries, warnings = parse_tasks(sdd)
+    assert warnings == []
+    assert entries[0].files == ["src/a.py"]
+    assert entries[1].depends_on == ["SDD-X-0001.md#1"]

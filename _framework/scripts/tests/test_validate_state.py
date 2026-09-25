@@ -431,3 +431,29 @@ def test_nenhum_validador_chama_rule_applies_direto():
         if p.name != "framework_lib.py" and "rule_applies(" in p.read_text(encoding="utf-8")
     ]
     assert offenders == []
+
+
+CRITERIA_ESCAPADO = """## Critérios de aceite / definição de pronto
+
+| # | Critério | Comando | Resultado esperado | Perfil esperado |
+|---|---|---|---|---|
+| 1 | RF1 | `grep -E 'a\\|b' f` | exit 0 | automatizado |
+"""
+
+
+def test_pipe_escapado_nao_desloca_perfil_esperado():
+    """SDD-DTF-0047 RF04: pipe escapado no comando não desloca colunas."""
+    from validate_state import table_with_header
+
+    header, rows = table_with_header(CRITERIA_ESCAPADO)
+    idx = next(i for i, h in enumerate(header) if "perfil esperado" in h)
+    assert rows[0][idx] == "automatizado"
+    assert rows[0][2] == "`grep -E 'a|b' f`"
+
+
+def test_check_sdd_pipe_escapado_em_comando_nao_reprova(tmp_path):
+    table = HEADER_PERFIL + (
+        "| 1 | `grep -E 'a\\|b' f` | 1 passed | teste reintroduzido | Sim | test_foo.py:42 | automatizado |\n"
+    )
+    problems = _with_criteria_and_evidence(tmp_path, CRITERIA_ESCAPADO, table)
+    assert problems == []

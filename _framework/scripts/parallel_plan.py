@@ -29,7 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import read_frontmatter  # noqa: E402
+from framework_lib import read_frontmatter, split_table_row  # noqa: E402
 
 TASK_NUM = re.compile(r"^\d+$")
 DECISAO_PURA = "(decisão pura)"
@@ -79,7 +79,7 @@ def parse_tasks(path: Path) -> tuple[list[TaskEntry], list[str]]:
         line = line.strip()
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")]
+        cells = split_table_row(line)
         if len(cells) < 5 or not TASK_NUM.match(cells[0]):
             continue
         num, task, files_cell, depends_cell = cells[0], cells[1], cells[3], cells[4]
