@@ -112,6 +112,8 @@ vazio no repositório novo.
 - Editar ADR já `approved` — gere um novo que o marque `superseded`.
 - Editar qualquer arquivo gerado (este inclusive).
 
+Índices: `_framework/INDEX.md` (arquivos) e `_framework/rules/workflow-rules.map.md` (seções).
+
 ## Validação
 
 ```

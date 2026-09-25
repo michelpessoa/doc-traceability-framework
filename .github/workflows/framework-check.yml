@@ -70,6 +70,11 @@ jobs:
           python3 _framework/scripts/render_prompts.py --check
           python3 _framework/scripts/check_renderings.py $REPORT_ONLY
 
+      - name: Índices de SDD e registry.md em dia
+        run: |
+          python3 _framework/scripts/render_indexes.py sdd docs/sdd --check
+          python3 _framework/scripts/generate_registry_md.py docs/sdd --check
+
       - name: Validar mensagens de commit do PR
         if: github.event_name == 'pull_request'
         run: |
