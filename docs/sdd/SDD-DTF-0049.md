@@ -2,7 +2,7 @@
 id: SDD-DTF-0049
 type: SDD
 title: "Título completo e resumo útil no mapa de seções e linhas específicas no INDEX do kit"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
