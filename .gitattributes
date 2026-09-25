@@ -1,0 +1,4 @@
+# Cópias do bundle da skill geradas por _framework/scripts/render_prompts.py
+_framework/skills/doc-traceability-framework/scripts/*.py linguist-generated=true
+_framework/skills/doc-traceability-framework/references/workflow-rules.yaml linguist-generated=true
+_framework/skills/doc-traceability-framework/templates/*.md linguist-generated=true
