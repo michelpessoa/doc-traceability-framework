@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 49 SDDs
+Total: 50 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -54,3 +54,4 @@ Total: 49 SDDs
 | `SDD-DTF-0048` | O YAML do kit (`_framework/rules/workflow-rules.yaml`, framework 2.3.1) ainda apresenta PRD e Tech Spec como passo do fluxo novo em 36 linh… | `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `_framework/INDEX.md`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/prompts/cursor/doc-framework.mdc` +20 | — | — | implemented |
 | `SDD-DTF-0049` | A SDD-DTF-0043 implementou os índices da SPEC-DTF-0016 e todos os tetos passam, mas a avaliação de 2026-09-25 mostrou que os índices ajudam… | `/home/michel/doc-traceability-central/`, `_framework/INDEX.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.map.md`, `_framework/scripts/render_indexes.py` +9 | — | — | implemented |
 | `SDD-DTF-0050` | O prompt do Cursor (`_framework/prompts/cursor/doc-framework.mdc`) ainda descreve o fluxo como `ADR → PRD+TS → SDD` e cita `TS-X` como id d… | `_framework/INDEX.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/rules/kit-index.yaml`, `_framework/scripts/render_prompts.py` +8 | — | — | implemented |
+| `SDD-DTF-0051` | Três resumos do mapa `workflow-rules.map.md` (§5, §14 e §15) terminam em `…` sem dizer qual seção abrir, porque `map_summaries` de `kit-ind… | `_framework/INDEX.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.map.md`, `_framework/scripts/render_indexes.py`, `_framework/tests/test_render_indexes.py` +7 | — | — | approved |

@@ -491,3 +491,13 @@ documents:
     relates_to: [SDD-DTF-0042, SDD-DTF-0048]
     path: "docs/sdd/SDD-DTF-0050.md"
     tags: [tooling, prd-ts, cursor, check_renderings, frente-tooling]
+  - id: SDD-DTF-0051
+    type: SDD
+    title: "Resumos do mapa: map_summaries com precedência sobre o banner e testes das ramificações de _cut_words"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0049]
+    path: "docs/sdd/SDD-DTF-0051.md"
+    tags: [otimizacao-llm, indice, mapa, resumo]
