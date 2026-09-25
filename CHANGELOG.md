@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.3.0** (`2026-09-22`).
+Versão corrente: **2.3.1** (`2026-09-25`).
+
+## 2.3.1
+
+SPEC-DTF-0017 / RFC-DTF-0008 (SDD-DTF-0042): correção de texto, sem mudança de comportamento, não-retroativa. O gate gate_implementation_before_code deixa de mandar verificar "PRD e/ou Tech Spec" e de citar a chave inexistente decision_gates.prd_ts_to_sdd; passa a SPEC e decision_gates.spec_to_sdd (cláusula de legado sob 1.x preservada). sdd.template.md do bundle volta a espelhar o original e ganham testes de regressão de texto do gate e de paridade de templates.
 
 ## 2.3.0
 

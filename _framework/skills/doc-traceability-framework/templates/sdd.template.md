@@ -66,8 +66,16 @@ Parte 2 da SPEC — não invente critério novo aqui, consolide o que já existe
 montante. Todo item tem que ser verificável por comando executável, não
 por leitura de código.
 
-| # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado |
-|---|---|---|---|
+Coluna "Perfil esperado": `automatizado` (tem comando/teste que roda
+sozinho), `manual` (checagem que exige julgamento humano) ou `n/a`
+(critério não verificável por comando nem por inspeção manual pontual,
+ex.: decisão pura já coberta por outro critério). O perfil declarado
+aqui é o que a Evidência de verificação vai comparar contra o "Perfil
+usado" (SDD-DTF-0036, STRAT-DTF-0003 item 7/E5) — trocar automatizado
+por manual sem justificar é o que essa comparação pega.
+
+| # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado | Perfil esperado |
+|---|---|---|---|---|
 
 ## Instruções específicas para a IA implementadora
 Instruções objetivas — arquivos/módulos esperados, padrões de código a
@@ -100,8 +108,18 @@ volta ao normal depois. Teste que passa com a implementação quebrada é
 ruído verde. Critério sem teste automatizado: escreva "sem teste", nunca
 marque como verificado por leitura de código.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? |
-|---|---|---|---|---|
+Coluna "Assertion (file:line)": caminho e linha exatos da asserção (não
+do comando) que resolve o critério — ex. `test_foo.py:42`. Prova que o
+comando testa o valor certo, não só que rodou e voltou verde
+(STRAT-DTF-0003 item 7/E4). Critério `manual` ou `n/a` (ver "Perfil
+esperado" acima): use `n/a` nesta célula. Coluna "Perfil usado": repita
+o "Perfil esperado" do critério correspondente, ou declare divergência
+com justificativa entre parênteses (ex.: `manual (motivo: sensor de
+mutação incompatível com CI atual)`) — divergência sem parênteses é
+reprovada.
+
+| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|
 
 ## Rastreabilidade
 | Campo | Valor |

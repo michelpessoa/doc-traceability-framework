@@ -14,9 +14,21 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.3.0"
-  last_updated: "2026-09-22"
+  version: "2.3.1"
+  last_updated: "2026-09-25"
   changelog:
+    - version: "2.3.1"
+      date: "2026-09-25"
+      summary: >
+        SPEC-DTF-0017 / RFC-DTF-0008 (SDD-DTF-0042): correção de texto,
+        sem mudança de comportamento, não-retroativa. O gate
+        gate_implementation_before_code deixa de mandar verificar "PRD
+        e/ou Tech Spec" e de citar a chave inexistente
+        decision_gates.prd_ts_to_sdd; passa a SPEC e
+        decision_gates.spec_to_sdd (cláusula de legado sob 1.x
+        preservada). sdd.template.md do bundle volta a espelhar o
+        original e ganham testes de regressão de texto do gate e de
+        paridade de templates.
     - version: "2.3.0"
       date: "2026-09-22"
       summary: >
@@ -970,7 +982,7 @@ capabilities:
       hook_command: ["python3", "${CLAUDE_PROJECT_DIR}/_framework/scripts/hook_session_start.py", "post-compact"]
 
 ##############################################################################
-# 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA PRD/TS/SDD
+# 13. GATE OBRIGATÓRIO: NENHUMA IMPLEMENTAÇÃO PULA SPEC/SDD
 ##############################################################################
 # Motivação (registrado para não se perder): este gate foi adicionado
 # depois de um incidente real de uso do framework — um ADR (decisão) foi
@@ -979,7 +991,7 @@ capabilities:
 # PRD, Tech Spec e SDD só foram escritos DEPOIS, retroativamente, quando
 # o dono do projeto percebeu a lacuna. O framework não existe para
 # documentar decisões que já viraram código por conta própria — existe
-# para que a especificação (PRD/TS/SDD) exista ANTES da implementação e
+# para que a especificação (SPEC/SDD) exista ANTES da implementação e
 # seja o que efetivamente guia o código. Uma IA que pula essa ordem está,
 # na prática, tratando o framework como decorativo.
 gate_implementation_before_code:
@@ -1013,32 +1025,34 @@ gate_implementation_before_code:
     endpoint, UI) para uma decisão que já tem RFC e/ou ADR aprovado neste
     framework, a IA DEVE, na mesma resposta/turno em que decide começar a
     implementar (nunca depois):
-      1. Verificar se PRD e/ou Tech Spec aplicáveis (conforme
-         decision_gates.rfc_to_adr já decidiu) existem no repositório
-         central. Se não existirem, CRIÁ-LOS PRIMEIRO — antes de
-         qualquer linha de código — seguindo o fluxo normal (seção 3).
+      1. Verificar se a SPEC aplicável (conforme
+         decision_gates.rfc_to_adr já decidiu) existe no repositório
+         central. Se não existir, CRIÁ-LA PRIMEIRO — antes de qualquer
+         linha de código — seguindo o fluxo normal (seção 3).
       2. Verificar se a SDD correspondente já foi compilada no
-         repositório do projeto (decision_gates.prd_ts_to_sdd). Se não
+         repositório do projeto (decision_gates.spec_to_sdd). Se não
          existir, COMPILÁ-LA PRIMEIRO — antes de qualquer linha de
          código.
-      3. Só depois de PRD/TS/SDD existirem (podem ser criados na mesma
+      3. Só depois de SPEC e SDD existirem (podem ser criadas na mesma
          sessão, não precisam de dias de intervalo — o gate é de ORDEM,
          não de tempo de espera) a IA pode começar a escrever código.
+      Em projeto legado (sob 1.x), o par PRD + Tech Spec ocupa o lugar
+      da SPEC nos passos 1 e 3, como já declara decision_gates.spec_to_sdd.
   not_sufficient_alone: >
     Um ADR sozinho, mesmo com uma seção "Consequências" detalhada
     listando o que precisa ser feito, NÃO é especificação suficiente
-    para pular para o código. ADR registra a decisão (o "porquê"); PRD
-    registra o requisito (o "o quê" para o usuário); Tech Spec registra
-    o desenho executável (o "como"); SDD compila os três para consumo
-    direto de IA de implementação. Pular PRD/TS/SDD e implementar a
-    partir só do ADR é a violação que este gate existe para impedir.
+    para pular para o código. ADR registra a decisão (o "porquê"); a
+    SPEC registra o requisito (o "o quê") e o desenho executável (o
+    "como"); SDD compila SPEC (+ ADR) para consumo direto de IA de
+    implementação. Pular SPEC/SDD e implementar a partir só do ADR é a
+    violação que este gate existe para impedir.
   if_user_asks_to_skip: >
     Se o usuário pedir explicitamente para "ir direto pro código" ou
     "pular a documentação" a partir de um RFC/ADR, a IA NÃO deve obedecer
     silenciosamente: deve avisar que isso viola o gate obrigatório deste
     framework e pedir confirmação explícita antes de implementar sem
-    PRD/TS/SDD. Confirmado o pedido, a IA registra no PRD/TS (quando
-    forem criados depois, se forem) que nasceram retroativos, com nota
+    SPEC/SDD. Confirmado o pedido, a IA registra na SPEC (quando for
+    criada depois, se for) que nasceu retroativa, com nota
     explícita — mesmo padrão de `provenance` usado em ADR reconstruído.
   relationship_with_audit: >
     Isto NÃO duplica a auditoria de aderência (seção 11). A auditoria
@@ -1047,7 +1061,7 @@ gate_implementation_before_code:
     fato, não bloqueia nada, tolera desvio porque adesão de todo o time
     nunca pode ser garantida. Este gate (seção 13) é diferente: aplica-se
     à própria IA operando SOB este framework, que conhece a regra — para
-    ela, pular a ordem PRD/TS/SDD → código não é um desvio tolerável a
+    ela, pular a ordem SPEC/SDD → código não é um desvio tolerável a
     ser descoberto depois, é um erro de execução a ser evitado antes de
     acontecer.
   exception: >
