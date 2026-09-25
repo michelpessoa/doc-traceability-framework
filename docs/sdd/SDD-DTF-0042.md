@@ -2,7 +2,7 @@
 id: SDD-DTF-0042
 type: SDD
 title: "Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -350,7 +350,7 @@ sys.exit(1 if bad else 0)
 | 11 | Paridade de templates verde e sensor (RF09) | (a) `python3 -m pytest _framework/tests/test_template_parity.py -v`; (b) sensor: `echo x >> _framework/skills/doc-traceability-framework/templates/adr.template.md`, rodar (a) de novo, depois desfazer a linha (`sed -i '$ d' ...` no mesmo arquivo) e rodar (a) uma terceira vez | (a) 4 passed; (b) `test_templates_md_paridade` FAILED com `adr.template.md` na mensagem; terceira execução 4 passed | automatizado |
 | 12 | Espelho no central (RF10) | Em `/home/michel/doc-traceability-central`: `for f in rules/workflow-rules.yaml templates/sdd.template.md skills/doc-traceability-framework/templates/sdd.template.md tests/test_gate_texto.py tests/test_template_parity.py; do cmp /home/michel/doc-traceability-framework/_framework/$f _framework/$f && echo "igual $f"; done; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | 5 linhas `igual ...` e `exit=0` | automatizado |
 | 13 | Nenhuma regressão da suíte existente (todos os RF) | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 0 failed | automatizado |
-| 14 | Cache fora da árvore rastreada (higiene) | `git status --porcelain \| grep -E "__pycache__\|\.pytest_cache" ; echo "exit=$?"` | Nenhuma linha listada (`exit=1` do `grep`); se listar, é da frente E da RFC-DTF-0008 e vira nota na SDD, não falha desta | manual (motivo: depende do `.gitignore` da frente E, fora desta SDD) |
+| 14 | Cache fora da árvore rastreada (higiene) | `git status --porcelain -- '*__pycache__*' '*.pytest_cache*'` (equivalente sem pipe: o parser de tabela do `validate_state.py` divide células em `|` mesmo escapado) | Nenhuma linha listada; se listar, é da frente E da RFC-DTF-0008 e vira nota na SDD, não falha desta | manual (motivo: depende do `.gitignore` da frente E, fora desta SDD) |
 
 ## Instruções específicas para a IA implementadora
 
@@ -393,36 +393,42 @@ sys.exit(1 if bad else 0)
 ## Verificação de escopo (nada a mais, nada a menos)
 
 Antes de marcar `implemented`, confirme as duas direções:
-- [ ] Todo requisito consolidado acima (RF01-RF10) tem código
+- [x] Todo requisito consolidado acima (RF01-RF10) tem código
       correspondente (nada da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou nas "Instruções
       específicas" — arquivo não listado é escopo a registrar aqui ou scope
       creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Pendente: SDD em `draft`, sem implementação. Preenchida pela skill
-`verify-sdd`, em sessão separada da que implementou. Para cada critério da
-tabela acima: comando rodado de fato nesta sessão e saída real, nunca
-"deve passar" nem resultado de memória.
+Verificação independente completa em `docs/sdd/validation.md`. Veredito: **PASS**.
 
-**Verificador independente:** o `sdd-verifier` registra aqui `sim` ou `não — mesma sessão que implementou` ao rodar a verificação
+**Verificador independente:** sim (subagente sdd-verifier, sessão separada da que implementou; todos os comandos rodados de novo em 2026-09-25 sobre `41570c9..HEAD`)
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
-comportamento introduzida em espaço descartável, teste tem que FALHAR, e
-volta ao normal depois. Critério sem teste automatizado: escreva "sem
-teste", nunca marque como verificado por leitura de código.
+comportamento introduzida em espaço descartável (`git checkout --` / `rm`,
+nunca `git stash`), teste tem que FALHAR, e volta ao normal depois.
 
-Coluna "Assertion (file:line)": caminho e linha exatos da asserção (não do
-comando) que resolve o critério. Critério `manual` ou `n/a`: `n/a`. Coluna
-"Perfil usado": repita o "Perfil esperado" do critério correspondente, ou
-declare divergência com justificativa entre parênteses.
-
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0042.md <central>/docs/DTF` | `✅ source_docs de SDD-DTF-0042.md conferem com o registry central.` exit=0; RF01-RF10 da SPEC-DTF-0017 todos representados, critérios EARS e contratos da Parte 2 idênticos | sem teste automatizado (leitura RF a RF) | Sim | n/a | manual (critério fora da tabela de aceite) |
+| 1 | 1 | GATE (script do critério) sobre o YAML de `41570c9` (`git show`) | `campos com PRD/TS: ['rule', 'not_sufficient_alone', 'if_user_asks_to_skip', 'relationship_with_audit']`, `cita prd_ts_to_sdd: True`, `prd_ts_to_sdd existe: False`, `cita spec_to_sdd: False`; exit=1 | n/a (prova do estado ANTES) | Sim | n/a | automatizado |
+| 1 | 2 | GATE sobre o YAML da branch | `campos com PRD/TS: []`, `cita prd_ts_to_sdd: False`, `prd_ts_to_sdd existe: False`, `cita spec_to_sdd: True`; exit=0 | ver 5 | Sim | `_framework/tests/test_gate_texto.py:34` | automatizado |
+| 1 | 3 | `python3 -m pytest _framework/tests/test_gate_texto.py -v` | `2 passed in 0.14s` | Mutação 1: PRD/Tech Spec no passo 1 -> `test_gate_regra_sem_prd_ts_como_passo` FAILED; mutação 2: `decision_gates.prd_ts_to_sdd` na regra -> `test_gate_referencias_decision_gates_existem` FAILED; restaurados, `2 passed` | Sim | `_framework/tests/test_gate_texto.py:34`, `:45` | automatizado |
+| 1 | 4 | comparação YAML `41570c9` vs branch sem `framework`/`gate_implementation_before_code` | `True`, exit=0 | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 5 | `sed` da mutação; pytest; `git checkout --`; pytest | mutado: `FAILED test_gate_regra_sem_prd_ts_como_passo`, `1 failed, 1 passed` (`test_gate_texto.py:34 AssertionError`); revertido: `2 passed` | falhou com a mutação | Sim | `_framework/tests/test_gate_texto.py:34` | automatizado |
+| 1 | 6 | leitura de `framework.version`, `changelog[0].version`, `last_updated==date` | `2.3.1 2.3.1 True` | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 7 | `render_prompts.py && render_prompts.py --check; echo exit=$?` | todas as linhas "em dia"/"sincronizado", zero "divergente"; `exit=0`; `git status --short` vazio após regenerar (idempotente) | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 8 | `grep -c "PRD e/ou Tech Spec"` nos 3 arquivos | DEPOIS: `universal.md:0`, `especificacao.md:0`, `references/workflow-rules.yaml:0`; ANTES (`41570c9:docs/especificacao.md`): 1 | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 9 | `framework_check.py --auto` na base `41570c9` (git archive) e na branch; `git diff --stat 41570c9 -- 'docs/**/registry.yaml' 'docs/**/registry.md' examples/` | exit antes=0, exit depois=0; diff-stat vazio | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 10 | `cmp` original vs bundle do `sdd.template.md` | ANTES (`41570c9`): `differ: byte 2863, line 69`, exit=1; DEPOIS: sem saída, exit=0 | ver 11 | Sim | `_framework/tests/test_template_parity.py:29` | automatizado |
+| 1 | 11 | `pytest _framework/tests/test_template_parity.py -v`; sensores `echo x >> adr.template.md` e `orfao.md` no bundle | (a) `4 passed`; sensor 1: `FAILED test_templates_md_paridade` (`Left contains one more item: 'adr.template.md'`), `1 failed, 3 passed`; sensor 2 (`orfao.md`): `FAILED test_bundle_sem_template_orfao`; desfeitos: `4 passed` | falhou com as duas mutações | Sim | `_framework/tests/test_template_parity.py:37` | automatizado |
+| 1 | 12 | `cmp` x5 kit vs `/home/michel/dtf-central-wt-0042` + `render_prompts.py --check` lá | 5 linhas `igual ...`; `--check` exit=0, zero "divergente" | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 13 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | `186 passed in 27.94s` | sem teste automatizado | Sim | n/a | automatizado |
+| 1 | 14 | `git status --porcelain -- '*__pycache__*' '*.pytest_cache*'` | saída vazia | n/a | Sim | n/a | manual (motivo: depende do `.gitignore` da frente E, fora desta SDD) |
 
 ## Rastreabilidade
 

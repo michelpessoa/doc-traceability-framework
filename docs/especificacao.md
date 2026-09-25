@@ -1,4 +1,4 @@
-# Especificação do framework (v2.3.0)
+# Especificação do framework (v2.3.1)
 
 Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `_framework/rules/workflow-rules.yaml`. Não edite à mão — o CI reprova.
@@ -20,7 +20,7 @@ Para narrativa e exemplos, veja `docs/guias/`. Para começar a usar,
 
 **Referência entre repositórios** — Como o repositório de projeto não tem os arquivos do repositório central presentes localmente, toda referência de uma SDD a um documento de origem (SPEC, ADR) DEVE incluir não só o id mas também a URL completa do arquivo no repositório central — sem isso, a rastreabilidade quebra ao atravessar repositórios. Ver frontmatter_schema.type_specific_fields.SDD.source_docs.
 
-## Núcleo canônico (framework 2.3.0)
+## Núcleo canônico (framework 2.3.1)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.
@@ -78,7 +78,7 @@ INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
 
 **NENHUMA LINHA DE CÓDIGO ANTES DA SPEC E DA SDD EXISTIREM.**
 
-OBRIGATÓRIO, não é sugestão. Antes de criar, editar ou gerar qualquer arquivo de código de implementação (schema, migration, service, endpoint, UI) para uma decisão que já tem RFC e/ou ADR aprovado neste framework, a IA DEVE, na mesma resposta/turno em que decide começar a implementar (nunca depois): 1. Verificar se PRD e/ou Tech Spec aplicáveis (conforme decision_gates.rfc_to_adr já decidiu) existem no repositório central. Se não existirem, CRIÁ-LOS PRIMEIRO — antes de qualquer linha de código — seguindo o fluxo normal (seção 3). 2. Verificar se a SDD correspondente já foi compilada no repositório do projeto (decision_gates.prd_ts_to_sdd). Se não existir, COMPILÁ-LA PRIMEIRO — antes de qualquer linha de código. 3. Só depois de PRD/TS/SDD existirem (podem ser criados na mesma sessão, não precisam de dias de intervalo — o gate é de ORDEM, não de tempo de espera) a IA pode começar a escrever código.
+OBRIGATÓRIO, não é sugestão. Antes de criar, editar ou gerar qualquer arquivo de código de implementação (schema, migration, service, endpoint, UI) para uma decisão que já tem RFC e/ou ADR aprovado neste framework, a IA DEVE, na mesma resposta/turno em que decide começar a implementar (nunca depois): 1. Verificar se a SPEC aplicável (conforme decision_gates.rfc_to_adr já decidiu) existe no repositório central. Se não existir, CRIÁ-LA PRIMEIRO — antes de qualquer linha de código — seguindo o fluxo normal (seção 3). 2. Verificar se a SDD correspondente já foi compilada no repositório do projeto (decision_gates.spec_to_sdd). Se não existir, COMPILÁ-LA PRIMEIRO — antes de qualquer linha de código. 3. Só depois de SPEC e SDD existirem (podem ser criadas na mesma sessão, não precisam de dias de intervalo — o gate é de ORDEM, não de tempo de espera) a IA pode começar a escrever código. Em projeto legado (sob 1.x), o par PRD + Tech Spec ocupa o lugar da SPEC nos passos 1 e 3, como já declara decision_gates.spec_to_sdd.
 
 Racionalizações que denunciam a violação acontecendo agora:
 
