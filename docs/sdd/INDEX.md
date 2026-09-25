@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 45 SDDs
+Total: 46 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -50,3 +50,4 @@ Total: 45 SDDs
 | `SDD-DTF-0044` | Reduzir o custo de contexto de cada disparo das skills do kit sem perder nenhum gate de vista. | `.claude/skills/doc-traceability-framework`, `_framework/procedures/verify-sdd.md`, `_framework/skills/doc-traceability-framework/SKILL.md`, `_framework/skills/doc-traceability-framework/references/audit.md` +10 | — | — | implemented |
 | `SDD-DTF-0045` | Os diretórios `.ruff_cache`, `.pytest_cache` e `.mypy_cache` não são declarados pelo `.gitignore` da raiz (hoje só ficam fora do `git statu… | (sem seção de arquivos) | — | — | implemented |
 | `SDD-DTF-0046` | A pasta `_framework/skills/doc-traceability-framework/` (o bundle da skill) contém cópias geradas de scripts, do YAML de regras e de templa… | (sem seção de arquivos) | — | — | implemented |
+| `SDD-DTF-0047` | Toda leitura de tabela markdown dos scripts do framework quebra a linha com `line.strip("/").split("/")`, sem reconhecer o pipe escapado (b… | (sem seção de arquivos) | — | — | in_review |

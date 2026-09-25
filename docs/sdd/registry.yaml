@@ -451,3 +451,13 @@ documents:
     relates_to: [SDD-DTF-0042, SDD-DTF-0043, SDD-DTF-0045]
     path: "docs/sdd/SDD-DTF-0046.md"
     tags: [otimizacao-llm, bundle, gerado, sync, gitattributes]
+  - id: SDD-DTF-0047
+    type: SDD
+    title: "Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045]
+    path: "docs/sdd/SDD-DTF-0047.md"
+    tags: [tooling, parser, tabela, pipe-escapado, validate_state, frente-tooling]
