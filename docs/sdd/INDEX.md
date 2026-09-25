@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 44 SDDs
+Total: 45 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -49,3 +49,4 @@ Total: 44 SDDs
 | `SDD-DTF-0043` | Dar a uma LLM (e a um humano) um caminho barato até qualquer arquivo do kit, qualquer seção do `workflow-rules.yaml` e qualquer SDD de um r… | `.github/workflows/framework-check.yml`, `AGENTS.md`, `_framework/INDEX.md`, `_framework/prompts/universal.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.map.md` +31 | — | — | implemented |
 | `SDD-DTF-0044` | Reduzir o custo de contexto de cada disparo das skills do kit sem perder nenhum gate de vista. | `.claude/skills/doc-traceability-framework`, `_framework/procedures/verify-sdd.md`, `_framework/skills/doc-traceability-framework/SKILL.md`, `_framework/skills/doc-traceability-framework/references/audit.md` +10 | — | — | implemented |
 | `SDD-DTF-0045` | Os diretórios `.ruff_cache`, `.pytest_cache` e `.mypy_cache` não são declarados pelo `.gitignore` da raiz (hoje só ficam fora do `git statu… | (sem seção de arquivos) | — | — | approved |
+| `SDD-DTF-0046` | A pasta `_framework/skills/doc-traceability-framework/` (o bundle da skill) contém cópias geradas de scripts, do YAML de regras e de templa… | (sem seção de arquivos) | — | — | in_review |
