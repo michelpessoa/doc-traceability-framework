@@ -163,8 +163,8 @@ def test_mapa_ids_batem_com_banners(tmp_path):
     text = ri.build_section_map(yaml_path)
     assert "| §2b |" in text and "(nenhuma)" in text
     assert yaml_path.read_bytes() == before
-    # multi-linha: título é a primeira linha
-    assert sections[3].title == "BANNER EM VÁRIAS LINHAS QUE CONTINUA"
+    # multi-linha: as linhas de continuação entram no título (SPEC-DTF-0022 RF01)
+    assert sections[3].title == "BANNER EM VÁRIAS LINHAS QUE CONTINUA AQUI NA SEGUNDA LINHA"
 
 
 def test_mapa_ids_batem_com_banners_yaml_real():
@@ -440,3 +440,268 @@ def test_arquivos_tocados_com_pipe_escapado():
         "| 1 | roda `grep a\\|b` | `src/z.py` |\n"
     )
     assert ri.extract_sdd_files(body) == ["src/z.py"]
+
+
+# --- SPEC-DTF-0022 (SDD-DTF-0049) ------------------------------------------
+
+
+def _doc(*sections: str) -> str:
+    """YAML mínimo: cada seção é (banner_lines, after_fence) já formatada por `_sec`."""
+    return f"{FENCE}\n# cabecalho\n{FENCE}\n\nframework:\n  version: '1'\n\n" + "\n".join(sections)
+
+
+def _sec(n: str, title_lines: list[str], banner_body: list[str] | None = None,
+         after: list[str] | None = None, yaml_body: str = "") -> str:
+    out = [FENCE, f"# {n}. {title_lines[0]}"] + [f"#     {t}" for t in title_lines[1:]]
+    if banner_body:
+        out += ["#"] + [f"# {b}" for b in banner_body]
+    out.append(FENCE)
+    out += [f"# {a}" if a else "#" for a in (after or [])]
+    if yaml_body:
+        out.append(yaml_body)
+    return "\n".join(out) + "\n"
+
+
+def _by_id(text: str, overrides: dict | None = None) -> dict:
+    return {s.sid: s for s in ri.parse_yaml_sections(text, overrides)}
+
+
+def test_titulo_completo_junta_continuacao_e_descarta_cauda():
+    doc = _doc(
+        _sec("1", ["TÍTULO QUE CONTINUA", "NA SEGUNDA LINHA"], yaml_body="a: 1"),
+        _sec("2", ["ARTEFATOS — cauda descritiva que não entra", "e continua aqui"], yaml_body="b: 1"),
+        _sec("3", ["GATE OBRIGATÓRIO: NOME COM DOIS-PONTOS"], yaml_body="c: 1"),
+    )
+    sec = _by_id(doc)
+    assert sec["1"].title == "TÍTULO QUE CONTINUA NA SEGUNDA LINHA"
+    assert sec["2"].title == "ARTEFATOS"
+    assert sec["3"].title == "GATE OBRIGATÓRIO: NOME COM DOIS-PONTOS"
+
+
+def test_titulo_completo_parentese_so_quando_estoura_70():
+    curto = "METADADOS (FRONT-MATTER)"
+    assert ri._clean_title(curto) == curto
+    longo = "CICLO DE VIDA DE STATUS PADRÃO (STRAT, RFC, ADR, PRD, TS, SDD, BASE, PM, INC)"
+    assert len(longo) > ri.TITLE_MAX
+    assert ri._clean_title(longo) == "CICLO DE VIDA DE STATUS PADRÃO"
+
+
+def test_titulo_completo_corte_com_reticencias_so_se_ainda_passa():
+    raw = "CAPACIDADES QUE QUALQUER FERRAMENTA DE IA (X, Y) DEVE OFERECER AO EXECUTAR ESTE FRAMEWORK"
+    out = ri._clean_title(raw)
+    assert out.endswith("…") and len(out) <= ri.TITLE_MAX
+    assert "(" not in out
+    assert not ri._clean_title("SÓ UM TÍTULO CURTO").endswith("…")
+
+
+def test_resumo_cadeia_fontes_em_ordem():
+    # (1) corpo do banner vence tudo
+    doc = _doc(_sec("1", ["T1 — cauda"], banner_body=["Corpo do banner. Outra frase."],
+                    after=["Depois da fence."], yaml_body="k:\n  description: \"Valor da chave.\""))
+    assert _by_id(doc)["1"].summary == "Corpo do banner."
+    # (2) parágrafo após a fence
+    doc = _doc(_sec("1", ["T1 — cauda"], after=["Depois da fence. Segunda."], yaml_body="k:\n  description: \"Valor.\""))
+    assert _by_id(doc)["1"].summary == "Depois da fence."
+    # (3) valor da primeira chave, na ordem de SCALAR_KEYS
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  purpose: \"Por propósito.\"\n  description: \"Por descrição.\""))
+    assert _by_id(doc)["1"].summary == "Por descrição."
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  approach: \"Por abordagem.\""))
+    assert _by_id(doc)["1"].summary == "Por abordagem."
+    # (4) map_summaries, só depois das fontes automáticas
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  x: 1"))
+    assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Frase à mão."
+    # (5) cauda do título após o travessão
+    assert _by_id(doc)["1"].summary == "Cauda"
+    # (6) título limpo
+    doc = _doc(_sec("1", ["APENAS TÍTULO"], yaml_body="k: 1"))
+    assert _by_id(doc)["1"].summary == "APENAS TÍTULO"
+
+
+def test_resumo_cadeia_rotulo_frase_completa_e_bloco_vazio():
+    doc = _doc(_sec("1", ["T1"], after=["Motivação (registrado): este gate nasceu de um incidente. Outra.", ""], yaml_body="k: 1"))
+    assert _by_id(doc)["1"].summary == "Este gate nasceu de um incidente."
+    doc = _doc(_sec("1", ["T1"], after=["Origem: mesmo incidente da seção 13 — algo"], yaml_body="k: 1"))
+    assert _by_id(doc)["1"].summary == "Mesmo incidente da seção 13 — algo"
+    # parágrafo terminado em dois-pontos vale inteiro, sem o `:`
+    doc = _doc(_sec("1", ["T1"], after=["Este framework assume dois tipos:", "", "  (a) central"], yaml_body="k: 1"))
+    assert _by_id(doc)["1"].summary == "Este framework assume dois tipos"
+    # bloco de comentário vazio é ignorado e cai para a fonte seguinte
+    doc = _doc(_sec("1", ["T1 — cauda"], after=["", ""], yaml_body="k:\n  description: \"Da chave.\""))
+    assert _by_id(doc)["1"].summary == "Da chave."
+    # primeira chave que não é mapeamento: fonte (3) ignorada
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  - a\n  - b"))
+    assert _by_id(doc)["1"].summary == "Cauda"
+
+
+def test_corte_fronteira_palavra_limite_e_conectivo():
+    assert ri._cut_words("cabe inteiro", 20) == "cabe inteiro"
+    assert ri._cut_words("termina em conectivo de", 40) == "termina em conectivo de"  # cabe: intacto
+    out = ri._cut_words("uma frase longa demais para caber no limite dado", 30)
+    assert out == "uma frase longa demais para…" or out.endswith("…")
+    assert len(out) <= 30
+    assert not out.rstrip("…").endswith(" ")
+    # conectivo pendurado é descartado
+    out = ri._cut_words("alfa beta gama de delta epsilon", 17)
+    assert out == "alfa beta gama…"
+    # palavra única maior que o limite: corte duro em limit - 1 mais reticências
+    assert ri._cut_words("palavralongademais", 8) == "palavra…"
+    # nunca corta no meio de palavra quando há espaço
+    words = "um dois tres quatro cinco seis sete oito nove dez".split()
+    text = " ".join(words)
+    for limit in range(8, len(text)):
+        cut = ri._cut_words(text, limit).rstrip("…")
+        assert len(ri._cut_words(text, limit)) <= limit
+        assert all(w in words for w in cut.split())
+
+
+def test_corte_fronteira_palavra_resumo_longo_e_ordem_de_encurtamento():
+    sec = ri.Section(
+        sid="99", title="TÍTULO " + "MUITO " * 8 + "LONGO", keys=("k1", "k2", "k3"),
+        start=1, end=2, nbytes=10, summary="Resumo " + "bem comprido " * 7 + "fim.",
+    )
+    row = ri._section_row(sec, 180)
+    assert ri._nbytes(row) <= 180
+    cells = [c.strip() for c in row.strip("|").split("|")]
+    # as chaves encolhem antes de tudo
+    assert cells[2] == "`k1` +2" or cells[2].startswith("`k1`")
+    # o Resumo não cai abaixo do piso e o título só encolhe depois dele
+    summary = cells[5]
+    assert len(summary.rstrip("…")) >= ri.SUMMARY_MIN or ri._nbytes(row) <= 180
+    apertado = ri._section_row(sec, 150)
+    assert ri._nbytes(apertado) <= 150
+    c2 = [c.strip() for c in apertado.strip("|").split("|")]
+    assert len(c2[5].rstrip("…")) >= ri.SUMMARY_MIN - 6
+    assert len(c2[1]) >= ri.TITLE_MIN - 1
+    # com folga total nada é cortado
+    assert ri._section_row(sec, 1000).endswith(sec.summary + " |")
+
+
+def test_map_summaries_so_sem_fonte_automatica():
+    doc = _doc(
+        _sec("1", ["COM FONTE"], after=["Parágrafo automático."], yaml_body="a: 1"),
+        _sec("2", ["SEM FONTE"], yaml_body="b: 1"),
+    )
+    sec = _by_id(doc, {"1": "Texto à mão um.", "2": "Texto à mão dois."})
+    assert sec["1"].summary == "Parágrafo automático."
+    assert sec["2"].summary == "Texto à mão dois."
+
+
+def test_map_summaries_id_inexistente_sai_2_citando_id(tmp_path):
+    doc = _doc(_sec("1", ["UM"], yaml_body="a: 1"))
+    with pytest.raises(SystemExit) as exc:
+        ri.parse_yaml_sections(doc, {"77": "frase"})
+    assert "77" in str(exc.value.code)
+    root = tmp_path / "_framework"
+    (root / "rules").mkdir(parents=True)
+    (root / "rules" / "workflow-rules.yaml").write_text(doc, encoding="utf-8")
+    (root / "rules" / "kit-index.yaml").write_text(
+        'entries:\n  - path: "rules/*"\n    what: "a b c d"\n    when: "w"\nmap_summaries:\n  "77": "frase valida"\n',
+        encoding="utf-8",
+    )
+    assert ri.main(["--root", str(root)]) == 2
+    assert not (root / "rules" / "workflow-rules.map.md").exists()
+
+
+@pytest.mark.parametrize("value", ['""', "12", "[a, b]", "null"])
+def test_map_summaries_valor_vazio_ou_nao_textual_sai_2(tmp_path, value):
+    path = tmp_path / "kit-index.yaml"
+    path.write_text(f'entries:\n  - path: "a"\n    what: "b c d e"\n    when: "c"\nmap_summaries:\n  "1": {value}\n', encoding="utf-8")
+    with pytest.raises(SystemExit) as exc:
+        ri.load_map_summaries(path)
+    assert "1" in str(exc.value.code)
+    path.write_text('entries: []\nmap_summaries: [a]\n', encoding="utf-8")
+    with pytest.raises(SystemExit):
+        ri.load_map_summaries(path)
+
+
+def test_map_summaries_ausente_e_manifesto_intacto(tmp_path):
+    path = tmp_path / "kit-index.yaml"
+    path.write_text(
+        'entries:\n  - path: "a"\n    what: "b c d e"\n    when: "c"\nmap_summaries:\n  "1": "Frase à mão."\n',
+        encoding="utf-8",
+    )
+    assert ri.load_map_summaries(path) == {"1": "Frase à mão."}
+    assert [e["path"] for e in ri.load_kit_manifest(path)] == ["a"]
+    path.write_text('entries:\n  - path: "a"\n    what: "b"\n    when: "c"\n', encoding="utf-8")
+    assert ri.load_map_summaries(path) == {}
+
+
+def test_kit_index_o_que_e_distinto_expande_name_e_stem(tmp_path):
+    root, _ = _kit(tmp_path)
+    manifest = [
+        {"path": "scripts/*.py", "what": "Cópia de {name} ({stem})", "when": "Ao ler {stem}.py e {outro}"},
+        {"path": "notes.md", "what": "Notas", "when": "Sempre"},
+        {"path": "*.bin", "what": "Binário", "when": "Nunca"},
+        {"path": "tiny.txt", "what": "Texto", "when": "Às vezes"},
+    ]
+    text = ri.build_kit_index(root, manifest)
+    assert "| Cópia de a.py (a) | Ao ler a.py e {outro} |" in text
+    assert "| Cópia de b.py (b) | Ao ler b.py e {outro} |" in text
+    rows = ri._table_rows(text)
+    whats = [r.split("|")[2].strip() for r in rows]
+    assert len(whats) == len(set(whats))
+
+
+def test_kit_index_o_que_e_distinto_no_index_real():
+    root = REPO_ROOT / "_framework"
+    manifest = ri.load_kit_manifest(root / "rules" / "kit-index.yaml")
+    text = ri.build_kit_index(root, manifest)  # cobertura da 0016 intacta: não levanta CoverageError
+    rows = ri._table_rows(text)
+    whats = [r.split("|")[2].strip() for r in rows]
+    assert len(whats) == len(rows) == len(set(whats)), "duas linhas com o mesmo O que é"
+    assert all(len(w.split()) >= 4 for w in whats)
+    assert (root / "INDEX.md").read_text(encoding="utf-8") == text
+
+
+def test_kit_index_o_que_e_distinto_cobertura_continua(tmp_path):
+    root, manifest = _kit(tmp_path)
+    (root / "novo.txt").write_text("x", encoding="utf-8")
+    with pytest.raises(ri.CoverageError):
+        ri.build_kit_index(root, manifest)
+
+
+def _map_rows() -> list[list[str]]:
+    rules = REPO_ROOT / "_framework" / "rules"
+    text = ri.build_section_map(rules / "workflow-rules.yaml", ri.load_map_summaries(rules / "kit-index.yaml"))
+    return [[c.strip() for c in ln.strip("|").split("|")] for ln in text.splitlines() if ln.startswith("| §") and not ln.startswith("| § ")]
+
+
+def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
+    import yaml
+
+    yaml_text = (REPO_ROOT / "_framework" / "rules" / "workflow-rules.yaml").read_text(encoding="utf-8")
+    norm = lambda x: " ".join(str(x).split()).lower()  # noqa: E731
+    hay = [norm(" ".join(ln.lstrip("#") for ln in yaml_text.splitlines() if ln.startswith("#")))]
+
+    def walk(o):
+        if isinstance(o, str):
+            hay.append(norm(o))
+        elif isinstance(o, dict):
+            [walk(v) for v in o.values()]
+        elif isinstance(o, list):
+            [walk(v) for v in o]
+
+    walk(yaml.safe_load(yaml_text))
+    rows = _map_rows()
+    assert len(rows) == 22
+    repetidos, titulos_cortados, meio_de_palavra, resumo_curto = [], [], [], []
+    for c in rows:
+        sid, titulo, resumo = c[0], c[1], c[-1]
+        if sid == "§0":
+            continue
+        t, r = titulo.rstrip("…"), resumo.rstrip("…")
+        if r.startswith(t[:15]) or t.startswith(r[:15]):
+            repetidos.append(sid)
+        if titulo.endswith("…"):
+            titulos_cortados.append(sid)
+        if resumo.endswith("…"):
+            if len(r) < ri.SUMMARY_MIN:
+                resumo_curto.append(sid)
+            pre = norm(r)
+            hits = [(h, i) for h in hay for i in range(len(h)) if h.startswith(pre, i)]
+            if hits and not any(i + len(pre) >= len(h) or h[i + len(pre)] == " " for h, i in hits):
+                meio_de_palavra.append(sid)
+    assert repetidos == []
+    assert len(titulos_cortados) <= 1
+    assert meio_de_palavra == []
+    assert resumo_curto == []
