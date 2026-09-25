@@ -2,7 +2,7 @@
 id: SDD-DTF-0049
 type: SDD
 title: "Título completo e resumo útil no mapa de seções e linhas específicas no INDEX do kit"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -636,18 +636,18 @@ branch de implementação, com os gerados regenerados.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF07) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF07) tem código
       correspondente (nada da SPEC-DTF-0022 ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou em "Instruções
       específicas" — se a implementação tocou um arquivo não listado aqui, ou
       é escopo que faltou registrar na SDD (atualize-a) ou é scope creep a
       remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado ("já que estava ali").
-- [ ] Errata da SPEC-DTF-0024: RF01 a RF05 têm código, teste ou nota
+- [x] Errata da SPEC-DTF-0024: RF01 a RF05 têm código, teste ou nota
       correspondente e só os arquivos da task 7 a 11 mudaram.
-- [ ] `workflow-rules.yaml` intocado, `render_prompts.py` sem diff,
+- [x] `workflow-rules.yaml` intocado, `render_prompts.py` sem diff,
       `framework.version` igual ao de `origin/main`, e os valores de
       `CEILINGS` e `MAP_FRACTION` iguais aos da 0016.
 
@@ -656,10 +656,16 @@ tanto quanto SDD estourada são falha:
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
 quem escreveu o código tem o resultado como conclusão desejada. Para cada
 critério da tabela acima: comando rodado de fato nesta sessão e saída real,
-nunca "deve passar" nem resultado de memória. Nada foi rodado ainda: esta SDD
-está em `draft` e as linhas abaixo esperam o verificador.
+nunca "deve passar" nem resultado de memória. Rodada 2 (segunda verificação
+independente, depois das PRs #127 e #131 do kit e #154 do central): todas as
+linhas abaixo foram rodadas nesta sessão, em worktrees de `origin/main`
+(kit em `9c62fad`, central em `91b69bf`).
 
-**Verificador independente:** pendente — sdd-verifier em sessão separada
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0049.md`.
+Veredito: **PASS**, com ressalvas de julgamento em A17 e A28 registradas para
+decisão humana.
+
+**Verificador independente:** sim
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -671,36 +677,37 @@ critério `manual` ou `n/a` usa `n/a`. Coluna "Perfil usado": repete o
 "Perfil esperado" do critério ou declara divergência com justificativa entre
 parênteses.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
-| A01 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k titulo_completo -v` | pendente | pendente: mutação (c) | pendente | pendente | pendente |
-| A02 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k resumo_cadeia -v` | pendente | pendente: mutação (b) | pendente | pendente | pendente |
-| A03 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_fronteira_palavra -v` | pendente | pendente: mutação (a) | pendente | pendente | pendente |
-| A04 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k map_summaries -v` | pendente | pendente: mutação (d) | pendente | pendente | pendente |
-| A05 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k kit_index_o_que_e_distinto -v` | pendente | pendente: mutação (e) | pendente | pendente | pendente |
-| A06 | pendente: `python3 -m pytest _framework/tests/test_render_indexes.py -k metricas_mapa_real -v` | pendente | pendente: mutação (a) | pendente | pendente | pendente |
-| A07 | pendente: awk de A07 sobre o mapa gerado (ANTES e DEPOIS) | pendente | n/a | pendente | n/a | pendente |
-| A08 | pendente: script MEDE-CORTE sobre o YAML e o mapa gerados (ANTES e DEPOIS) | pendente | n/a | pendente | n/a | pendente |
-| A09 | pendente: awk de A09 sobre o INDEX gerado (ANTES e DEPOIS) | pendente | n/a | pendente | n/a | pendente |
-| A10 | pendente: `render_indexes.py --check` e `render_prompts.py --check` | pendente | n/a | pendente | n/a | pendente |
-| A11 | pendente: pytest de cobertura, ids, tetos e idempotência | pendente | n/a | pendente | pendente | pendente |
-| A12 | pendente: `git diff --stat origin/main` do YAML e de `render_prompts.py`, e versão | pendente | n/a | pendente | n/a | pendente |
-| A13 | pendente: `diff -r` kit x central | pendente | n/a | pendente | n/a | pendente |
-| A14 | pendente: `pytest _framework/tests/test_kit_parity.py -k render_indexes -v` | pendente | n/a | pendente | pendente | pendente |
-| A15 | pendente: `render_indexes.py sdd docs/sdd --check` | pendente | n/a | pendente | n/a | pendente |
-| A16 | pendente: `python3 -m pytest _framework/ -q` | pendente | n/a | pendente | n/a | pendente |
-| A17 | pendente: leitura humana do mapa e de 10 linhas do INDEX | pendente | n/a | pendente | n/a | pendente |
-| A18 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
-| A19 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
-| A20 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A21 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A22 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | pendente: mutações (a) a (c) | pendente | pendente | pendente |
-| A23 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
-| A24 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A25 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A26 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A27 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
-| A28 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 2 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0049.md ../central/docs/DTF` (central em 91b69bf); RF01 a RF07 da SPEC-DTF-0022, RF01 a RF05 da 0024 e RF01 a RF04 da 0025 conferidos contra os requisitos e contratos da SDD (piso 28 da 0025 prevalece) | `✅ source_docs de SDD-DTF-0049.md conferem com o registry central.`, exit 0; nenhum RF sem representação; nenhum critério relaxado | n/a (checagem mecanizada mais leitura) | Sim | n/a | manual |
+| 2 | A01 | `python3 -m pytest _framework/tests/test_render_indexes.py -k titulo_completo -v` | 3 passed, 46 deselected | Mutação R1c (`_clean_title` sem descartar a cauda ` — `) derrubou `test_titulo_completo_junta_continuacao_e_descarta_cauda` e `test_metricas_mapa_real...`; restaurado, 49 passed | Sim | _framework/tests/test_render_indexes.py:481 | automatizado |
+| 2 | A02 | `python3 -m pytest _framework/tests/test_render_indexes.py -k resumo_cadeia -v` | 2 passed, 47 deselected | Mutação R1b (cadeia sem a fonte 3) derrubou `test_resumo_cadeia_fontes_em_ordem` e `test_resumo_cadeia_rotulo_frase_completa_e_bloco_vazio` | Sim | _framework/tests/test_render_indexes.py:520 | automatizado |
+| 2 | A03 | `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_fronteira_palavra -v` | 2 passed, 47 deselected | Mutação R1a (`_cut_words` sem recuo ao espaço) derrubou `test_corte_fronteira_palavra_limite_e_conectivo`, `test_metricas_mapa_real...` e `test_corte_descarta_travessao...` | Sim | _framework/tests/test_render_indexes.py:559 | automatizado |
+| 2 | A04 | `python3 -m pytest _framework/tests/test_render_indexes.py -k map_summaries -v` | 8 passed, 41 deselected | Mutação R1d (sem validar id de `map_summaries`) derrubou `test_map_summaries_id_inexistente_sai_2_citando_id`; extra X5 (valor vazio aceito) derrubou `..._valor_vazio_ou_nao_textual_sai_2[""]` | Sim | _framework/tests/test_render_indexes.py:612 | automatizado |
+| 2 | A05 | `python3 -m pytest _framework/tests/test_render_indexes.py -k kit_index_o_que_e_distinto -v` | 3 passed, 46 deselected | Mutação R1e (sem expansão de `{name}`) derrubou `..._expande_name_e_stem` e `..._no_index_real` | Sim | _framework/tests/test_render_indexes.py:671 | automatizado |
+| 2 | A06 | `python3 -m pytest _framework/tests/test_render_indexes.py -k metricas_mapa_real -v` | 1 passed, 48 deselected | Mutações R1a, R1c, X1 (sem `DASHES`) e X2 (sem recuo de parêntese) derrubaram `test_metricas_mapa_real...` | Sim | _framework/tests/test_render_indexes.py:728 | automatizado |
+| 2 | A07 | awk de A07 sobre o mapa: ANTES `git show 1fe4f68:_framework/rules/workflow-rules.map.md \| awk ...`; DEPOIS `awk ... _framework/rules/workflow-rules.map.md` (kit em 9c62fad) | ANTES (1fe4f68): `9 16`; DEPOIS: `0 1` (meta: 0 e ≤ 1) | n/a (comando de medição; coberto por A06) | Sim | n/a | automatizado |
+| 2 | A08 | MEDE-CORTE (script da SDD) sobre YAML e mapa: ANTES com `git show 1fe4f68:` dos dois; DEPOIS com os arquivos do kit em 9c62fad | ANTES (1fe4f68): `5 ['§4', '§11', '§13', '§17', '§18']`; DEPOIS: `0 []` | n/a (comando de medição; coberto por A06) | Sim | n/a | automatizado |
+| 2 | A09 | awk de A09 sobre o INDEX: ANTES `git show 1fe4f68:_framework/INDEX.md \| awk ...`; DEPOIS `awk ... _framework/INDEX.md` | ANTES (1fe4f68): `98 27`; DEPOIS: `0 111`; cabeçalho `Total: 111 arquivos` | n/a (comando de medição; coberto por A05) | Sim | n/a | automatizado |
+| 2 | A10 | `python3 _framework/scripts/render_indexes.py --check; echo exit=$?` e `python3 _framework/scripts/render_prompts.py --check; echo exit=$?` | `✅` em cada índice; `mapa+maior seção = 12567 (13.7% do YAML)` (YAML 91557 bytes, teto 13733); INDEX ≤ 24576 e linhas ≤ 200 (o `--check` reprova acima disso); `exit=0` nos dois | n/a (comando de medição; tetos cobertos por `test_tetos`) | Sim | n/a | automatizado |
+| 2 | A11 | `python3 -m pytest _framework/tests/test_render_indexes.py -k "manifesto_orfao or mapa_ids_batem or tetos or idempotente" -v` | 14 passed, 35 deselected | sem sensor próprio nesta rodada (testes pré-existentes da SDD-DTF-0043) | Sim | _framework/tests/test_render_indexes.py:398, _framework/tests/test_render_indexes.py:400, _framework/tests/test_render_indexes.py:432 | automatizado |
+| 2 | A12 | `git diff --stat origin/main -- _framework/rules/workflow-rules.yaml _framework/scripts/render_prompts.py` e leitura de `framework.version` no worktree e em `origin/main` | Primeiro comando sem saída; versão `2.3.2` nos dois (a SDD cita `2.3.1` na data da SPEC-DTF-0022; a 2.3.2 veio da SDD-DTF-0048, mergeada antes; o critério pede a versão de `origin/main`) | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A13 | `diff -r -x __pycache__ -x .pytest_cache -x .ruff_cache -x .mypy_cache _framework ../central/_framework; echo exit=$?`, com worktree do kit em 9c62fad e worktree do central em 91b69bf (não os checkouts em `/home/michel`, o central está em outra branch) | Sem saída de diff, `exit=0` | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A14 | `python3 -m pytest _framework/tests/test_kit_parity.py -k render_indexes -v` | 1 passed, 2 deselected | sem sensor próprio nesta rodada | Sim | _framework/tests/test_kit_parity.py:37 | automatizado |
+| 2 | A15 | `python3 _framework/scripts/render_indexes.py sdd docs/sdd --check; echo exit=$?` | `✅ docs/sdd/INDEX.md: em dia.`, `exit=0` (aviso pré-existente de 30 SDDs sem seção de arquivos) | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A16 | `python3 -m pytest _framework/ -q` | 292 passed in 29.66s | sem sensor próprio nesta rodada (suíte inteira; sensores por critério em A01 a A06 e A22) | Sim | n/a | automatizado |
+| 2 | A17 | Leitura humana do mapa inteiro (22 linhas) e de 10 linhas de `_framework/INDEX.md` sorteadas com `random.seed(4909)` | Mapa: 22 linhas lidas. INDEX: 10 de 10 linhas descrevem o arquivo e são distintas entre si (conferidas 3 contra o arquivo: `test_repo_hygiene.py`, `mutations.yaml`, `test_ci_gate_verify_sdd.py`). Ressalvas no mapa, para decisão humana: §14 (`Mesmo incidente EVM da seção 13…`) não distingue o §14 do §13 no Resumo (a coluna Seção distingue); §15 (`Os gates 13/14 garantem ORDEM…`) corta a frase num ponto que sugere o oposto do que o gate trata (qualidade de conteúdo); §5 termina em `são…` (o corte da SPEC-DTF-0024 não o alcança); §13, §16, §18, §19 descrevem histórico ou outra seção (limite reconhecido da SPEC-DTF-0022, fora de escopo da 0024) | n/a (critério manual) | Sim, com ressalvas (decisão humana) | n/a | manual |
+| 2 | A18 | ANTES em `08f5b1e` (main antes do PR #131): `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_descarta_travessao -v`; DEPOIS em `9c62fad`: mesmo comando | ANTES: `45 deselected`, 0 selected; DEPOIS: 1 passed, 48 deselected | Mutações X1 (sem `DASHES`) e X2 (sem recuo de parêntese) derrubaram o teste | Sim | _framework/tests/test_render_indexes.py:740, _framework/tests/test_render_indexes.py:746 | automatizado |
+| 2 | A19 | `python3 -m pytest _framework/tests/test_render_indexes.py -k "conectivo_pendurado_exercido or map_summaries_perde_para_fonte_3 or piso_summary_min" -v` | 3 passed, 46 deselected | R2a, R2b e R2c derrubaram cada um o teste correspondente (ver A22) | Sim | _framework/tests/test_render_indexes.py:758, _framework/tests/test_render_indexes.py:767, _framework/tests/test_render_indexes.py:786 | automatizado |
+| 2 | A20 | `python3 -c "rows=[...]; print(...)"` do critério, ANTES em `08f5b1e` e DEPOIS em `9c62fad` | ANTES (08f5b1e): `2 3`; DEPOIS: `0 0` | n/a (comando de medição; coberto por `test_metricas_mapa_real`) | Sim | n/a | automatizado |
+| 2 | A21 | `python3 _framework/scripts/render_indexes.py --check; echo exit=$?` e `python3 _framework/scripts/render_prompts.py --check; echo exit=$?` | Os dois `exit=0`; `mapa+maior seção = 12567 (13.7% do YAML)`, abaixo de 15% | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A22 | Cópia descartável do worktree (`cp -r`), 3 mutações da errata + as 5 da rodada 1 + 6 extras; `python3 -m pytest _framework/tests/test_render_indexes.py -q` em cada | Base: 49 passed. (a) R2a `DANGLING` removido do laço final: FAILED `test_corte_descarta_conectivo_pendurado_exercido` e `test_corte_descarta_travessao...`; (b) R2b `override` antes da fonte 3: FAILED `test_map_summaries_perde_para_fonte_3`; (c) R2c `SUMMARY_MIN` 28 para 10: FAILED `test_piso_summary_min_no_encurtamento_da_linha`. Rodada 1: R1a a R1e todas derrubadas. Extra: X1, X2, X4, X5, X6 derrubadas; X3 (sem descarte de palavra final terminada em `( : , ;`) SOBREVIVE (49 passed). Restaurado: 49 passed | As 3 lacunas anteriores agora são pegas; 1 mutação extra (X3) sobrevive, fora dos critérios | Sim | _framework/tests/test_render_indexes.py:762, _framework/tests/test_render_indexes.py:770, _framework/tests/test_render_indexes.py:786 | automatizado |
+| 2 | A23 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 292 passed in 29.46s | sem sensor próprio (suíte inteira) | Sim | n/a | automatizado |
+| 2 | A24 | `grep -c 'references/\*' docs/sdd/SDD-DTF-0049.md; grep -c "SPEC-DTF-0024" docs/sdd/SDD-DTF-0049.md` | `2` e `23` | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A25 | `cmp _framework/scripts/render_indexes.py _framework/skills/doc-traceability-framework/scripts/render_indexes.py; ruff format --check _framework/scripts; echo exit=$?` | `cmp` sem saída; `33 files already formatted`; `exit=0` | n/a (comando de medição; paridade coberta por A14) | Sim | n/a | automatizado |
+| 2 | A26 | `git diff --name-only 08f5b1e 9c62fad` (baseline: main antes do PR #131) | 5 arquivos: `_framework/INDEX.md`, `_framework/rules/workflow-rules.map.md`, `_framework/scripts/render_indexes.py`, cópia dele na skill, `_framework/tests/test_render_indexes.py`; nenhum `workflow-rules.yaml` nem `render_prompts.py` (os gerados de `docs/sdd/` não mudaram nesse intervalo) | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A27 | Loop de `cmp` dos 6 arquivos entre kit (9c62fad) e central (91b69bf), e `python3 _framework/scripts/render_prompts.py --check; echo exit=$?` no central | 6 linhas `igual ...` (scripts/render_indexes.py, cópia da skill, tests/test_render_indexes.py, rules/kit-index.yaml, rules/workflow-rules.map.md, INDEX.md); `exit=0` | n/a (comando de medição; espelho também coberto por A13) | Sim | n/a | automatizado |
+| 2 | A28 | Leitura humana das 22 linhas do mapa regenerado e saída de A20 | Literalmente cumprido: nenhum resumo termina em travessão nem parêntese aberto (A20 `0 0`); §13, §16, §18, §19 seguem como limite reconhecido. Mesmas ressalvas do A17 (§14, §15, §5) | n/a (critério manual) | Sim, com ressalvas (decisão humana) | n/a | manual |
 
 ## Rastreabilidade
 | Campo | Valor |
