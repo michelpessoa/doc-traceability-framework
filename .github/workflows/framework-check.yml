@@ -70,10 +70,25 @@ jobs:
           python3 _framework/scripts/render_prompts.py --check
           python3 _framework/scripts/check_renderings.py $REPORT_ONLY
 
+      - name: Testes de paridade e consistência (_framework/tests)
+        run: python3 -m pytest _framework/tests/ -v
+
       - name: Índices de SDD e registry.md em dia
         run: |
           python3 _framework/scripts/render_indexes.py sdd docs/sdd --check
           python3 _framework/scripts/generate_registry_md.py docs/sdd --check
+
+      - name: Higiene de cache (ignorados e não rastreados)
+        run: |
+          for d in .ruff_cache .pytest_cache .mypy_cache _framework/scripts/__pycache__; do
+            git check-ignore -q "$d" || { echo "cache não ignorado pelo .gitignore da raiz: $d"; exit 1; }
+          done
+          if git ls-files | grep -E '(^|/)(\.ruff_cache|\.pytest_cache|\.mypy_cache|__pycache__)/'; then
+            echo "cache rastreado acima"; exit 1
+          fi
+          if git status --porcelain --untracked-files=all | grep -E '(_cache|__pycache__|\.pyc)'; then
+            echo "cache aparece no git status acima"; exit 1
+          fi
 
       - name: Validar mensagens de commit do PR
         if: github.event_name == 'pull_request'

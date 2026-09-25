@@ -358,17 +358,17 @@ divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
-| 1 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 2 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 3 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 4 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 5 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 6 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 7 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 8 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 9 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 10 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
-| 11 | não rodado | não rodado | não rodado | não rodado | não rodado | automatizado |
+| 1 | `for d in .ruff_cache .pytest_cache .mypy_cache; do git check-ignore -v "$d"; done` (após ruff, mypy, pytest) | kit e central: `.gitignore:2:.ruff_cache/`, `.gitignore:3:.pytest_cache/`, `.gitignore:4:.mypy_cache/` | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 2 | `git ls-files \| grep -E '(^\|/)(\.ruff_cache\|...)/'; echo rc=$?` | kit e central: nenhuma linha, `rc=1` | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 3 | loop `grep -qxF "$d/" .ignore` | kit e central: nenhuma linha "falta" | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 4 | `python3 -m pytest _framework/tests/ -v` | kit e central: `50 passed`; coletou test_ci_gate_verify_sdd, test_kit_parity, test_parallel_plan, test_repo_hygiene (7), test_skill_md_consistency, test_validate_doc | n/a | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 5 | `grep -n "pytest _framework/tests/" .github/workflows/framework-check.yml` | kit: `74:        run: python3 -m pytest _framework/tests/ -v`; central: `65:` idem (uma linha cada) | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 6 | não rodado (adiado: depende de SDD-DTF-0043 implemented; task 5) | não rodado | não rodado | não rodado | n/a | automatizado |
+| 7 | não rodado (adiado: depende de SPEC-DTF-0017) | não rodado | não rodado | não rodado | n/a | automatizado |
+| 8 | script do passo "Higiene de cache" após `ruff check`, `mypy` e `pytest _framework/ -q` (187 passed) | kit e central: `rc=0`, sem mensagem | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 9 | `git status --porcelain --untracked-files=all \| grep -E '(_cache\|__pycache__\|\.pyc)'; echo rc=$?` | kit e central: nenhuma linha, `rc=1` | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 10 | `python3 -m pytest _framework/tests/test_repo_hygiene.py -v` | kit e central: `7 passed` (3 de RF08 + 4 do sensor parametrizado) | removido `.mypy_cache/` do `.gitignore`: `test_gitignore_cobre_caches` FALHOU (`assert not ['.mypy_cache/']`); restaurado (kit e central) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
+| 11 | `pytest _framework/scripts/tests/ _framework/tests/ -q` + grep de cache | kit: `187 passed`, grep sem linha, `rc=1` | sem teste (comando de shell) | sim (implementador; aguarda verify-sdd independente) | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

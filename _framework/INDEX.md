@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 101 arquivos
+Total: 107 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -50,9 +50,12 @@ Total: 101 arquivos
 | `scripts/tests/test_validate_state.py` | Teste ou fixture dos scripts do kit | Ao alterar o script correspondente | 8-32 KB |
 | `scripts/validate_doc.py` | Validador de documento ou de estado | Ao depurar reprovação de validação | 8-32 KB |
 | `scripts/validate_state.py` | Validador de documento ou de estado | Ao depurar reprovação de validação | 8-32 KB |
-| `skills/doc-traceability-framework/SKILL.md` | Definição de skill do Claude Code | Ao ajustar comportamento ou gatilho da skill | 8-32 KB |
+| `skills/doc-traceability-framework/SKILL.md` | Definição de skill do Claude Code | Ao ajustar comportamento ou gatilho da skill | 2-8 KB |
 | `skills/doc-traceability-framework/prompts/framework-audit.md` | Cópia de prompts/ dentro da skill | Nunca à mão; espelha prompts/ | 2-8 KB |
 | `skills/doc-traceability-framework/prompts/onboarding-bootstrap.md` | Cópia de prompts/ dentro da skill | Nunca à mão; espelha prompts/ | 2-8 KB |
+| `skills/doc-traceability-framework/references/audit.md` | Cópia do workflow-rules.yaml na skill (gerada) | Nunca à mão; regenere com render_prompts.py | <2 KB |
+| `skills/doc-traceability-framework/references/incidents.md` | Cópia do workflow-rules.yaml na skill (gerada) | Nunca à mão; regenere com render_prompts.py | <2 KB |
+| `skills/doc-traceability-framework/references/onboarding.md` | Cópia do workflow-rules.yaml na skill (gerada) | Nunca à mão; regenere com render_prompts.py | <2 KB |
 | `skills/doc-traceability-framework/references/workflow-rules.yaml` | Cópia do workflow-rules.yaml na skill (gerada) | Nunca à mão; regenere com render_prompts.py | >32 KB |
 | `skills/doc-traceability-framework/scripts/check_commit.py` | Cópia byte a byte de scripts/ (gerada) | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_hooks.py` | Cópia byte a byte de scripts/ (gerada) | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
@@ -98,11 +101,14 @@ Total: 101 arquivos
 | `templates/tech-spec.template.md` | Template de um tipo de documento | Ao criar um documento desse tipo | 2-8 KB |
 | `tests/fixtures/sdd_fixture_a.md` | Fixture de teste do kit | Ao alterar o teste que a usa | <2 KB |
 | `tests/fixtures/sdd_fixture_b.md` | Fixture de teste do kit | Ao alterar o teste que a usa | <2 KB |
+| `tests/fixtures/verify_sdd_pre_reorder.md` | Fixture de teste do kit | Ao alterar o teste que a usa | 8-32 KB |
 | `tests/test_ci_gate_verify_sdd.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |
 | `tests/test_gate_texto.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
 | `tests/test_kit_parity.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
 | `tests/test_parallel_plan.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
+| `tests/test_procedures_structure.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_render_indexes.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |
-| `tests/test_skill_md_consistency.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
+| `tests/test_repo_hygiene.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | <2 KB |
+| `tests/test_skill_md_consistency.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |
 | `tests/test_template_parity.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 2-8 KB |
 | `tests/test_validate_doc.py` | Teste do kit (paridade, gates, render) | Ao mudar o comportamento testado | 8-32 KB |

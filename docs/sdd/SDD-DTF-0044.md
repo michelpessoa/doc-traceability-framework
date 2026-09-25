@@ -2,7 +2,7 @@
 id: SDD-DTF-0044
 type: SDD
 title: "Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -367,12 +367,12 @@ STRAT-DTF-0003 item 7/E5).
 | 5 | RF03 | `ls _framework/skills/doc-traceability-framework/references/` | lista `audit.md`, `incidents.md`, `onboarding.md`, `workflow-rules.yaml` | automatizado |
 | 6 | RF04 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k descriptions -q` | passa nas quatro skills | automatizado |
 | 7 | RF05 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k repo_root_path -q` | passa (ou `skip` explícito só sem `git`) | automatizado |
-| 8 | RF05 | `cd _framework/tests && cat "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md" \| head -1` | imprime `# Verificação independente de SDD` | automatizado |
+| 8 | RF05 | `cd _framework/tests && head -n 1 "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md"` | imprime `# Verificação independente de SDD` | automatizado |
 | 9 | RF06 | `python3 -m pytest _framework/tests/test_procedures_structure.py -q` | passa nos dois testes | automatizado |
-| 10 | RF06 | `grep -n '^### 5\.\|^## Escalonado\|^## Descompassos\|^## Lições' _framework/procedures/verify-sdd.md` | a linha de `### 5.` tem número menor que as demais | automatizado |
+| 10 | RF06 | `grep -n -e '^### 5\.' -e '^## Escalonado' -e '^## Descompassos' -e '^## Lições' _framework/procedures/verify-sdd.md` | a linha de `### 5.` tem número menor que as demais | automatizado |
 | 11 | RF07 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k layout -q` | passa | automatizado |
 | 12 | RF07 | `test -f .claude/skills/doc-traceability-framework/references/incidents.md && echo OK` | imprime `OK` | automatizado |
-| 13 | RF07 | `diff -rq /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework \| grep -v __pycache__` | sem saída | automatizado |
+| 13 | RF07 | `diff -rq -x __pycache__ /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework` | sem saída | automatizado |
 | 14 | RF07 | Manual (perfil `manual`): abrir sessão do Claude Code na raiz do kit e executar `/skills` | lista `doc-traceability-framework`; se não listar, aplicar a alternativa do RF07 (manter o symlink de arquivo `.claude/skills/doc-traceability-framework/SKILL.md` e citar `references/` no `SKILL.md` por caminho a partir da raiz do repositório) e registrar o resultado na evidência | manual |
 | 15 | Todos | `python3 _framework/scripts/render_prompts.py --check` | exit 0 (nenhum alvo gerado mudou) | automatizado |
 | 16 | Todos | `python3 -m pytest _framework/tests -q` | suíte verde | automatizado |
@@ -430,24 +430,22 @@ STRAT-DTF-0003 item 7/E5).
 ## Verificação de escopo (nada a mais, nada a menos)
 
 Antes de marcar `implemented`, confirme as duas direções:
-- [ ] RF01 a RF07 têm arquivo correspondente na implementação (nada da
+- [x] RF01 a RF07 têm arquivo correspondente na implementação (nada da
       SPEC ficou de fora).
-- [ ] Todo arquivo tocado aparece em "Decomposição em tasks" ou em
+- [x] Todo arquivo tocado aparece em "Decomposição em tasks" ou em
       "Especificação técnica consolidada"; arquivo não listado é escopo a
       registrar na SDD ou scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra não
       pedido por RF.
-- [ ] `workflow-rules.yaml`, `render_prompts.py`, `sdd-verifier.md` e
+- [x] `workflow-rules.yaml`, `render_prompts.py`, `sdd-verifier.md` e
       arquivos gerados sem diff.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
-Esta SDD ainda não foi implementada: nenhuma linha abaixo tem comando
-rodado nem saída real. A verificação substitui cada "(pendente ...)" pela
-saída real; nunca "deve passar" nem resultado de memória.
+Linhas preenchidas pela sessão implementadora com saída real desta sessão; o `sdd-verifier` (sessão separada) refaz e confirma antes de `implemented`. Critério 14 é manual e segue pendente.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** sim — `sdd-verifier` em sessão separada rodou os critérios 1 a 13, 15 e 16 (15 PASS); o critério 14 foi executado pelo humano (Michel Pessoa) em sessão nova do Claude Code na raiz do kit
 
 Coluna "Sensor": falha de comportamento introduzida em espaço
 descartável (lista em "Sensor de discriminação"); o teste tem que FALHAR
@@ -458,22 +456,23 @@ esperado" ou declara divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
-| 1 | `test $(wc -c < _framework/skills/doc-traceability-framework/SKILL.md) -le 9216 && echo OK` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "size_budget or iron_law or rationalization or pointers" -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 3 | `python3 _framework/scripts/check_renderings.py` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 4 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "references or moved_sections" -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 5 | `ls _framework/skills/doc-traceability-framework/references/` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 6 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k descriptions -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 7 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k repo_root_path -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 8 | `cd _framework/tests && cat "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md" \| head -1` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 9 | `python3 -m pytest _framework/tests/test_procedures_structure.py -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 10 | `grep -n '^### 5\.\|^## Escalonado\|^## Descompassos\|^## Lições' _framework/procedures/verify-sdd.md` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 11 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k layout -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 12 | `test -f .claude/skills/doc-traceability-framework/references/incidents.md && echo OK` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 13 | `diff -rq /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework \| grep -v __pycache__` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 14 | Manual (perfil `manual`): abrir sessão do Claude Code na raiz do kit e executar `/skills` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | manual |
-| 15 | `python3 _framework/scripts/render_prompts.py --check` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
-| 16 | `python3 -m pytest _framework/tests -q` | (pendente: SDD ainda não implementada; sem comando rodado) | sem teste rodado | Não | n/a | automatizado |
+| 1 | `test $(wc -c < _framework/skills/doc-traceability-framework/SKILL.md) -le 9216 && echo OK` | `wc -c` = 6158; imprime `OK` | sem teste (comando) | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:109 | automatizado |
+| 2 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "size_budget or iron_law or rationalization or pointers" -q` | 4 passed, 6 deselected | RF01 +3100 bytes, RF02 lei apagada: teste falhou; restaurado | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:129 | automatizado |
+| 3 | `python3 _framework/scripts/check_renderings.py` | exit 0; 5 renderizações concordam (8 tipos, 6 Iron Laws, 4 níveis); 2 avisos preexistentes de PRD/TS em cursor | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 4 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k "references or moved_sections" -q` | 2 passed, 8 deselected | RF03 incidents.md renomeado: teste falhou; restaurado | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:161 | automatizado |
+| 5 | `ls _framework/skills/doc-traceability-framework/references/` | audit.md incidents.md onboarding.md workflow-rules.yaml | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 6 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k descriptions -q` | 1 passed (4 skills) | RF04 description alongada além de 450: falhou; restaurado | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:205 | automatizado |
+| 7 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k repo_root_path -q` | 1 passed | RF05 `git rev-parse` trocado por `.`: falhou; restaurado | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:218 | automatizado |
+| 8 | `cd _framework/tests && head -n 1 "$(git rev-parse --show-toplevel)/_framework/procedures/verify-sdd.md"` | `# Verificação independente de SDD` | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 9 | `python3 -m pytest _framework/tests/test_procedures_structure.py -q` | 2 passed | RF06 verify-sdd.md voltou à fixture: 2 falharam; restaurado | Sim (verificador independente) | _framework/tests/test_procedures_structure.py:45 | automatizado |
+| 10 | `grep -n -e '^### 5\.' -e '^## Escalonado' -e '^## Descompassos' -e '^## Lições' _framework/procedures/verify-sdd.md` | 170:### 5.; 207:## Escalonado; 224:## Descompassos; 227:## Lições | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 11 | `python3 -m pytest _framework/tests/test_skill_md_consistency.py -k layout -q` | 1 passed, 9 deselected | RF07 symlink de arquivo recriado: falhou; restaurado | Sim (verificador independente) | _framework/tests/test_skill_md_consistency.py:233 | automatizado |
+| 12 | `test -f .claude/skills/doc-traceability-framework/references/incidents.md && echo OK` | imprime `OK` | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 13 | `diff -rq -x __pycache__ /home/michel/doc-traceability-framework/_framework /home/michel/doc-traceability-central/_framework` | sem saída (rodado contra os worktrees do kit e do central, pois o checkout principal ainda não tem esta mudança) | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 14 | Manual (perfil `manual`): abrir sessão do Claude Code na raiz do kit e executar `/skills` | `/skills` em sessão nova na raiz do kit lista `doc-traceability-framework` (symlink de pasta funciona; alternativa do RF07 não aplicada) | sem teste rodado | Sim (humano) | n/a | manual |
+| 15 | `python3 _framework/scripts/render_prompts.py --check` | exit 0; alvos sincronizados | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 16 | `python3 -m pytest _framework/tests -q` | 54 passed | sem teste | Sim (verificador independente) | n/a | automatizado |
+| 17 | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0044.md /home/michel/dtc-wt-0044/docs/DTF` | Fidelidade à origem: exit 0, "source_docs de SDD-DTF-0044.md conferem com o registry central" (sdd-verifier, sessão separada) | sem teste | Sim (verificador independente) | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

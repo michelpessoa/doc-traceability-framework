@@ -1,0 +1,5 @@
+# Caches de ferramentas fora de glob/grep (ripgrep respeita .ignore; SDD-DTF-0045)
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+__pycache__/
