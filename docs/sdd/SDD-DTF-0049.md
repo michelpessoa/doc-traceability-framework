@@ -9,6 +9,8 @@ created: "2026-09-25"
 updated: "2026-09-25"
 relates_to: [SDD-DTF-0043]
 source_docs:
+  - id: "SPEC-DTF-0024"
+    url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0024.md"
   - id: "SPEC-DTF-0022"
     url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md"
   - id: "SPEC-DTF-0016"
@@ -527,6 +529,94 @@ Justificativa do perfil manual em A17 (da SPEC-DTF-0022): "ajuda a escolher"
 - Não corrigir a faixa de tamanho do INDEX nem a coluna Bytes do mapa (fora
   de escopo).
 
+## Errata da SPEC-DTF-0024 (segunda rodada de implementação)
+
+A SPEC-DTF-0024 (`approved`) complementa a SPEC-DTF-0022 depois da
+verificação independente desta SDD, que passou A01 a A16 e reprovou com
+ressalvas o A17 no mapa. Onde esta seção diz "alterado", a SPEC-DTF-0024
+prevalece sobre o RF03 da SPEC-DTF-0022; em tudo o mais a 0022 vale. As tasks
+1 a 6 e os critérios A01 a A17 acima já foram implementados (PR #127) e não
+mudam. Leia a SPEC-DTF-0024 inteira antes de implementar; em divergência com
+esta seção, a SPEC manda.
+
+| RF (SPEC-DTF-0024) | Requisito | Arquivos |
+|---|---|---|
+| RF01 | `_cut_words` descarta, depois do corte, palavra final que seja só um travessão (`—`, `–` ou `-`), além dos conectivos de `DANGLING` | `_framework/scripts/render_indexes.py`, cópia na skill |
+| RF02 | `_cut_words` recua até antes de um `(` sem `)` correspondente no trecho retido e refaz o descarte | `_framework/scripts/render_indexes.py`, cópia na skill |
+| RF03 | Mapa regenerado com 0 resumos terminando em travessão ou com parêntese aberto; tetos de tamanho inalterados | `_framework/rules/workflow-rules.map.md`, `_framework/INDEX.md` |
+| RF04 | Testes das três lacunas: descarte de `DANGLING` exercido, precedência da fonte 3 sobre `map_summaries` e piso `SUMMARY_MIN` | `_framework/tests/test_render_indexes.py` |
+| RF05 | Desvio de `references/` registrado (esta seção, abaixo) | `docs/sdd/SDD-DTF-0049.md` |
+
+**Desvio registrado (RF05): `references/` da skill.** A SPEC-DTF-0022 mandava
+tratar `references/` como família de cópia com glob. Só
+`references/workflow-rules.yaml` é cópia gerada por `render_prompts.py`;
+`audit.md`, `incidents.md` e `onboarding.md` são escritos à mão. O manifesto
+`kit-index.yaml` usa entradas individuais para os três `.md` e um glob
+`references/*` com `{name}` para o restante, porque uma descrição de "cópia
+gerada" para os três descreveria errado. O verificador confirmou o desvio como
+justificado e de baixo risco.
+
+Contrato do laço final de `_cut_words` (assinatura
+`_cut_words(text: str, limit: int) -> str` permanece; constante nova
+`DASHES = {"—", "–", "-"}`), depois de montar `words` a partir do trecho retido:
+
+```
+while words:
+    joined = " ".join(words)
+    if joined.count("(") > joined.count(")"):
+        idx = joined.rfind("(")
+        words = joined[:idx].split()
+        continue
+    if words[-1].lower() in DANGLING or words[-1] in DASHES or words[-1][-1] in "(:,;":
+        words.pop()
+        continue
+    break
+```
+
+Só palavra final composta apenas de travessão é descartada (`pré-condição`
+não casa); sem palavras restantes vale o corte duro por caractere já
+existente. Testes novos em `_framework/tests/test_render_indexes.py`:
+`test_corte_descarta_travessao_e_parentese_aberto`,
+`test_corte_descarta_conectivo_pendurado_exercido`,
+`test_map_summaries_perde_para_fonte_3` e
+`test_piso_summary_min_no_encurtamento_da_linha`.
+
+### Tasks da errata
+
+| # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
+|---|---|---|---|---|
+| 7 | Rodar A18 a A21 na `main` e guardar as saídas reais (ANTES) | RF01, RF02, RF03, RF04 | (decisão pura) | |
+| 8 | Código: `DASHES` e o laço final de `_cut_words` | RF01, RF02 | `_framework/scripts/render_indexes.py` | 7 |
+| 9 | Testes: os quatro novos e os três sensores de mutação | RF01, RF02, RF04 | `_framework/tests/test_render_indexes.py` | 8 |
+| 10 | Regenerar com `render_prompts.py` (mapa, INDEX, cópia da skill, `docs/sdd/`), rodar `--check` e A18 a A27 registrando comando e saída reais | RF03 | `_framework/rules/workflow-rules.map.md`, `_framework/INDEX.md`, `_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `docs/sdd/INDEX.md`, `docs/sdd/registry.md` | 9 |
+| 11 | Espelhar no central, em worktree, branch e PR próprios do central | RF03 | `central:_framework/scripts/render_indexes.py`, `central:_framework/skills/doc-traceability-framework/scripts/render_indexes.py`, `central:_framework/tests/test_render_indexes.py`, `central:_framework/rules/kit-index.yaml`, `central:_framework/rules/workflow-rules.map.md`, `central:_framework/INDEX.md` | 10 |
+
+Ordem: 7, 8, 9, 10, 11 (cadeia linear). Branch de implementação nova:
+`git worktree add ../dtf-wt-0049b -b sdd/SDD-DTF-0049-errata-0024 origin/main`
+(a `sdd/SDD-DTF-0049-mapa-index-especificos` já foi mergeada). Commits com
+`Refs: SDD-DTF-0049`; sem commit direto em `main`; sem force-push; gerados só
+por `render_prompts.py` e `render_indexes.py`, nunca à mão. O `sdd-verifier`
+roda depois da task 11, em sessão separada.
+
+### Critérios de aceite da errata (SPEC-DTF-0024, A01 a A11)
+
+Executar na raiz do kit. "Antes" = `main` antes da errata; "depois" = na
+branch de implementação, com os gerados regenerados.
+
+| # | Critério (origem) | Comando de verificação | Resultado esperado | Perfil esperado |
+|---|---|---|---|---|
+| A18 | RF01, RF02: travessão e parêntese aberto no corte (0024 A01) | `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_descarta_travessao -v` | ANTES: 0 selecionados; DEPOIS: 1 passed | automatizado |
+| A19 | RF04: três lacunas cobertas (0024 A02) | `python3 -m pytest _framework/tests/test_render_indexes.py -k "conectivo_pendurado_exercido or map_summaries_perde_para_fonte_3 or piso_summary_min" -v` | 3 passed | automatizado |
+| A20 | RF03: mapa sem resumo em travessão nem parêntese aberto (0024 A03) | `python3 -c "rows=[l for l in open('_framework/rules/workflow-rules.map.md',encoding='utf-8') if l[2:3]=='§']; print(sum(1 for l in rows if '—…' in l or '–…' in l or ' -…' in l), sum(1 for l in rows if l.count('(')>l.count(')')))"` | ANTES: `3 2`; DEPOIS: `0 0` | automatizado |
+| A21 | RF03: índices e gerados em dia (0024 A04) | `python3 _framework/scripts/render_indexes.py --check; echo "exit=$?"` e `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | Os dois com `exit=0`; `mapa+maior seção` abaixo de 15% do YAML | automatizado |
+| A22 | RF04: cada mutação derruba um teste (0024 A05) | Em cópia descartável, mutar (a) o descarte de `DANGLING` no laço final de `_cut_words`, (b) a ordem entre `_scalar_source` e `map_summaries`, (c) `SUMMARY_MIN = 30` para `10`; rodar `python3 -m pytest _framework/tests/test_render_indexes.py -q`; restaurar | Cada mutação: pelo menos 1 failed; sem mutação: 0 failed | automatizado |
+| A23 | Suíte inteira sem regressão (0024 A06) | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 0 failed | automatizado |
+| A24 | RF05: desvio de `references/` registrado (0024 A07) | `grep -c "references/\*" docs/sdd/SDD-DTF-0049.md; grep -c "SPEC-DTF-0024" docs/sdd/SDD-DTF-0049.md` | Ambos com contagem maior ou igual a 1 | automatizado |
+| A25 | RF01, RF02: cópia da skill e formatação (0024 A08) | `cmp _framework/scripts/render_indexes.py _framework/skills/doc-traceability-framework/scripts/render_indexes.py; ruff format --check _framework/scripts; echo "exit=$?"` | `cmp` sem saída e `exit=0` | automatizado |
+| A26 | Só os arquivos previstos mudaram (0024 A09) | `git diff --name-only main` | Só `render_indexes.py`, a cópia dele na skill, `test_render_indexes.py`, `workflow-rules.map.md`, `INDEX.md` e os gerados de `docs/sdd/` (`registry.md`, `INDEX.md`); nenhum `workflow-rules.yaml`, nenhum `render_prompts.py` | automatizado |
+| A27 | Espelho no central (0024 A10) | Em `/home/michel/doc-traceability-central`: `for f in scripts/render_indexes.py skills/doc-traceability-framework/scripts/render_indexes.py tests/test_render_indexes.py rules/kit-index.yaml rules/workflow-rules.map.md INDEX.md; do cmp /home/michel/doc-traceability-framework/_framework/$f _framework/$f && echo "igual $f"; done; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | 6 linhas `igual ...` e `exit=0` | automatizado |
+| A28 | RF03: leitura humana do mapa regenerado (0024 A11) | Ler as 22 linhas do mapa regenerado | Nenhum resumo termina em travessão ou parêntese aberto; resumos de §13, §16, §18 e §19 seguem como limite reconhecido | manual (motivo: julgar se o resumo é útil exige leitura; registrar julgamento e a saída de A20) |
+
 ## Verificação de escopo (nada a mais, nada a menos)
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
@@ -540,6 +630,8 @@ tanto quanto SDD estourada são falha:
       remover antes do merge.
 - [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado ("já que estava ali").
+- [ ] Errata da SPEC-DTF-0024: RF01 a RF05 têm código, teste ou nota
+      correspondente e só os arquivos da task 7 a 11 mudaram.
 - [ ] `workflow-rules.yaml` intocado, `render_prompts.py` sem diff,
       `framework.version` igual ao de `origin/main`, e os valores de
       `CEILINGS` e `MAP_FRACTION` iguais aos da 0016.
@@ -583,8 +675,19 @@ parênteses.
 | A15 | pendente: `render_indexes.py sdd docs/sdd --check` | pendente | n/a | pendente | n/a | pendente |
 | A16 | pendente: `python3 -m pytest _framework/ -q` | pendente | n/a | pendente | n/a | pendente |
 | A17 | pendente: leitura humana do mapa e de 10 linhas do INDEX | pendente | n/a | pendente | n/a | pendente |
+| A18 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
+| A19 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
+| A20 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A21 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A22 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | pendente: mutações (a) a (c) | pendente | pendente | pendente |
+| A23 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | pendente | pendente |
+| A24 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A25 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A26 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A27 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
+| A28 | pendente: critério da errata SPEC-DTF-0024 (ver tabela acima) | pendente | n/a | pendente | n/a | pendente |
 
 ## Rastreabilidade
 | Campo | Valor |
 |---|---|
-| source_docs | SPEC-DTF-0022 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md), SPEC-DTF-0016 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0016.md), RFC-DTF-0008 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/01-rfc/RFC-DTF-0008.md) |
+| source_docs | SPEC-DTF-0024 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0024.md), SPEC-DTF-0022 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md), SPEC-DTF-0016 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0016.md), RFC-DTF-0008 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/01-rfc/RFC-DTF-0008.md) |
