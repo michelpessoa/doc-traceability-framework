@@ -401,3 +401,43 @@ documents:
     relates_to: []
     path: "docs/sdd/SDD-DTF-0041.md"
     tags: [workflow-rules, frontmatter_schema, drift, spec]
+  - id: SDD-DTF-0042
+    type: SDD
+    title: "Corrigir defasagens do kit: gate_implementation_before_code em SPEC, espelho do sdd.template.md e teste de paridade de templates"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0042.md"
+    tags: [otimizacao-llm, defasagem, gate_implementation_before_code, paridade-templates]
+  - id: SDD-DTF-0043
+    type: SDD
+    title: "Índices gerados do kit: INDEX.md, mapa de seções do YAML, INDEX de SDDs e sumários navegáveis"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0042]
+    path: "docs/sdd/SDD-DTF-0043.md"
+    tags: [otimizacao-llm, indice, render_prompts, gerado, contexto]
+  - id: SDD-DTF-0044
+    type: SDD
+    title: "Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: []
+    path: "docs/sdd/SDD-DTF-0044.md"
+    tags: [otimizacao-llm, skills, contexto, frente-c]
+  - id: SDD-DTF-0045
+    type: SDD
+    title: "Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0043]
+    path: "docs/sdd/SDD-DTF-0045.md"
+    tags: [otimizacao-llm, higiene, ci, gitignore, cache]
