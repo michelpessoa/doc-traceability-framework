@@ -441,3 +441,13 @@ documents:
     relates_to: [SDD-DTF-0043]
     path: "docs/sdd/SDD-DTF-0045.md"
     tags: [otimizacao-llm, higiene, ci, gitignore, cache]
+  - id: SDD-DTF-0046
+    type: SDD
+    title: "Bundle da skill como artefato gerado: .gitattributes com linguist-generated e templates sincronizados por render_prompts.py"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0042, SDD-DTF-0043, SDD-DTF-0045]
+    path: "docs/sdd/SDD-DTF-0046.md"
+    tags: [otimizacao-llm, bundle, gerado, sync, gitattributes]
