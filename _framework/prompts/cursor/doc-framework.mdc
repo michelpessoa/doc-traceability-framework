@@ -40,8 +40,8 @@ de suposta — documento não vai a `approved` com essa marcação pendente.
 Ver `gate_content_quality` (seção 15).
 
 ## Fluxo e gate de decisão (contexto — acontece no repositório central)
-`Strategy Doc → RFC → [gate: exige ADR?] → (sim: ADR → PRD+TS → SDD) |
-(não: PRD+TS → SDD)`. Gate: `requires_adr = true` se QUALQUER for
+`Strategy Doc → RFC → [gate: exige ADR?] → (sim: ADR → SPEC → SDD) |
+(não: SPEC → SDD)`. Gate: `requires_adr = true` se QUALQUER for
 verdadeiro: (1) novo padrão arquitetural; (2) decisão de alto
 custo/difícil reversão; (3) trade-off técnico relevante entre
 alternativas; (4) impacto cross-team; (5) troca/introdução de
@@ -81,7 +81,7 @@ Terminando o planejamento antes de outra sessão implementar, ou perto de
 ~45% de uso de contexto: gere `HANDOFF.md` na raiz deste repositório
 (seções fixas: Goal, Status, Ids relacionados, Files touched, Key
 decisions, Open threads/blockers, Next step, Don't do), referenciando ids
-(SDD-X, TS-X) em vez de reescrever conteúdo. Ver `handover_protocol`
+(SDD-X, SPEC-X, ADR-X) em vez de reescrever conteúdo. Ver `handover_protocol`
 (`_framework/rules/workflow-rules.yaml`, seção 17).
 
 ## Regras de comportamento neste editor
