@@ -9,6 +9,8 @@ created: "2026-09-25"
 updated: "2026-09-25"
 relates_to: [SDD-DTF-0043]
 source_docs:
+  - id: "SPEC-DTF-0025"
+    url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0025.md"
   - id: "SPEC-DTF-0024"
     url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0024.md"
   - id: "SPEC-DTF-0022"
@@ -130,7 +132,7 @@ Casos de borda / condições de erro (SPEC-DTF-0022):
 | Primeira frase maior que 100 caracteres | RF03 | Corte em fronteira de palavra com `…`, sem conectivo pendurado |
 | Texto de uma palavra só maior que o limite | RF03 | Corte duro em `limit - 1` caracteres com `…` (único caso sem fronteira) |
 | Texto que cabe no limite | RF03 | Devolvido inteiro, sem `…`, mesmo terminando em conectivo (só o corte descarta conectivo) |
-| Linha do mapa ainda acima de 180 bytes depois de encurtar chaves, Resumo (piso 30) e título (piso 20) | RF03, RF06 | Não corta abaixo dos pisos; `check_map_ceiling` reprova com código 1 (comportamento da 0016) |
+| Linha do mapa ainda acima de 180 bytes depois de encurtar chaves, Resumo (piso `SUMMARY_MIN`, 28 pela SPEC-DTF-0025) e título (piso 20) | RF03, RF06 | Não corta abaixo dos pisos; `check_map_ceiling` reprova com código 1 (comportamento da 0016) |
 | `map_summaries` com id inexistente, vazio ou não textual | RF04 | Código 2 citando o id; nada é escrito |
 | Seção nova sem descrição e sem entrada em `map_summaries` | RF02, RF04 | Resumo cai para o título; o teste de qualidade do mapa real acusa a linha repetida, sem quebrar `--check` |
 | Valor da primeira chave de topo que não é mapeamento (lista ou escalar) | RF02 | Fonte (3) ignorada; segue para a fonte (4) |
@@ -207,7 +209,7 @@ limpo de RF01.
 
 ```python
 TITLE_MAX = 70          # caracteres do título da linha do mapa (RF01)
-SUMMARY_MIN = 30        # piso do Resumo ao encurtar a linha (RF03)
+SUMMARY_MIN = 28        # piso do Resumo ao encurtar a linha (RF03; 28 pela SPEC-DTF-0025 RF01)
 LABEL_RE = re.compile(r"^(?:Motivação|Origem)(?:\s*\([^)]*\))?\s*:\s*")   # rótulo removido (RF02)
 SCALAR_KEYS = ("description", "purpose", "instructions", "approach", "applies_when")   # fonte (3)
 DANGLING = {"a", "o", "as", "os", "um", "uma", "de", "do", "da", "dos", "das", "em", "no", "na",
@@ -325,7 +327,7 @@ Tratamento de erro por contrato:
 | RF03, `-k corte_fronteira_palavra` | Unitário de `_cut_words` (limite, conectivo pendurado, palavra única) e ordem de encurtamento da linha | `_framework/tests/test_render_indexes.py` |
 | RF04, `-k map_summaries` | Unitário (fonte automática vence; id inexistente, vazio, não textual saem com código 2) | `_framework/tests/test_render_indexes.py` |
 | RF05, `-k kit_index_o_que_e_distinto` | Unitário com `{name}`, `{stem}`, chave desconhecida; e sobre o INDEX real | `_framework/tests/test_render_indexes.py` |
-| RF01 a RF03 sobre o mapa real, `-k metricas_mapa_real` | Helper que lê o YAML e o mapa reais e mede repetição, título cortado, corte no meio de palavra e piso de 30 caracteres antes do `…` | `_framework/tests/test_render_indexes.py` |
+| RF01 a RF03 sobre o mapa real, `-k metricas_mapa_real` | Helper que lê o YAML e o mapa reais e mede repetição, título cortado, corte no meio de palavra e piso `SUMMARY_MIN` (28) de caracteres antes do `…` | `_framework/tests/test_render_indexes.py` |
 | RF06, testes existentes e A10 a A12 | Cobertura, ids, tetos e idempotência já existentes; `--check` real | `_framework/tests/test_render_indexes.py` |
 | RF07, `-k render_indexes` e `diff -r` | Paridade byte a byte e espelho | `_framework/tests/test_kit_parity.py` |
 
@@ -445,7 +447,7 @@ com o gerador já rodado (`python3 _framework/scripts/render_prompts.py`).
 | A03 | RF03: corte em fronteira de palavra, ≤ limite contando `…`, sem conectivo pendurado, ordem de encurtamento | `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_fronteira_palavra -v` | Todos passam | automatizado |
 | A04 | RF04: `map_summaries` só sem fonte automática; erro com código 2 | `python3 -m pytest _framework/tests/test_render_indexes.py -k map_summaries -v` | Todos passam | automatizado |
 | A05 | RF05: `{name}` e `{stem}` expandidos, chave desconhecida literal, nenhum "O que é" repetido no INDEX real, cobertura da 0016 intacta | `python3 -m pytest _framework/tests/test_render_indexes.py -k kit_index_o_que_e_distinto -v` | Todos passam | automatizado |
-| A06 | RF01 a RF03: métricas do mapa real no teste (0 repetidos, ≤ 1 título cortado, 0 cortes no meio de palavra, todo resumo com `…` tem ≥ 30 caracteres antes dele) | `python3 -m pytest _framework/tests/test_render_indexes.py -k metricas_mapa_real -v` | Todos passam | automatizado |
+| A06 | RF01 a RF03: métricas do mapa real no teste (0 repetidos, ≤ 1 título cortado, 0 cortes no meio de palavra, todo resumo com `…` tem ≥ `SUMMARY_MIN` (28) caracteres antes dele) | `python3 -m pytest _framework/tests/test_render_indexes.py -k metricas_mapa_real -v` | Todos passam | automatizado |
 | A07 | RF01, RF02: medição DEPOIS do mapa; para o ANTES usar `git show main:_framework/rules/workflow-rules.map.md` como entrada padrão no lugar do arquivo | `awk -F'\174' 'NR>8 && $1=="" {t=$3; r=$7; gsub(/^ +/,"",t); gsub(/ +$/,"",t); gsub(/^ +/,"",r); gsub(/ +$/,"",r); sub(/…$/,"",t); sub(/…$/,"",r); if (index(r,substr(t,1,15))==1) rep++; else if (index(t,substr(r,1,15))==1) rep++; if ($3 ~ /…[ ]*$/) tt++} END {print rep+0, tt+0}' _framework/rules/workflow-rules.map.md` | Primeiro número `0`, segundo ≤ `1` (antes: `9 16`) | automatizado |
 | A08 | RF03: nenhum resumo cortado no meio de palavra (script MEDE-CORTE sobre o YAML e o mapa gerados; ANTES com os dois de `git show main:`) | `python3 - _framework/rules/workflow-rules.yaml _framework/rules/workflow-rules.map.md <<'EOF'` com o script MEDE-CORTE acima | `0 []` (antes: `5 ['§4', '§11', '§13', '§17', '§18']`) | automatizado |
 | A09 | RF05: medição DEPOIS do INDEX; ANTES com `git show main:_framework/INDEX.md` como entrada padrão | `awk -F'\174' 'NR>7 && $1=="" {c[$3]++} END {n=0; d=0; for (k in c) {d++; if (c[k]>1) n+=c[k]}; print n, d}' _framework/INDEX.md` | Primeiro número `0`, segundo igual ao `Total:` do cabeçalho (antes: `98 27`) | automatizado |
@@ -488,7 +490,7 @@ Justificativa do perfil manual em A17 (da SPEC-DTF-0022): "ajuda a escolher"
 - **Contrato:** nos RFs que a SPEC-DTF-0022 marca como alterados prevalece a
   0022 sobre a SPEC-DTF-0016. Nada pode divergir da 0022 (nomes,
   assinaturas, constantes `TITLE_MAX = 70`, `SUMMARY_MAX = 100`,
-  `SUMMARY_MIN = 30`, piso do título 20, teto de linha 180 bytes, cadeia de
+  `SUMMARY_MIN = 28` (SPEC-DTF-0025 RF01), piso do título 20, teto de linha 180 bytes, cadeia de
   seis fontes, `DANGLING`). Não relaxar nenhum critério nem meta.
 - **Não alterar** `_framework/rules/workflow-rules.yaml`,
   `_framework/scripts/render_prompts.py`, `framework.version`, `AGENTS.md`,
@@ -581,6 +583,19 @@ existente. Testes novos em `_framework/tests/test_render_indexes.py`:
 `test_map_summaries_perde_para_fonte_3` e
 `test_piso_summary_min_no_encurtamento_da_linha`.
 
+**Errata da SPEC-DTF-0025 (piso e medição).** A primeira tentativa de
+implementar a errata da SPEC-DTF-0024 parou antes de commitar: o recuo do
+parêntese deixa o §15 com 29 caracteres e o piso 30 reprova
+`test_metricas_mapa_real`. A SPEC-DTF-0025 (`approved`) altera: `SUMMARY_MIN`
+passa a 28 (`SUMMARY_MIN = 28` em `_framework/scripts/render_indexes.py` e na
+cópia da skill; RF01); o ANTES do A20 é `2 3` e não `3 2`, e o §3 também
+termina com parêntese aberto antes da errata (RF02); a mutação (c) do A22 é
+`SUMMARY_MIN = 28` para `10` e o piso citado no A06 vira `SUMMARY_MIN` (RF03);
+os testes comparam com `ri.SUMMARY_MIN`, sem o literal 30 (RF04). Critérios
+adicionais desta SPEC, rodados junto com A18 a A26: E01 a E07 da
+SPEC-DTF-0025 (constante 30 → 28, métricas do mapa real, sensor do piso,
+suíte e formatação, índices em dia). Nenhum outro teto muda.
+
 ### Tasks da errata
 
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
@@ -607,9 +622,9 @@ branch de implementação, com os gerados regenerados.
 |---|---|---|---|---|
 | A18 | RF01, RF02: travessão e parêntese aberto no corte (0024 A01) | `python3 -m pytest _framework/tests/test_render_indexes.py -k corte_descarta_travessao -v` | ANTES: 0 selecionados; DEPOIS: 1 passed | automatizado |
 | A19 | RF04: três lacunas cobertas (0024 A02) | `python3 -m pytest _framework/tests/test_render_indexes.py -k "conectivo_pendurado_exercido or map_summaries_perde_para_fonte_3 or piso_summary_min" -v` | 3 passed | automatizado |
-| A20 | RF03: mapa sem resumo em travessão nem parêntese aberto (0024 A03) | `python3 -c "rows=[l for l in open('_framework/rules/workflow-rules.map.md',encoding='utf-8') if l[2:3]=='§']; print(sum(1 for l in rows if '—…' in l or '–…' in l or ' -…' in l), sum(1 for l in rows if l.count('(')>l.count(')')))"` | ANTES: `3 2`; DEPOIS: `0 0` | automatizado |
+| A20 | RF03: mapa sem resumo em travessão nem parêntese aberto (0024 A03) | `python3 -c "rows=[l for l in open('_framework/rules/workflow-rules.map.md',encoding='utf-8') if l[2:3]=='§']; print(sum(1 for l in rows if '—…' in l or '–…' in l or ' -…' in l), sum(1 for l in rows if l.count('(')>l.count(')')))"` | ANTES: `2 3` (SPEC-DTF-0025 RF02: travessão no §11 e §14; parêntese aberto no §3, §15 e §17); DEPOIS: `0 0` | automatizado |
 | A21 | RF03: índices e gerados em dia (0024 A04) | `python3 _framework/scripts/render_indexes.py --check; echo "exit=$?"` e `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | Os dois com `exit=0`; `mapa+maior seção` abaixo de 15% do YAML | automatizado |
-| A22 | RF04: cada mutação derruba um teste (0024 A05) | Em cópia descartável, mutar (a) o descarte de `DANGLING` no laço final de `_cut_words`, (b) a ordem entre `_scalar_source` e `map_summaries`, (c) `SUMMARY_MIN = 30` para `10`; rodar `python3 -m pytest _framework/tests/test_render_indexes.py -q`; restaurar | Cada mutação: pelo menos 1 failed; sem mutação: 0 failed | automatizado |
+| A22 | RF04: cada mutação derruba um teste (0024 A05) | Em cópia descartável, mutar (a) o descarte de `DANGLING` no laço final de `_cut_words`, (b) a ordem entre `_scalar_source` e `map_summaries`, (c) `SUMMARY_MIN = 28` para `10`; rodar `python3 -m pytest _framework/tests/test_render_indexes.py -q`; restaurar | Cada mutação: pelo menos 1 failed; sem mutação: 0 failed | automatizado |
 | A23 | Suíte inteira sem regressão (0024 A06) | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 0 failed | automatizado |
 | A24 | RF05: desvio de `references/` registrado (0024 A07) | `grep -c "references/\*" docs/sdd/SDD-DTF-0049.md; grep -c "SPEC-DTF-0024" docs/sdd/SDD-DTF-0049.md` | Ambos com contagem maior ou igual a 1 | automatizado |
 | A25 | RF01, RF02: cópia da skill e formatação (0024 A08) | `cmp _framework/scripts/render_indexes.py _framework/skills/doc-traceability-framework/scripts/render_indexes.py; ruff format --check _framework/scripts; echo "exit=$?"` | `cmp` sem saída e `exit=0` | automatizado |
@@ -690,4 +705,4 @@ parênteses.
 ## Rastreabilidade
 | Campo | Valor |
 |---|---|
-| source_docs | SPEC-DTF-0024 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0024.md), SPEC-DTF-0022 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md), SPEC-DTF-0016 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0016.md), RFC-DTF-0008 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/01-rfc/RFC-DTF-0008.md) |
+| source_docs | SPEC-DTF-0025 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0025.md), SPEC-DTF-0024 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0024.md), SPEC-DTF-0022 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md), SPEC-DTF-0016 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0016.md), RFC-DTF-0008 (https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/01-rfc/RFC-DTF-0008.md) |
