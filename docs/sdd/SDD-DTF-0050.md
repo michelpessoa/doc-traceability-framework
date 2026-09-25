@@ -2,7 +2,7 @@
 id: SDD-DTF-0050
 type: SDD
 title: "Prompt do Cursor sem PRD+TS: fluxo e ids de exemplo em SPEC no texto de render_prompts.py, com teste de regressão"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -133,26 +133,33 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição;
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF05) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF05) tem código
       correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou em "Instruções
       específicas" — se tocou um arquivo não listado, ou é escopo que
       faltou registrar na SDD (atualize-a) ou é scope creep a remover.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado.
-- [ ] `workflow-rules.yaml` intocado e `framework.version` igual ao de
+- [x] `workflow-rules.yaml` intocado e `framework.version` igual ao de
       `origin/main`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou —
-quem escreveu o código tem o resultado como conclusão desejada. Para cada
-critério da tabela acima: comando rodado de fato nesta sessão e saída real,
-nunca "deve passar" nem resultado de memória. Nada foi rodado ainda: esta SDD
-está em `draft` e as linhas abaixo esperam o verificador.
+Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 2 (segunda verificação independente, depois dos PRs #134 e #135 do kit
+e #155 e #156 do central): todas as linhas abaixo foram rodadas nesta sessão,
+em worktrees de `origin/main` (kit em `9c8dc23`, central em `a6d00a5`); o
+"antes" de A01 e A02 é o SHA fixo `524fa59` (main anterior ao PR #134). Na
+rodada 1 duas mutações sobreviviam (remover o Copilot e remover o
+`universal.md` da tupla `GERADOS`); o RF03 ampliado, o terceiro teste e o
+critério A09 vieram da correção, e ambas são derrubadas agora. Fidelidade à
+origem: n/a, sizing `small` sem `source_docs` (precedente SDD-DTF-0047).
 
-**Verificador independente:** pendente — sdd-verifier em sessão separada
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0050.md`.
+Veredito: **PASS**.
+
+**Verificador independente:** sim
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -164,17 +171,17 @@ critério `manual` ou `n/a` usa `n/a`. Coluna "Perfil usado": repete o
 "Perfil esperado" do critério ou declara divergência com justificativa entre
 parênteses.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
-| A01 | pendente: `check_renderings.py` filtrado por "tipo legado" | pendente | n/a | pendente | n/a | pendente |
-| A02 | pendente: `grep -c` de `PRD+TS` e `TS-X` no Cursor | pendente | n/a | pendente | n/a | pendente |
-| A03 | pendente: `pytest _framework/tests/test_prompts_sem_prd_ts.py -v` | pendente | pendente: A04 | pendente | pendente | pendente |
-| A04 | pendente: mutação em cópia descartável e pytest do A03 | pendente | pendente | pendente | pendente | pendente |
-| A05 | pendente: `render_prompts.py` e `--check`, `cmp` da cópia da skill | pendente | n/a | pendente | n/a | pendente |
-| A06 | pendente: suíte completa e `ruff format --check` | pendente | n/a | pendente | n/a | pendente |
-| A07 | pendente: `git diff --name-only main` | pendente | n/a | pendente | n/a | pendente |
-| A08 | pendente: `cmp` kit x central e `--check` no central | pendente | n/a | pendente | n/a | pendente |
-| A09 | pendente: pytest `-k gerados_cobrem` e mutações da tupla `GERADOS` | pendente | pendente: remover cada prompt da tupla | pendente | pendente | pendente |
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 2 | A01 | `python3 _framework/scripts/check_renderings.py > "$TMPD/cr.txt" 2>&1; grep -c "tipo legado" "$TMPD/cr.txt"`, ANTES em worktree de `524fa59` (main anterior ao PR #134), DEPOIS em worktree de `origin/main` (`9c8dc23`) | ANTES (524fa59): `2` (avisos `cita o tipo legado 'PRD'` e `'TS'` em `prompts/cursor/doc-framework.mdc`); DEPOIS (9c8dc23): `0` | n/a (comando de medição; coberto por A03) | Sim | n/a | automatizado |
+| 2 | A02 | `grep -c "PRD+TS" _framework/prompts/cursor/doc-framework.mdc; grep -c "TS-X" _framework/prompts/cursor/doc-framework.mdc`, ANTES em `524fa59`, DEPOIS em `9c8dc23` | ANTES (524fa59): `2` e `1`; DEPOIS (9c8dc23): `0` e `0` | n/a (comando de medição; coberto por A03) | Sim | n/a | automatizado |
+| 2 | A03 | `python3 -m pytest _framework/tests/test_prompts_sem_prd_ts.py -v` em `9c8dc23`; ANTES: o mesmo arquivo de teste copiado sobre os gerados de `524fa59` (cópia descartável) | DEPOIS: 3 passed (`test_gerados_sem_prd_ts`, `test_detector_pega_mutacao_em_memoria`, `test_gerados_cobrem_os_tres_prompts`). ANTES (arquivo inexistente em 524fa59): com o teste sobre os gerados antigos, `test_gerados_sem_prd_ts` FAILED citando `doc-framework.mdc:43`, `:44` e `:84` | Ver A04, A09 e as mutações do detector abaixo | Sim | _framework/tests/test_prompts_sem_prd_ts.py:36, _framework/tests/test_prompts_sem_prd_ts.py:41, _framework/tests/test_prompts_sem_prd_ts.py:42, _framework/tests/test_prompts_sem_prd_ts.py:43 | automatizado |
+| 2 | A04 | Cópia descartável de `9c8dc23`: acrescentado ` PRD+TS` ao fim da linha 5 do `doc-framework.mdc`; `python3 -m pytest _framework/tests/test_prompts_sem_prd_ts.py -q`; restaurado do backup | Com a mutação: 1 failed, 2 passed, mensagem `_framework/prompts/cursor/doc-framework.mdc:5: --- PRD+TS` (arquivo e linha). Restaurado: 3 passed | Mutação no gerado derrubou `test_gerados_sem_prd_ts`. Mutações do detector (cada uma em cópia, pytest inteiro do arquivo): remover a isenção de legado: 2 failed; remover `TS-X` do padrão: 1 failed; padrão sem a variante `PRD + TS`: 1 failed; isenção total (`if False`): 1 failed; âncora vazia (tudo isento): 1 failed; remover `PRD+TS` do padrão: 1 failed. Nenhuma sobreviveu; restaurado: 3 passed | Sim | _framework/tests/test_prompts_sem_prd_ts.py:36, _framework/tests/test_prompts_sem_prd_ts.py:41 | automatizado |
+| 2 | A05 | `python3 _framework/scripts/render_prompts.py && python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; cmp _framework/scripts/render_prompts.py _framework/skills/doc-traceability-framework/scripts/render_prompts.py` em `9c8dc23` | `✅ docs/sdd/INDEX.md: em dia.` e `✅ _framework/INDEX.md: em dia.` (mais o aviso pré-existente de 30 SDDs sem seção de arquivos), última linha `exit=0`; nenhuma linha `divergente`; `cmp` sem saída; `git status --short` limpo depois da regeneração | n/a (comando de medição; gerados em dia cobertos por `--check`) | Sim | n/a | automatizado |
+| 2 | A06 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; ruff format --check _framework/scripts; echo "exit=$?"` em `9c8dc23` | `295 passed in 29.73s`; `33 files already formatted`; `exit=0` | sem sensor próprio (suíte inteira; sensores em A04 e A09) | Sim | n/a | automatizado |
+| 2 | A07 | `git diff --name-status 524fa59 9c8dc23` (base fixa: main antes do PR #134; soma dos PRs #134 e #135); `git diff -U0` de `render_prompts.py` com `--word-diff`; `git diff --name-only` filtrado por `workflow-rules` | 8 arquivos: `_framework/INDEX.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/rules/kit-index.yaml`, `_framework/scripts/render_prompts.py`, a cópia da skill, `_framework/tests/test_prompts_sem_prd_ts.py` (A), `docs/sdd/INDEX.md`, `docs/sdd/SDD-DTF-0050.md`. `render_prompts.py`: uma linha (120) e só as três trocas (`PRD+TS`→`SPEC` duas vezes, `TS-X)`→`SPEC-X, ADR-X)`). `workflow-rules.yaml`: diff de 0 linhas; único `prompts/` é o do Cursor | n/a (comando de medição) | Sim | n/a | automatizado |
+| 2 | A08 | Loop de `cmp` dos 6 arquivos entre o kit (`9c8dc23`) e worktree do central em `origin/main` (`a6d00a5`, PR #155 e PR #156; o checkout do central estava atrás de origin/main), mais `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` no central; e `pytest` do teste e da suíte no central | 6 linhas `igual ...` (scripts/render_prompts.py, cópia da skill, prompts/cursor/doc-framework.mdc, tests/test_prompts_sem_prd_ts.py, rules/kit-index.yaml, INDEX.md); `exit=0`; no central, teste novo: 3 passed e suíte: 295 passed | n/a (comando de medição; teste espelhado coberto por A03) | Sim | n/a | automatizado |
+| 2 | A09 | `python3 -m pytest _framework/tests/test_prompts_sem_prd_ts.py -k gerados_cobrem -v` em `9c8dc23`; em cópia descartável, removido `copilot-instructions.md` da tupla `GERADOS`, pytest do arquivo inteiro; restaurado; removido `universal.md`, idem; restaurado; extra: removido `doc-framework.mdc` | Sem mutação: `1 passed, 2 deselected`. Sem Copilot: 1 failed, 2 passed (asserção do conjunto de nomes, `:48` no original, `:47` na cópia com uma linha a menos). Sem universal: 1 failed, 2 passed. Extra, sem Cursor: 1 failed, 2 passed. Restaurado: 3 passed | As duas mutações que sobreviviam na rodada 1 (remover o Copilot, remover o `universal.md`) agora são derrubadas por `test_gerados_cobrem_os_tres_prompts` | Sim | _framework/tests/test_prompts_sem_prd_ts.py:48, _framework/tests/test_prompts_sem_prd_ts.py:49 | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
