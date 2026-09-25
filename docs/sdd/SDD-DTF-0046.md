@@ -2,7 +2,7 @@
 id: SDD-DTF-0046
 type: SDD
 title: "Bundle da skill como artefato gerado: .gitattributes com linguist-generated e templates sincronizados por render_prompts.py"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -320,13 +320,13 @@ vai para a Evidência. O número do critério corresponde ao A01 a A15 da SPEC.
 
 Antes de marcar `implemented`, confirmar as duas direções:
 
-- [ ] Todo requisito consolidado (RF01 a RF13) tem arquivo, teste ou
+- [x] Todo requisito consolidado (RF01 a RF13) tem arquivo, teste ou
       critério correspondente, no kit e no central.
-- [ ] Todo arquivo tocado pela implementação aparece na "Decomposição em
+- [x] Todo arquivo tocado pela implementação aparece na "Decomposição em
       tasks" ou nas "Instruções específicas"; arquivo não listado é escopo
       que faltou registrar (atualizar a SDD) ou scope creep a remover
       antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra além de
+- [x] Nenhuma abstração, config, feature flag ou refactor extra além de
       `_bundle_orphans`; nenhum `-diff`, nenhum `merge=`, nenhum `templates/ci/`
       no bundle, nenhuma RFC-DTF-0009.
 
@@ -338,7 +338,7 @@ critério da tabela acima: comando rodado de fato nesta sessão e saída real,
 nunca "deve passar" nem resultado de memória. Critérios 1 a 14 rodam no kit
 e o 15 no central.
 
-**Verificador independente:** não — evidência registrada pelo implementador (comandos rodados de fato na sessão de implementação); aguarda `sdd-verifier` em sessão separada. Desvio registrado: `_framework/INDEX.md` (gerado por `render_indexes.py`, invocado por `render_prompts.py`) foi regenerado no kit e no central porque os dois arquivos de teste novos entram no índice; sem isso `--check` reprova.
+**Verificador independente:** sim — subagente verificador em sessão separada da que implementou; todos os 15 critérios foram re-rodados nesta sessão (kit em /home/michel/dtf-wt-0046, central em /home/michel/dtf-central-wt-0046, "antes" em worktree de origin/main 1ab4b3b), sem confiar na evidência anterior do implementador. Diff verificado: 1ab4b3b..b93295a. Desvio (a) julgado aceitável: `_framework/INDEX.md` regenerado no kit e no central (4 linhas: total 107 para 109 e duas entradas dos testes novos); é saída gerada de `render_indexes.py` e, sem ela, `render_prompts.py --check` reprova (visto no critério 8). Desvio (b) julgado aceitável: o sensor do critério 13 esperava 3 falhas como subconjunto; com `render_prompts.py` de origin/main falham 5 dos 7 testes (os 3 esperados mais `check_detecta_template_divergente_ou_ausente` e `rejeita_symlink`), o que é coerente porque o código antigo também não cobre RF04 em `--check` nem RF07; os 2 que passam (`ignora_subpasta_ci`, `idempotente`) só protegem invariantes que o código antigo já tinha.
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -350,6 +350,7 @@ divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
+| 0 | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0046.md $CENTRAL/docs/DTF` (Fidelidade à origem) | `✅ source_docs de SDD-DTF-0046.md conferem com o registry central.` exit 0; RF01 a RF13 da SPEC-DTF-0020 todos representados na SDD com critérios equivalentes; contratos da Parte 2 conferem | n/a | Sim | n/a | automatizado |
 | 1 | `git check-attr linguist-generated diff merge -- $BUNDLE/scripts/render_prompts.py $BUNDLE/references/workflow-rules.yaml $BUNDLE/templates/spec.template.md` | Nove linhas: cada um dos 3 arquivos com `linguist-generated: true`, `diff: unspecified`, `merge: unspecified` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:66 | automatizado |
 | 2 | `git check-attr linguist-generated -- $BUNDLE/SKILL.md $BUNDLE/prompts/framework-audit.md _framework/scripts/render_prompts.py _framework/templates/spec.template.md` | Quatro linhas `linguist-generated: unspecified` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:71 | automatizado |
 | 3 | `grep -c -e '^[^#].* -diff' -e '^[^#].* diff$' -e '^[^#].* diff ' -e '^[^#].* merge=' .gitattributes; echo "exit=$?"` | `0` e `exit=1` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:38 | automatizado |
@@ -362,7 +363,7 @@ divergência com justificativa entre parênteses.
 | 10 | `render_prompts.py; render_prompts.py --check; echo exit; test ! -e $BUNDLE/templates/ci && echo sem-ci; git status --porcelain -- $BUNDLE` (com implementação commitada) | `exit=0`, `sem-ci`, `git status --porcelain` sem nenhuma linha | n/a | Sim | _framework/scripts/tests/test_render_prompts_sync.py:51,92-93 | automatizado |
 | 11 | `rm $BUNDLE/templates/inc.template.md && ln -s ...`; `--check`; `git checkout --` | `❌ .../templates/inc.template.md: é symlink` e `exit=1`; restaurado, `git status` limpo | Mutação (symlink): reprovou | Sim | _framework/scripts/tests/test_render_prompts_sync.py:83-85 | automatizado |
 | 12 | `git diff --stat origin/main -- .ignore .gitignore _framework/tests/test_repo_hygiene.py .github/workflows/framework-check.yml; grep -c "doc-traceability-framework" .ignore; echo "exit=$?"` | `git diff --stat` sem linhas; `0` e `exit=1` | n/a | Sim | n/a | automatizado |
-| 13 | `python3 -m pytest _framework/scripts/tests/test_render_prompts_sync.py -v`; sensor: `git show origin/main:_framework/scripts/render_prompts.py` sobre o arquivo | 7 passed in 0.12s. Sensor: 5 failed, 2 passed (falharam gera_templates_md, check_detecta_template_divergente_ou_ausente, reprova_template_orfao_nos_dois_modos, compara_bytes_crlf, rejeita_symlink); arquivo restaurado com `git checkout --` | Reverter render_prompts.py a origin/main: 5 FAILED | Sim | _framework/scripts/tests/test_render_prompts_sync.py:28-30,38-43,59-62,70-72,83-85 | automatizado |
+| 13 | `python3 -m pytest _framework/scripts/tests/test_render_prompts_sync.py -v`; sensor: `git show origin/main:_framework/scripts/render_prompts.py` sobre o arquivo | 7 passed in 0.12s. Sensor: 5 failed, 2 passed (falharam gera_templates_md, check_detecta_template_divergente_ou_ausente, reprova_template_orfao_nos_dois_modos, compara_bytes_crlf, rejeita_symlink); arquivo restaurado com `git checkout --` | Reverter render_prompts.py a origin/main: 5 FAILED, 2 passed (reprodução independente); restaurado, 7 passed | Sim | _framework/scripts/tests/test_render_prompts_sync.py:28-30,38-43,59-62,70-72,83-85 | automatizado |
 | 14 | `git diff --stat origin/main -- workflow-rules.yaml CHANGELOG.md $BUNDLE/references/workflow-rules.yaml`; `git diff --name-status --diff-filter=AD origin/main -- $BUNDLE`; `framework_check.py --auto; echo exit` (kit e worktree de origin/main) | Os dois `git diff` sem linhas; `framework_check.py --auto`: depois `exit=0`, antes `exit=0` (Todas as verificações do framework passaram) | n/a | Sim | n/a | automatizado |
 | 15 | `for f in <5 arquivos>; do cmp "$f" "$CENTRAL/$f"; echo "rc=$? $f"; done; cd $CENTRAL; render_prompts.py --check; echo exit` (CENTRAL=/home/michel/dtf-central-wt-0046, branch sdd/SDD-DTF-0046-espelho, commit 1effd2a) | Cinco linhas `rc=0`, sem saída do `cmp`; `exit=0` | n/a | Sim | n/a | automatizado |
 
