@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.3.1._
 
-Total de documentos: **46**
+Total de documentos: **48**
 
 
-## SDD (46)
+## SDD (48)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -55,3 +55,5 @@ Total de documentos: **46**
 | `SDD-DTF-0045` | Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |
 | `SDD-DTF-0046` | Bundle da skill como artefato gerado: .gitattributes com linguist-generated e templates sincronizados por render_prompts.py | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0042, SDD-DTF-0043, SDD-DTF-0045 |
 | `SDD-DTF-0047` | Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045 |
+| `SDD-DTF-0048` | Fechar a defasagem PRD/Tech Spec do YAML do kit: fluxo, gates 14, 15 e 17, capabilities e teste de regressão | in_review | Michel Pessoa | 2026-09-25 | SDD-DTF-0042 |
+| `SDD-DTF-0049` | Título completo e resumo útil no mapa de seções e linhas específicas no INDEX do kit | in_review | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |

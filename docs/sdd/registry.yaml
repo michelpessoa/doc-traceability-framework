@@ -461,3 +461,23 @@ documents:
     relates_to: [SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045]
     path: "docs/sdd/SDD-DTF-0047.md"
     tags: [tooling, parser, tabela, pipe-escapado, validate_state, frente-tooling]
+  - id: SDD-DTF-0048
+    type: SDD
+    title: "Fechar a defasagem PRD/Tech Spec do YAML do kit: fluxo, gates 14, 15 e 17, capabilities e teste de regressão"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0042]
+    path: "docs/sdd/SDD-DTF-0048.md"
+    tags: [otimizacao-llm, defasagem, prd-ts, gate_content_quality]
+  - id: SDD-DTF-0049
+    type: SDD
+    title: "Título completo e resumo útil no mapa de seções e linhas específicas no INDEX do kit"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0043]
+    path: "docs/sdd/SDD-DTF-0049.md"
+    tags: [otimizacao-llm, indice, mapa, resumo, errata]
