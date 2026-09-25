@@ -27,9 +27,7 @@ def test_sync_copies_gera_templates_md(tmp_path):
     root = _root(tmp_path)
     assert sync_copies(root, check=False) is True
     for name in ("spec.template.md", "prd.template.md"):
-        assert (root / SKILL / "templates" / name).read_bytes() == (
-            root / "templates" / name
-        ).read_bytes()
+        assert (root / SKILL / "templates" / name).read_bytes() == (root / "templates" / name).read_bytes()
 
 
 def test_sync_copies_check_detecta_template_divergente_ou_ausente(tmp_path):
