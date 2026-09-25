@@ -34,6 +34,9 @@ BANNER_RE = r"^# (\d+[a-z]?)\. (.+)$"
 FENCE_RE = r"^#{20,}$"
 LARGEST_SECTION_EXCLUDES = {"0"}
 SUMMARY_MAX = 100
+SUMMARY_MIN = 30  # piso do Resumo ao encurtar a linha do mapa (SPEC-DTF-0022 RF03)
+TITLE_MAX = 70  # caracteres do título da linha do mapa (RF01)
+TITLE_MIN = 20  # piso do título ao encurtar a linha do mapa (RF03)
 SDD_SUMMARY_MAX = 140
 SIZE_BUCKETS = [(2048, "<2 KB"), (8192, "2-8 KB"), (32768, "8-32 KB"), (None, ">32 KB")]
 CEILINGS = {
@@ -46,6 +49,39 @@ CEILINGS = {
     "toc_total": 3072,
 }
 MAP_FRACTION = 0.15
+LABEL_RE = re.compile(r"^(?:Motivação|Origem)(?:\s*\([^)]*\))?\s*:\s*")  # rótulo removido (RF02)
+SCALAR_KEYS = ("description", "purpose", "instructions", "approach", "applies_when")  # fonte (3)
+DANGLING = {
+    "a",
+    "o",
+    "as",
+    "os",
+    "um",
+    "uma",
+    "de",
+    "do",
+    "da",
+    "dos",
+    "das",
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+    "por",
+    "para",
+    "com",
+    "sem",
+    "ao",
+    "aos",
+    "e",
+    "ou",
+    "que",
+    "como",
+    "se",
+    "->",
+    "+",
+}  # conectivos que não podem terminar um corte (RF03)
 SDD_MAX_FILES = 6
 IGNORED_DIRS = {"__pycache__", ".ruff_cache", ".pytest_cache", ".mypy_cache"}
 TOC_BEGIN = "<!-- BEGIN GENERATED: sumário -->"
@@ -59,12 +95,12 @@ SDD_NAME_RE = re.compile(r"^SDD-[A-Z0-9]+-\d{4}\.md$")
 @dataclass(frozen=True)
 class Section:
     sid: str  # "0", "3b", "13" (exibido como "§13")
-    title: str  # primeira linha do banner; "preâmbulo" para §0
+    title: str  # título completo e limpo (RF01); "preâmbulo" para §0
     keys: tuple[str, ...]  # chaves de topo YAML na faixa
     start: int  # linha (1-based) da linha `# N. TÍTULO`; 1 para §0
     end: int  # última linha da seção
     nbytes: int
-    summary: str  # RF04, <= SUMMARY_MAX
+    summary: str  # RF02, <= SUMMARY_MAX
 
 
 class CoverageError(Exception):
@@ -87,6 +123,40 @@ def _first_sentence(text: str, limit: int) -> str:
     if len(sentence) > limit:
         sentence = sentence[: limit - 1].rstrip() + "…"
     return sentence
+
+
+def _cut_words(text: str, limit: int) -> str:
+    """Corta em fronteira de palavra, sem conectivo pendurado; no máximo `limit` com o `…` (RF03)."""
+    if len(text) <= limit:
+        return text
+    head = text[: limit - 1]
+    if text[limit - 1] != " ":
+        idx = head.rfind(" ")
+        head = head[:idx] if idx > 0 else ""
+    words = head.split()
+    while words and (words[-1].lower() in DANGLING or words[-1][-1] in "(:,;"):
+        words.pop()
+    if not words:
+        return text[: limit - 1].rstrip() + "…"
+    return " ".join(words) + "…"
+
+
+def _sentence(text: str, limit: int) -> str:
+    """Primeira frase completa de `text`, sem rótulo, capitalizada e cortada em `limit` (RF02)."""
+    flat = LABEL_RE.sub("", " ".join(text.split()), count=1)
+    m = re.search(r"[.!?](?=\s+[A-ZÀ-ÖØ-Þ\"'`(])", flat)
+    sentence = (flat[: m.end()] if m else flat).rstrip(":;, ")
+    if not sentence:
+        return ""
+    return _cut_words(sentence[0].upper() + sentence[1:], limit)
+
+
+def _clean_title(raw: str) -> str:
+    """Título completo e limpo até o fim de uma expressão (RF01)."""
+    title = " ".join(raw.split()).split(" — ")[0].strip()
+    if len(title) > TITLE_MAX:
+        title = " ".join(re.sub(r"\s*\([^)]*\)", "", title).split())
+    return _cut_words(title, TITLE_MAX)
 
 
 def _cell(text: str) -> str:
@@ -123,7 +193,79 @@ def _table_rows(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def parse_yaml_sections(text: str) -> list[Section]:
+def _is_fence(line: str) -> bool:
+    return bool(re.match(FENCE_RE, line.rstrip("\n")))
+
+
+def _banner_parts(lines: list[str], title_idx: int, hi: int) -> tuple[str, str, int]:
+    """(continuação do título, parágrafo do corpo do banner, índice logo após a fence de fechamento)."""
+    i = title_idx + 1
+    cont: list[str] = []
+    while i < hi and not _is_fence(lines[i]) and lines[i].startswith("#"):
+        body = lines[i].rstrip("\n")[1:].strip()
+        if not body:
+            break
+        cont.append(body)
+        i += 1
+    para: list[str] = []
+    if i < hi and lines[i].rstrip("\n").strip() == "#":
+        j = i
+        while j < hi and not _is_fence(lines[j]) and lines[j].startswith("#"):
+            body = lines[j].rstrip("\n")[1:].strip()
+            if body:
+                para.append(body)
+            elif para:
+                break
+            j += 1
+    k = title_idx + 1
+    while k < hi and not _is_fence(lines[k]):
+        k += 1
+    return " ".join(cont), " ".join(para), k + 1
+
+
+def _scalar_source(value) -> str:
+    """Fonte (3): primeiro valor textual não vazio de SCALAR_KEYS num mapeamento."""
+    if not isinstance(value, dict):
+        return ""
+    for name in SCALAR_KEYS:
+        v = value.get(name)
+        if isinstance(v, str) and v.strip():
+            return v
+    return ""
+
+
+def _section_summary(
+    lines: list[str],
+    title_idx: int,
+    hi: int,
+    first_key_value=None,
+    override: str = "",
+    tail: str = "",
+) -> str:
+    """Resumo pela cadeia de fontes 1 a 5 (RF02); "" se nenhuma."""
+    _cont, body, after = _banner_parts(lines, title_idx, hi)
+    para: list[str] = []
+    i = after
+    while i < hi:
+        ln = lines[i].rstrip("\n")
+        if not ln.startswith("#"):
+            break
+        text = ln[1:].strip()
+        if not text:
+            if para:
+                break
+        else:
+            para.append(text)
+        i += 1
+    for source in (body, " ".join(para), _scalar_source(first_key_value), override, tail):
+        summary = _sentence(source, SUMMARY_MAX) if source else ""
+        if summary:
+            return summary
+    return ""
+
+
+def parse_yaml_sections(text: str, overrides: dict[str, str] | None = None) -> list[Section]:
+    overrides = overrides or {}
     lines = text.splitlines(keepends=True)
     banners: list[tuple[str, str, int]] = []  # (sid, title, índice 0-based da linha de título)
     for i, raw in enumerate(lines):
@@ -147,6 +289,15 @@ def parse_yaml_sections(text: str) -> list[Section]:
                 f"workflow-rules.yaml: ids fora de ordem crescente — §{banners[n - 1][0]} "
                 f"(linha {banners[n - 1][2] + 1}) antes de §{sid} (linha {idx + 1})"
             )
+    for sid in overrides:
+        if sid not in seen:
+            raise SystemExit(f"map_summaries: id §{sid} não existe no mapa")
+
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        data = None
+    data = data if isinstance(data, dict) else {}
 
     # Faixas: cada seção começa na linha de fence que antecede o banner.
     starts = [0] + [idx - 1 for _sid, _t, idx in banners]
@@ -160,7 +311,12 @@ def parse_yaml_sections(text: str) -> list[Section]:
         if sid == "0":
             summary = "Cabeçalho e bloco `framework:` (versão e changelog)"
         else:
-            summary = _section_summary(lines, title_idx, hi) or title
+            cont, _body, _after = _banner_parts(lines, title_idx, hi)
+            raw = f"{title} {cont}".strip()
+            title = _clean_title(raw)
+            tail = " — ".join(" ".join(raw.split()).split(" — ")[1:])
+            first_value = data.get(keys[0]) if keys else None
+            summary = _section_summary(lines, title_idx, hi, first_value, overrides.get(sid, ""), tail) or title
         sections.append(
             Section(
                 sid=sid,
@@ -175,33 +331,30 @@ def parse_yaml_sections(text: str) -> list[Section]:
     return sections
 
 
-def _section_summary(lines: list[str], title_idx: int, hi: int) -> str:
-    """Primeira frase do primeiro parágrafo de comentário após o banner (RF04)."""
-    i = title_idx + 1
-    while i < hi and not re.match(FENCE_RE, lines[i].rstrip("\n")):
-        i += 1
-    i += 1  # passa a fence de fechamento
-    para: list[str] = []
-    while i < hi:
-        ln = lines[i].rstrip("\n")
-        if not ln.startswith("#"):
-            break
-        body = ln[1:].strip()
-        if not body:
-            if para:
-                break
-        else:
-            para.append(body)
-        i += 1
-    if not para:
-        return ""
-    return _first_sentence(" ".join(para), SUMMARY_MAX)
+def load_map_summaries(path: Path) -> dict[str, str]:
+    """`map_summaries` opcional de kit-index.yaml: id de seção -> frase (RF04)."""
+    if not path.is_file():
+        return {}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    raw = data.get("map_summaries") if isinstance(data, dict) else None
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise SystemExit(f"{path}: `map_summaries` deve ser um mapeamento de id de seção para frase")
+    out: dict[str, str] = {}
+    for sid, value in raw.items():
+        if not isinstance(value, str) or not value.strip():
+            raise SystemExit(f"{path}: map_summaries §{sid} tem valor vazio ou não textual")
+        out[str(sid)] = value
+    return out
 
 
 def _section_row(sec: Section, max_bytes: int) -> str:
-    """Linha do mapa, encurtada até caber em `max_bytes`."""
+    """Linha do mapa, encurtada até caber em `max_bytes`: chaves, Resumo (piso 30), título (piso 20)."""
     keys = list(sec.keys)
     shown = len(keys)
+    base_title = _cell(sec.title).rstrip("…")
+    base_summary = _cell(sec.summary).rstrip("…")
     title = _cell(sec.title)
     summary = _cell(sec.summary)
 
@@ -218,11 +371,15 @@ def _section_row(sec: Section, max_bytes: int) -> str:
     while _nbytes(row) > max_bytes and shown > 1:
         shown -= 1
         row = render()
-    while _nbytes(row) > max_bytes and len(title) > 20:
-        title = title[: len(title) - 4].rstrip() + "…"
+    limit = len(summary)
+    while _nbytes(row) > max_bytes and limit > SUMMARY_MIN:
+        limit = max(SUMMARY_MIN, limit - 6)
+        summary = _cut_words(base_summary, limit)
         row = render()
-    while _nbytes(row) > max_bytes and len(summary) > 20:
-        summary = summary[: len(summary) - 4].rstrip() + "…"
+    limit = len(title)
+    while _nbytes(row) > max_bytes and limit > TITLE_MIN:
+        limit = max(TITLE_MIN, limit - 6)
+        title = _cut_words(base_title, limit)
         row = render()
     return row
 
@@ -231,9 +388,9 @@ def _largest_section_bytes(sections: list[Section]) -> int:
     return max((s.nbytes for s in sections if s.sid not in LARGEST_SECTION_EXCLUDES), default=0)
 
 
-def build_section_map(yaml_path: Path) -> str:
+def build_section_map(yaml_path: Path, overrides: dict[str, str] | None = None) -> str:
     text = yaml_path.read_text(encoding="utf-8")
-    sections = parse_yaml_sections(text)
+    sections = parse_yaml_sections(text, overrides)
     yaml_bytes = _nbytes(text)
     largest = _largest_section_bytes(sections)
     rows = [_section_row(s, CEILINGS["map_row"]) for s in sections]
@@ -350,6 +507,11 @@ def _bucket(size: int) -> str:
     return SIZE_BUCKETS[-1][1]
 
 
+def _expand(text: str, name: str) -> str:
+    """Só `{name}` (com extensão) e `{stem}` (sem extensão) são substituídos (RF05)."""
+    return text.replace("{name}", name).replace("{stem}", Path(name).stem)
+
+
 def build_kit_index(root: Path, manifest: list[dict]) -> str:
     files = list_kit_files(root)
     patterns = [(_glob_re(e["path"]), e) for e in manifest]
@@ -367,7 +529,9 @@ def build_kit_index(root: Path, manifest: list[dict]) -> str:
         if hit is None:
             problems.append(f"arquivo sem entrada em kit-index.yaml: {rel}")
             continue
-        rows.append(f"| `{rel}` | {_cell(hit['what'])} | {_cell(hit['when'])} | {_bucket(f.stat().st_size)} |")
+        what = _expand(hit["what"], f.name)
+        when = _expand(hit["when"], f.name)
+        rows.append(f"| `{rel}` | {_cell(what)} | {_cell(when)} | {_bucket(f.stat().st_size)} |")
     for n, (_rx, entry) in enumerate(patterns):
         if not used[n]:
             problems.append(f"entrada de kit-index.yaml sem arquivo: {entry['path']}")
@@ -643,7 +807,8 @@ def generate_all(root: Path, rules: dict, check: bool) -> bool:
     repo = root.parent
     yaml_path = root / "rules/workflow-rules.yaml"
     yaml_text = yaml_path.read_text(encoding="utf-8")
-    sections = parse_yaml_sections(yaml_text)
+    overrides = load_map_summaries(root / "rules/kit-index.yaml")
+    sections = parse_yaml_sections(yaml_text, overrides)
 
     # 1. sumário do guia técnico (marcadores obrigatórios em --check)
     guide = repo / GUIDE_REL
@@ -661,7 +826,7 @@ def generate_all(root: Path, rules: dict, check: bool) -> bool:
         ok &= _report(check_toc_ceiling("universal.md", universal.read_text(encoding="utf-8")))
 
     # 2. mapa de seções
-    map_text = build_section_map(yaml_path)
+    map_text = build_section_map(yaml_path, overrides)
     map_problems = check_map_ceiling(sections, map_text, _nbytes(yaml_text))
     ok &= _report(map_problems)
     if not map_problems:
