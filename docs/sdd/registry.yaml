@@ -481,3 +481,13 @@ documents:
     relates_to: [SDD-DTF-0043]
     path: "docs/sdd/SDD-DTF-0049.md"
     tags: [otimizacao-llm, indice, mapa, resumo, errata]
+  - id: SDD-DTF-0050
+    type: SDD
+    title: "Prompt do Cursor sem PRD+TS: fluxo e ids de exemplo em SPEC no texto de render_prompts.py, com teste de regressão"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-09-25"
+    updated: "2026-09-25"
+    relates_to: [SDD-DTF-0042, SDD-DTF-0048]
+    path: "docs/sdd/SDD-DTF-0050.md"
+    tags: [tooling, prd-ts, cursor, check_renderings, frente-tooling]
