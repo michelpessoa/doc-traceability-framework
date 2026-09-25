@@ -41,3 +41,9 @@ def test_detector_pega_mutacao_em_memoria() -> None:
     assert [n for n, _ in ocorrencias(texto)] == [2, 3, 4]
     assert ocorrencias("par PRD+TS, em projeto legado") == []
     assert ocorrencias("ADR → SPEC → SDD\n(SDD-X, SPEC-X, ADR-X)") == []
+
+
+def test_gerados_cobrem_os_tres_prompts() -> None:
+    nomes = {caminho.name for caminho in GERADOS}
+    assert nomes == {"universal.md", "doc-framework.mdc", "copilot-instructions.md"}
+    assert all(caminho.is_file() for caminho in GERADOS)

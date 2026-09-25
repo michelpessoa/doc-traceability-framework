@@ -52,7 +52,7 @@ a versão real (`v2.3.2`): o `"v1.7.0"` do literal é substituído por
 |---|---|---|
 | RF01 | No prefixo do Cursor, o fluxo de decisão passa de `(sim: ADR → PRD+TS → SDD)` e `(não: PRD+TS → SDD)` para `(sim: ADR → SPEC → SDD)` e `(não: SPEC → SDD)` | Quando `render_prompts.py` regenerar o Cursor, o sistema deve produzir um `doc-framework.mdc` sem a expressão `PRD+TS` |
 | RF02 | No prefixo do Cursor, os ids de exemplo do handover passam de `(SDD-X, TS-X)` para `(SDD-X, SPEC-X, ADR-X)`, como já está no Copilot e no universal | Quando `render_prompts.py` regenerar o Cursor, o sistema deve produzir um `doc-framework.mdc` sem `TS-X` |
-| RF03 | O texto gerado dos três prompts (`universal.md`, `cursor/doc-framework.mdc`, `copilot/copilot-instructions.md`) não cita PRD nem TS como passo do fluxo | Se um dos três arquivos gerados contiver `PRD+TS`, `PRD + TS` ou `TS-X`, então o teste novo deve falhar, exceto em linha que traga a marca "legado" (âncora de legado vinda do YAML, como `par PRD+TS, em projeto legado` no `universal.md`) |
+| RF03 | O texto gerado dos três prompts (`universal.md`, `cursor/doc-framework.mdc`, `copilot/copilot-instructions.md`) não cita PRD nem TS como passo do fluxo | Se um dos três arquivos gerados contiver `PRD+TS`, `PRD + TS` ou `TS-X`, então o teste novo deve falhar, exceto em linha que traga a marca "legado" (âncora de legado vinda do YAML, como `par PRD+TS, em projeto legado` no `universal.md`); e, se a lista de arquivos que o teste verifica deixar de conter algum dos três prompts, então o teste deve falhar |
 | RF04 | Os gerados são regenerados pelo script, nunca à mão, e a cópia de `render_prompts.py` na skill segue idêntica | Quando `render_prompts.py --check` rodar após a regeneração, o sistema deve sair com código 0 |
 | RF05 | O central espelha a mudança por PR próprio | Quando `cmp` comparar os arquivos tocados no kit com o mesmo caminho no central, o sistema deve reportar arquivos idênticos |
 
@@ -73,7 +73,7 @@ Fora de escopo: qualquer texto do YAML (já tratado na SDD-DTF-0048), o
   o arquivo na mensagem. Uma função de detecção sobre texto em memória
   (`ocorrencias(texto) -> list[tuple[int, str]]`) e um teste que a aplica aos
   três arquivos reais; um segundo teste de mutação alimenta a função com um
-  texto que contém `PRD+TS` e exige detecção. `ocorrencias()` isenta a linha que contém "legado": o `universal.md` traz `par PRD+TS, em projeto legado`, âncora de legado que vem do YAML (fora de escopo), e sem a isenção o teste reprovaria esse arquivo mesmo depois da correção. O teste de mutação cobre a linha com a marca e a linha sem ela.
+  texto que contém `PRD+TS` e exige detecção. `ocorrencias()` isenta a linha que contém "legado": o `universal.md` traz `par PRD+TS, em projeto legado`, âncora de legado que vem do YAML (fora de escopo), e sem a isenção o teste reprovaria esse arquivo mesmo depois da correção. O teste de mutação cobre a linha com a marca e a linha sem ela. Um terceiro teste, `test_gerados_cobrem_os_tres_prompts`, afirma que a tupla `GERADOS` é exatamente `universal.md`, `doc-framework.mdc` e `copilot-instructions.md`, todos existentes; sem ele, a verificação de RF03 pode encolher sem falha (a verificação independente mostrou que remover o Copilot ou o `universal.md` da tupla sobrevivia à suíte).
 - **Manifesto e índice.** `render_indexes.py` exige entrada em `_framework/rules/kit-index.yaml` para todo arquivo do kit: o teste novo ganha a entrada (o manifesto não é gerado) e `_framework/INDEX.md` é regenerado por `render_prompts.py`. O central precisa da mesma entrada no espelho.
 - **Cópia da skill.** `_framework/skills/doc-traceability-framework/scripts/render_prompts.py`
   é gerada por `render_prompts.py`; não editar à mão.
@@ -107,6 +107,7 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição;
 | A06 | Suíte completa e formatação sem regressão | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; ruff format --check _framework/scripts; echo "exit=$?"` | 0 failed e `exit=0` | automatizado |
 | A07 | Só os arquivos previstos mudaram | `git diff --name-only main` no kit | Só os arquivos das tasks 2 a 4 (incluídos `kit-index.yaml` e `INDEX.md`), a SDD desta mudança e os gerados de `docs/sdd/`; nenhum `workflow-rules.yaml`, nenhum outro `prompts/` | automatizado |
 | A08 | RF05: espelho no central | Em `/home/michel/doc-traceability-central`: `for f in scripts/render_prompts.py skills/doc-traceability-framework/scripts/render_prompts.py prompts/cursor/doc-framework.mdc tests/test_prompts_sem_prd_ts.py rules/kit-index.yaml INDEX.md; do cmp /home/michel/doc-traceability-framework/_framework/$f _framework/$f && echo "igual $f"; done; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | 6 linhas `igual ...` e `exit=0` | automatizado |
+| A09 | RF03: a lista de arquivos verificados não encolhe | `python3 -m pytest _framework/tests/test_prompts_sem_prd_ts.py -k gerados_cobrem -v`; em cópia descartável, remover o `copilot-instructions.md` da tupla `GERADOS` e depois o `universal.md`, rodando o pytest inteiro do arquivo a cada vez; restaurar | Sem mutação: 1 passed; com cada mutação: pelo menos 1 failed | automatizado |
 
 ## Instruções específicas para a IA implementadora
 
@@ -173,6 +174,7 @@ parênteses.
 | A06 | pendente: suíte completa e `ruff format --check` | pendente | n/a | pendente | n/a | pendente |
 | A07 | pendente: `git diff --name-only main` | pendente | n/a | pendente | n/a | pendente |
 | A08 | pendente: `cmp` kit x central e `--check` no central | pendente | n/a | pendente | n/a | pendente |
+| A09 | pendente: pytest `-k gerados_cobrem` e mutações da tupla `GERADOS` | pendente | pendente: remover cada prompt da tupla | pendente | pendente | pendente |
 
 ## Rastreabilidade
 | Campo | Valor |
