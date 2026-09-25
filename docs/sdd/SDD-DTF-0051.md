@@ -2,7 +2,7 @@
 id: SDD-DTF-0051
 type: SDD
 title: "Resumos do mapa: map_summaries com precedência sobre o banner e testes das ramificações de _cut_words"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
