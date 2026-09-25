@@ -52,9 +52,35 @@ MAP_FRACTION = 0.15
 LABEL_RE = re.compile(r"^(?:Motivação|Origem)(?:\s*\([^)]*\))?\s*:\s*")  # rótulo removido (RF02)
 SCALAR_KEYS = ("description", "purpose", "instructions", "approach", "applies_when")  # fonte (3)
 DANGLING = {
-    "a", "o", "as", "os", "um", "uma", "de", "do", "da", "dos", "das", "em", "no", "na",
-    "nos", "nas", "por", "para", "com", "sem", "ao", "aos", "e", "ou", "que", "como", "se",
-    "->", "+",
+    "a",
+    "o",
+    "as",
+    "os",
+    "um",
+    "uma",
+    "de",
+    "do",
+    "da",
+    "dos",
+    "das",
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+    "por",
+    "para",
+    "com",
+    "sem",
+    "ao",
+    "aos",
+    "e",
+    "ou",
+    "que",
+    "como",
+    "se",
+    "->",
+    "+",
 }  # conectivos que não podem terminar um corte (RF03)
 SDD_MAX_FILES = 6
 IGNORED_DIRS = {"__pycache__", ".ruff_cache", ".pytest_cache", ".mypy_cache"}
@@ -290,9 +316,7 @@ def parse_yaml_sections(text: str, overrides: dict[str, str] | None = None) -> l
             title = _clean_title(raw)
             tail = " — ".join(" ".join(raw.split()).split(" — ")[1:])
             first_value = data.get(keys[0]) if keys else None
-            summary = (
-                _section_summary(lines, title_idx, hi, first_value, overrides.get(sid, ""), tail) or title
-            )
+            summary = _section_summary(lines, title_idx, hi, first_value, overrides.get(sid, ""), tail) or title
         sections.append(
             Section(
                 sid=sid,

@@ -450,8 +450,13 @@ def _doc(*sections: str) -> str:
     return f"{FENCE}\n# cabecalho\n{FENCE}\n\nframework:\n  version: '1'\n\n" + "\n".join(sections)
 
 
-def _sec(n: str, title_lines: list[str], banner_body: list[str] | None = None,
-         after: list[str] | None = None, yaml_body: str = "") -> str:
+def _sec(
+    n: str,
+    title_lines: list[str],
+    banner_body: list[str] | None = None,
+    after: list[str] | None = None,
+    yaml_body: str = "",
+) -> str:
     out = [FENCE, f"# {n}. {title_lines[0]}"] + [f"#     {t}" for t in title_lines[1:]]
     if banner_body:
         out += ["#"] + [f"# {b}" for b in banner_body]
@@ -496,16 +501,24 @@ def test_titulo_completo_corte_com_reticencias_so_se_ainda_passa():
 
 def test_resumo_cadeia_fontes_em_ordem():
     # (1) corpo do banner vence tudo
-    doc = _doc(_sec("1", ["T1 — cauda"], banner_body=["Corpo do banner. Outra frase."],
-                    after=["Depois da fence."], yaml_body="k:\n  description: \"Valor da chave.\""))
+    doc = _doc(
+        _sec(
+            "1",
+            ["T1 — cauda"],
+            banner_body=["Corpo do banner. Outra frase."],
+            after=["Depois da fence."],
+            yaml_body='k:\n  description: "Valor da chave."',
+        )
+    )
     assert _by_id(doc)["1"].summary == "Corpo do banner."
     # (2) parágrafo após a fence
-    doc = _doc(_sec("1", ["T1 — cauda"], after=["Depois da fence. Segunda."], yaml_body="k:\n  description: \"Valor.\""))
+    doc = _doc(_sec("1", ["T1 — cauda"], after=["Depois da fence. Segunda."], yaml_body='k:\n  description: "Valor."'))
     assert _by_id(doc)["1"].summary == "Depois da fence."
     # (3) valor da primeira chave, na ordem de SCALAR_KEYS
-    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  purpose: \"Por propósito.\"\n  description: \"Por descrição.\""))
+    body = 'k:\n  purpose: "Por propósito."\n  description: "Por descrição."'
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body=body))
     assert _by_id(doc)["1"].summary == "Por descrição."
-    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  approach: \"Por abordagem.\""))
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body='k:\n  approach: "Por abordagem."'))
     assert _by_id(doc)["1"].summary == "Por abordagem."
     # (4) map_summaries, só depois das fontes automáticas
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  x: 1"))
@@ -518,7 +531,8 @@ def test_resumo_cadeia_fontes_em_ordem():
 
 
 def test_resumo_cadeia_rotulo_frase_completa_e_bloco_vazio():
-    doc = _doc(_sec("1", ["T1"], after=["Motivação (registrado): este gate nasceu de um incidente. Outra.", ""], yaml_body="k: 1"))
+    para = "Motivação (registrado): este gate nasceu de um incidente. Outra."
+    doc = _doc(_sec("1", ["T1"], after=[para, ""], yaml_body="k: 1"))
     assert _by_id(doc)["1"].summary == "Este gate nasceu de um incidente."
     doc = _doc(_sec("1", ["T1"], after=["Origem: mesmo incidente da seção 13 — algo"], yaml_body="k: 1"))
     assert _by_id(doc)["1"].summary == "Mesmo incidente da seção 13 — algo"
@@ -526,7 +540,7 @@ def test_resumo_cadeia_rotulo_frase_completa_e_bloco_vazio():
     doc = _doc(_sec("1", ["T1"], after=["Este framework assume dois tipos:", "", "  (a) central"], yaml_body="k: 1"))
     assert _by_id(doc)["1"].summary == "Este framework assume dois tipos"
     # bloco de comentário vazio é ignorado e cai para a fonte seguinte
-    doc = _doc(_sec("1", ["T1 — cauda"], after=["", ""], yaml_body="k:\n  description: \"Da chave.\""))
+    doc = _doc(_sec("1", ["T1 — cauda"], after=["", ""], yaml_body='k:\n  description: "Da chave."'))
     assert _by_id(doc)["1"].summary == "Da chave."
     # primeira chave que não é mapeamento: fonte (3) ignorada
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  - a\n  - b"))
@@ -556,8 +570,13 @@ def test_corte_fronteira_palavra_limite_e_conectivo():
 
 def test_corte_fronteira_palavra_resumo_longo_e_ordem_de_encurtamento():
     sec = ri.Section(
-        sid="99", title="TÍTULO " + "MUITO " * 8 + "LONGO", keys=("k1", "k2", "k3"),
-        start=1, end=2, nbytes=10, summary="Resumo " + "bem comprido " * 7 + "fim.",
+        sid="99",
+        title="TÍTULO " + "MUITO " * 8 + "LONGO",
+        keys=("k1", "k2", "k3"),
+        start=1,
+        end=2,
+        nbytes=10,
+        summary="Resumo " + "bem comprido " * 7 + "fim.",
     )
     row = ri._section_row(sec, 180)
     assert ri._nbytes(row) <= 180
@@ -605,11 +624,12 @@ def test_map_summaries_id_inexistente_sai_2_citando_id(tmp_path):
 @pytest.mark.parametrize("value", ['""', "12", "[a, b]", "null"])
 def test_map_summaries_valor_vazio_ou_nao_textual_sai_2(tmp_path, value):
     path = tmp_path / "kit-index.yaml"
-    path.write_text(f'entries:\n  - path: "a"\n    what: "b c d e"\n    when: "c"\nmap_summaries:\n  "1": {value}\n', encoding="utf-8")
+    entry = 'entries:\n  - path: "a"\n    what: "b c d e"\n    when: "c"\n'
+    path.write_text(f'{entry}map_summaries:\n  "1": {value}\n', encoding="utf-8")
     with pytest.raises(SystemExit) as exc:
         ri.load_map_summaries(path)
     assert "1" in str(exc.value.code)
-    path.write_text('entries: []\nmap_summaries: [a]\n', encoding="utf-8")
+    path.write_text("entries: []\nmap_summaries: [a]\n", encoding="utf-8")
     with pytest.raises(SystemExit):
         ri.load_map_summaries(path)
 
@@ -663,7 +683,8 @@ def test_kit_index_o_que_e_distinto_cobertura_continua(tmp_path):
 def _map_rows() -> list[list[str]]:
     rules = REPO_ROOT / "_framework" / "rules"
     text = ri.build_section_map(rules / "workflow-rules.yaml", ri.load_map_summaries(rules / "kit-index.yaml"))
-    return [[c.strip() for c in ln.strip("|").split("|")] for ln in text.splitlines() if ln.startswith("| §") and not ln.startswith("| § ")]
+    lines = [ln for ln in text.splitlines() if ln.startswith("| §") and not ln.startswith("| § ")]
+    return [[c.strip() for c in ln.strip("|").split("|")] for ln in lines]
 
 
 def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
