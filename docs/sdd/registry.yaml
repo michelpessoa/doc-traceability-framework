@@ -454,7 +454,7 @@ documents:
   - id: SDD-DTF-0047
     type: SDD
     title: "Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"

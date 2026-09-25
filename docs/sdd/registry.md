@@ -54,4 +54,4 @@ Total de documentos: **46**
 | `SDD-DTF-0044` | Skills enxutas: SKILL.md roteador, references sob demanda, descriptions curtas e procedimentos por caminho estável | implemented | Michel Pessoa | 2026-09-25 | — |
 | `SDD-DTF-0045` | Higiene de busca e CI: caches fora da árvore de busca e etapa de CI para índices e paridade | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0043 |
 | `SDD-DTF-0046` | Bundle da skill como artefato gerado: .gitattributes com linguist-generated e templates sincronizados por render_prompts.py | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0042, SDD-DTF-0043, SDD-DTF-0045 |
-| `SDD-DTF-0047` | Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado | approved | Michel Pessoa | 2026-09-25 | SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045 |
+| `SDD-DTF-0047` | Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0024, SDD-DTF-0042, SDD-DTF-0044, SDD-DTF-0045 |

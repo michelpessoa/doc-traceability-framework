@@ -2,7 +2,7 @@
 id: SDD-DTF-0047
 type: SDD
 title: "Leitor de tabelas markdown trata pipe escapado como conteúdo de célula, com um único helper compartilhado"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -280,34 +280,34 @@ célula desta tabela usa pipe, escapado ou não.
 
 Antes de marcar `implemented`, confirmar as duas direções:
 
-- [ ] Todo requisito consolidado (RF01 a RF10) tem código, teste ou arquivo
+- [x] Todo requisito consolidado (RF01 a RF10) tem código, teste ou arquivo
       correspondente, no kit e no central.
-- [ ] Todo arquivo tocado aparece na "Decomposição em tasks" ou nas
+- [x] Todo arquivo tocado aparece na "Decomposição em tasks" ou nas
       "Instruções específicas"; arquivo não listado é escopo faltando (atualizar
       a SDD) ou scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra além do
+- [x] Nenhuma abstração, config, feature flag ou refactor extra além do
       helper `split_table_row`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
-Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
-Para cada critério da tabela acima: comando rodado de fato nesta sessão e
-saída real, nunca "deve passar" nem resultado de memória.
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0047.md`. Veredito: **PASS**.
 
-**Verificador independente:** não — mesma sessão que implementou (preliminar; o sdd-verifier refaz em sessão separada)
+**Verificador independente:** sim
+
+Sem `source_docs` (sizing small): o passo 0 (Fidelidade à origem) não se aplica; a validação não exige linha própria.
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
-| 1 | 1 | `python3 -m pytest _framework/scripts/tests/test_table_cells.py -v` | 14 passed em 0.09s; os sete testes nomeados PASSED | testes de pipe escapado FAILED com helper na lógica antiga (item 4) | sim | _framework/scripts/tests/test_table_cells.py:39 | automatizado |
-| 1 | 2 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v` | 54 passed (com test_table_cells); os dois testes novos PASSED, anteriores PASSED | FAILED no helper antigo | sim | _framework/scripts/tests/test_validate_state.py:449 | automatizado |
-| 1 | 3 | `python3 -m pytest _framework/tests/test_validate_doc.py _framework/tests/test_parallel_plan.py _framework/tests/test_render_indexes.py _framework/tests/test_ci_gate_verify_sdd.py -q` | 71 passed em 2.53s | 6 testes novos FAILED no helper antigo | sim | _framework/tests/test_parallel_plan.py:136 | automatizado |
-| 1 | 4 | helper temporariamente com a lógica antiga de split, depois restaurado (cópia descartada, sem commit), com pytest nos seis arquivos de teste | 11 failed, 114 passed com o código antigo: 4 de test_table_cells, 2 de test_validate_state, 1 de parallel_plan, 1 de ci_gate, 1 de render_indexes, 2 de validate_doc; restaurado: 266 passed | sensor é o próprio critério | sim | _framework/scripts/tests/test_table_cells.py:39 | automatizado |
-| 1 | 5 | `python3 -m pytest _framework/scripts/tests/test_table_cells.py::test_nenhum_script_divide_linha_por_pipe_direto -v` | 1 passed em 0.08s | falhava enquanto os cinco scripts tinham o split direto | sim | _framework/scripts/tests/test_table_cells.py:67 | automatizado |
-| 1 | 6 | `python3 _framework/scripts/render_prompts.py --check` | sai 0; seis cópias sincronizadas; INDEX em dia | n/a (checagem de sincronia) | sim | _framework/scripts/render_prompts.py:1 | automatizado |
-| 1 | 7 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 266 passed em 28.08s | n/a (regressão) | sim | _framework/tests/test_kit_parity.py:1 | automatizado |
-| 1 | 8 | `python3 _framework/scripts/framework_check.py --auto` | Todas as verificações do framework passaram. | n/a (regressão) | sim | _framework/scripts/framework_check.py:1 | automatizado |
-| 1 | 9 | `ruff check _framework/scripts` e `ruff format --check _framework/scripts` e `mypy _framework/scripts` | All checks passed!; 33 files already formatted; Success: no issues found in 33 source files | n/a (linters) | sim | _framework/scripts/framework_lib.py:1 | automatizado |
-| 1 | 10 | `diff -r _framework/scripts /home/michel/dtf-central-wt-0047/_framework/scripts -x __pycache__` | sem saída, sai 0 (central em worktree próprio na branch sdd/SDD-DTF-0047-espelho; no central: 266 passed, render_prompts --check, framework_check e linters ok) | n/a (diff) | sim | _framework/scripts/framework_lib.py:1 | automatizado |
+| 1 | 1 | `python3 -m pytest _framework/scripts/tests/test_table_cells.py -v` | 14 passed em 0.09s; os sete testes nomeados PASSED | helper trocado pela logica antiga (copia em scratchpad, restaurada): 4 testes de pipe escapado FAILED, sete de RF03 seguem passando | Sim | _framework/scripts/tests/test_table_cells.py:39 | automatizado |
+| 1 | 2 | `python3 -m pytest _framework/scripts/tests/test_validate_state.py -v -k pipe_escapado` e o arquivo inteiro | 2 passed (os dois testes novos); arquivo inteiro 40 passed | logica antiga no helper e no site de validate_state: os dois FAILED | Sim | _framework/scripts/tests/test_validate_state.py:449 | automatizado |
+| 1 | 3 | `python3 -m pytest _framework/tests/test_validate_doc.py _framework/tests/test_parallel_plan.py _framework/tests/test_render_indexes.py _framework/tests/test_ci_gate_verify_sdd.py -q` | 71 passed em 2.39s | revertendo um site por vez ao split direto, cada teste do site FAILED (validate_doc 2, parallel_plan 1, render_indexes 1, ci_gate 1) | Sim | _framework/tests/test_parallel_plan.py:136 | automatizado |
+| 1 | 4 | logica antiga de split no corpo de split_table_row (copia descartada, sem stash nem commit; stash aborta na coleta com ImportError, nao discrimina) e pytest em scripts/tests e tests | 12 failed, 254 passed: 4 de test_table_cells, 2 de test_validate_state, 1 de ci_gate, 1 de parallel_plan, 1 de render_indexes, 2 de validate_doc, mais test_selftest (mutante); restaurado: 266 passed. Fuzz de 285443 linhas sem pipe escapado: split_table_row identico ao antigo | o proprio sensor (falha real por asserção, nao ImportError) | Sim | _framework/scripts/tests/test_table_cells.py:39 | automatizado |
+| 1 | 5 | `python3 -m pytest _framework/scripts/tests/test_table_cells.py::test_nenhum_script_divide_linha_por_pipe_direto -v` | 1 passed em 0.08s | reintroduzido o split direto em cada um dos cinco scripts: o teste FAILED em todos os cinco | Sim | _framework/scripts/tests/test_table_cells.py:67 | automatizado |
+| 1 | 6 | `python3 _framework/scripts/render_prompts.py --check` | sai 0; INDEX e docs/sdd/INDEX.md em dia; copias do bundle sincronizadas | n/a (checagem de sincronia) | Sim | _framework/scripts/render_prompts.py:1 | automatizado |
+| 1 | 7 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q` | 266 passed em 28.5s (kit) e 266 passed em 29.2s (central) | n/a (regressao) | Sim | _framework/tests/test_kit_parity.py:1 | automatizado |
+| 1 | 8 | `python3 _framework/scripts/framework_check.py --auto` | Todas as verificacoes do framework passaram. (kit e central) | n/a (regressao) | Sim | _framework/scripts/framework_check.py:1 | automatizado |
+| 1 | 9 | `ruff check _framework/scripts` e `ruff format --check _framework/scripts` e `mypy _framework/scripts` | All checks passed!; 33 files already formatted; Success: no issues found in 33 source files (kit e central) | n/a (linters) | Sim | _framework/scripts/framework_lib.py:1 | automatizado |
+| 1 | 10 | `diff -r _framework/scripts /home/michel/dtf-central-wt-0047/_framework/scripts -x __pycache__` | sem saida, sai 0 | n/a (diff) | Sim | _framework/scripts/framework_lib.py:1 | automatizado |
 
 ## Rastreabilidade
 
