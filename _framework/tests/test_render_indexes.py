@@ -706,6 +706,7 @@ def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
     rows = _map_rows()
     assert len(rows) == 22
     repetidos, titulos_cortados, meio_de_palavra, resumo_curto = [], [], [], []
+    fim_ruim = []
     for c in rows:
         sid, titulo, resumo = c[0], c[1], c[-1]
         if sid == "§0":
@@ -715,6 +716,8 @@ def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
             repetidos.append(sid)
         if titulo.endswith("…"):
             titulos_cortados.append(sid)
+        if resumo.count("(") > resumo.count(")") or r.rstrip().endswith(tuple(ri.DASHES)):
+            fim_ruim.append(sid)  # 0024 RF03: nem parêntese aberto nem travessão pendurado
         if resumo.endswith("…"):
             if len(r) < ri.SUMMARY_MIN:
                 resumo_curto.append(sid)
@@ -726,3 +729,58 @@ def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
     assert len(titulos_cortados) <= 1
     assert meio_de_palavra == []
     assert resumo_curto == []
+    assert fim_ruim == []
+
+
+# --- SPEC-DTF-0024 (errata da SDD-DTF-0049) ---------------------------------
+
+
+def test_corte_descarta_travessao_e_parentese_aberto():
+    # RF01: travessão isolado no fim do trecho retido é descartado
+    assert ri._cut_words("alfa beta gama — delta epsilon zeta", 20) == "alfa beta gama…"
+    # hífen dentro de palavra não é travessão
+    assert ri._cut_words("alfa beta pré-condição gama delta", 24) == "alfa beta pré-condição…"
+    # travessão no meio, dentro do limite: intacto
+    assert ri._cut_words("alfa — beta", 20) == "alfa — beta"
+    # RF02: parêntese aberto faz o corte recuar até antes dele
+    assert ri._cut_words("alfa beta gama (delta epsilon zeta) eta", 27) == "alfa beta gama…"
+    # parêntese fechado antes do corte: não recua
+    assert ri._cut_words("alfa (beta) gama delta epsilon", 22) == "alfa (beta) gama…"
+    # depois do recuo o descarte de conectivo roda de novo
+    assert ri._cut_words("alfa beta de (gama delta epsilon", 26) == "alfa beta…"
+    # sem palavras sobrando: corte duro por caractere, sem exceção
+    assert ri._cut_words("(alfa beta gama delta", 10) == "(alfa bet…"
+    assert ri._cut_words("— alfa beta", 3).endswith("…")
+
+
+def test_corte_descarta_conectivo_pendurado_exercido():
+    # o trecho retido TERMINA em conectivo (nos testes antigos o corte já cai antes dele)
+    assert ri._cut_words("alfa beta gama de delta", 19) == "alfa beta gama…"
+    assert ri._cut_words("alfa beta gama para o delta", 23) == "alfa beta gama…"
+    for limit in range(8, 40):
+        out = ri._cut_words("alfa beta gama para o delta epsilon com zeta", limit)
+        assert out.rstrip("…").split()[-1] not in ri.DANGLING
+
+
+def test_map_summaries_perde_para_fonte_3():
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body='k:\n  description: "Da chave."'))
+    assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Da chave."
+    # sem fonte automática (1 a 3), o override vale e vem antes da cauda do título
+    doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  x: 1"))
+    assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Frase à mão."
+
+
+def test_piso_summary_min_no_encurtamento_da_linha():
+    sec = ri.Section(
+        sid="99",
+        title="T",
+        keys=("k",),
+        start=1,
+        end=2,
+        nbytes=10,
+        summary=" ".join(["abcd"] * 20),
+    )
+    row = ri._section_row(sec, 60)  # inatingível: o encurtamento vai até o piso
+    resumo = [c.strip() for c in row.strip("|").split("|")][5]
+    assert resumo.endswith("…")
+    assert ri.SUMMARY_MIN - 5 <= len(resumo.rstrip("…")) < ri.SUMMARY_MIN

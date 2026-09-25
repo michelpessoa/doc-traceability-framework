@@ -34,7 +34,7 @@ BANNER_RE = r"^# (\d+[a-z]?)\. (.+)$"
 FENCE_RE = r"^#{20,}$"
 LARGEST_SECTION_EXCLUDES = {"0"}
 SUMMARY_MAX = 100
-SUMMARY_MIN = 30  # piso do Resumo ao encurtar a linha do mapa (SPEC-DTF-0022 RF03)
+SUMMARY_MIN = 28  # piso do Resumo ao encurtar a linha do mapa (SPEC-DTF-0022 RF03; SPEC-DTF-0025 RF01)
 TITLE_MAX = 70  # caracteres do título da linha do mapa (RF01)
 TITLE_MIN = 20  # piso do título ao encurtar a linha do mapa (RF03)
 SDD_SUMMARY_MAX = 140
@@ -82,6 +82,7 @@ DANGLING = {
     "->",
     "+",
 }  # conectivos que não podem terminar um corte (RF03)
+DASHES = {"—", "–", "-"}  # travessão isolado não pode terminar um corte (0024 RF01)
 SDD_MAX_FILES = 6
 IGNORED_DIRS = {"__pycache__", ".ruff_cache", ".pytest_cache", ".mypy_cache"}
 TOC_BEGIN = "<!-- BEGIN GENERATED: sumário -->"
@@ -134,8 +135,15 @@ def _cut_words(text: str, limit: int) -> str:
         idx = head.rfind(" ")
         head = head[:idx] if idx > 0 else ""
     words = head.split()
-    while words and (words[-1].lower() in DANGLING or words[-1][-1] in "(:,;"):
-        words.pop()
+    while words:
+        joined = " ".join(words)
+        if joined.count("(") > joined.count(")"):
+            words = joined[: joined.rfind("(")].split()
+            continue
+        if words[-1].lower() in DANGLING or words[-1] in DASHES or words[-1][-1] in "(:,;":
+            words.pop()
+            continue
+        break
     if not words:
         return text[: limit - 1].rstrip() + "…"
     return " ".join(words) + "…"
@@ -350,7 +358,7 @@ def load_map_summaries(path: Path) -> dict[str, str]:
 
 
 def _section_row(sec: Section, max_bytes: int) -> str:
-    """Linha do mapa, encurtada até caber em `max_bytes`: chaves, Resumo (piso 30), título (piso 20)."""
+    """Linha do mapa, encurtada até caber em `max_bytes`: chaves, Resumo (piso SUMMARY_MIN), título (piso 20)."""
     keys = list(sec.keys)
     shown = len(keys)
     base_title = _cell(sec.title).rstrip("…")
