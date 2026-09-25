@@ -3,7 +3,7 @@
 # reprova arquivo do kit sem entrada e entrada sem arquivo. Glob relativo
 # a _framework/; `*` não atravessa "/", `**` atravessa. `what` e `when`
 # aceitam {name} (arquivo com extensão) e {stem} (sem extensão).
-# `map_summaries` dá o resumo de seção do mapa quando o YAML não tem fonte.
+# `map_summaries` dá o resumo de seção do mapa e vale mesmo que o YAML tenha fonte.
 entries:
   - path: "AGENTS.md"
     what: "Regras do agente dentro de _framework/: espelho com o kit público e YAML como fonte"
@@ -262,7 +262,10 @@ entries:
     when: "Ao alterar o gate de qualidade de conteúdo"
 map_summaries:
   "2": "Os oito tipos de documento: STRAT, RFC, ADR, SPEC, SDD, BASE, INC e PM, com pasta e repositório"
+  "5": "Incidente e postmortem têm ciclo próprio (open a closed), fora do padrão"
   "6": "Estados do ciclo de vida de status, transições permitidas e notas de uso"
   "7": "Padrão do id de documento: tipo, código do projeto e sequência de 4 dígitos"
+  "14": "Gate: sem commit de implementação direto em main"
+  "15": "Gate de conteúdo: SPEC e SDD sem placeholder antes de in_review"
   "9": "Registry central e de projeto: campos das entradas, regra de atualização e consulta de rastreio"
   "12": "Lista das 18 capacidades que a IA deve ter, de criar documento a escrever handover"
