@@ -338,7 +338,7 @@ critério da tabela acima: comando rodado de fato nesta sessão e saída real,
 nunca "deve passar" nem resultado de memória. Critérios 1 a 14 rodam no kit
 e o 15 no central.
 
-**Verificador independente:** não — SDD em `in_review`, ainda não implementada nem verificada
+**Verificador independente:** não — evidência registrada pelo implementador (comandos rodados de fato na sessão de implementação); aguarda `sdd-verifier` em sessão separada. Desvio registrado: `_framework/INDEX.md` (gerado por `render_indexes.py`, invocado por `render_prompts.py`) foi regenerado no kit e no central porque os dois arquivos de teste novos entram no índice; sem isso `--check` reprova.
 
 A coluna "Sensor" registra o sensor de discriminação: falha de
 comportamento introduzida em espaço descartável, teste tem que FALHAR, e
@@ -350,6 +350,23 @@ divergência com justificativa entre parênteses.
 
 | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|
+| 1 | `git check-attr linguist-generated diff merge -- $BUNDLE/scripts/render_prompts.py $BUNDLE/references/workflow-rules.yaml $BUNDLE/templates/spec.template.md` | Nove linhas: cada um dos 3 arquivos com `linguist-generated: true`, `diff: unspecified`, `merge: unspecified` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:66 | automatizado |
+| 2 | `git check-attr linguist-generated -- $BUNDLE/SKILL.md $BUNDLE/prompts/framework-audit.md _framework/scripts/render_prompts.py _framework/templates/spec.template.md` | Quatro linhas `linguist-generated: unspecified` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:71 | automatizado |
+| 3 | `grep -c -e '^[^#].* -diff' -e '^[^#].* diff$' -e '^[^#].* diff ' -e '^[^#].* merge=' .gitattributes; echo "exit=$?"` | `0` e `exit=1` | n/a | Sim | _framework/tests/test_gitattributes_generated.py:38 | automatizado |
+| 4 | `cmp .gitattributes $CENTRAL/.gitattributes; echo "exit=$?"` (CENTRAL=/home/michel/dtf-central-wt-0046) | Sem saída do `cmp`; `exit=0` | n/a | Sim | n/a | automatizado |
+| 5 | `python3 -m pytest _framework/tests/test_gitattributes_generated.py -v` | 3 passed in 0.02s (declara_copias_geradas, sem_diff_nem_merge, git_check_attr_gerados_e_manuais) | n/a | Sim | _framework/tests/test_gitattributes_generated.py:30-31,38,66,71 | automatizado |
+| 6 | `OUT=$(mktemp); python3 _framework/scripts/render_prompts.py --check > "$OUT"; echo "exit=$?"; grep -c "templates/.*template.md: sincronizado" "$OUT"` | `exit=0` e `10` | n/a | Sim | _framework/scripts/tests/test_render_prompts_sync.py:28-30 | automatizado |
+| 7 | `echo "<!-- mão -->" >> $BUNDLE/templates/spec.template.md`; `--check`; pytest `test_template_parity.py -q`; `git checkout -- ...`; repetir | Com mutação: `❌ .../templates/spec.template.md: divergente de .../_framework/templates/spec.template.md.`, `exit=1`, `FAILED test_templates_md_paridade` (1 failed, 3 passed). Após reverter: `exit=0` e `4 passed` | Mutação aplicada: os dois mecanismos reprovaram; revertida | Sim | _framework/tests/test_template_parity.py:37 | automatizado |
+| 8 | `cp` do spec.template.md para `$BUNDLE/templates/orfao.md`; `--check`; sem `--check`; `test -f`; `rm` | `exit=1` nos dois modos; `❌ .../templates/orfao.md: órfão (sem original em .../_framework/templates) — remova à mão.`; `preservado` | Mutação (criar órfão): reprovou nos dois modos | Sim | _framework/scripts/tests/test_render_prompts_sync.py:59-62 | automatizado |
+| 9 | `sed -i 's/$/\r/' $BUNDLE/templates/adr.template.md`; `--check`; `git checkout --`. Antes: mesma mutação em worktree de origin/main (1ab4b3b) | Depois: `exit=1` com `❌ .../adr.template.md: divergente de ...`. Antes: `exit=0` (lacuna provada) | Mutação CRLF: depois reprova, antes passa | Sim | _framework/scripts/tests/test_render_prompts_sync.py:70-72 | automatizado |
+| 10 | `render_prompts.py; render_prompts.py --check; echo exit; test ! -e $BUNDLE/templates/ci && echo sem-ci; git status --porcelain -- $BUNDLE` (com implementação commitada) | `exit=0`, `sem-ci`, `git status --porcelain` sem nenhuma linha | n/a | Sim | _framework/scripts/tests/test_render_prompts_sync.py:51,92-93 | automatizado |
+| 11 | `rm $BUNDLE/templates/inc.template.md && ln -s ...`; `--check`; `git checkout --` | `❌ .../templates/inc.template.md: é symlink` e `exit=1`; restaurado, `git status` limpo | Mutação (symlink): reprovou | Sim | _framework/scripts/tests/test_render_prompts_sync.py:83-85 | automatizado |
+| 12 | `git diff --stat origin/main -- .ignore .gitignore _framework/tests/test_repo_hygiene.py .github/workflows/framework-check.yml; grep -c "doc-traceability-framework" .ignore; echo "exit=$?"` | `git diff --stat` sem linhas; `0` e `exit=1` | n/a | Sim | n/a | automatizado |
+| 13 | `python3 -m pytest _framework/scripts/tests/test_render_prompts_sync.py -v`; sensor: `git show origin/main:_framework/scripts/render_prompts.py` sobre o arquivo | 7 passed in 0.12s. Sensor: 5 failed, 2 passed (falharam gera_templates_md, check_detecta_template_divergente_ou_ausente, reprova_template_orfao_nos_dois_modos, compara_bytes_crlf, rejeita_symlink); arquivo restaurado com `git checkout --` | Reverter render_prompts.py a origin/main: 5 FAILED | Sim | _framework/scripts/tests/test_render_prompts_sync.py:28-30,38-43,59-62,70-72,83-85 | automatizado |
+| 14 | `git diff --stat origin/main -- workflow-rules.yaml CHANGELOG.md $BUNDLE/references/workflow-rules.yaml`; `git diff --name-status --diff-filter=AD origin/main -- $BUNDLE`; `framework_check.py --auto; echo exit` (kit e worktree de origin/main) | Os dois `git diff` sem linhas; `framework_check.py --auto`: depois `exit=0`, antes `exit=0` (Todas as verificações do framework passaram) | n/a | Sim | n/a | automatizado |
+| 15 | `for f in <5 arquivos>; do cmp "$f" "$CENTRAL/$f"; echo "rc=$? $f"; done; cd $CENTRAL; render_prompts.py --check; echo exit` (CENTRAL=/home/michel/dtf-central-wt-0046, branch sdd/SDD-DTF-0046-espelho, commit 1effd2a) | Cinco linhas `rc=0`, sem saída do `cmp`; `exit=0` | n/a | Sim | n/a | automatizado |
+
+Complementares: `python3 -m pytest _framework/ -q` no kit e no central: `245 passed`; `framework_check.py --auto`: exit 0 nos dois; `git status --short` sem arquivos de cache.
 
 ## Rastreabilidade
 | Campo | Valor |
