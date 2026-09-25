@@ -520,7 +520,7 @@ def test_resumo_cadeia_fontes_em_ordem():
     assert _by_id(doc)["1"].summary == "Por descrição."
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body='k:\n  approach: "Por abordagem."'))
     assert _by_id(doc)["1"].summary == "Por abordagem."
-    # (4) map_summaries, só depois das fontes automáticas
+    # (4) map_summaries (a 1ª fonte desde a SPEC-DTF-0026; aqui vale por não haver as demais)
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  x: 1"))
     assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Frase à mão."
     # (5) cauda do título após o travessão
@@ -595,14 +595,17 @@ def test_corte_fronteira_palavra_resumo_longo_e_ordem_de_encurtamento():
     assert ri._section_row(sec, 1000).endswith(sec.summary + " |")
 
 
-def test_map_summaries_so_sem_fonte_automatica():
+def test_map_summaries_precedencia_override_sobre_banner():
+    # RF01/RF04 (SPEC-DTF-0026): override vale mesmo com fonte automática; sem override, vale a fonte
     doc = _doc(
         _sec("1", ["COM FONTE"], after=["Parágrafo automático."], yaml_body="a: 1"),
         _sec("2", ["SEM FONTE"], yaml_body="b: 1"),
+        _sec("3", ["SÓ FONTE"], after=["Outro parágrafo automático."], yaml_body="c: 1"),
     )
     sec = _by_id(doc, {"1": "Texto à mão um.", "2": "Texto à mão dois."})
-    assert sec["1"].summary == "Parágrafo automático."
+    assert sec["1"].summary == "Texto à mão um."
     assert sec["2"].summary == "Texto à mão dois."
+    assert sec["3"].summary == "Outro parágrafo automático."
 
 
 def test_map_summaries_id_inexistente_sai_2_citando_id(tmp_path):
@@ -762,10 +765,12 @@ def test_corte_descarta_conectivo_pendurado_exercido():
         assert out.rstrip("…").split()[-1] not in ri.DANGLING
 
 
-def test_map_summaries_perde_para_fonte_3():
+def test_map_summaries_vale_sobre_fonte_3_e_cauda():
+    # SPEC-DTF-0026 RF01: o override vale mesmo com o valor da 1ª chave (antes perdia para a fonte 3)
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body='k:\n  description: "Da chave."'))
-    assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Da chave."
-    # sem fonte automática (1 a 3), o override vale e vem antes da cauda do título
+    assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Frase à mão."
+    assert _by_id(doc)["1"].summary == "Da chave."
+    # sem fonte automática (1 a 3), o override também vale e vem antes da cauda do título
     doc = _doc(_sec("1", ["T1 — cauda"], yaml_body="k:\n  x: 1"))
     assert _by_id(doc, {"1": "Frase à mão."})["1"].summary == "Frase à mão."
 
@@ -784,3 +789,12 @@ def test_piso_summary_min_no_encurtamento_da_linha():
     resumo = [c.strip() for c in row.strip("|").split("|")][5]
     assert resumo.endswith("…")
     assert ri.SUMMARY_MIN - 5 <= len(resumo.rstrip("…")) < ri.SUMMARY_MIN
+
+
+def test_corte_descarta_palavra_final_com_pontuacao_pendente_cut_words():
+    # RF03 (SPEC-DTF-0026): a palavra final terminada em `:`, `,`, `;` ou `(` sai junto com o corte
+    assert ri._cut_words("alfa beta gama: delta epsilon", 20) == "alfa beta…"
+    assert ri._cut_words("alfa beta gama, delta epsilon", 20) == "alfa beta…"
+    assert ri._cut_words("alfa beta gama; delta epsilon", 20) == "alfa beta…"
+    # `(` com parêntese balanceado antes: não cai no recuo do parêntese aberto
+    assert ri._cut_words("alfa) beta gama( delta epsilon", 22) == "alfa) beta…"

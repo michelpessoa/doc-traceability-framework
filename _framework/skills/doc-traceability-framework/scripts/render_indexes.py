@@ -265,7 +265,7 @@ def _section_summary(
         else:
             para.append(text)
         i += 1
-    for source in (body, " ".join(para), _scalar_source(first_key_value), override, tail):
+    for source in (override, body, " ".join(para), _scalar_source(first_key_value), tail):
         summary = _sentence(source, SUMMARY_MAX) if source else ""
         if summary:
             return summary
