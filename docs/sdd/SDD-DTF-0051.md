@@ -9,11 +9,13 @@ created: "2026-09-25"
 updated: "2026-09-25"
 relates_to: [SDD-DTF-0049]
 source_docs:
+  - id: "SPEC-DTF-0027"
+    url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0027.md"
   - id: "SPEC-DTF-0026"
     url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0026.md"
   - id: "SPEC-DTF-0022"
     url: "https://github.com/michelpessoa/doc-traceability-central/blob/main/docs/DTF/03-spec/SPEC-DTF-0022.md"
-consumption_instructions: "Compilada da SPEC-DTF-0026 (approved), que complementa as SPECs 0022 e 0024: só o RF02 (cadeia de fontes) e a regra de corte do RF03 da 0022 são tocados, e o código de _cut_words não muda, só ganha testes. Ordem: escrever os testes de RF03 e RF04 primeiro e vê-los falhar (RF04) ou passar-e-sobreviver-à-mutação (RF03, X3); depois inverter a tupla de fontes em _section_summary; depois as três entradas em kit-index.yaml; depois regenerar. Gerados (mapa, INDEX, prompts, cópia da skill) nunca à mão: render_prompts.py e render_indexes.py. Não usar isolation: worktree do agente; criar o worktree à mão. O central espelha por PR próprio (task 6, prefixo central:). Implementar em sessão separada; verificação por sdd-verifier em outra sessão."
+consumption_instructions: "Compilada da SPEC-DTF-0026 (approved), corrigida pela SPEC-DTF-0027 (approved): os textos dos §5, §14 e §15 são os da 0027, porque os da 0026 estouravam o teto de 180 bytes por linha do mapa. A 0026 complementa as SPECs 0022 e 0024: só o RF02 (cadeia de fontes) e a regra de corte do RF03 da 0022 são tocados, e o código de _cut_words não muda, só ganha testes. Ordem: escrever os testes de RF03 e RF04 primeiro e vê-los falhar (RF04) ou passar-e-sobreviver-à-mutação (RF03, X3); depois inverter a tupla de fontes em _section_summary; depois as três entradas em kit-index.yaml; depois regenerar. Gerados (mapa, INDEX, prompts, cópia da skill) nunca à mão: render_prompts.py e render_indexes.py. Não usar isolation: worktree do agente; criar o worktree à mão. O central espelha por PR próprio (task 6, prefixo central:). Implementar em sessão separada; verificação por sdd-verifier em outra sessão."
 supersedes: null
 superseded_by: null
 tags: [otimizacao-llm, indice, mapa, resumo]
@@ -46,17 +48,17 @@ permanece para tudo que a 0026 não altera.
 | RF | Requisito | Critério de aceite (EARS) |
 |---|---|---|
 | RF01 | Em `_section_summary`, `map_summaries` passa a ser a 1ª fonte; sem entrada, a cadeia body, parágrafo, escalar, tail segue como está | Quando `kit-index.yaml` tiver `map_summaries` para um id cujo YAML também tem banner, o sistema deve usar o override como Resumo |
-| RF02 | `kit-index.yaml` ganha `map_summaries` para §5, §14 e §15 com os textos exatos da tabela abaixo, cada um em até 100 caracteres, e a linha do mapa não termina em `…` e tem até 180 bytes | Quando o mapa for regenerado, o sistema deve mostrar nos §5, §14 e §15 exatamente esses textos, sem `…` |
+| RF02 | `kit-index.yaml` ganha `map_summaries` para §5, §14 e §15 com os textos exatos da tabela abaixo, cada um cabendo na sobra da linha do mapa (84, 51 e 64 bytes), e a linha do mapa não termina em `…` e tem até 180 bytes | Quando o mapa for regenerado, o sistema deve mostrar nos §5, §14 e §15 exatamente esses textos, sem `…` |
 | RF03 | Testes de `_cut_words` para palavra final terminada em `:`, `,`, `;` e `(` (com parêntese balanceado antes) | Quando `_cut_words` receber os textos da tabela de RF03, o sistema deve devolver a saída indicada; a mutação X3 deve reprovar pelo menos um teste |
 | RF04 | Teste de precedência com fixture: banner com override usa o override; banner sem override usa o banner | Quando a ordem antiga da cadeia for restaurada, o sistema deve reprovar pelo menos um teste |
 
-Textos de RF02 (fixos):
+Textos de RF02 (fixos; da SPEC-DTF-0027, que substitui os da 0026 por caberem na linha de 180 bytes):
 
 | § | Resumo |
 |---|---|
-| 5 | `Incidentes e postmortem têm ciclo próprio (open, mitigated, resolved, closed), fora do padrão` |
-| 14 | `Gate: implementação não é commitada direto em main; branch nomeada pelo id de origem e PR` |
-| 15 | `Gate de conteúdo: SPEC e SDD sem placeholder nem ambiguidade pendente antes de in_review` |
+| 5 | `Incidente e postmortem têm ciclo próprio (open a closed), fora do padrão` |
+| 14 | `Gate: sem commit de implementação direto em main` |
+| 15 | `Gate de conteúdo: SPEC e SDD sem placeholder antes de in_review` |
 
 Casos de RF03 (`_cut_words(texto, limite)`):
 
@@ -83,7 +85,7 @@ Fora de escopo: reescrever §3, §13, §16, §18 e §19; mudar `SUMMARY_MAX`,
   `map_summaries`, com os textos de RF02, e trocar o comentário do topo
   ("quando o YAML não tem fonte") por "e vale mesmo que o YAML tenha fonte".
   Entradas existentes (§2, §6, §7, §9, §12) não mudam.
-- **Testes** em `_framework/tests/test_render_indexes.py`: um teste com as
+- **Testes** em `_framework/tests/test_render_indexes.py`: o teste `test_map_summaries_so_sem_fonte_automatica` codifica a ordem antiga da cadeia e é substituído pelo de precedência (RF04); um teste com as
   quatro linhas de RF03 (nome contendo `cut_words`) e um teste
   `test_precedencia_override_sobre_banner` (nome contendo
   `precedencia_override`), ambos sem mock.
@@ -97,7 +99,7 @@ Fora de escopo: reescrever §3, §13, §16, §18 e §19; mudar `SUMMARY_MAX`,
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
 |---|---|---|---|---|
 | 1 | Rodar A01, A03 e A05 no `main` e guardar as saídas reais (ANTES) | RF02, RF03 | (decisão pura) | |
-| 2 | Testes de RF03 e RF04; ver o de RF04 falhar antes da troca | RF03, RF04 | `_framework/tests/test_render_indexes.py` | 1 |
+| 2 | Testes de RF03 e RF04 (o de RF04 substitui `test_map_summaries_so_sem_fonte_automatica`, que afirma a ordem antiga); ver o de RF04 falhar antes da troca | RF03, RF04 | `_framework/tests/test_render_indexes.py` | 1 |
 | 3 | Inverter a ordem da tupla de fontes | RF01 | `_framework/scripts/render_indexes.py` | 2 |
 | 4 | Entradas e comentário em `kit-index.yaml` | RF02 | `_framework/rules/kit-index.yaml` | 3 |
 | 5 | Regenerar com `render_prompts.py` e `render_indexes.py`; rodar A01 a A10 registrando comando e saída reais | RF01 a RF04 | `_framework/rules/workflow-rules.map.md`, `_framework/INDEX.md`, `docs/sdd/INDEX.md`, cópia da skill de `render_indexes.py` | 4 |
@@ -111,7 +113,7 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição.
 
 | # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado | Perfil esperado |
 |---|---|---|---|---|
-| A01 | RF02: resumos do §5, §14 e §15 | `grep -e '^\| §5 ' -e '^\| §14 ' -e '^\| §15 ' _framework/rules/workflow-rules.map.md` | ANTES: 3 linhas terminando em `…`; DEPOIS: 3 linhas com os textos de RF02 e nenhuma com `…` | automatizado |
+| A01 | RF02: resumos do §5, §14 e §15 | `grep -e '^\| §5 ' -e '^\| §14 ' -e '^\| §15 ' _framework/rules/workflow-rules.map.md` | ANTES: 3 linhas terminando em `…`; DEPOIS: 3 linhas com os textos de RF02, nenhuma com `…` e cada uma com até 180 bytes (`printf '%s' "$linha" \| wc -c`) | automatizado |
 | A02 | RF03, RF04: testes novos | `python3 -m pytest _framework/tests/test_render_indexes.py -k "cut_words or precedencia_override" -v` | ANTES: `precedencia_override` falha e o de RF03 passa; DEPOIS: 0 failed | automatizado |
 | A03 | RF03: mutação X3 derrubada | Em cópia descartável: `sed -i 's/ or words\[-1\]\[-1\] in "(:,;"//' _framework/scripts/render_indexes.py`; `python3 -m pytest _framework/tests/test_render_indexes.py -q`; restaurar | ANTES (sem os testes novos): `49 passed`; DEPOIS: com a mutação, pelo menos 1 failed | automatizado |
 | A04 | RF04: precedência derrubável | Em cópia descartável, devolver `override` à 4ª posição da tupla; `pytest -k precedencia_override` | Com a ordem antiga: pelo menos 1 failed; com a nova: 0 failed | automatizado |
@@ -121,6 +123,7 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição.
 | A08 | Só os arquivos previstos mudaram | `git diff --name-only main` | Só os arquivos das tasks 2 a 5, esta SDD e os gerados de `docs/sdd/`; nenhum `workflow-rules.yaml`, nenhum `prompts/` | automatizado |
 | A09 | Escopo do código: só a tupla mudou | `git diff -U0 main -- _framework/scripts/render_indexes.py` | Um hunk em `_section_summary` que só reordena os elementos da tupla; `_cut_words` intocada | automatizado |
 | A10 | Espelho no central | Em `/home/michel/doc-traceability-central`: `for f in scripts/render_indexes.py skills/doc-traceability-framework/scripts/render_indexes.py rules/kit-index.yaml rules/workflow-rules.map.md tests/test_render_indexes.py INDEX.md; do cmp /home/michel/doc-traceability-framework/_framework/$f _framework/$f && echo "igual $f"; done; python3 _framework/scripts/render_indexes.py --check; echo "exit=$?"` | 6 linhas `igual ...` e `exit=0` | automatizado |
+| A11 | SPEC-DTF-0027 RF02: constantes e tetos intactos | `python3 -c "import sys; sys.path.insert(0,'_framework/scripts'); import render_indexes as ri; print(ri.SUMMARY_MIN, ri.SUMMARY_MAX)"; git diff -U0 main -- _framework/scripts/render_indexes.py \| grep -e '^[-+].*SUMMARY_M' -e '^[-+].*TITLE_M'; echo "exit=$?"` | `28 100`, nenhuma linha de diff e `exit=1` | automatizado |
 
 ## Instruções específicas para a IA implementadora
 
@@ -135,9 +138,8 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição.
   `registry.md` (`render_indexes.py` e `generate_registry_md.py docs/sdd`).
 - **Tabelas markdown:** não escrever regex com `](` nem alternância com
   barra vertical dentro de célula; usar `grep -e` repetido.
-- **Se uma linha do mapa passar de 180 bytes**, encurtar o texto do
-  override dentro dos 100 caracteres e atualizar SPEC e SDD por nova SPEC;
-  não baixar teto nem piso.
+- **Se uma linha do mapa passar de 180 bytes**, ou se o resumo sair com
+  `…`, parar: o texto se corrige por nova SPEC; não baixar teto nem piso.
 - **Evidência de verificação** só pelo `sdd-verifier`, em sessão separada.
 
 ## Verificação de escopo (nada a mais, nada a menos)
@@ -166,6 +168,6 @@ Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 ## Rastreabilidade
 | Campo | Valor |
 |---|---|
-| source_docs | SPEC-DTF-0026, SPEC-DTF-0022 |
+| source_docs | SPEC-DTF-0027, SPEC-DTF-0026, SPEC-DTF-0022 |
 | relates_to | SDD-DTF-0049 (mapa e INDEX da rodada 2) |
 | Gate RFC → ADR | Nenhum critério de `decision_gates.rfc_to_adr` se aplica |
