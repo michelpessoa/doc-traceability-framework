@@ -2,7 +2,7 @@
 id: SDD-DTF-0051
 type: SDD
 title: "Resumos do mapa: map_summaries com precedência sobre o banner e testes das ramificações de _cut_words"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-09-25"
@@ -146,24 +146,40 @@ Executar na raiz do kit. "Antes" = `main`, antes de qualquer edição.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF04) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF04) tem código
       correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", na "Decomposição em tasks" ou em "Instruções
       específicas".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado.
-- [ ] `workflow-rules.yaml` intocado e `framework.version` igual ao de
+- [x] `workflow-rules.yaml` intocado e `framework.version` igual ao de
       `origin/main`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 2 (subagente `sdd-verifier` com contexto próprio, worktrees de `origin/main`: kit `6f42e45`, central `9cd0f0d`). Na rodada 1 (kit `6e265f1`) a mutação "override em 2º, depois do corpo do banner" sobrevivia; o PR #140 acrescentou o caso e o PR #160 o espelhou. "ANTES" de A01 a A11 é o SHA fixo `551b928` (main do kit antes do PR #139), e não `main`, que avançou. Fidelidade à origem: `check_source_docs.py` confere `source_docs` com o registry central.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0051.md`.
+Veredito: **PASS**, com ressalva aceita: A01 e o texto dos §5, §14 e §15 no `kit-index.yaml` não têm asserção automatizada além do `render_indexes.py --check`.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 2 | Fidelidade à origem | `check_source_docs.py docs/sdd/SDD-DTF-0051.md <central>/docs/DTF` | `source_docs ... conferem com o registry central`, `exit=0`; RF01 a RF04 da 0026 e RF01/RF02 da 0027 presentes na SDD; textos do RF02 são os da 0027; nenhum critério relaxado | n/a | Sim | n/a | automatizado |
+| 2 | A01 | `grep -e '^\| §5 ' -e '^\| §14 ' -e '^\| §15 ' _framework/rules/workflow-rules.map.md` e `wc -c` | DEPOIS: 171, 179 e 180 bytes, nenhuma com `…`; ANTES (551b928): 3 com `…` | Sem asserção automatizada (ressalva); `--check` derruba divergência sem regeneração | Sim | n/a | automatizado |
+| 2 | A02 | `pytest test_render_indexes.py -k "cut_words or precedencia_override" -v` | 2 passed; testes novos sobre o código antigo: 1 failed, 1 passed | Precedência falha com o código antigo | Sim | _framework/tests/test_render_indexes.py:607, _framework/tests/test_render_indexes.py:798 | automatizado |
+| 2 | A03 | Cópia: `sed` remove ` or words[-1][-1] in "(:,;"`; pytest do arquivo | ANTES: 49 passed com a mutação; DEPOIS: 1 failed, 49 passed | X3 derrubada; cada caractere sozinho também | Sim | _framework/tests/test_render_indexes.py:798 | automatizado |
+| 2 | A04 | Cópia com `override` em 4º; `pytest -k precedencia_override` | Ordem antiga 1 failed; nova 1 passed | Derrubada; override em 2º, 3º e 5º também | Sim | _framework/tests/test_render_indexes.py:607 | automatizado |
+| 2 | A05 | `git diff -U0 551b928 HEAD -- workflow-rules.map.md` filtrado por §2, §6, §7, §9, §12 | Sem linhas, `exit=1` | n/a (medição) | Sim | n/a | automatizado |
+| 2 | A06 | `render_indexes.py --check; echo exit=$?` | Em dia, `exit=0` | `--check` sai 1 com mapa divergente | Sim | n/a | automatizado |
+| 2 | A07 | pytest das duas suítes; `ruff format --check`; `render_prompts.py --check`; `cmp` | 296 passed; 33 files already formatted; `cmp` sem saída; `exit=0` | Sensores de A03 e A04 | Sim | n/a | automatizado |
+| 2 | A08 | `git diff --name-only 551b928 HEAD` | 5 arquivos previstos | n/a (medição) | Sim | n/a | automatizado |
+| 2 | A09 | `git diff -U0 551b928 HEAD -- _framework/scripts/render_indexes.py` | 1 hunk, só a tupla | n/a (medição) | Sim | n/a | automatizado |
+| 2 | A10 | `cmp` dos 6 arquivos kit x central; `--check` no central | 6 `igual ...`; `exit=0` | n/a (medição) | Sim | n/a | automatizado |
+| 2 | A11 | Constantes e diff por `SUMMARY_M` e `TITLE_M` | `28 100`, sem diff, `exit=1` | n/a (medição) | Sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
