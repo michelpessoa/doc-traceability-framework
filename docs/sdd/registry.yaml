@@ -494,7 +494,7 @@ documents:
   - id: SDD-DTF-0051
     type: SDD
     title: "Resumos do mapa: map_summaries com precedência sobre o banner e testes das ramificações de _cut_words"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-09-25"
     updated: "2026-09-25"
