@@ -5,7 +5,8 @@ ci_gate_verify_sdd.py
 Camada 2 (obrigatória, tool-agnostic) do gate `verify-sdd`
 (workflow-rules.yaml, seção 16, `gate_scope_verification`): script de CI
 que bloqueia merge de PR que muda uma SDD para `implemented` sem
-`validation-SDD-{ID}.md` de veredito PASS real, cobertura completa de
+`validation-SDD-{ID}.md` (ou o nome legado `validation-{PROJ}-{SEQ}.md`,
+SDD-DTF-0052) de veredito PASS real, cobertura completa de
 RF-ID e critérios de aceite não afrouxados entre `approved` e
 `implemented` — com válvula de escape para incidente ativo validada
 contra o registry central (SDD-DTF-0032, SPEC-DTF-0011, ADR-DTF-0004,
@@ -217,20 +218,30 @@ def normalize_row(cells: list[str]) -> str:
 # ---------------------------------------------------------------------------
 
 
+def validation_paths(sdd_id: str) -> list[str]:
+    """Caminhos aceitos para o relatório, em ordem de precedência: o canônico
+    `validation-{sdd_id}.md` e o legado sem o prefixo `SDD-` (SDD-DTF-0052)."""
+    paths = [f"docs/sdd/validation-{sdd_id}.md"]
+    if sdd_id.startswith("SDD-"):
+        paths.append(f"docs/sdd/validation-{sdd_id[4:]}.md")
+    return paths
+
+
 def check_validation_presence(sdd_id: str, head: str) -> tuple[str, str] | list[str]:
-    """RF02: presença de `validation-{sdd_id}.md` com `**Veredito:** PASS`.
+    """RF02: presença do relatório com `**Veredito:** PASS`.
 
-    Retorna (path, texto) em caso de sucesso de presença, ou lista de
-    motivos de falha (arquivo ausente).
+    Retorna (path, texto) do primeiro caminho de `validation_paths` que
+    existir em `head`, ou lista de motivos de falha (nenhum presente).
     """
-    path = f"docs/sdd/validation-{sdd_id}.md"
-    text = read_file_at_revision(head, path)
-    if text is None:
-        return [f"{path} ausente para transição approved->implemented (RF02)."]
-    return path, text
+    paths = validation_paths(sdd_id)
+    for path in paths:
+        text = read_file_at_revision(head, path)
+        if text is not None:
+            return path, text
+    return [f"{' e '.join(paths)} ausente(s) para transição approved->implemented (RF02)."]
 
 
-def check_rf_coverage(sdd_id: str, sdd_body: str, validation_text: str) -> list[str]:
+def check_rf_coverage(sdd_id: str, sdd_body: str, validation_text: str, validation_path: str) -> list[str]:
     """RF03: todo RF-ID de 'Requisitos consolidados' tem linha de
     evidência correspondente em `validation_text`."""
     consolidated = section_body(sdd_body, "Requisitos consolidados") or sdd_body
@@ -242,7 +253,7 @@ def check_rf_coverage(sdd_id: str, sdd_body: str, validation_text: str) -> list[
     for row in rows:
         covered |= set(RF_ID_RE.findall(" | ".join(row)))
     missing = [r for r in rf_ids if r not in covered and r.upper() not in {c.upper() for c in covered}]
-    return [f"{sdd_id}: RF-ID {rf} sem linha de evidência em validation-{sdd_id}.md (RF03)." for rf in missing]
+    return [f"{sdd_id}: RF-ID {rf} sem linha de evidência em {validation_path} (RF03)." for rf in missing]
 
 
 def check_evidence_rows(sdd_id: str, validation_text: str) -> list[str]:
@@ -393,7 +404,7 @@ def evaluate_sdd(
     if not VEREDITO_PASS_RE.search(validation_text):
         reasons.append(f"{validation_path} não contém a linha '**Veredito:** PASS' (RF02).")
 
-    reasons += check_rf_coverage(sdd_id, body_head, validation_text)
+    reasons += check_rf_coverage(sdd_id, body_head, validation_text, validation_path)
     reasons += check_evidence_rows(sdd_id, validation_text)
 
     if status_base == "approved":

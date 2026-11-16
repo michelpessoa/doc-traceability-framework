@@ -11,6 +11,10 @@ Ver SDD-DTF-0032, SPEC-DTF-0011, ADR-DTF-0004, ADR-DTF-0005.
 Quando um PR muda o `status` de uma SDD para `implemented`:
 
 1. Existe `docs/sdd/validation-SDD-{ID}.md` com a linha `**Veredito:** PASS`.
+   O gate também aceita o nome legado `docs/sdd/validation-{PROJ}-{SEQ}.md`
+   (ex.: `validation-EVM-0068.md`), sem o prefixo `SDD-`, para projeto que
+   já grava relatórios assim; não é preciso renomear. Se os dois existirem,
+   vale o canônico (SDD-DTF-0052).
 2. Todo RF-ID de "Requisitos consolidados" tem linha de evidência
    correspondente nesse arquivo.
 3. Nenhuma linha da tabela de evidência contradiz o veredito (uma linha

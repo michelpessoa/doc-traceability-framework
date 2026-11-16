@@ -501,3 +501,13 @@ documents:
     relates_to: [SDD-DTF-0049]
     path: "docs/sdd/SDD-DTF-0051.md"
     tags: [otimizacao-llm, indice, mapa, resumo]
+  - id: SDD-DTF-0052
+    type: SDD
+    title: "Gate de CI do verify-sdd aceita o relatório com o nome legado validation-{PROJ}-{SEQ}.md, além do canônico"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-16"
+    updated: "2026-11-16"
+    relates_to: [RFC-DTF-0009, SDD-DTF-0032]
+    path: "docs/sdd/SDD-DTF-0052.md"
+    tags: [ci, verify-sdd, gate, relatorio, compatibilidade]
