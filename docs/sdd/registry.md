@@ -60,4 +60,4 @@ Total de documentos: **52**
 | `SDD-DTF-0050` | Prompt do Cursor sem PRD+TS: fluxo e ids de exemplo em SPEC no texto de render_prompts.py, com teste de regressão | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0042, SDD-DTF-0048 |
 | `SDD-DTF-0051` | Resumos do mapa: map_summaries com precedência sobre o banner e testes das ramificações de _cut_words | implemented | Michel Pessoa | 2026-09-25 | SDD-DTF-0049 |
 | `SDD-DTF-0052` | Gate de CI do verify-sdd aceita o relatório com o nome legado validation-{PROJ}-{SEQ}.md, além do canônico | implemented | Michel Pessoa | 2026-11-16 | RFC-DTF-0009, SDD-DTF-0032 |
-| `SDD-DTF-0053` | Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4 | draft | Michel Pessoa | 2026-11-16 | SDD-DTF-0052 |
+| `SDD-DTF-0053` | Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4 | approved | Michel Pessoa | 2026-11-16 | SDD-DTF-0052 |
