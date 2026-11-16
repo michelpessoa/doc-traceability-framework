@@ -2,7 +2,7 @@
 id: SDD-DTF-0052
 type: SDD
 title: "Gate de CI do verify-sdd aceita o relatório com o nome legado validation-{PROJ}-{SEQ}.md, além do canônico"
-status: draft
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-16"
