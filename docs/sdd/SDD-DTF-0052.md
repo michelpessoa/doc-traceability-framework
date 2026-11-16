@@ -116,23 +116,42 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF05) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF05) tem código
       correspondente.
-- [ ] Todo arquivo tocado pela implementação aparece na "Decomposição em
+- [x] Todo arquivo tocado pela implementação aparece na "Decomposição em
       tasks".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado.
-- [ ] `workflow-rules.yaml` intocado e `framework.version` igual ao de
+- [x] `workflow-rules.yaml` intocado e `framework.version` igual ao de
       `origin/main`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, na branch
+`sdd/SDD-DTF-0052-relatorio-nome-legado` (head `649d1f2`), com base fixa
+`dd4a510` (`origin/main` no momento da verificação). O "antes" de A01 é um
+worktree descartável de `dd4a510` com o arquivo de teste novo copiado por
+cima; os sensores A02 e A03 rodaram em worktree descartável do head, nunca
+no checkout. Fidelidade à origem: n/a, sizing `small` sem `source_docs`
+(precedente SDD-DTF-0047).
 
-**Verificador independente:** a preencher pela verificação.
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0052.md`.
+Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | n/a (sizing small, `source_docs: []`) | SDD lida inteira; RF01 a RF05 têm código e teste ou grep correspondentes | n/a | Sim | n/a | n/a |
+| 1 | A01 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py -q -k "legado or canonico or nenhum_relatorio"`, ANTES em worktree de `dd4a510` com o teste novo copiado; DEPOIS no head `649d1f2` | ANTES: `3 failed, 1 passed, 13 deselected` (falham `test_relatorio_legado_sozinho_passa`, `test_nenhum_relatorio_cita_os_dois_caminhos`, `test_cobertura_cita_o_relatorio_legado_lido`; o de precedência passa no antes, esperado, pois o código antigo só lê o canônico). DEPOIS: `4 passed, 13 deselected` | Ver A02, A03 e a mutação extra do RF04 em A02 | Sim | _framework/tests/test_ci_gate_verify_sdd.py:182, _framework/tests/test_ci_gate_verify_sdd.py:196, _framework/tests/test_ci_gate_verify_sdd.py:208, _framework/tests/test_ci_gate_verify_sdd.py:209, _framework/tests/test_ci_gate_verify_sdd.py:225 | automatizado |
+| 1 | A02 | Worktree descartável do head: `paths.append(...sdd_id[4:]...)` trocado por `pass` em `validation_paths`; pytest do A01; restaurado do backup. Extra (RF04): mensagem de cobertura voltada a `validation-{sdd_id}.md` fixo; idem | Com a mutação: `3 failed, 1 passed` (legado sozinho, nenhum relatório, cobertura legado). Restaurado: `4 passed`. Extra RF04: `1 failed, 3 passed` (`test_cobertura_cita_o_relatorio_legado_lido`); restaurado `4 passed`; `git status` limpo | Mutações derrubadas | Sim | _framework/tests/test_ci_gate_verify_sdd.py:182, _framework/tests/test_ci_gate_verify_sdd.py:208, _framework/tests/test_ci_gate_verify_sdd.py:225 | automatizado |
+| 1 | A03 | Worktree descartável do head: `for path in paths:` trocado por `for path in reversed(paths):` em `check_validation_presence`; pytest do A01; restaurado | Com a mutação: `1 failed, 3 passed` (`test_relatorio_canonico_tem_precedencia_sobre_legado`, gate passou com o legado). Restaurado: `4 passed` | Mutação derrubada | Sim | _framework/tests/test_ci_gate_verify_sdd.py:195 | automatizado |
+| 1 | A04 | `grep -c "validation-{PROJ}-{SEQ}.md" docs/guias/gate-ci-verify-sdd.md` | `1` (linha 14, com a precedência do canônico na linha 17) | sem teste automatizado (grep de documentação) | Sim | docs/guias/gate-ci-verify-sdd.md:14 | automatizado |
+| 1 | A05 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; cmp _framework/scripts/ci_gate_verify_sdd.py _framework/skills/doc-traceability-framework/scripts/ci_gate_verify_sdd.py` | `✅ _framework/INDEX.md: em dia.`, `✅ docs/sdd/INDEX.md: em dia.` (mais o aviso pré-existente de 30 SDDs sem seção de arquivos); `exit=0`; `cmp` sem saída | n/a (comando de medição) | Sim | _framework/skills/doc-traceability-framework/scripts/ci_gate_verify_sdd.py:226 | automatizado |
+| 1 | A06 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q`; `ruff format --check` e `ruff check` nos dois arquivos alterados | `300 passed in 35.89s`; `2 files already formatted`; `All checks passed!` | sem sensor próprio (suíte inteira; sensores em A02 e A03) | Sim | _framework/tests/test_ci_gate_verify_sdd.py:182 | automatizado |
+| 1 | A07 | `git diff --name-status origin/main` (= `dd4a510`); `git diff --quiet origin/main -- _framework/rules/workflow-rules.yaml` | 8 arquivos: o script, a cópia da skill, o teste, o guia, `docs/sdd/INDEX.md`, `docs/sdd/SDD-DTF-0052.md` (A), `docs/sdd/registry.md`, `docs/sdd/registry.yaml`; `workflow-rules.yaml` intocado, `framework.version` `2.3.2` nos dois lados; nada em `procedures/`, skill `verify-sdd` ou `.yml.example` | n/a (comando de medição) | Sim | n/a | automatizado |
+| 1 | A08 | No central (branch `sdd/SDD-DTF-0052-espelho`, `c1d9ffe`): loop de `cmp` dos 4 arquivos contra o kit; `git diff --name-only origin/main`; `pytest _framework/tests/test_ci_gate_verify_sdd.py -q` | 4 linhas `igual ...`; diff do central só os 4 arquivos; `17 passed` | n/a (comando de medição; teste espelhado coberto por A02/A03) | Sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
