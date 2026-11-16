@@ -2,7 +2,7 @@
 id: SDD-DTF-0053
 type: SDD
 title: "Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-16"
