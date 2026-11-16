@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 112 arquivos
+Total: 120 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -17,6 +17,10 @@ Total: 112 arquivos
 | `rules/kit-index.yaml` | Manifesto manual deste INDEX.md e dos resumos de seção do mapa | Ao criar, mover ou remover arquivo do kit | 8-32 KB |
 | `rules/workflow-rules.map.md` | Mapa gerado das seções do YAML: id, título, chaves, linhas, bytes e resumo | Antes de ler o YAML, para achar a seção certa | 2-8 KB |
 | `rules/workflow-rules.yaml` | Fonte canônica das regras: gates, sizing, tipos, ciclo de status e changelog | Ao mudar ou consultar uma regra; leia pelo mapa | >32 KB |
+| `schemas/ci-gate-verify-sdd.schema.json` | Esquema da saída de máquina ci-gate-verify-sdd.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
+| `schemas/parallel-plan.schema.json` | Esquema da saída de máquina parallel-plan.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
+| `schemas/resultado-validador.schema.json` | Esquema da saída de máquina resultado-validador.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
+| `schemas/resultado-verificacao.schema.json` | Esquema da saída de máquina resultado-verificacao.schema | Ao mudar uma saída --json (seção 20) | 2-8 KB |
 | `scripts/check_commit.py` | Checa mensagem de commit: Conventional Commits e referência a id do framework | Ao depurar hook commit-msg ou checagem de intervalo | 2-8 KB |
 | `scripts/check_hooks.py` | Reprova .claude/settings.json com hook mudo ou mal configurado | Ao editar hooks do Claude Code | 2-8 KB |
 | `scripts/check_renderings.py` | Compara os fatos entre YAML, SKILL.md, universal, Cursor e Copilot | Ao mudar uma renderização e ver divergência | 2-8 KB |
@@ -34,6 +38,7 @@ Total: 112 arquivos
 | `scripts/render_indexes.py` | Gera INDEX.md do kit, mapa de seções do YAML, INDEX de SDDs e sumários | Ao mudar a forma ou o teto de um índice gerado | 8-32 KB |
 | `scripts/render_prompts.py` | Gera AGENTS.md, prompts e cópias da skill a partir do YAML | Ao regenerar os arquivos derivados do YAML | >32 KB |
 | `scripts/selftest.py` | Muta os validadores do kit e exige que os testes falhem | Ao checar se os testes dos validadores discriminam | 2-8 KB |
+| `scripts/tests/fixtures/saida_texto_2_3_2.json` | Saída em texto dos validadores gravada no framework 2.3.2 | Ao mudar texto de validador (não regravar para acomodar) | 8-32 KB |
 | `scripts/tests/mutations.yaml` | Lista de mutações dos validadores usada pelo selftest.py | Ao adicionar mutação ou depurar mutante sobrevivente | 2-8 KB |
 | `scripts/tests/test_check_commit.py` | Testes do check_commit.py sobre repositório git temporário | Ao alterar a checagem de mensagem de commit | 2-8 KB |
 | `scripts/tests/test_check_hooks.py` | Testes do check_hooks.py: um caso por regra de hook | Ao alterar a checagem de hooks | 2-8 KB |
@@ -45,8 +50,10 @@ Total: 112 arquivos
 | `scripts/tests/test_hook_session_start.py` | Testes do hook_session_start.py com repositório mínimo | Ao alterar o hook de início de sessão | 2-8 KB |
 | `scripts/tests/test_lessons_check.py` | Testes do lessons_check.py: contagem de recorrência de lições | Ao alterar a contagem de lições | 2-8 KB |
 | `scripts/tests/test_operational_artifacts.py` | Testes dos artefatos operacionais por glob, como validation-*.md | Ao alterar quais arquivos dispensam front-matter | <2 KB |
+| `scripts/tests/test_registry_entrega.py` | Testes do campo entrega no trace e de SDD em docs/sdd/arquivo/ | Ao alterar o registro de entrega de SDD | 2-8 KB |
 | `scripts/tests/test_render_prompts_mechanization.py` | Testes do bloco mechanization gerado pelo render_prompts.py | Ao alterar a mecanização dos gates nas renderizações | 2-8 KB |
 | `scripts/tests/test_render_prompts_sync.py` | Testes do sync de templates e da cópia byte a byte da skill | Ao alterar sync_copies ou a paridade do bundle | 2-8 KB |
+| `scripts/tests/test_report_json.py` | Testes do --json dos validadores e da saída em texto inalterada | Ao alterar report() ou o main() de um validador | 8-32 KB |
 | `scripts/tests/test_selftest.py` | Testes do selftest.py: mutante morto, sobrevivente e não aplicável | Ao alterar a mutação dos validadores | 2-8 KB |
 | `scripts/tests/test_table_cells.py` | Testes do split_table_row para células de tabela markdown | Ao alterar a leitura de células de tabela | <2 KB |
 | `scripts/tests/test_validate_state.py` | Testes do validate_state.py sobre o YAML real | Ao alterar o gate de evidência da SDD | 8-32 KB |
@@ -105,6 +112,7 @@ Total: 112 arquivos
 | `tests/fixtures/sdd_fixture_b.md` | SDD fictícia B que os testes do parallel_plan.py leem | Ao alterar test_parallel_plan.py | <2 KB |
 | `tests/fixtures/verify_sdd_pre_reorder.md` | Cópia do verify-sdd antes da reordenação, base do teste de estrutura | Ao alterar test_procedures_structure.py | 8-32 KB |
 | `tests/test_ci_gate_verify_sdd.py` | Testes do ci_gate_verify_sdd.py: bloqueio de merge sem validação PASS | Ao alterar o gate de CI do verify-sdd | 8-32 KB |
+| `tests/test_executor_contract.py` | Teste de contrato: cada saída de executor_contract roda e valida contra o esquema | Ao mudar executor_contract, um esquema ou uma saída --json | 2-8 KB |
 | `tests/test_gate_texto.py` | Regressão do texto do gate de implementação antes do código | Ao editar o texto de gate_implementation_before_code | <2 KB |
 | `tests/test_gitattributes_generated.py` | Testes do .gitattributes que marca o bundle gerado | Ao alterar o .gitattributes dos arquivos gerados | 2-8 KB |
 | `tests/test_kit_parity.py` | Paridade byte a byte entre scripts originais e cópias da skill | Ao alterar um script copiado para a skill | <2 KB |

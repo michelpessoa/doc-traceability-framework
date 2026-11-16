@@ -479,7 +479,11 @@ def main() -> int:
     changed = discover_changed_sdd_paths(args.base, args.head)
 
     if not changed:
-        print("✅ PR não toca nenhuma docs/sdd/SDD-*.md — gate passa trivialmente.")
+        if args.json:
+            # Contrato do executor: com --json, a saída é sempre JSON (SPEC-DTF-0028, RF05).
+            print(json.dumps(GateResult(True, [], []).to_dict(), ensure_ascii=False, indent=2))
+        else:
+            print("✅ PR não toca nenhuma docs/sdd/SDD-*.md — gate passa trivialmente.")
         return 0
 
     try:

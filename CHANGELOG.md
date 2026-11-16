@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.3.2** (`2026-09-25`).
+Versão corrente: **2.4.0** (`2026-11-16`).
+
+## 2.4.0
+
+SPEC-DTF-0028 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0053): contrato do executor, não-retroativo. Seção 20 nova, `executor_contract`: o que um executor pode ler, os scripts com saída de máquina e o esquema de cada uma (`_framework/schemas/`), e o que pode escrever no central; quebra só em versão maior. `--json` em validate_doc, validate_state, check_source_docs, registry_tools validate e check_commit, sem mudar a saída em texto. SDD entregue em `docs/sdd/arquivo/` e campo opcional `entrega` no registry. Modelo M4 do verify-sdd em JSON, com `causa`. Nenhum gate, critério, sizing, ciclo de status ou front-matter muda.
 
 ## 2.3.2
 

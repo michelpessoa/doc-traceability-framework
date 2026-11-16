@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import load_registry, read_frontmatter, report  # noqa: E402
+from framework_lib import json_flag, load_registry, read_frontmatter, report, run_main, usage_error  # noqa: E402
 from registry_tools import check_source_docs_urls, resolve_doc_path  # noqa: E402
 
 OK_STATUSES = {"approved", "implemented"}
@@ -83,11 +83,11 @@ def check_sdd_source_docs(sdd_path: Path, central_docs_dir: Path) -> list[str]:
 
 
 def main() -> int:
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    report_only = "--report-only" in sys.argv
+    argv, as_json = json_flag(sys.argv[1:])
+    args = [a for a in argv if not a.startswith("--")]
+    report_only = "--report-only" in argv
     if len(args) != 2:
-        print(__doc__)
-        return 1
+        return usage_error(__doc__, as_json, "check_source_docs.py")
 
     sdd_path, central_docs_dir = Path(args[0]), Path(args[1])
     problems = check_sdd_source_docs(sdd_path, central_docs_dir)
@@ -96,8 +96,10 @@ def main() -> int:
         [],
         f"✅ source_docs de {sdd_path.name} conferem com o registry central.",
         report_only=report_only,
+        as_json=as_json,
+        script="check_source_docs.py",
     )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_main(main, "check_source_docs.py", sys.argv[1:]))

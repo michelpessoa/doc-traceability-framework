@@ -39,12 +39,15 @@ from framework_lib import (  # noqa: E402
     INCIDENT_STATUSES,
     VALID_STATUSES,
     iter_documents,
+    json_flag,
     load_rules,
     project_version,
     read_frontmatter,
     report,
     rule_applies_since_date,
+    run_main,
     split_table_row,
+    usage_error,
 )
 
 # Em que versão cada exigência entrou. Regra não vale retroativamente:
@@ -443,11 +446,11 @@ def collect(targets) -> list[Path]:
 
 
 def main() -> int:
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    report_only = "--report-only" in sys.argv
+    argv, as_json = json_flag(sys.argv[1:])
+    args = [a for a in argv if not a.startswith("--")]
+    report_only = "--report-only" in argv
     if not args:
-        print(__doc__)
-        return 1
+        return usage_error(__doc__, as_json, "validate_doc.py")
 
     paths = collect(args)
     problems, warnings = [], []
@@ -461,8 +464,10 @@ def main() -> int:
         warnings,
         f"✅ {len(paths)} documento(s) passaram no gate de qualidade de conteúdo.",
         report_only=report_only,
+        as_json=as_json,
+        script="validate_doc.py",
     )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_main(main, "validate_doc.py", sys.argv[1:]))

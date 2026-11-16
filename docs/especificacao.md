@@ -1,4 +1,4 @@
-# Especificação do framework (v2.3.2)
+# Especificação do framework (v2.4.0)
 
 Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `_framework/rules/workflow-rules.yaml`. Não edite à mão — o CI reprova.
@@ -20,7 +20,7 @@ Para narrativa e exemplos, veja `docs/guias/`. Para começar a usar,
 
 **Referência entre repositórios** — Como o repositório de projeto não tem os arquivos do repositório central presentes localmente, toda referência de uma SDD a um documento de origem (SPEC, ADR) DEVE incluir não só o id mas também a URL completa do arquivo no repositório central — sem isso, a rastreabilidade quebra ao atravessar repositórios. Ver frontmatter_schema.type_specific_fields.SDD.source_docs.
 
-## Núcleo canônico (framework 2.3.2)
+## Núcleo canônico (framework 2.4.0)
 
 Gerado de `_framework/rules/workflow-rules.yaml`. Em caso de
 divergência com qualquer texto abaixo ou acima, o YAML manda.
@@ -161,6 +161,8 @@ Racionalizações que denunciam a violação acontecendo agora:
 ## Registry
 
 - **entry_fields**: id, type, title, status, owner, created, updated, relates_to, path
+- **optional_entry_fields**: entrega
+- **optional_entry_fields_note**: `entrega: {pr, data, resultado}`, só em SDD entregue; `registry_tools.py trace` imprime quando existe.
 - **update_rule**: Toda vez que um documento é criado ou tem status/relates_to alterado, o registry correspondente (central ou de projeto, conforme o tipo) DEVE ser atualizado no mesmo momento. O front-matter do documento e a entrada no registry nunca podem divergir.
 - **traceability_query**: Dado um id, a cadeia completa (ancestrais e descendentes) é obtida percorrendo relates_to/parent_*/source_docs recursivamente. Quando a cadeia atravessa do repositório de projeto para o central (via SDD), a resolução usa a url gravada em source_docs em vez de leitura local.
 

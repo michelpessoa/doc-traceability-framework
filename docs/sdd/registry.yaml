@@ -511,3 +511,13 @@ documents:
     relates_to: [RFC-DTF-0009, SDD-DTF-0032]
     path: "docs/sdd/SDD-DTF-0052.md"
     tags: [ci, verify-sdd, gate, relatorio, compatibilidade]
+  - id: SDD-DTF-0053
+    type: SDD
+    title: "Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-16"
+    updated: "2026-11-16"
+    relates_to: [SDD-DTF-0052]
+    path: "docs/sdd/SDD-DTF-0053.md"
+    tags: [integracao, executor, contrato, json, schema]
