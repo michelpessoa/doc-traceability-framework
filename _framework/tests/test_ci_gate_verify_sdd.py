@@ -168,6 +168,64 @@ def test_validation_ausente_reprova(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# SDD-DTF-0052 — nome legado do relatório (validation-{PROJ}-{SEQ}.md)
+# ---------------------------------------------------------------------------
+
+
+def test_relatorio_legado_sozinho_passa(tmp_path):
+    repo, base, sdd_id = _prepare_transition(tmp_path)
+    commit_file(repo, f"docs/sdd/{sdd_id}.md", sdd_content(sdd_id, "implemented"), "wip")
+    head = commit_file(repo, "docs/sdd/validation-DTF-0001.md", validation_content(sdd_id), "validation legado")
+
+    gate = _run_gate(repo, base, head, sdd_id)
+
+    assert gate.passed is True
+
+
+def test_relatorio_canonico_tem_precedencia_sobre_legado(tmp_path):
+    repo, base, sdd_id = _prepare_transition(tmp_path)
+    commit_file(repo, f"docs/sdd/{sdd_id}.md", sdd_content(sdd_id, "implemented"), "wip")
+    commit_file(repo, "docs/sdd/validation-DTF-0001.md", validation_content(sdd_id), "validation legado")
+    head = commit_file(
+        repo, f"docs/sdd/validation-{sdd_id}.md", validation_content(sdd_id, veredito="FAIL"), "validation canônico"
+    )
+
+    gate = _run_gate(repo, base, head, sdd_id)
+
+    assert gate.passed is False
+    assert any(f"docs/sdd/validation-{sdd_id}.md" in r for r in gate.per_sdd[0].reasons)
+
+
+def test_nenhum_relatorio_cita_os_dois_caminhos(tmp_path):
+    repo, base, sdd_id = _prepare_transition(tmp_path)
+    head = commit_file(repo, f"docs/sdd/{sdd_id}.md", sdd_content(sdd_id, "implemented"), "implemented")
+
+    gate = _run_gate(repo, base, head, sdd_id)
+
+    motivos = " ".join(gate.per_sdd[0].reasons)
+    assert gate.passed is False
+    assert f"docs/sdd/validation-{sdd_id}.md" in motivos
+    assert "docs/sdd/validation-DTF-0001.md" in motivos
+    assert "(RF02)" in motivos
+
+
+def test_cobertura_cita_o_relatorio_legado_lido(tmp_path):
+    rf_ids = ("RF01", "RF02")
+    criteria_rows = [
+        "| 1 | RF01 — critério de RF01 | `cmd` | ok |",
+        "| 2 | RF02 — critério de RF02 | `cmd` | ok |",
+    ]
+    repo, base, sdd_id = _prepare_transition(tmp_path, rf_ids=rf_ids, criteria_rows=criteria_rows)
+    commit_file(repo, f"docs/sdd/{sdd_id}.md", sdd_content(sdd_id, "implemented", rf_ids, criteria_rows), "wip")
+    head = commit_file(repo, "docs/sdd/validation-DTF-0001.md", validation_content(sdd_id), "validation legado")
+
+    gate = _run_gate(repo, base, head, sdd_id)
+
+    assert gate.passed is False
+    assert any("RF02" in r and "validation-DTF-0001.md" in r for r in gate.per_sdd[0].reasons)
+
+
+# ---------------------------------------------------------------------------
 # RF03
 # ---------------------------------------------------------------------------
 
