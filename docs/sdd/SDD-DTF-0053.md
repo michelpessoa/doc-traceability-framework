@@ -102,7 +102,7 @@ que a implementação precisa acertar:
 
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
 |---|---|---|---|---|
-| 1 | Testes de `report`/`json_flag` e dos cinco scripts, incluindo a saída sem `--json` igual à de antes, vistos falhar | RF01, RF02 | `_framework/scripts/tests/test_report_json.py` | |
+| 1 | Testes de `report`/`json_flag` e dos cinco scripts, incluindo a saída sem `--json` igual à de antes, contra fixture gravada no 2.3.2, vistos falhar | RF01, RF02 | `_framework/scripts/tests/test_report_json.py`, `_framework/scripts/tests/fixtures/saida_texto_2_3_2.json` | |
 | 2 | `json_flag` e `report` com JSON | RF01, RF02 | `_framework/scripts/framework_lib.py` | 1 |
 | 3 | `--json` nos cinco `main()` | RF01 | `_framework/scripts/validate_doc.py`, `_framework/scripts/validate_state.py`, `_framework/scripts/check_source_docs.py`, `_framework/scripts/registry_tools.py`, `_framework/scripts/check_commit.py` | 2 |
 | 4 | Os quatro esquemas e `jsonschema` como dependência de teste | RF03 | `_framework/schemas/resultado-validador.schema.json`, `_framework/schemas/ci-gate-verify-sdd.schema.json`, `_framework/schemas/parallel-plan.schema.json`, `_framework/schemas/resultado-verificacao.schema.json`, `requirements.txt` | 2 |

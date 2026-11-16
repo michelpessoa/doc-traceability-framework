@@ -1,0 +1,50 @@
+{
+  "validate_doc_problemas": {
+    "stdout": "❌ 10 problema(s) encontrado(s):\n  - SPEC-X-0001: front-matter sem `project` (obrigatório).\n  - SPEC-X-0001: front-matter sem `owner` (obrigatório).\n  - SPEC-X-0001: front-matter sem `created` (obrigatório).\n  - SPEC-X-0001: front-matter sem `updated` (obrigatório).\n  - SPEC-X-0001: seção obrigatória ausente: 'Objetivo'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Requisitos funcionais'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Contratos técnicos'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Estratégia de teste'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Fora de escopo'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Requisitos transversais (sweep)' (STRAT-DTF-0003 item 10).\n",
+    "exit": 1
+  },
+  "validate_doc_report_only": {
+    "stdout": "❌ 10 problema(s) encontrado(s):\n  - SPEC-X-0001: front-matter sem `project` (obrigatório).\n  - SPEC-X-0001: front-matter sem `owner` (obrigatório).\n  - SPEC-X-0001: front-matter sem `created` (obrigatório).\n  - SPEC-X-0001: front-matter sem `updated` (obrigatório).\n  - SPEC-X-0001: seção obrigatória ausente: 'Objetivo'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Requisitos funcionais'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Contratos técnicos'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Estratégia de teste'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Fora de escopo'.\n  - SPEC-X-0001: seção obrigatória ausente: 'Requisitos transversais (sweep)' (STRAT-DTF-0003 item 10).\n\n(modo --report-only: exit 0 mesmo com problemas)\n",
+    "exit": 0
+  },
+  "validate_doc_uso": {
+    "stdout": "\nvalidate_doc.py\n\nMecaniza o gate_content_quality (workflow-rules.yaml, seção 15). O gate\nexistia só como autorrevisão em prosa — uma IA checando a si mesma no\nmomento em que tem incentivo para não checar. Este script é o sinal\nexterno que faltava.\n\nUso:\n    python3 validate_doc.py <arquivo.md | diretório> [...] [--report-only]\n\nCheca, por documento:\n  1. Front-matter completo (campos obrigatórios de frontmatter_schema).\n  2. Nenhum placeholder banido (\"TBD\", \"definir depois\", ...).\n  3. `NEEDS CLARIFICATION` pendente não passa de in_review.\n  4. Seções obrigatórias do tipo presentes.\n  5. SPEC/PRD: todo requisito funcional tem RF-ID próprio.\n  6. SPEC/PRD: todo critério de aceite está em notação EARS.\n  7. SPEC/TS: a seção de contratos aponta arquivo/módulo (\"onde\").\n  8. SPEC: toda linha de RF tem coluna Arquivos preenchida (RF06, SDD-DTF-0030).\n  9. SDD: toda linha de task tem coluna Arquivos preenchida; \"Decomposição em\n     tasks\" ausente sem dispensa por sizing/RF único é gate (RF06/RF07,\n     SDD-DTF-0030).\n  10. SPEC: seção \"Requisitos transversais (sweep)\" presente, com todas as\n      categorias fixas cobertas e Destino preenchido (RF-ID ou n/a + motivo),\n      não-retroativo (STRAT-DTF-0003 item 10, SDD-DTF-0039).\n\nExit 1 se houver problema; --report-only sempre sai 0.\n\n",
+    "exit": 1
+  },
+  "validate_state_ok": {
+    "stdout": "⚠️  SDD-X-0001: sem seção 'Evidência de verificação' (será exigida em implemented).\n⚠️  SDD-X-0001: sem seção 'Verificação de escopo' (será exigida em implemented).\n✅ 1 documento(s) verificados: nenhuma SDD `implemented` sem evidência.\n",
+    "exit": 0
+  },
+  "validate_state_uso": {
+    "stdout": "\nvalidate_state.py\n\nMecaniza o gate_scope_verification (workflow-rules.yaml, seção 16): uma SDD\nsó pode estar `implemented` se a evidência de verificação existir de fato.\n\nO gate original pedia que a IA preenchesse uma tabela de evidência e\nconfirmasse escopo — e depois confiava nela para dizer que tinha feito. Este\nscript checa a única coisa que dá para checar de fora: a tabela existe, tem\nlinha para cada critério de aceite, cita comando e saída reais, e a\nchecklist de escopo está marcada.\n\nUso:\n    python3 validate_state.py <SDD.md | diretório> [...] [--report-only]\n\nExit 1 se houver problema; --report-only sempre sai 0.\n\n",
+    "exit": 1
+  },
+  "check_source_docs_problema": {
+    "stdout": "❌ 2 problema(s) encontrado(s):\n  - SDD-X-0001: source_docs 'SPEC-X-0009' tem url não resolvível: 'u'.\n  - SDD-X-0001: source_docs 'SPEC-X-0009' não encontrado no registry central (central).\n",
+    "exit": 1
+  },
+  "check_source_docs_uso": {
+    "stdout": "\ncheck_source_docs.py\n\nMecaniza o item 1 do passo \"0. Fidelidade à origem\" do `verify-sdd`\n(RFC-DTF-0007/ADR-DTF-0007/SPEC-DTF-0014): cada entrada de `source_docs`\nde uma SDD — id + url apontando pro repositório central — precisa\nexistir de fato, estar num status utilizável e apontar pro arquivo\ncerto. Sem isso, todo o resto da verificação confere a SDD contra uma\norigem errada sem saber.\n\nUso:\n    python3 check_source_docs.py <SDD.md> <central_docs_dir>\n\nExit 1 se houver problema; --report-only sempre sai 0.\n\n",
+    "exit": 1
+  },
+  "registry_tools_validate_problemas": {
+    "stdout": "⚠️  registry.yaml não tem o campo `repository` (URL do repositório de código do projeto) e não declara `repository_status` — modo greenfield ASSUMIDO, não declarado. Se o repositório já existe, preencha `repository`; se ainda não existe, declare `repository_status: none_yet`.\n❌ 2 problema(s) encontrado(s):\n  - SPEC-X-0001: status inválido 'inventado'\n  - SPEC-X-0001: `path: nao-existe.md` não resolve para nenhum arquivo existente.\n",
+    "exit": 1
+  },
+  "registry_tools_uso": {
+    "stdout": "\nregistry_tools.py\n\nFerramentas de linha de comando sobre docs/registry.yaml, implementando\nas capacidades \"validate_registry\" e \"trace\" descritas em\n_framework/rules/workflow-rules.yaml (seção 8).\n\nUso:\n    python3 registry_tools.py validate <caminho_para_docs>\n    python3 registry_tools.py trace <caminho_para_docs> <ID>\n    python3 registry_tools.py audit <git_log_file> <docs_dir_1> [<docs_dir_2> ...]\n\nvalidate: procura ids duplicados, referências quebradas em relates_to/\n          parent_*, status inválidos, divergência entre o front-matter do\n          .md e a entrada do registry, documento em disco fora do registry,\n          `path` que não resolve, `framework_version` desconhecida e\n          `source_docs` sem url utilizável.\n          Aceita --report-only para listar sem falhar (exit 0).\ntrace:    imprime a cadeia completa de um id (ancestrais e descendentes),\n          percorrendo relates_to recursivamente.\naudit:    implementa a seção 11 (audit) de workflow-rules.yaml — cruza um\n          histórico de commits com os ids conhecidos em um ou mais\n          registries e classifica cada commit em coberto / referência\n          quebrada / não documentado. Não bloqueia nada, é só relatório.\n          Gere o arquivo de log com:\n            git log --pretty=format:'%H%n%s%n%b%n===END===' > gitlog.txt\n\nRequer PyYAML (pip install pyyaml --break-system-packages).\n\n",
+    "exit": 1
+  },
+  "check_commit_problema": {
+    "stdout": "❌ 1 problema(s) encontrado(s):\n  - MSG: assunto fora de Conventional Commits — 'mensagem fora do formato'. Esperado 'tipo(escopo): descrição'.\n",
+    "exit": 1
+  },
+  "check_commit_ok": {
+    "stdout": "✅ 1 mensagem(ns) de commit no formato esperado.\n",
+    "exit": 0
+  },
+  "check_commit_uso": {
+    "stdout": "\ncheck_commit.py\n\nCheca mensagens de commit: formato Conventional Commits e, opcionalmente,\nreferência a um id do framework.\n\nMotivação: hoje o vínculo commit↔documento é reconstruído DEPOIS pelo\n`registry_tools.py audit` — arqueologia sobre o histórico. Checar na hora\ndo commit faz o vínculo nascer junto com ele, e reduz a auditoria ao papel\nque ela deveria ter: rede de segurança para quem não opera sob o framework\n(workflow-rules.yaml, seção 11).\n\nUso:\n    python3 check_commit.py <arquivo_com_a_mensagem>      # hook commit-msg\n    python3 check_commit.py --range <git_range>           # ex.: main..HEAD\n    python3 check_commit.py --last <N>\n    ... [--require-refs] [--report-only]\n\n--require-refs transforma \"commit sem id do framework\" de aviso em erro.\nFora dele, a convenção de referência segue sendo recomendada e não\nobrigatória, como a seção 11 define.\n\n",
+    "exit": 1
+  }
+}

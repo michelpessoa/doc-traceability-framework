@@ -236,7 +236,7 @@ entra no LESSONS.md do projeto)
 **M4. Resultado em JSON (opcional, para executor)**
 
 Valida contra `_framework/schemas/resultado-verificacao.schema.json`
-(seção 20 de `workflow-rules.yaml`, `executor_contract.verification_output`).
+(seção 20 de `workflow-rules.yaml`).
 `causa` diz por que reprovou, para o executor decidir o próximo passo:
 `implementacao` (o código não atende a SDD; cabe nova tentativa),
 `especificacao` (a SDD é ambígua ou contraditória; vai ao humano) ou
@@ -245,7 +245,6 @@ Valida contra `_framework/schemas/resultado-verificacao.schema.json`
 
 ```json
 {
-  "sdd_id": "SDD-X-0001",
   "status": "aprovado",
   "causa": null,
   "criterios": [

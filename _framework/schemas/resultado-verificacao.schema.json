@@ -5,7 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "sdd_id",
     "status",
     "causa",
     "criterios",
@@ -13,9 +12,6 @@
     "descompassos"
   ],
   "properties": {
-    "sdd_id": {
-      "type": "string"
-    },
     "status": {
       "enum": [
         "aprovado",
@@ -73,8 +69,7 @@
     "evidencias": {
       "type": "array",
       "items": {
-        "type": "string",
-        "pattern": "^.+:[0-9]+ — .+$"
+        "type": "string"
       }
     },
     "descompassos": {

@@ -1,7 +1,7 @@
 # Mapa de seções do workflow-rules.yaml
 
 Gerado por `render_indexes.py` — não edite à mão. Ids `§N` = numeração dos banners do YAML.
-YAML: 95358 bytes; mapa + maior seção: 12769 (13.4% de 15%)
+YAML: 95189 bytes; mapa + maior seção: 12769 (13.4% de 15%)
 Total: 23 seções
 
 | § | Seção | Chaves | Linhas | Bytes | Resumo |
@@ -28,4 +28,4 @@ Total: 23 seções
 | §17 | SKILL DE TRANSFERÊNCIA DE CONTEXTO: HANDOVER / PICKUP | `handover_protocol` | 1353-1409 | 3698 | O fluxo deste framework frequentemente separa quem planeja… |
 | §18 | LIÇÕES LOCAIS E CONGELAMENTO DO NÚCLEO | `lessons_policy` | 1411-1467 | 3563 | Entre a v1.4.0 e a v1.7.0 — duas semanas — cada falha de execução de um agente… |
 | §19 | SIZING: A PROFUNDIDADE DO FLUXO É FUNÇÃO DO BLAST RADIUS | `sizing` | 1469-1528 | 3453 | Até a v1.7.0 o funil era fixo — toda mudança atravessava… |
-| §20 | CONTRATO DO EXECUTOR | `executor_contract` | 1530-1576 | 2563 | O que um executor lê, as saídas --json com esquema e o que pode escrever no central |
+| §20 | CONTRATO DO EXECUTOR | `executor_contract` | 1530-1572 | 2394 | O que um executor lê, as saídas --json com esquema e o que pode escrever no central |

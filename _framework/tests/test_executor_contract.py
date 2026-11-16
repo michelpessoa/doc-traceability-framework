@@ -141,3 +141,35 @@ def test_sensor_reads_pega_chave_renomeada(tmp_path):
     copia.write_text(texto, encoding="utf-8")
     rules = yaml.safe_load(texto)
     assert [k for k in contrato(copia)["reads"] if k not in rules] == ["sizing"]
+
+
+def test_chaves_do_contrato_sao_as_da_spec():
+    """SPEC-DTF-0028 declara exatamente estas chaves; campo novo exige emendar a SPEC antes."""
+    assert set(contrato()) == {"contract_version", "description", "reads", "machine_outputs", "writes"}
+    assert all(set(s) == {"script", "args", "schema"} for s in contrato()["machine_outputs"])
+
+
+def test_campos_da_verificacao_sao_os_da_spec():
+    schema = json.loads(
+        (REPO_ROOT / "_framework/schemas/resultado-verificacao.schema.json").read_text(encoding="utf-8")
+    )
+    assert (
+        set(schema["required"])
+        == set(schema["properties"])
+        == {
+            "status",
+            "causa",
+            "criterios",
+            "evidencias",
+            "descompassos",
+        }
+    )
+    assert set(schema["properties"]["criterios"]["items"]["required"]) == {
+        "numero",
+        "comando",
+        "saida",
+        "sensor",
+        "passou",
+        "assertion",
+        "perfil",
+    }

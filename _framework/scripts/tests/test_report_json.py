@@ -177,3 +177,73 @@ def test_erro_operacional_vira_json(tmp_path):
     valida(objeto)
     assert com.returncode == sem.returncode == 1
     assert objeto["problemas"][0]["mensagem"].startswith("erro operacional:")
+
+
+# ---------------------------------------------------------------------------
+# A02 — saída em texto igual à do framework 2.3.2, contra fixture gravada
+# ---------------------------------------------------------------------------
+# `fixtures/saida_texto_2_3_2.json` foi gravada rodando CASOS com os scripts
+# do framework 2.3.2 (kit em 279b10a), antes do --json existir, cada caso
+# num diretório novo e com caminhos relativos a ele. Não regravar a fixture
+# para acomodar mudança de texto: mudança de texto quebra quem lê a saída.
+
+FIXTURE_TEXTO = Path(__file__).resolve().parent / "fixtures" / "saida_texto_2_3_2.json"
+
+SPEC_RUIM_CASO = '---\nid: SPEC-X-0001\ntype: SPEC\ntitle: "t"\nstatus: in_review\n---\n\n# t\n'
+SDD_OK = "---\nid: SDD-X-0001\ntype: SDD\nstatus: approved\n---\n\n# s\n"
+SDD_ORIGEM = '---\nid: SDD-X-0001\ntype: SDD\nsource_docs:\n  - id: "SPEC-X-0009"\n    url: "u"\n---\n'
+REGISTRY_RUIM = (
+    'project: "X"\nframework_version: "2.3.2"\ndocuments:\n  - id: SPEC-X-0001\n    type: SPEC\n'
+    '    status: inventado\n    path: "nao-existe.md"\n'
+)
+
+
+def _escrever(raiz: Path, arquivos: dict[str, str]) -> None:
+    for nome, texto in arquivos.items():
+        caminho = raiz / nome
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        caminho.write_text(texto, encoding="utf-8")
+
+
+CASOS = {
+    "validate_doc_problemas": ({"SPEC-X-0001.md": SPEC_RUIM_CASO}, ["validate_doc.py", "SPEC-X-0001.md"]),
+    "validate_doc_report_only": (
+        {"SPEC-X-0001.md": SPEC_RUIM_CASO},
+        ["validate_doc.py", "SPEC-X-0001.md", "--report-only"],
+    ),
+    "validate_doc_uso": ({}, ["validate_doc.py"]),
+    "validate_state_ok": ({"SDD-X-0001.md": SDD_OK}, ["validate_state.py", "SDD-X-0001.md"]),
+    "validate_state_uso": ({}, ["validate_state.py"]),
+    "check_source_docs_problema": (
+        {"SDD-X-0001.md": SDD_ORIGEM, "central/registry.yaml": "documents: []\n"},
+        ["check_source_docs.py", "SDD-X-0001.md", "central"],
+    ),
+    "check_source_docs_uso": ({}, ["check_source_docs.py"]),
+    "registry_tools_validate_problemas": (
+        {"docs/registry.yaml": REGISTRY_RUIM},
+        ["registry_tools.py", "validate", "docs"],
+    ),
+    "registry_tools_uso": ({}, ["registry_tools.py"]),
+    "check_commit_problema": ({"MSG": "mensagem fora do formato\n"}, ["check_commit.py", "MSG"]),
+    "check_commit_ok": ({"MSG": "docs: mensagem no formato\n\nRefs: SDD-X-0001\n"}, ["check_commit.py", "MSG"]),
+    "check_commit_uso": ({}, ["check_commit.py"]),
+}
+
+
+def preparar(caso: str, raiz: Path) -> list[str]:
+    arquivos, args = CASOS[caso]
+    _escrever(raiz, arquivos)
+    return args
+
+
+@pytest.mark.parametrize("caso", sorted(CASOS))
+def test_saida_em_texto_igual_a_2_3_2(caso, tmp_path):
+    esperado = json.loads(FIXTURE_TEXTO.read_text(encoding="utf-8"))[caso]
+    args = preparar(caso, tmp_path)
+    obtido = rodar(str(SCRIPTS / args[0]), *args[1:], cwd=tmp_path)
+    assert obtido.stdout == esperado["stdout"]
+    assert obtido.returncode == esperado["exit"]
+
+
+def test_fixture_de_texto_cobre_todos_os_casos():
+    assert set(json.loads(FIXTURE_TEXTO.read_text(encoding="utf-8"))) == set(CASOS)

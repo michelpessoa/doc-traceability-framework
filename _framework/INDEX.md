@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 119 arquivos
+Total: 120 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -38,6 +38,7 @@ Total: 119 arquivos
 | `scripts/render_indexes.py` | Gera INDEX.md do kit, mapa de seções do YAML, INDEX de SDDs e sumários | Ao mudar a forma ou o teto de um índice gerado | 8-32 KB |
 | `scripts/render_prompts.py` | Gera AGENTS.md, prompts e cópias da skill a partir do YAML | Ao regenerar os arquivos derivados do YAML | >32 KB |
 | `scripts/selftest.py` | Muta os validadores do kit e exige que os testes falhem | Ao checar se os testes dos validadores discriminam | 2-8 KB |
+| `scripts/tests/fixtures/saida_texto_2_3_2.json` | Saída em texto dos validadores gravada no framework 2.3.2 | Ao mudar texto de validador (não regravar para acomodar) | 8-32 KB |
 | `scripts/tests/mutations.yaml` | Lista de mutações dos validadores usada pelo selftest.py | Ao adicionar mutação ou depurar mutante sobrevivente | 2-8 KB |
 | `scripts/tests/test_check_commit.py` | Testes do check_commit.py sobre repositório git temporário | Ao alterar a checagem de mensagem de commit | 2-8 KB |
 | `scripts/tests/test_check_hooks.py` | Testes do check_hooks.py: um caso por regra de hook | Ao alterar a checagem de hooks | 2-8 KB |
@@ -52,7 +53,7 @@ Total: 119 arquivos
 | `scripts/tests/test_registry_entrega.py` | Testes do campo entrega no trace e de SDD em docs/sdd/arquivo/ | Ao alterar o registro de entrega de SDD | 2-8 KB |
 | `scripts/tests/test_render_prompts_mechanization.py` | Testes do bloco mechanization gerado pelo render_prompts.py | Ao alterar a mecanização dos gates nas renderizações | 2-8 KB |
 | `scripts/tests/test_render_prompts_sync.py` | Testes do sync de templates e da cópia byte a byte da skill | Ao alterar sync_copies ou a paridade do bundle | 2-8 KB |
-| `scripts/tests/test_report_json.py` | Testes do --json dos validadores e da saída em texto inalterada | Ao alterar report() ou o main() de um validador | 2-8 KB |
+| `scripts/tests/test_report_json.py` | Testes do --json dos validadores e da saída em texto inalterada | Ao alterar report() ou o main() de um validador | 8-32 KB |
 | `scripts/tests/test_selftest.py` | Testes do selftest.py: mutante morto, sobrevivente e não aplicável | Ao alterar a mutação dos validadores | 2-8 KB |
 | `scripts/tests/test_table_cells.py` | Testes do split_table_row para células de tabela markdown | Ao alterar a leitura de células de tabela | <2 KB |
 | `scripts/tests/test_validate_state.py` | Testes do validate_state.py sobre o YAML real | Ao alterar o gate de evidência da SDD | 8-32 KB |
