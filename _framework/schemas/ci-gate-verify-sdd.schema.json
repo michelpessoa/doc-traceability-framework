@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ci-gate-verify-sdd.schema.json",
+  "title": "Saída de ci_gate_verify_sdd.py --json (GateResult.to_dict)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "passed",
+    "per_sdd",
+    "overrides_used"
+  ],
+  "properties": {
+    "passed": {
+      "type": "boolean"
+    },
+    "per_sdd": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sdd_id",
+          "status_transition",
+          "outcome",
+          "reasons"
+        ],
+        "properties": {
+          "sdd_id": {
+            "type": "string"
+          },
+          "status_transition": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "overrides_used": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "inc_id",
+          "status",
+          "timestamp"
+        ],
+        "properties": {
+          "inc_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -161,6 +161,10 @@ gate 16 violado, mesmo com `validation.md` PASS ao lado.
 
 Escreva `validation.md` ao lado da SDD, conforme o modelo M3, em "Modelos de registro".
 
+Quem roda este procedimento a partir de um executor pode devolver também o
+resultado em JSON, conforme o modelo M4, opcional. Ele não substitui M1 nem
+M3.
+
 `FAIL` não avança status. Relate o descompasso ao humano e proponha os
 dois caminhos possíveis — atualizar a SDD para o escopo real acordado, ou
 remover o código fora de escopo. **A escolha é dele, não sua.**
@@ -227,6 +231,37 @@ Motivo de cada falha: <resumo por rodada>.
 ## Lições
 (o que causou cada descompasso, em forma de red flag reaproveitável —
 entra no LESSONS.md do projeto)
+```
+
+**M4. Resultado em JSON (opcional, para executor)**
+
+Valida contra `_framework/schemas/resultado-verificacao.schema.json`
+(seção 20 de `workflow-rules.yaml`, `executor_contract.verification_output`).
+`causa` diz por que reprovou, para o executor decidir o próximo passo:
+`implementacao` (o código não atende a SDD; cabe nova tentativa),
+`especificacao` (a SDD é ambígua ou contraditória; vai ao humano) ou
+`ambiente` (falha de infraestrutura; não conta tentativa). Com `status`
+`aprovado`, `causa` é `null`.
+
+```json
+{
+  "sdd_id": "SDD-X-0001",
+  "status": "aprovado",
+  "causa": null,
+  "criterios": [
+    {
+      "numero": "A01",
+      "comando": "python3 -m pytest tests/test_x.py -q",
+      "saida": "3 passed",
+      "sensor": "assert trocado por assert not: 1 failed; restaurado: 3 passed",
+      "passou": true,
+      "assertion": "tests/test_x.py:12",
+      "perfil": "automatizado"
+    }
+  ],
+  "evidencias": ["src/x.py:40 — regra do RF01"],
+  "descompassos": []
+}
 ```
 
 ## Red flags

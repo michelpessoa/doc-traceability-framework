@@ -40,11 +40,14 @@ from framework_lib import (  # noqa: E402
     VALID_STATUSES,
     framework_versions,
     iter_documents,
+    json_flag,
     load_registry,
     load_rules,
     read_frontmatter,
     registry_mode,
     report,
+    run_main,
+    usage_error,
     version_key,
 )
 
@@ -60,7 +63,7 @@ def load(docs_dir: Path):
     return load_registry(docs_dir)
 
 
-def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
+def cmd_validate(docs_dir: Path, report_only: bool = False, as_json: bool = False) -> int:
     data, docs = load(docs_dir)
     problems = []
     mode = registry_mode(data)
@@ -123,6 +126,8 @@ def cmd_validate(docs_dir: Path, report_only: bool = False) -> int:
         warnings,
         f"✅ registry.yaml e documentos consistentes ({len(docs)} documentos, nenhum problema encontrado).",
         report_only=report_only,
+        as_json=as_json,
+        script="registry_tools.py",
     )
 
 
@@ -318,6 +323,17 @@ def resolve_doc_path(docs_dir: Path, rel_path: str) -> Path | None:
     return tail if tail.is_file() else None
 
 
+def format_delivery(delivery) -> str:
+    """`entrega: PR #<pr>, <data>, <resultado>` com o que existir (SPEC-DTF-0028, RF06)."""
+    if not isinstance(delivery, dict):
+        return ""
+    parts = []
+    if delivery.get("pr") is not None:
+        parts.append(f"PR #{delivery['pr']}")
+    parts += [str(delivery[k]) for k in ("data", "resultado") if delivery.get(k)]
+    return f"entrega: {', '.join(parts)}" if parts else ""
+
+
 def cmd_trace(docs_dir: Path, target_id: str) -> int:
     _, docs = load(docs_dir)
     if target_id not in docs:
@@ -333,6 +349,9 @@ def cmd_trace(docs_dir: Path, target_id: str) -> int:
         d = docs[doc_id]
         prefix = "  " * depth
         print(f"{prefix}- {doc_id} [{d.get('type')}] {d.get('title')} ({d.get('status')})")
+        delivery = format_delivery(d.get("entrega"))
+        if delivery:
+            print(f"{prefix}  {delivery}")
         for rel in d.get("relates_to") or []:
             walk(rel, depth + 1)
 
@@ -412,15 +431,15 @@ def cmd_audit(git_log_path: Path, docs_dirs) -> int:
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--report-only"]
-    report_only = "--report-only" in sys.argv
+    argv, as_json = json_flag(sys.argv[1:])
+    args = [a for a in argv if a != "--report-only"]
+    report_only = "--report-only" in argv
     if len(args) < 2:
-        print(__doc__)
-        sys.exit(1)
+        sys.exit(usage_error(__doc__, as_json, "registry_tools.py"))
     action = args[0]
     sys.argv = [sys.argv[0], *args]
     if action == "validate":
-        sys.exit(cmd_validate(Path(args[1]), report_only=report_only))
+        sys.exit(cmd_validate(Path(args[1]), report_only=report_only, as_json=as_json))
     elif action == "trace":
         if len(sys.argv) < 4:
             print("Uso: registry_tools.py trace <docs_dir> <ID>")
@@ -439,4 +458,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(run_main(main, "registry_tools.py", sys.argv[1:]))

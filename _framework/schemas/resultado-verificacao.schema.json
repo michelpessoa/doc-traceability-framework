@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resultado-verificacao.schema.json",
+  "title": "Resultado da verificação independente de uma SDD, modelo M4 do verify-sdd (SPEC-DTF-0028, RF07)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sdd_id",
+    "status",
+    "causa",
+    "criterios",
+    "evidencias",
+    "descompassos"
+  ],
+  "properties": {
+    "sdd_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "aprovado",
+        "reprovado"
+      ]
+    },
+    "causa": {
+      "enum": [
+        "implementacao",
+        "especificacao",
+        "ambiente",
+        null
+      ]
+    },
+    "criterios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "numero",
+          "comando",
+          "saida",
+          "sensor",
+          "passou",
+          "assertion",
+          "perfil"
+        ],
+        "properties": {
+          "numero": {
+            "type": "string"
+          },
+          "comando": {
+            "type": "string"
+          },
+          "saida": {
+            "type": "string"
+          },
+          "sensor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "passou": {
+            "type": "boolean"
+          },
+          "assertion": {
+            "type": "string"
+          },
+          "perfil": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidencias": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^.+:[0-9]+ — .+$"
+      }
+    },
+    "descompassos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "aprovado"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "causa": {
+            "const": null
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "reprovado"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "causa": {
+            "enum": [
+              "implementacao",
+              "especificacao",
+              "ambiente"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

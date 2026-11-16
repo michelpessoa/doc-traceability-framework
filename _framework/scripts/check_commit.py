@@ -29,7 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import ID_PATTERN, report  # noqa: E402
+from framework_lib import ID_PATTERN, json_flag, report, run_main, usage_error  # noqa: E402
 
 CONVENTIONAL = re.compile(
     r"^(?P<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)"
@@ -113,7 +113,7 @@ def merge_in_progress() -> bool:
 
 
 def main() -> int:
-    argv = sys.argv[1:]
+    argv, as_json = json_flag(sys.argv[1:])
     report_only = "--report-only" in argv
     require_refs = "--require-refs" in argv
     positional = [a for a in argv if not a.startswith("--")]
@@ -133,8 +133,7 @@ def main() -> int:
             raise SystemExit(f"Não encontrado: {path}")
         entries = [(path.name, path.read_text(encoding="utf-8"))]
     else:
-        print(__doc__)
-        return 1
+        return usage_error(__doc__, as_json, "check_commit.py")
 
     problems, warnings = [], []
     for label, message in entries:
@@ -149,8 +148,10 @@ def main() -> int:
         warnings,
         f"✅ {len(entries)} mensagem(ns) de commit no formato esperado.",
         report_only=report_only,
+        as_json=as_json,
+        script="check_commit.py",
     )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_main(main, "check_commit.py", sys.argv[1:]))

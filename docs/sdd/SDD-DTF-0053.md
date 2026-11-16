@@ -105,11 +105,11 @@ que a implementação precisa acertar:
 | 1 | Testes de `report`/`json_flag` e dos cinco scripts, incluindo a saída sem `--json` igual à de antes, vistos falhar | RF01, RF02 | `_framework/scripts/tests/test_report_json.py` | |
 | 2 | `json_flag` e `report` com JSON | RF01, RF02 | `_framework/scripts/framework_lib.py` | 1 |
 | 3 | `--json` nos cinco `main()` | RF01 | `_framework/scripts/validate_doc.py`, `_framework/scripts/validate_state.py`, `_framework/scripts/check_source_docs.py`, `_framework/scripts/registry_tools.py`, `_framework/scripts/check_commit.py` | 2 |
-| 4 | Os quatro esquemas | RF03 | `_framework/schemas/resultado-validador.schema.json`, `_framework/schemas/ci-gate-verify-sdd.schema.json`, `_framework/schemas/parallel-plan.schema.json`, `_framework/schemas/resultado-verificacao.schema.json` | 2 |
+| 4 | Os quatro esquemas e `jsonschema` como dependência de teste | RF03 | `_framework/schemas/resultado-validador.schema.json`, `_framework/schemas/ci-gate-verify-sdd.schema.json`, `_framework/schemas/parallel-plan.schema.json`, `_framework/schemas/resultado-verificacao.schema.json`, `requirements.txt` | 2 |
 | 5 | Teste de `trace` com e sem `entrega`, visto falhar; `trace` imprime a entrega | RF06 | `_framework/scripts/tests/test_registry_entrega.py`, `_framework/scripts/registry_tools.py` | 3 |
-| 6 | Teste de contrato, visto falhar; `executor_contract`, `delivered`, `optional_entry_fields`, 2.4.0 e changelog | RF04, RF05, RF06, RF08 | `_framework/tests/test_executor_contract.py`, `_framework/rules/workflow-rules.yaml` | 4 |
-| 7 | Modelo M4 e o teste do exemplo | RF07 | `_framework/procedures/verify-sdd.md`, `_framework/tests/test_executor_contract.py` | 6 |
-| 8 | Manifesto e gerados | RF04 | `_framework/rules/kit-index.yaml`, gerados por `render_prompts.py` | 7 |
+| 6 | Teste de contrato, visto falhar; `executor_contract`, `delivered`, `optional_entry_fields`, 2.4.0 e changelog; `ci_gate_verify_sdd.py --json` passa a emitir JSON também quando a PR não toca SDD (hoje emite texto, o que o teste de contrato pegou) | RF04, RF05, RF06, RF08 | `_framework/tests/test_executor_contract.py`, `_framework/rules/workflow-rules.yaml`, `_framework/rules/kit-index.yaml`, `_framework/scripts/ci_gate_verify_sdd.py` | 4 |
+| 7 | Modelo M4 e o teste do exemplo; o teste que guarda a reordenação do procedimento passa a ignorar o bloco do M4 | RF07 | `_framework/procedures/verify-sdd.md`, `_framework/tests/test_executor_contract.py`, `_framework/tests/test_procedures_structure.py` | 6 |
+| 8 | Manifesto e gerados; o teste do mapa passa a contar 23 seções | RF04 | `_framework/rules/kit-index.yaml`, `_framework/tests/test_render_indexes.py`, gerados por `render_prompts.py` | 7 |
 | 9 | Espelho no central, branch e PR próprios | RF01 a RF08 | `central:_framework/`, mesmos caminhos | 8 |
 
 ## Critérios de aceite / definição de pronto

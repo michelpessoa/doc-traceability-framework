@@ -57,9 +57,25 @@ def test_verify_sdd_step5_before_fenced_templates_headings():
         assert re.search(rf"modelo {model}\b", step4), f"passo 4 não cita o modelo {model}"
 
 
+M4_INTRO = (
+    "Quem roda este procedimento a partir de um executor pode devolver também o",
+    "resultado em JSON, conforme o modelo M4, opcional. Ele não substitui M1 nem",
+    "M3.",
+)
+
+
+def _without_m4(lines: list[str]) -> list[str]:
+    """Tira o que a SDD-DTF-0053 acrescentou (modelo M4 e a frase que o cita):
+    este teste guarda a reordenação anterior, não proíbe conteúdo novo."""
+    start = next(i for i, line in enumerate(lines) if line.startswith("**M4."))
+    end = next(i for i, line in enumerate(lines) if line.startswith("## Red flags"))
+    kept = lines[:start] + lines[end:]
+    return [line for line in kept if line not in M4_INTRO]
+
+
 def test_verify_sdd_reorder_preserves_lines():
     before = _nonblank(FIXTURE)
-    after = _nonblank(PROCEDURE)
+    after = _without_m4(_nonblank(PROCEDURE))
     from collections import Counter
 
     b, a = Counter(before), Counter(after)

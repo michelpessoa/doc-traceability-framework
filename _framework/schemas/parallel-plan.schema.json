@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "parallel-plan.schema.json",
+  "title": "Saída de parallel_plan.py --json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parallel_groups",
+    "blocked_pairs"
+  ],
+  "properties": {
+    "parallel_groups": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "blocked_pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "a",
+          "b",
+          "files"
+        ],
+        "properties": {
+          "a": {
+            "type": "string"
+          },
+          "b": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

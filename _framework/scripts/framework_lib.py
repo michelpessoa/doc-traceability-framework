@@ -14,6 +14,7 @@ Requer PyYAML (pip install pyyaml --break-system-packages).
 """
 
 import fnmatch
+import json
 import re
 from pathlib import Path
 
@@ -285,12 +286,56 @@ def registry_mode(data: dict) -> str:
 # ---------------------------------------------------------------------------
 
 
-def report(problems, warnings, ok_message: str, report_only: bool = False) -> int:
+RESULT_SCHEMA_ID = "dtf.resultado-validador/1"
+_LEADING_ID_RE = re.compile(r"^(" + ID_PATTERN.pattern.replace(r"\b", "", 1) + r"):")
+
+
+def json_flag(argv: list[str]) -> tuple[list[str], bool]:
+    """Tira `--json` dos argumentos e diz se estava presente (SPEC-DTF-0028, RF01)."""
+    return [a for a in argv if a != "--json"], "--json" in argv
+
+
+def _item(message: str) -> dict:
+    """Mensagem com o id do documento quando ela começa por um id seguido de `:` (RF02)."""
+    found = _LEADING_ID_RE.match(message)
+    return {"documento": found.group(1) if found else None, "mensagem": message}
+
+
+def report(
+    problems,
+    warnings,
+    ok_message: str,
+    report_only: bool = False,
+    *,
+    as_json: bool = False,
+    script: str = "",
+) -> int:
     """
     Imprime avisos e problemas no formato usado por todos os validators.
     Retorna o exit code: 0 se não houver problema (ou se report_only), 1 caso
-    contrário.
+    contrário. Com `as_json`, imprime só o objeto de
+    `_framework/schemas/resultado-validador.schema.json`, com o mesmo exit
+    code (SPEC-DTF-0028).
     """
+    exit_code = 1 if problems and not report_only else 0
+    if as_json:
+        print(
+            json.dumps(
+                {
+                    "schema": RESULT_SCHEMA_ID,
+                    "script": script,
+                    "framework_version": (load_rules().get("framework") or {}).get("version"),
+                    "ok": not problems,
+                    "exit_code": exit_code,
+                    "problemas": [_item(p) for p in problems],
+                    "avisos": [_item(w) for w in warnings],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return exit_code
+
     for w in warnings:
         print(f"⚠️  {w}")
 
@@ -300,11 +345,32 @@ def report(problems, warnings, ok_message: str, report_only: bool = False) -> in
             print(f"  - {p}")
         if report_only:
             print("\n(modo --report-only: exit 0 mesmo com problemas)")
-            return 0
-        return 1
+        return exit_code
 
     print(ok_message)
     return 0
+
+
+def run_main(main, script: str, argv: list[str]) -> int:
+    """Roda `main`; com `--json`, um erro operacional vira problema no JSON, com exit 1 (SPEC-DTF-0028)."""
+    if "--json" not in argv:
+        return main()
+    try:
+        return main()
+    except SystemExit as saida:
+        if saida.code is None or isinstance(saida.code, int):
+            raise
+        return report([f"erro operacional: {saida.code}"], [], "", as_json=True, script=script)
+    except Exception as erro:  # noqa: BLE001 — qualquer erro operacional vira resultado legível
+        return report([f"erro operacional: {type(erro).__name__}: {erro}"], [], "", as_json=True, script=script)
+
+
+def usage_error(doc: str, as_json: bool, script: str) -> int:
+    """Uso inválido: imprime o docstring, ou o devolve como problema no JSON. Exit 1, como antes."""
+    if as_json:
+        return report([doc.strip()], [], "", as_json=True, script=script)
+    print(doc)
+    return 1
 
 
 _ESCAPED_PIPE = "\\|"

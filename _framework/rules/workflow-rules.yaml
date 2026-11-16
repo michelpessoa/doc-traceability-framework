@@ -14,9 +14,22 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.3.2"
-  last_updated: "2026-09-25"
+  version: "2.4.0"
+  last_updated: "2026-11-16"
   changelog:
+    - version: "2.4.0"
+      date: "2026-11-16"
+      summary: >
+        SPEC-DTF-0028 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0053): contrato
+        do executor, não-retroativo. Seção 20 nova, `executor_contract`: o
+        que um executor pode ler, os scripts com saída de máquina e o
+        esquema de cada uma (`_framework/schemas/`), e o que pode escrever
+        no central; quebra só em versão maior. `--json` em validate_doc,
+        validate_state, check_source_docs, registry_tools validate e
+        check_commit, sem mudar a saída em texto. SDD entregue em
+        `docs/sdd/arquivo/` e campo opcional `entrega` no registry.
+        Modelo M4 do verify-sdd em JSON, com `causa`. Nenhum gate,
+        critério, sizing, ciclo de status ou front-matter muda.
     - version: "2.3.2"
       date: "2026-09-25"
       summary: >
@@ -233,6 +246,11 @@ repository_topology:
     role: "Fonte da verdade de todas as decisões, de todos os projetos, para sempre."
   project_repo:
     contains: ["docs/sdd/ (SDDs deste projeto)"]
+    delivered: "docs/sdd/arquivo/"
+    delivered_note: >
+      SDD entregue pode sair do caminho dos agentes para esta pasta, com o
+      status `implemented` mantido e o `path` do registry atualizado; a
+      entrada registra a entrega no campo opcional `entrega` (seção 9).
     registry: "docs/sdd/registry.yaml (local, mesmo schema, escopo só SDD)"
     role: "Onde a IA de implementação lê a SDD e onde o rastreio de código (commits/PRs) acontece."
   cross_repo_reference:
@@ -782,6 +800,10 @@ registry:
     human_readable_view: "docs/sdd/registry.md"
     scope: "Só SDD deste projeto, no repositório de código do projeto"
   entry_fields: ["id", "type", "title", "status", "owner", "created", "updated", "relates_to", "path"]
+  optional_entry_fields: ["entrega"]
+  optional_entry_fields_note: >
+    `entrega: {pr, data, resultado}`, só em SDD entregue; `registry_tools.py
+    trace` imprime quando existe.
   update_rule: >
     Toda vez que um documento é criado ou tem status/relates_to alterado,
     o registry correspondente (central ou de projeto, conforme o tipo)
@@ -1503,3 +1525,52 @@ sizing:
         reality: "O critério é objetivo: ~3 arquivos, nenhum critério do gate, sem mudança de comportamento externo. Se falhar em um, não é small."
       - flag: "É large, mas a RFC eu escrevo depois."
         reality: "Documento retroativo é a violação da seção 13 com outro nome."
+
+##############################################################################
+# 20. CONTRATO DO EXECUTOR
+##############################################################################
+# O que um executor (ferramenta que roda o fluxo deste framework sem um
+# humano em cada passo) pode usar do framework sem depender de detalhe
+# interno: chaves deste YAML que lê, scripts com saída de máquina e o
+# esquema de cada uma, e o que pode escrever no central. O kit não cita
+# nenhum executor específico. Quebrar algo declarado aqui só em versão
+# maior; versão minor só acrescenta. O teste
+# _framework/tests/test_executor_contract.py roda cada saída declarada e
+# valida contra o esquema. Ver SPEC-DTF-0028, ADR-DTF-0008.
+executor_contract:
+  contract_version: 1
+  reads: [sizing, decision_gates, status_lifecycle, repository_topology, frontmatter_schema, registry]
+  machine_outputs:
+    - script: validate_doc.py
+      args: ["<documento>", "--json"]
+      schema: _framework/schemas/resultado-validador.schema.json
+    - script: validate_state.py
+      args: ["<sdd>", "--json"]
+      schema: _framework/schemas/resultado-validador.schema.json
+    - script: check_source_docs.py
+      args: ["<sdd>", "<central_docs_dir>", "--json"]
+      schema: _framework/schemas/resultado-validador.schema.json
+    - script: registry_tools.py
+      args: ["validate", "<docs_dir>", "--json"]
+      schema: _framework/schemas/resultado-validador.schema.json
+    - script: check_commit.py
+      args: ["<mensagem_de_commit>", "--json"]
+      schema: _framework/schemas/resultado-validador.schema.json
+    - script: ci_gate_verify_sdd.py
+      args: ["--base", "<base>", "--head", "<head>", "--project-code", "<project_code>", "--pr-body-file", "<pr_body_file>", "--json"]
+      schema: _framework/schemas/ci-gate-verify-sdd.schema.json
+    - script: parallel_plan.py
+      args: ["<sdd>", "--json"]
+      schema: _framework/schemas/parallel-plan.schema.json
+  verification_output:
+    procedure: _framework/procedures/verify-sdd.md
+    model: M4
+    schema: _framework/schemas/resultado-verificacao.schema.json
+  writes:
+    - "Rascunho em draft de STRAT, RFC, ADR e SPEC no central, sempre por PR, nunca em main."
+    - "Entrada em docs/{PROJECT_CODE}/LESSONS.md, por PR."
+    - "Campo entrega e path de SDD entregue no registry de projeto."
+  exit_codes:
+    "0": "passou (ou --report-only)"
+    "1": "reprovado, uso inválido ou erro operacional"
+    "2": "erro operacional do ci_gate_verify_sdd.py (registry central inacessível ou front-matter que não parseia)"

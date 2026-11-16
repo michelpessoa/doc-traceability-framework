@@ -25,12 +25,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from framework_lib import (  # noqa: E402
     iter_documents,
+    json_flag,
     load_rules,
     project_version,
     read_frontmatter,
     report,
     rule_applies_since_date,
+    run_main,
     split_table_row,
+    usage_error,
     version_date,
 )
 
@@ -396,11 +399,11 @@ def collect(targets) -> list[Path]:
 
 
 def main() -> int:
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    report_only = "--report-only" in sys.argv
+    argv, as_json = json_flag(sys.argv[1:])
+    args = [a for a in argv if not a.startswith("--")]
+    report_only = "--report-only" in argv
     if not args:
-        print(__doc__)
-        return 1
+        return usage_error(__doc__, as_json, "validate_state.py")
 
     paths = collect(args)
     problems, warnings = [], []
@@ -414,8 +417,10 @@ def main() -> int:
         warnings,
         f"✅ {len(paths)} documento(s) verificados: nenhuma SDD `implemented` sem evidência.",
         report_only=report_only,
+        as_json=as_json,
+        script="validate_state.py",
     )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_main(main, "validate_state.py", sys.argv[1:]))

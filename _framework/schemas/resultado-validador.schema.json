@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resultado-validador.schema.json",
+  "title": "Resultado de um validador do framework com --json (SPEC-DTF-0028, RF01 e RF02)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "script",
+    "framework_version",
+    "ok",
+    "exit_code",
+    "problemas",
+    "avisos"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dtf.resultado-validador/1"
+    },
+    "script": {
+      "type": "string",
+      "minLength": 1
+    },
+    "framework_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "problemas": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "avisos": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documento",
+        "mensagem"
+      ],
+      "properties": {
+        "documento": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mensagem": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
