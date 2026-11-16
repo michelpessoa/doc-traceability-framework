@@ -151,12 +151,12 @@ tanto quanto SDD estourada são falha:
       correspondente.
 - [x] Todo arquivo tocado aparece na "Decomposição em tasks" ou é gerado
       por `render_prompts.py`.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
-      foi pedido por nenhum requisito consolidado. (Não confirmado:
-      `executor_contract` ganhou `verification_output` e `exit_codes`,
-      que a SPEC não declara, e perdeu `description`, que ela declara;
-      `resultado-verificacao.schema.json` exige `sdd_id`, que a SPEC não
-      lista. Ver `validation-SDD-DTF-0053.md`.)
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
+      foi pedido por nenhum requisito consolidado. (Rodada 1 não
+      confirmou; rodada 2 confirmou: `executor_contract` tem exatamente
+      `contract_version`, `description`, `reads`, `machine_outputs` e
+      `writes`, e `resultado-verificacao.schema.json` tem exatamente os
+      campos da SPEC. Ver `validation-SDD-DTF-0053.md`.)
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
@@ -171,11 +171,20 @@ sensores A04 e A05 rodaram numa cópia descartável do head, nunca no
 checkout. A SPEC-DTF-0028 foi lida no worktree descartável da branch
 `docs/spec-dtf-0028-approved` do central (PR #193 ainda não mergeada).
 
+Rodada 2: todas as linhas da rodada 2 foram rodadas em outra sessão
+independente, no kit com head `c0e2c3b` (base fixa `279b10a`) e no central
+com head `0fb03c3` (branch `sdd/SDD-DTF-0053-espelho`). Os "antes" rodaram
+em worktree descartável de `279b10a` com os testes, a fixture e os esquemas
+novos copiados por cima; os sensores, em worktree descartável do head. A
+PR #193 do central foi mergeada entre as rodadas: a SPEC-DTF-0028 está
+`approved` no `main` do central, idêntica à da branch lida na rodada 1.
+
 Verificação independente completa em `docs/sdd/validation-SDD-DTF-0053.md`.
-Veredito: **FAIL** (causa `implementacao`): A02 não tem a parte
-automatizada que a SDD declara, e `executor_contract` e o esquema da
-verificação divergem do contrato da SPEC, que a SDD manda seguir sem
-inventar campo.
+Veredito atual (rodada 2): **PASS**. Rodada 1: **FAIL** (causa
+`implementacao`): A02 não tinha a parte automatizada que a SDD declara, e
+`executor_contract` e o esquema da verificação divergiam do contrato da
+SPEC; os três achados foram corrigidos em `c0e2c3b` e conferidos na
+rodada 2.
 
 **Verificador independente:** sim
 
@@ -192,6 +201,17 @@ inventar campo.
 | 1 | A08 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | `✅ _framework/INDEX.md: em dia.`, `✅ docs/sdd/INDEX.md: em dia.` (mais o aviso pré-existente de 30 SDDs sem seção de arquivos); `exit=0` | sem teste automatizado (comando de medição) | Sim | n/a (comando de medição, sem asserção em teste) | automatizado |
 | 1 | A09 | `python3 -m pytest -q`; `ruff format --check` nos 19 `.py` do diff; o que o CI roda: `ruff check`/`ruff format --check`/`mypy` em `_framework/scripts`, as duas suítes, `framework_check.py --auto`, `check_renderings.py`, `render_indexes.py sdd docs/sdd --check`, `generate_registry_md.py docs/sdd --check`, `check_commit.py --range origin/main..HEAD`; `_framework/scripts/selftest.py` | `324 passed in 44.02s`; `19 files already formatted`; `All checks passed!`; `Success: no issues found in 35 source files`; `35 files already formatted`; `181 passed`; `143 passed`; `Todas as verificações do framework passaram`; `5 renderização(ões) concordam`; `docs/sdd/INDEX.md: em dia`; `docs/sdd/registry.md: em dia`; `3 mensagem(ns) de commit no formato esperado`; `7 mutação(ões): todos os mutantes morreram`; todos exit 0 | Suíte inteira; sensores próprios em A02, A04 e A05 | Sim | `_framework/tests/test_executor_contract.py:118` | automatizado |
 | 1 | A10 | No central: `diff -r -x __pycache__ <kit>/_framework _framework; echo diff_exit=$?`; `cmp` de `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `docs/especificacao.md`, `requirements.txt` | `diff_exit=0` (sem `-x`, só diferem `.pyc` de cache, não versionados); os cinco arquivos iguais; diff do central contra `origin/main` = os mesmos caminhos do kit fora de `docs/sdd/`, mais `docs/DTF/registry.md` regerado (cabeçalho v2.4.0) | sem teste automatizado (comando de medição) | Sim | n/a (comando de medição, sem asserção em teste) | automatizado |
+| 2 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0053.md <worktree docs/spec-dtf-0028-approved>/docs/DTF`; idem contra worktree do `main` do central (`96c376f`, com a PR #193 mergeada); leitura do bloco `executor_contract` e do M4 em "Contratos técnicos" da SPEC contra o YAML e o esquema | Branch da SPEC: `✅ source_docs de SDD-DTF-0053.md conferem com o registry central.`, exit 0. `main` do central: a mesma linha, exit 0 (na rodada 1 saía 1 por a SPEC estar `in_review`). `git diff 3ba4b05 96c376f -- SPEC-DTF-0028.md` vazio: SPEC igual à lida na rodada 1. RF01 a RF08 presentes na SPEC e na SDD; chaves de `executor_contract` iguais às do bloco da SPEC; campos de `criterios` iguais | sem teste automatizado (leitura e comando de medição) | Sim | `_framework/scripts/check_source_docs.py:96` | manual (passo 0, itens 2 a 4, é leitura, ADR-DTF-0007) |
+| 2 | A01 | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`, ANTES em worktree de `279b10a` com o teste, a fixture e os esquemas copiados; DEPOIS no head | ANTES: `ImportError: cannot import name 'json_flag' from 'framework_lib'`, `1 error in 0.19s`. DEPOIS: `26 passed in 4.95s` (13 da rodada 1 mais 13 de A02) | Ver A05; mutações de A02 também derrubam este arquivo | Sim | `_framework/scripts/tests/test_report_json.py:54`, `_framework/scripts/tests/test_report_json.py:244` | automatizado |
+| 2 | A02 | `pytest _framework/scripts/tests/test_report_json.py -q` (casos `test_saida_em_texto_igual_a_2_3_2[*]`, 12, e `test_fixture_de_texto_cobre_todos_os_casos`); fixture conferida com `scratchpad/fixture_check.py`, que roda os 12 `CASOS` com os scripts de `279b10a` e compara com `fixtures/saida_texto_2_3_2.json`; os mesmos 13 testes em `279b10a` (sem o import de `json_flag`); sensor em worktree descartável do head: `usage_error` imprimindo `USO ALTERADO`; noutra rodada, `nenhuma SDD` → `nenhuma SDDx` na mensagem de OK do `validate_state.py:418` | `12/12 casos iguais à fixture com scripts de 279b10a`; em `279b10a`: `13 passed, 13 deselected`; no head: `26 passed`. Mutação do uso: `5 failed, 21 passed` (os cinco `*_uso`); mutação do OK: `1 failed, 25 passed` (`validate_state_ok`); restaurado: `26 passed in 5.33s` | Mutações derrubadas (2 de 2; na rodada 1 as duas sobreviviam) | Sim | `_framework/scripts/tests/test_report_json.py:244`, `_framework/scripts/tests/test_report_json.py:245` | automatizado |
+| 2 | A03 | `python3 -m pytest _framework/tests/test_executor_contract.py -q`, ANTES em worktree de `279b10a` com o teste e os esquemas copiados; DEPOIS no head | ANTES: `8 failed, 1 passed in 0.88s` (passa só `test_campos_da_verificacao_sao_os_da_spec`, que lê o esquema copiado). DEPOIS: `9 passed in 2.19s` | Ver A04; sensor extra: `sdd_id` devolvido ao esquema da verificação dá `2 failed, 7 passed` (`test_exemplo_do_m4_valida_contra_o_esquema`, `test_campos_da_verificacao_sao_os_da_spec`) | Sim | `_framework/tests/test_executor_contract.py:83`, `_framework/tests/test_executor_contract.py:148`, `_framework/tests/test_executor_contract.py:156` | automatizado |
+| 2 | A04 | Worktree descartável do head: `sed 's/^sizing:$/sizing_renomeado:/'` no YAML; noutra rodada, o primeiro `schema:` de `machine_outputs` trocado por `_framework/schemas/nao-existe.schema.json`; noutra, `exit_codes: {}` acrescentado ao `executor_contract`; pytest de A03 a cada vez; restaurado do backup | `sizing` renomeado: `1 failed, 8 passed` (`test_reads_existem_no_yaml`). Esquema inexistente: `2 failed, 7 passed` (`test_esquemas_declarados_existem_e_sao_validos`, `test_saidas_declaradas_validam_contra_o_esquema`). Chave inventada: `1 failed, 8 passed` (`test_chaves_do_contrato_sao_as_da_spec`). Restaurado: `9 passed in 2.50s` | Mutações derrubadas (3 de 3) | Sim | `_framework/tests/test_executor_contract.py:83`, `_framework/tests/test_executor_contract.py:89`, `_framework/tests/test_executor_contract.py:148` | automatizado |
+| 2 | A05 | Worktree descartável do head: `_item` (`framework_lib.py:301`) devolvendo sempre `{"documento": None, ...}`; pytest de A01; restaurado | Com a mutação: `3 failed, 23 passed` (`test_report_json_com_problema`, `test_validate_doc_json`, `test_registry_tools_validate_json`). Restaurado: `26 passed in 5.43s` | Mutação derrubada | Sim | `_framework/scripts/tests/test_report_json.py:54` | automatizado |
+| 2 | A06 | `python3 -m pytest _framework/scripts/tests/test_registry_entrega.py -q`, ANTES em worktree de `279b10a` com o teste copiado; DEPOIS no head | ANTES: `2 failed, 2 passed in 0.48s`. DEPOIS: `4 passed in 0.49s` | O "antes" derruba os dois testes de impressão da entrega; os outros dois são guardas de não regressão | Sim | `_framework/scripts/tests/test_registry_entrega.py:31`, `_framework/scripts/tests/test_registry_entrega.py:51` | automatizado |
+| 2 | A07 | `grep -n 'version: "2.4.0"' _framework/rules/workflow-rules.yaml`; no central (branch do espelho, `0fb03c3`): `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | `17:  version: "2.4.0"` e `20:    - version: "2.4.0"`; central: `✅ 134 documento(s) ok.`, `✅ Todas as verificações do framework passaram.`, `exit=0`, 0 linhas com `❌` | sem teste automatizado (comando de medição) | Sim | `_framework/rules/workflow-rules.yaml:17` | automatizado |
+| 2 | A08 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | `✅ _framework/INDEX.md: em dia.`, `✅ docs/sdd/INDEX.md: em dia.` (mais o aviso pré-existente de 30 SDDs sem seção de arquivos); `exit=0` | sem teste automatizado (comando de medição) | Sim | n/a (comando de medição, sem asserção em teste) | automatizado |
+| 2 | A09 | `python3 -m pytest -q`; `ruff format --check` nos 19 `.py` do diff; passos do CI do kit: `ruff check`, `mypy`, `ruff format --check` em `_framework/scripts`, `pytest _framework/scripts/tests/`, `framework_check.py --auto`, `render_prompts.py --check`, `check_renderings.py`, `pytest _framework/tests/`, `render_indexes.py sdd docs/sdd --check`, `generate_registry_md.py docs/sdd --check`, higiene de cache, `check_commit.py --range origin/main..HEAD`; `_framework/scripts/selftest.py` | `339 passed in 48.38s`; `19 files already formatted`; `All checks passed!`; `Success: no issues found in 35 source files`; `35 files already formatted`; `194 passed`; `Todas as verificações do framework passaram` (exit 0); `exit=0`; `5 renderização(ões) concordam`; `145 passed`; `docs/sdd/INDEX.md: em dia`; `docs/sdd/registry.md: em dia`; caches ignorados, 0 rastreados, 0 no status; `5 mensagem(ns) de commit no formato esperado` (exit 0); selftest `7 mutação(ões): todos os mutantes morreram` (exit 0) | Suíte inteira; sensores próprios em A02, A03, A04 e A05 | Sim | `_framework/tests/test_executor_contract.py:148`, `_framework/scripts/tests/test_report_json.py:244` | automatizado |
+| 2 | A10 | No central (`0fb03c3`): `diff -r -x __pycache__ <kit>/_framework _framework; echo diff_exit=$?`; `cmp` de `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `docs/especificacao.md`, `requirements.txt`; `git diff --name-only origin/main...HEAD` | `diff_exit=0`; os cinco arquivos iguais; diff do central desde o merge-base = 33 caminhos em `_framework/` (os mesmos 33 do kit) mais os cinco de raiz e `docs/DTF/registry.md`, 39 no total; `git merge-tree` com o `main` atual sem conflito | sem teste automatizado (comando de medição) | Sim | n/a (comando de medição, sem asserção em teste) | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |

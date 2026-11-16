@@ -1,6 +1,88 @@
 # Verificação — SDD-DTF-0053
 
-- **Veredito:** FAIL
+- **Veredito:** PASS
+- **Diff verificado:** `279b10a..c0e2c3b` no kit (branch `sdd/SDD-DTF-0053-contrato-do-executor`); espelho no central em `0fb03c3` (branch `sdd/SDD-DTF-0053-espelho`), contra o merge-base `d812311` com o `main` do central
+- **Rodada:** 2
+- **Verificador independente:** sim (sessão diferente da que implementou e da que corrigiu)
+
+## Rodada 2
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| Fidelidade à origem | `check_source_docs.py` contra a branch `docs/spec-dtf-0028-approved` e contra o `main` do central (`96c376f`, PR #193 mergeada); leitura do bloco `executor_contract` e do M4 da SPEC | exit 0 nos dois; SPEC igual à da rodada 1; chaves e campos iguais aos da SPEC | sem teste automatizado (leitura) | Sim |
+| A01 (RF01, RF02) | `pytest _framework/scripts/tests/test_report_json.py -q`, ANTES em `279b10a` com teste, fixture e esquemas copiados | ANTES `ImportError ... json_flag`, 1 error; DEPOIS `26 passed` | ver A05 e A02 | Sim |
+| A02 (RF01) | 12 casos de `test_saida_em_texto_igual_a_2_3_2` mais o de cobertura da fixture; `fixture_check.py` rodando os `CASOS` com os scripts de `279b10a`; mutações em worktree descartável | `12/12 casos iguais à fixture com scripts de 279b10a`; em `279b10a` `13 passed`; mutação do uso `5 failed`; mutação do OK do `validate_state.py` `1 failed`; restaurado `26 passed` | 2 de 2 derrubadas | Sim |
+| A03 (RF03, RF04, RF05, RF07) | `pytest _framework/tests/test_executor_contract.py -q`, ANTES em `279b10a` com teste e esquemas copiados | ANTES `8 failed, 1 passed`; DEPOIS `9 passed`; `sdd_id` devolvido ao esquema: `2 failed` | ver A04 | Sim |
+| A04 (RF05) | `sizing` renomeado; `schema` inexistente; `exit_codes: {}` acrescentado ao contrato | `1 failed`; `2 failed`; `1 failed`; restaurado `9 passed` | 3 de 3 derrubadas | Sim |
+| A05 (RF02) | `_item` devolvendo sempre `documento: None` | `3 failed, 23 passed`; restaurado `26 passed` | derrubada | Sim |
+| A06 (RF06) | `pytest _framework/scripts/tests/test_registry_entrega.py -q`, ANTES em `279b10a` | ANTES `2 failed, 2 passed`; DEPOIS `4 passed` | o antes derruba os dois testes de impressão | Sim |
+| A07 (RF08) | `grep -n 'version: "2.4.0"'`; `framework_check.py --auto` no central (espelho) | linhas 17 e 20; `134 documento(s) ok`, `exit=0` | sem teste automatizado (medição) | Sim |
+| A08 | `render_prompts.py --check; echo exit=$?` | `exit=0` | sem teste automatizado (medição) | Sim |
+| A09 | `pytest -q`; `ruff format --check` nos 19 `.py` do diff; passos do CI; `selftest.py` | `339 passed`; `19 files already formatted`; ruff, mypy, `194 passed`, `145 passed`, `framework_check`, `render_prompts --check`, `check_renderings`, `render_indexes --check`, `generate_registry_md --check`, higiene de cache, `check_commit --range` (5 mensagens): todos exit 0; selftest `7 mutação(ões): todos os mutantes morreram` | suíte inteira | Sim |
+| A10 | `diff -r -x __pycache__ <kit>/_framework _framework` no central; `cmp` dos arquivos de raiz; `git diff --name-only origin/main...HEAD` | `diff_exit=0`; arquivos de raiz iguais; 39 caminhos, os 33 de `_framework/` iguais aos do kit | sem teste automatizado (medição) | Sim |
+
+### Achados da rodada 1, conferidos
+
+1. **A02:** resolvido. `test_report_json.py:240-245` roda os cinco scripts
+   como processo, em 12 casos (problema, `--report-only`, uso, OK), e compara
+   stdout e código de saída com `fixtures/saida_texto_2_3_2.json`. A fixture
+   corresponde à saída real do 2.3.2: os 12 casos rodados com os scripts de
+   `279b10a` dão saída e código idênticos. As duas mutações que sobreviviam
+   na rodada 1 agora reprovam (5 e 1 falhas).
+2. **`executor_contract`:** resolvido. Chaves `contract_version`,
+   `description`, `reads`, `machine_outputs`, `writes`, como no bloco da
+   SPEC; `verification_output` e `exit_codes` removidos; o M4 não cita mais a
+   chave removida (o YAML aponta o esquema da verificação só em comentário).
+   `test_chaves_do_contrato_sao_as_da_spec` fixa isso, e o sensor o derruba.
+3. **Esquema da verificação:** resolvido. `required` e `properties` são
+   exatamente `status`, `causa`, `criterios`, `evidencias`, `descompassos`;
+   `evidencias` é lista de strings sem padrão; o exemplo M4 não traz `sdd_id`
+   e valida. `test_campos_da_verificacao_sao_os_da_spec` fixa isso.
+
+### Descompassos encontrados (rodada 2)
+
+Nenhum.
+
+Escopo nas duas direções: os 42 arquivos de `git diff --name-only
+origin/main` no kit (igual ao diff contra `279b10a`) aparecem na
+decomposição em tasks ou são gerados por `render_prompts.py`; o único
+arquivo novo desde a rodada 1, a fixture, entrou na task 1 da SDD no mesmo
+commit da correção. No central, o diff de dois pontos contra o `main` atual
+mostra também `docs/DTF/03-spec/SPEC-DTF-0028.md` e `docs/DTF/registry.yaml`
+com `approved` → `in_review`: é só porque a PR #193 foi mergeada depois que
+a branch do espelho saiu de `d812311`, não mudança da branch (o diff desde o
+merge-base não os contém, e `git merge-tree` com o `main` não tem conflito).
+Todo RF01 a RF08 tem código e teste.
+
+Observações que não violam critério:
+
+- Os valores de `writes` e o placeholder de `args` do `validate_doc.py`
+  (`<documento>` em vez de `<arquivo>`) não são cópia literal do bloco da
+  SPEC, que é ilustrativo; as chaves e a estrutura são as declaradas. O
+  terceiro item de `writes` menciona também o `path` de SDD entregue, que é
+  o `delivered` de RF06.
+- O pré-requisito anotado na rodada 1 (PR #193 mergeada) está cumprido:
+  `check_source_docs.py` contra o `main` do central sai com 0.
+- O espelho no central ainda precisa da própria PR; os dois `E741` em
+  `_framework/tests/test_procedures_structure.py` seguem pré-existentes e
+  fora do lint do CI.
+
+### Lições (rodada 2)
+
+- Red flag: fixture "gravada na versão anterior" sem prova de que foi
+  gravada lá. Rodar os mesmos casos contra o commit de base e comparar com a
+  fixture custa um script; sem isso, uma fixture regravada com a saída nova
+  passaria pelo mesmo teste.
+- Red flag: diff de dois pontos contra um `main` que andou. Mudança de
+  outra PR mergeada depois aparece invertida como se fosse da branch; o
+  escopo se confere desde o merge-base.
+
+---
+
+## Rodada 1
+
+- **Veredito da rodada 1:** FAIL
+
 - **Causa:** implementacao
 - **Diff verificado:** `279b10a..221d77f` no kit (branch `sdd/SDD-DTF-0053-contrato-do-executor`); espelho no central em `a8e54d3` (branch `sdd/SDD-DTF-0053-espelho`), contra `origin/main` do central
 - **Rodada:** 1
@@ -20,7 +102,7 @@
 | A09 | `pytest -q`; `ruff format --check` nos 19 `.py` do diff; passos do CI; `selftest.py` | `324 passed`; `19 files already formatted`; ruff, mypy, `181 passed`, `143 passed`, `framework_check`, `check_renderings`, `render_indexes --check`, `generate_registry_md --check`, `check_commit --range`: todos exit 0; selftest `7 mutação(ões): todos os mutantes morreram` | suíte inteira | Sim |
 | A10 | `diff -r -x __pycache__ <kit>/_framework _framework` no central; `cmp` dos arquivos de raiz | `diff_exit=0`; arquivos de raiz iguais | sem teste automatizado (medição) | Sim |
 
-## Descompassos encontrados
+### Descompassos encontrados (rodada 1)
 
 1. **A02 sem a parte automatizada declarada (bloqueante).** A SDD diz que "o
    teste de A01 compara stdout e código de saída sem `--json` com os de
@@ -78,7 +160,7 @@ Observações que não violam critério:
 - Para `implemented`, a PR #193 do central (SPEC-DTF-0028 `approved`) tem de
   estar mergeada: contra o `main` de hoje, `check_source_docs.py` sai com 1.
 
-## Lições
+### Lições (rodada 1)
 
 - Red flag: critério de "saída igual à de antes" com perfil automatizado,
   verificado só por um teste unitário da função comum. Se o texto sai também
