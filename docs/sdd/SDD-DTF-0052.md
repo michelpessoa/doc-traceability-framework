@@ -2,7 +2,7 @@
 id: SDD-DTF-0052
 type: SDD
 title: "Gate de CI do verify-sdd aceita o relatório com o nome legado validation-{PROJ}-{SEQ}.md, além do canônico"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-16"
@@ -139,11 +139,12 @@ no checkout. Fidelidade à origem: n/a, sizing `small` sem `source_docs`
 Verificação independente completa em `docs/sdd/validation-SDD-DTF-0052.md`.
 Veredito: **PASS**.
 
+Fidelidade à origem: n/a, sizing `small` sem `source_docs` (precedente SDD-DTF-0047 e SDD-DTF-0050).
+
 **Verificador independente:** sim
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
-| 1 | Fidelidade à origem | n/a (sizing small, `source_docs: []`) | SDD lida inteira; RF01 a RF05 têm código e teste ou grep correspondentes | n/a | Sim | n/a | n/a |
 | 1 | A01 | `python3 -m pytest _framework/tests/test_ci_gate_verify_sdd.py -q -k "legado or canonico or nenhum_relatorio"`, ANTES em worktree de `dd4a510` com o teste novo copiado; DEPOIS no head `649d1f2` | ANTES: `3 failed, 1 passed, 13 deselected` (falham `test_relatorio_legado_sozinho_passa`, `test_nenhum_relatorio_cita_os_dois_caminhos`, `test_cobertura_cita_o_relatorio_legado_lido`; o de precedência passa no antes, esperado, pois o código antigo só lê o canônico). DEPOIS: `4 passed, 13 deselected` | Ver A02, A03 e a mutação extra do RF04 em A02 | Sim | _framework/tests/test_ci_gate_verify_sdd.py:182, _framework/tests/test_ci_gate_verify_sdd.py:196, _framework/tests/test_ci_gate_verify_sdd.py:208, _framework/tests/test_ci_gate_verify_sdd.py:209, _framework/tests/test_ci_gate_verify_sdd.py:225 | automatizado |
 | 1 | A02 | Worktree descartável do head: `paths.append(...sdd_id[4:]...)` trocado por `pass` em `validation_paths`; pytest do A01; restaurado do backup. Extra (RF04): mensagem de cobertura voltada a `validation-{sdd_id}.md` fixo; idem | Com a mutação: `3 failed, 1 passed` (legado sozinho, nenhum relatório, cobertura legado). Restaurado: `4 passed`. Extra RF04: `1 failed, 3 passed` (`test_cobertura_cita_o_relatorio_legado_lido`); restaurado `4 passed`; `git status` limpo | Mutações derrubadas | Sim | _framework/tests/test_ci_gate_verify_sdd.py:182, _framework/tests/test_ci_gate_verify_sdd.py:208, _framework/tests/test_ci_gate_verify_sdd.py:225 | automatizado |
 | 1 | A03 | Worktree descartável do head: `for path in paths:` trocado por `for path in reversed(paths):` em `check_validation_presence`; pytest do A01; restaurado | Com a mutação: `1 failed, 3 passed` (`test_relatorio_canonico_tem_precedencia_sobre_legado`, gate passou com o legado). Restaurado: `4 passed` | Mutação derrubada | Sim | _framework/tests/test_ci_gate_verify_sdd.py:195 | automatizado |
