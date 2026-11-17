@@ -128,3 +128,13 @@ def test_ordem_embutida_e_rotulos_cobrem_o_yaml_real():
     assert declared, "workflow-rules.yaml sem document_types"
     assert sorted(declared) == sorted(grm.TYPE_ORDER)
     assert set(declared) <= set(grm.TYPE_LABEL)
+
+
+def test_ordem_segue_o_yaml_mesmo_diferente_da_embutida(monkeypatch):
+    """RF01: com regras numa ordem diferente de TYPE_ORDER, vale a das regras."""
+    rules = {"document_types": {"SDD": {}, "SPEC": {}}, "legacy_document_types": {"TS": {}}}
+    assert grm.type_order(rules) == ["SDD", "SPEC", "TS"]
+    monkeypatch.setattr(grm, "load_rules", lambda *a, **k: rules)
+    monkeypatch.setattr(grm, "find_rules_file", lambda *a, **k: Path("workflow-rules.yaml"))
+    text = grm.render_registry(_registry_with(["TS", "SPEC", "SDD"]))
+    assert _sections(text) == ["SDD", "SPEC", "Tech Spec"]

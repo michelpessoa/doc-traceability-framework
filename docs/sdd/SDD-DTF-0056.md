@@ -93,7 +93,7 @@ regeneração de `registry.md` em projetos que não sejam o DTF do central.
 | 1 | Testes novos, vistos falhar com o código atual | RF01 a RF06 | `_framework/scripts/tests/test_generate_registry_md.py` | |
 | 2 | Ordem derivada do YAML, rótulos e seção para tipo não declarado | RF01 a RF05 | `_framework/scripts/generate_registry_md.py` | 1 |
 | 3 | Regenerar a cópia da skill e o índice do kit (a faixa de tamanho do teste muda) | RF01 a RF05 | `_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `_framework/INDEX.md` | 2 |
-| 4 | Espelhar no central e regenerar `docs/DTF/registry.md`, em branch e PR próprios | RF01 a RF06 | `central:_framework/scripts/generate_registry_md.py`, `central:_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `central:_framework/scripts/tests/test_generate_registry_md.py`, `central:docs/DTF/registry.md` | 3 |
+| 4 | Espelhar no central e regenerar `docs/DTF/registry.md`, em branch e PR próprios | RF01 a RF06 | `central:_framework/scripts/generate_registry_md.py`, `central:_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `central:_framework/scripts/tests/test_generate_registry_md.py`, `central:docs/DTF/registry.md`, `central:_framework/INDEX.md` (gerado, idêntico ao do kit) | 3 |
 
 ## Critérios de aceite / definição de pronto
 
@@ -173,3 +173,4 @@ Fidelidade à origem: n/a, sizing `small` sem `source_docs` (precedente SDD-DTF-
 | relates_to | SDD-DTF-0043 (RF08: cabeçalho sem hora e `--check` do registry.md) |
 | Gate RFC → ADR | Nenhum critério de `decision_gates.rfc_to_adr` se aplica |
 | Aprovação | Owner (Michel Pessoa), 2026-11-17, sobre o texto desta SDD em `in_review` |
+| Ajuste pós-aprovação | Owner aceitou em 2026-11-17, depois da rodada 1 do verify-sdd: `_framework/INDEX.md` na task 3, `central:_framework/INDEX.md` na task 4 e um teste de RF01 com regras sintéticas em ordem diferente da embutida |
