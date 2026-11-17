@@ -524,7 +524,7 @@ documents:
   - id: SDD-DTF-0054
     type: SDD
     title: "Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-11-17"
     updated: "2026-11-17"

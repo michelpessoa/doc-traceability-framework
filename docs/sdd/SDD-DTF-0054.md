@@ -2,7 +2,7 @@
 id: SDD-DTF-0054
 type: SDD
 title: "Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-17"
@@ -261,21 +261,43 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF10) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF10) tem código
       correspondente.
-- [ ] Todo arquivo tocado aparece na "Decomposição em tasks" ou é gerado
+- [x] Todo arquivo tocado aparece na "Decomposição em tasks" ou é gerado
       por `render_prompts.py`.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, no kit na
+branch `sdd/SDD-DTF-0054-aprovacao-como-dado` (head `d238b61`), com base
+fixa `d3749e2` (merge-base com `origin/main`), e no central na branch
+`sdd/SDD-DTF-0054-espelho` (head `abac56e`). Os "antes" de A01, A02 e A06
+rodaram numa cópia descartável de `d3749e2` (`git archive`) com os testes
+novos e o esquema copiados por cima. Os sensores mutaram o arquivo da
+worktree com cópia guardada no scratchpad e restauraram por ela; `git
+status --porcelain` vazio depois de cada um.
 
-**Verificador independente:** a preencher pelo verificador
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0054.md`. Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0054.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; leitura da SPEC-DTF-0029 e da ADR-DTF-0008 (itens 3 e 4) do central | `✅ source_docs de SDD-DTF-0054.md conferem com o registry central.` `exit=0`; RF01 a RF10 e os 10 casos de borda iguais aos da SPEC; EARS sem relaxamento; bloco `approval_policy`, campos de `approved_by`, assinatura de `content_hash`, CLI e JSON de `approval_hash.py`, `check_approval(path, version)` e `RULE_SINCE["approved_by"] = "2.5.0"` iguais aos da Parte 2 | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 1 | A01 | `python3 -m pytest _framework/scripts/tests/test_approval_hash.py -q` | ANTES (base `d3749e2` com o teste): `ModuleNotFoundError: No module named 'approval_hash'`, 1 error; DEPOIS: `12 passed` | ver A05; extra: leitura em bytes sem normalizar CRLF → `1 failed` (`test_hash_estavel_com_crlf`); restaurado `12 passed` | Sim | `_framework/scripts/tests/test_approval_hash.py:52` | automatizado |
+| 1 | A02 | `python3 -m pytest _framework/scripts/tests/test_approval.py -q` | ANTES (base com `approval_hash.py` e o teste): `ImportError: cannot import name 'check_approval'`; DEPOIS: `31 passed` | ver A03 e A04; extra: cobrança desligada → `4 failed`; `evidence` não cobrada → `1 failed`; restaurado `31 passed` | Sim | `_framework/scripts/tests/test_approval.py:131` | automatizado |
+| 1 | A03 | Em `validate_state.py`, `if str(data.get("content_sha256")) != current:` trocado por `if False and ...`; `pytest` de A02; restaurado pela cópia | `2 failed, 29 passed` (`test_hash_diferente_reprova`, `test_documento_antigo_com_campo_e_validado`); restaurado `31 passed` | derrubada | Sim | `_framework/scripts/tests/test_approval.py:238` | automatizado |
+| 1 | A04 | No YAML, regra de SPEC com `approver: policy`; `pytest` de A02; restaurado pela cópia | `3 failed, 28 passed` (`test_regras_iniciais_em_ordem`, `test_policy_em_spec_large_reprova`, `test_projeto_antigo_com_policy_em_spec_e_validado`); restaurado `31 passed` | derrubada | Sim | `_framework/scripts/tests/test_approval.py:215` | automatizado |
+| 1 | A05 | No YAML, `hash_excluded_sections: []`; `pytest` de A01; restaurado pela cópia | `2 failed, 10 passed` (`test_hash_ignora_secao_excluida_preenchida`, `test_cli_json_valida_contra_o_esquema`); restaurado `12 passed` | derrubada | Sim | `_framework/scripts/tests/test_approval_hash.py:64` | automatizado |
+| 1 | A06 | `python3 -m pytest _framework/tests/test_executor_contract.py -q` | ANTES (base com o teste e o esquema): `3 failed, 8 passed` (`KeyError` em `approval_policy`); DEPOIS: `11 passed` | `approval_policy` tirado de `reads` → `1 failed`; restaurado `11 passed` | Sim | `_framework/tests/test_executor_contract.py:183` | automatizado |
+| 1 | A07 | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`; `git diff --stat origin/main -- _framework/scripts/tests/fixtures/` e o mesmo contra `d3749e2` | `26 passed`; os dois diffs vazios (`origin/main` = `d3749e2` nesta sessão) | a fixture do 2.3.2 compara stdout e exit dos validadores; sem mutação própria nesta rodada (o requisito é não mudar) | Sim | `_framework/scripts/tests/test_report_json.py:244` | automatizado |
+| 1 | A08 | `grep -n 'version: "2.5.0"' _framework/rules/workflow-rules.yaml`; no central: `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"`; `git status --porcelain docs/` | linhas 17 e 20; `✅ 134 documento(s) ok.` nas duas verificações, `✅ Todas as verificações do framework passaram.`, `exit=0`; porcelain vazio | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 1 | A09 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | todos `em dia`/`sincronizado`, incluindo `approval_hash.py` da skill; `exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 1 | A10 | `python3 -m pytest -q`; `ruff format --check` e `ruff check` nos 10 `.py` do diff; `selftest.py` | `384 passed`; `10 files already formatted`; `All checks passed!`; `✅ 7 mutação(ões): todos os mutantes morreram.` | suíte inteira | Sim | `_framework/tests/test_render_indexes.py:712` | automatizado |
+| 1 | A11 | No central: `diff -r -x __pycache__ -x .pytest_cache /home/user/doc-traceability-framework/_framework _framework; echo "diff exit=$?"` | `diff exit=0` (sem `-x`, só bytecode `__pycache__` não versionado difere) | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
 
 ## Rastreabilidade
 
