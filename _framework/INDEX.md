@@ -50,7 +50,7 @@ Total: 129 arquivos
 | `scripts/tests/test_check_hooks.py` | Testes do check_hooks.py: um caso por regra de hook | Ao alterar a checagem de hooks | 2-8 KB |
 | `scripts/tests/test_check_source_docs.py` | Testes do check_source_docs.py sobre origens da SDD | Ao alterar a checagem de source_docs | 2-8 KB |
 | `scripts/tests/test_discover.py` | Testes da descoberta de diretórios em framework_check.discover | Ao alterar como o framework_check acha os documentos | 2-8 KB |
-| `scripts/tests/test_generate_registry_md.py` | Testes do cabeçalho, da ausência de hora e do --check do registry.md | Ao alterar o generate_registry_md.py | <2 KB |
+| `scripts/tests/test_generate_registry_md.py` | Testes do cabeçalho, da ausência de hora e do --check do registry.md | Ao alterar o generate_registry_md.py | 2-8 KB |
 | `scripts/tests/test_guard_bash.py` | Testes do guard_bash.sh: exit 0 libera, exit 2 bloqueia | Ao alterar o hook de bloqueio de comandos | <2 KB |
 | `scripts/tests/test_hook_post_edit.py` | Testes do hook_post_edit.py sobre documentos mínimos | Ao alterar o hook pós-edição | 2-8 KB |
 | `scripts/tests/test_hook_session_start.py` | Testes do hook_session_start.py com repositório mínimo | Ao alterar o hook de início de sessão | 2-8 KB |
