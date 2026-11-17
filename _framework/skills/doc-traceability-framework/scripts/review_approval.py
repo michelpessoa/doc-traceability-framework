@@ -138,6 +138,7 @@ def main() -> int:
     reviews, problema = _malformed_reviews(Path(args.reviews))
     if problema:
         return _emit(as_json, documento, args.head, [problema], None, 2)
+    assert reviews is not None  # _malformed_reviews devolve lista sempre que não há problema
 
     approvers = approvers_for(path)
     if approvers is None:

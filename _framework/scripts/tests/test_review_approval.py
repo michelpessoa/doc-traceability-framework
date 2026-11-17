@@ -41,7 +41,7 @@ def _review(login="owner", state="APPROVED", body="", commit=HEAD, at="2099-01-0
 def _central(tmp_path: Path, approvers=("owner",), status: str = "in_review") -> Path:
     docs = tmp_path / "docs" / "TST"
     (docs / "03-spec").mkdir(parents=True)
-    registry = {"project": "TST", "framework_version": "2.5.0"}
+    registry: dict = {"project": "TST", "framework_version": "2.5.0"}
     if approvers is not None:
         registry["approvers"] = list(approvers)
     (docs / "registry.yaml").write_text(yaml.safe_dump(registry), encoding="utf-8")
