@@ -14,9 +14,22 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.5.0"
+  version: "2.6.0"
   last_updated: "2026-11-17"
   changelog:
+    - version: "2.6.0"
+      date: "2026-11-17"
+      summary: >
+        SPEC-DTF-0030 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0055):
+        aprovação por review, não-retroativa. `review_approval.py` decide
+        sem rede se as reviews de uma PR aprovam o documento (`APPROVED`,
+        ou `COMMENTED` com o corpo exatamente `Aprovado`; a mais recente
+        entre aprovação e `CHANGES_REQUESTED` decide; presa ao head) e
+        monta o `approved_by`. Campo opcional `approvers` no topo do
+        registry central, validado por `registry_tools.py`;
+        `validate_state.py` confere `approved_by.actor` humano contra ele.
+        `executor_contract` só acrescenta (`contract_version` 1). Nenhum
+        gate, sizing, ciclo de status, política ou template muda.
     - version: "2.5.0"
       date: "2026-11-17"
       summary: >
@@ -819,6 +832,17 @@ registry:
         Dois passos, um único ato: (1) preencher `repository` com a URL e
         `repository_status: active` no registry central; (2) criar
         docs/sdd/registry.yaml vazio no repositório novo.
+    approvers_field:
+      field: "approvers"
+      level: "topo do arquivo (nível de projeto, não por documento) — ao lado de `project` e `framework_version`"
+      description: >
+        Lista não vazia de logins do GitHub que podem aprovar por review
+        os documentos do projeto. Conferida por review_approval.py na hora
+        da aprovação e por validate_state.py depois, contra
+        `approved_by.actor` com `kind: human`. Opcional: sem ela,
+        `approved_by` humano não é conferido contra lista. Ver
+        SPEC-DTF-0030.
+      since: "2.6.0"
   project_registry:
     path: "docs/sdd/registry.yaml"
     human_readable_view: "docs/sdd/registry.md"
@@ -1593,11 +1617,16 @@ executor_contract:
     - script: approval_hash.py
       args: ["<documento>", "--json"]
       schema: _framework/schemas/approval-hash.schema.json
+    - script: review_approval.py
+      args: ["<documento>", "--reviews", "<arquivo>", "--head", "<sha>", "--pr-url", "<url>", "--json"]
+      schema: _framework/schemas/review-approval.schema.json
   writes:
     - "Rascunho em draft de STRAT, RFC, ADR e SPEC no central, sempre por PR, nunca em main."
     - "Entrada em docs/{PROJECT_CODE}/LESSONS.md, por PR."
     - "Campo entrega e path de SDD entregue no registry de projeto."
     - "Campo approved_by com kind: policy só onde approval_policy permite."
+    - "PR de documento novo (SPEC, RFC) no central com status in_review, de branch docs/<id>."
+    - "Na mesma PR, antes do merge: status approved e approved_by com kind: human, só com saída válida de review_approval.py sobre o head revisado."
 
 ##############################################################################
 # 21. APROVAÇÃO COMO DADO

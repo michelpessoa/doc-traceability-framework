@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.5.0** (`2026-11-17`).
+Versão corrente: **2.6.0** (`2026-11-17`).
+
+## 2.6.0
+
+SPEC-DTF-0030 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0055): aprovação por review, não-retroativa. `review_approval.py` decide sem rede se as reviews de uma PR aprovam o documento (`APPROVED`, ou `COMMENTED` com o corpo exatamente `Aprovado`; a mais recente entre aprovação e `CHANGES_REQUESTED` decide; presa ao head) e monta o `approved_by`. Campo opcional `approvers` no topo do registry central, validado por `registry_tools.py`; `validate_state.py` confere `approved_by.actor` humano contra ele. `executor_contract` só acrescenta (`contract_version` 1). Nenhum gate, sizing, ciclo de status, política ou template muda.
 
 ## 2.5.0
 

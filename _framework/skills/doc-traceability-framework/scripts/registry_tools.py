@@ -117,6 +117,7 @@ def cmd_validate(docs_dir: Path, report_only: bool = False, as_json: bool = Fals
         rp, rw = check_repository_state(data)
         problems += rp
         warnings += rw
+        problems += check_approvers(data)
 
     problems += check_framework_version(data, docs_dir, warnings)
     problems += check_documents_on_disk(docs_dir, data, docs, warnings)
@@ -178,6 +179,22 @@ def check_repository_state(data: dict) -> tuple[list, list]:
             "`repository_status: none_yet`."
         )
     return problems, warnings
+
+
+def check_approvers(data: dict) -> list[str]:
+    """`approvers` do registry central (SPEC-DTF-0030, RF01): opcional; se
+    declarado, lista não vazia de logins do GitHub, sem espaço. Função pura."""
+    if "approvers" not in data:
+        return []
+    value = data["approvers"]
+    valid = (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(v, str) and v and not any(c.isspace() for c in v) for v in value)
+    )
+    if valid:
+        return []
+    return ["registry.yaml: `approvers` deve ser uma lista não vazia de logins do GitHub, sem espaço."]
 
 
 def check_framework_version(data: dict, docs_dir: Path, warnings: list) -> list:
