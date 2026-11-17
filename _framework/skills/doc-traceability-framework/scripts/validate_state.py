@@ -38,6 +38,7 @@ from framework_lib import (  # noqa: E402
     usage_error,
     version_date,
 )
+from review_approval import approvers_for  # noqa: E402
 
 # Em que versão cada exigência do gate 16 entrou. Mesma mecânica de
 # validate_doc.RULE_SINCE: regra não vale retroativamente, projeto mapeado
@@ -291,6 +292,14 @@ def check_approval(path: Path, version: str | None = None) -> tuple[list[str], l
             f"{doc_id}: approved_by com kind policy, mas a política reserva {doc_type}"
             f" (sizing {sizing or 'não declarado'}) a aprovação human."
         )
+
+    if data.get("kind") == "human":
+        approvers = approvers_for(path)
+        if approvers is not None and data.get("actor") not in approvers:
+            problems.append(
+                f"{doc_id}: approved_by.actor {data.get('actor')} não está em approvers"
+                f" ({', '.join(str(a) for a in approvers)}) do registry central."
+            )
 
     current = content_hash(path)
     if str(data.get("content_sha256")) != current:

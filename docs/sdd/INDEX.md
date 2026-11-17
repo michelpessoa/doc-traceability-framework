@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 53 SDDs
+Total: 54 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -58,3 +58,4 @@ Total: 53 SDDs
 | `SDD-DTF-0052` | `_framework/scripts/ci_gate_verify_sdd.py` só procura o relatório em `docs/sdd/validation-{sdd_id}.md`, ou seja, `validation-SDD-EVM-0068.m… | `_framework/scripts/ci_gate_verify_sdd.py`, `_framework/skills/doc-traceability-framework/scripts/ci_gate_verify_sdd.py`, `_framework/tests/test_ci_gate_verify_sdd.py` +5 | — | — | implemented |
 | `SDD-DTF-0053` | Fase 1 da RFC-DTF-0009. | `_framework/procedures/verify-sdd.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/schemas/ci-gate-verify-sdd.schema.json`, `_framework/schemas/parallel-plan.schema.json`, `_framework/schemas/resultado-validador.schema.json` +17 | — | — | implemented |
 | `SDD-DTF-0054` | Fase 2 da RFC-DTF-0009. | `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/schemas/approval-hash.schema.json`, `_framework/scripts/approval_hash.py`, `_framework/scripts/framework_check.py`, `_framework/scripts/tests/test_approval.py` +6 | — | — | implemented |
+| `SDD-DTF-0055` | Parte do kit da SPEC-DTF-0030, a primeira SPEC da fase 4 da RFC-DTF-0009. | `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/schemas/review-approval.schema.json`, `_framework/scripts/registry_tools.py`, `_framework/scripts/review_approval.py`, `_framework/scripts/tests/test_approval.py` +5 | — | — | approved |
