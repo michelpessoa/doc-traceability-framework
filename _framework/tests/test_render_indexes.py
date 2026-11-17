@@ -709,7 +709,7 @@ def test_metricas_mapa_real_sem_repeticao_nem_corte_no_meio_de_palavra():
 
     walk(yaml.safe_load(yaml_text))
     rows = _map_rows()
-    assert len(rows) == 23  # §20, executor_contract (SDD-DTF-0053)
+    assert len(rows) == 24  # §21, approval_policy (SDD-DTF-0054)
     repetidos, titulos_cortados, meio_de_palavra, resumo_curto = [], [], [], []
     fim_ruim = []
     for c in rows:

@@ -100,6 +100,7 @@ def test_saidas_declaradas_validam_contra_o_esquema(entradas):
         "check_commit.py",
         "ci_gate_verify_sdd.py",
         "parallel_plan.py",
+        "approval_hash.py",
     }
     for saida in saidas:
         script = SCRIPTS / saida["script"]
@@ -173,3 +174,22 @@ def test_campos_da_verificacao_sao_os_da_spec():
         "assertion",
         "perfil",
     }
+
+
+def test_aprovacao_como_dado_no_contrato():
+    """SPEC-DTF-0029, RF09: o contrato só acrescenta, contract_version continua 1."""
+    c = contrato()
+    assert c["contract_version"] == 1
+    assert "approval_policy" in c["reads"]
+    assert {
+        "script": "approval_hash.py",
+        "args": ["<documento>", "--json"],
+        "schema": "_framework/schemas/approval-hash.schema.json",
+    } in c["machine_outputs"]
+    assert "Campo approved_by com kind: policy só onde approval_policy permite." in c["writes"]
+
+
+def test_hash_excluded_sections_declarado():
+    """SPEC-DTF-0029, tratamento de erro: sem a chave o hash não exclui nada, e o contrato reprova o YAML."""
+    rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
+    assert rules["approval_policy"]["hash_excluded_sections"]

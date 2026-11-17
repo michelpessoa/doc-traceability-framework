@@ -161,9 +161,17 @@ implementação precisa acertar:
   - `check_approval(path: Path, version: str | None = None) -> tuple[list[str], list[str]]`,
     ao lado de `check_sdd`. Sem front-matter ou `type: INC`: `([], [])`.
     Cobrança vale quando o status é `approved`, `implemented` ou
-    `superseded` **e** `rule_applies_since_date(rules, "2.5.0", created, version)`
-    **e** `rule_applies("2.5.0", version)` — as duas condições do RF08,
-    com as funções que já existem em `framework_lib`.
+    `superseded` **e** o documento tem `created` **e**
+    `rule_applies_since_date(rules, "2.5.0", created, version)` **e**
+    `rule_applies_since_date(rules, "2.5.0", None, version)` — as duas
+    condições do RF08; a segunda chamada, sem `created`, cai no fallback
+    por versão do projeto. Registrado na implementação: (1) chamar
+    `rule_applies` direto, como a primeira versão desta SDD dizia, é
+    proibido pela trava `test_nenhum_validador_chama_rule_applies_direto`;
+    (2) sem `created` não cobra, porque não há como provar que o documento
+    é da 2.5.0 em diante, e cobrar mudaria a saída da fixture do 2.3.2
+    (requisito não funcional da SPEC), cuja SDD aprovada não tem
+    `created` nem projeto com versão.
   - Com cobrança e sem o campo: reprova `"{id}: approved_by ausente
     (obrigatório em {status} desde a 2.5.0)."`.
   - Campo presente, em qualquer status: valida o formato — não é mapa →

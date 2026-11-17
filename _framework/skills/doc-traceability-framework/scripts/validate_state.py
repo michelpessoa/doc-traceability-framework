@@ -17,12 +17,14 @@ Uso:
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
 
+import datetime
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from approval_hash import content_hash  # noqa: E402
 from framework_lib import (  # noqa: E402
     iter_documents,
     json_flag,
@@ -45,6 +47,7 @@ RULE_SINCE = {
     "evidence_required": "1.7.0",
     "scope_checklist": "1.7.0",
     "source_fidelity": "2.2.0",
+    "approved_by": "2.5.0",
 }
 
 # Frases que denunciam evidência de memória em vez de execução — o
@@ -182,6 +185,119 @@ def check_sdd(path: Path, version: str | None = None) -> tuple[list, list]:
         problems += check_scope(doc_id, scope)
 
     return problems, warnings
+
+
+# Status em que o documento já foi aprovado: é onde approved_by é cobrado
+# e conferido contra a política e o hash (SPEC-DTF-0029, RF05).
+APPROVED_STATES = {"approved", "implemented", "superseded"}
+APPROVED_BY_FIELDS = ("kind", "actor", "at", "content_sha256")
+APPROVAL_KINDS = {"human", "policy"}
+SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
+
+
+def approver_for(rules: dict, doc_type: str, sizing) -> str:
+    """Aprovador da primeira regra de approval_policy que casa; nenhuma, o default (RF01)."""
+    policy = rules.get("approval_policy") or {}
+    for rule in policy.get("rules") or []:
+        if doc_type not in (rule.get("types") or []):
+            continue
+        if "sizing" in rule and sizing not in (rule.get("sizing") or []):
+            continue
+        return rule.get("approver")
+    return policy.get("default_approver", "human")
+
+
+def _iso_8601(value) -> bool:
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return True
+    if not isinstance(value, str):
+        return False
+    for parse in (datetime.date.fromisoformat, datetime.datetime.fromisoformat):
+        try:
+            parse(value)
+            return True
+        except ValueError:
+            pass
+    return False
+
+
+def approved_by_format(doc_id: str, data) -> list[str]:
+    """Formato de approved_by (RF03): mapa, campos presentes e valores válidos."""
+    if not isinstance(data, dict):
+        return [f"{doc_id}: approved_by deve ser um mapa."]
+    problems = []
+    for field in APPROVED_BY_FIELDS:
+        if data.get(field) in (None, ""):
+            problems.append(f"{doc_id}: approved_by sem `{field}`.")
+    kind = data.get("kind")
+    if kind not in (None, "") and kind not in APPROVAL_KINDS:
+        problems.append(f"{doc_id}: approved_by com `kind` inválido ({kind!r}); use human ou policy.")
+    at = data.get("at")
+    if at not in (None, "") and not _iso_8601(at):
+        problems.append(f"{doc_id}: approved_by com `at` fora de ISO 8601 ({at!r}).")
+    digest = data.get("content_sha256")
+    if digest not in (None, "") and not SHA256_HEX.match(str(digest)):
+        problems.append(f"{doc_id}: approved_by com `content_sha256` inválido; esperado hexadecimal de 64.")
+    if kind == "human" and data.get("evidence") in (None, ""):
+        problems.append(f"{doc_id}: approved_by com kind human sem `evidence` (obrigatório).")
+    return problems
+
+
+def check_approval(path: Path, version: str | None = None) -> tuple[list[str], list[str]]:
+    """
+    Cobra approved_by (SPEC-DTF-0029, RF05 a RF08): ausente em documento
+    aprovado sob a 2.5.0, kind que a approval_policy não permite e conteúdo
+    mudado depois da aprovação. Em status sem aprovação, só o formato.
+    """
+    if version is None:
+        version = project_version(path)
+    try:
+        fm, _ = read_frontmatter(path)
+    except ValueError as exc:
+        return [str(exc)], []
+    if not fm or fm.get("type") == "INC":
+        return [], []
+
+    doc_id = fm.get("id") or path.name
+    status = fm.get("status")
+    data = fm.get("approved_by")
+    rules = load_rules()
+
+    if data is None:
+        # RF08: cobra só documento com `created` desde a 2.5.0 em projeto que
+        # não declara versão anterior. Sem `created` não há como provar que
+        # o documento é da 2.5.0 em diante: não cobra (a saída da fixture do
+        # 2.3.2 não muda). A segunda chamada, sem `created`, confere só a
+        # versão do projeto (nunca `rule_applies` direto — ver
+        # test_nenhum_validador_chama_rule_applies_direto).
+        since, created = RULE_SINCE["approved_by"], fm.get("created")
+        required = (
+            status in APPROVED_STATES
+            and bool(created)
+            and rule_applies_since_date(rules, since, created, version)
+            and rule_applies_since_date(rules, since, None, version)
+        )
+        if required:
+            return [f"{doc_id}: approved_by ausente (obrigatório em {status} desde a 2.5.0)."], []
+        return [], []
+
+    problems = approved_by_format(doc_id, data)
+    if problems or status not in APPROVED_STATES:
+        return problems, []
+
+    doc_type, sizing = fm.get("type"), fm.get("sizing")
+    if data.get("kind") == "policy" and approver_for(rules, doc_type, sizing) == "human":
+        problems.append(
+            f"{doc_id}: approved_by com kind policy, mas a política reserva {doc_type}"
+            f" (sizing {sizing or 'não declarado'}) a aprovação human."
+        )
+
+    current = content_hash(path)
+    if str(data.get("content_sha256")) != current:
+        problems.append(
+            f"{doc_id}: o documento mudou depois da aprovação (gravado {data.get('content_sha256')}, atual {current})."
+        )
+    return problems, []
 
 
 def check_evidence(doc_id: str, evidence: str | None, n_criteria: int) -> list:
@@ -409,6 +525,9 @@ def main() -> int:
     problems, warnings = [], []
     for path in paths:
         p, w = check_sdd(path)
+        problems += p
+        warnings += w
+        p, w = check_approval(path)
         problems += p
         warnings += w
 

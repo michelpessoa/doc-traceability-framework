@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "approval-hash.schema.json",
+  "title": "Saída de approval_hash.py --json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "documento",
+    "content_sha256",
+    "secoes_excluidas"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dtf.approval-hash/1"
+    },
+    "documento": {
+      "type": "string"
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "secoes_excluidas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
