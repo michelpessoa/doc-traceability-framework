@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.4.0** (`2026-11-16`).
+Versão corrente: **2.5.0** (`2026-11-17`).
+
+## 2.5.0
+
+SPEC-DTF-0029 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0054): aprovação como dado, não-retroativa. Seção 21 nova, `approval_policy`: quem aprova cada tipo e sizing (`human` para STRAT, RFC, ADR, BASE, PM e SPEC medium ou maior; `policy` para SDD, com os checks declarados) e as seções fora do hash. Campo comum opcional `approved_by` no front-matter, preso ao sha256 do corpo calculado por `approval_hash.py`. `validate_state.py` cobra o campo em documento `approved`, `implemented` ou `superseded` criado desde a 2.5.0 em projeto sob 2.5.0 ou maior, e reprova `kind` que a política não permite e conteúdo mudado depois da aprovação. `executor_contract` só acrescenta (`contract_version` 1). Nenhum gate, sizing, ciclo de status ou template muda.
 
 ## 2.4.0
 

@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 120 arquivos
+Total: 125 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -17,10 +17,12 @@ Total: 120 arquivos
 | `rules/kit-index.yaml` | Manifesto manual deste INDEX.md e dos resumos de seção do mapa | Ao criar, mover ou remover arquivo do kit | 8-32 KB |
 | `rules/workflow-rules.map.md` | Mapa gerado das seções do YAML: id, título, chaves, linhas, bytes e resumo | Antes de ler o YAML, para achar a seção certa | 2-8 KB |
 | `rules/workflow-rules.yaml` | Fonte canônica das regras: gates, sizing, tipos, ciclo de status e changelog | Ao mudar ou consultar uma regra; leia pelo mapa | >32 KB |
+| `schemas/approval-hash.schema.json` | Esquema da saída de máquina approval-hash.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
 | `schemas/ci-gate-verify-sdd.schema.json` | Esquema da saída de máquina ci-gate-verify-sdd.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
 | `schemas/parallel-plan.schema.json` | Esquema da saída de máquina parallel-plan.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
 | `schemas/resultado-validador.schema.json` | Esquema da saída de máquina resultado-validador.schema | Ao mudar uma saída --json (seção 20) | <2 KB |
 | `schemas/resultado-verificacao.schema.json` | Esquema da saída de máquina resultado-verificacao.schema | Ao mudar uma saída --json (seção 20) | 2-8 KB |
+| `scripts/approval_hash.py` | Hash do corpo aprovado de um documento, gravado em approved_by | Ao gravar ou conferir approved_by de documento aprovado | 2-8 KB |
 | `scripts/check_commit.py` | Checa mensagem de commit: Conventional Commits e referência a id do framework | Ao depurar hook commit-msg ou checagem de intervalo | 2-8 KB |
 | `scripts/check_hooks.py` | Reprova .claude/settings.json com hook mudo ou mal configurado | Ao editar hooks do Claude Code | 2-8 KB |
 | `scripts/check_renderings.py` | Compara os fatos entre YAML, SKILL.md, universal, Cursor e Copilot | Ao mudar uma renderização e ver divergência | 2-8 KB |
@@ -40,6 +42,8 @@ Total: 120 arquivos
 | `scripts/selftest.py` | Muta os validadores do kit e exige que os testes falhem | Ao checar se os testes dos validadores discriminam | 2-8 KB |
 | `scripts/tests/fixtures/saida_texto_2_3_2.json` | Saída em texto dos validadores gravada no framework 2.3.2 | Ao mudar texto de validador (não regravar para acomodar) | 8-32 KB |
 | `scripts/tests/mutations.yaml` | Lista de mutações dos validadores usada pelo selftest.py | Ao adicionar mutação ou depurar mutante sobrevivente | 2-8 KB |
+| `scripts/tests/test_approval.py` | Testes da approval_policy e do check_approval do validate_state | Ao alterar a cobrança de approved_by ou a política | 8-32 KB |
+| `scripts/tests/test_approval_hash.py` | Testes do approval_hash.py: CRLF, front-matter e seções excluídas | Ao alterar o cálculo do hash do conteúdo aprovado | 2-8 KB |
 | `scripts/tests/test_check_commit.py` | Testes do check_commit.py sobre repositório git temporário | Ao alterar a checagem de mensagem de commit | 2-8 KB |
 | `scripts/tests/test_check_hooks.py` | Testes do check_hooks.py: um caso por regra de hook | Ao alterar a checagem de hooks | 2-8 KB |
 | `scripts/tests/test_check_source_docs.py` | Testes do check_source_docs.py sobre origens da SDD | Ao alterar a checagem de source_docs | 2-8 KB |
@@ -66,6 +70,7 @@ Total: 120 arquivos
 | `skills/doc-traceability-framework/references/incidents.md` | Referência da skill sobre incidente, severidade e postmortem | Ao abrir incidente ou postmortem pela skill | <2 KB |
 | `skills/doc-traceability-framework/references/onboarding.md` | Referência da skill sobre onboarding de projeto já existente | Ao onboardar projeto legado pela skill | <2 KB |
 | `skills/doc-traceability-framework/references/workflow-rules.yaml` | Cópia gerada de rules/workflow-rules.yaml dentro da skill | Nunca à mão; regenere com render_prompts.py | >32 KB |
+| `skills/doc-traceability-framework/scripts/approval_hash.py` | Cópia gerada de scripts/approval_hash.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_commit.py` | Cópia gerada de scripts/check_commit.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_hooks.py` | Cópia gerada de scripts/check_hooks.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_renderings.py` | Cópia gerada de scripts/check_renderings.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |

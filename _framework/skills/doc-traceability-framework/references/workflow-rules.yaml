@@ -14,9 +14,24 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.4.0"
-  last_updated: "2026-11-16"
+  version: "2.5.0"
+  last_updated: "2026-11-17"
   changelog:
+    - version: "2.5.0"
+      date: "2026-11-17"
+      summary: >
+        SPEC-DTF-0029 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0054): aprovação
+        como dado, não-retroativa. Seção 21 nova, `approval_policy`: quem
+        aprova cada tipo e sizing (`human` para STRAT, RFC, ADR, BASE, PM e
+        SPEC medium ou maior; `policy` para SDD, com os checks declarados)
+        e as seções fora do hash. Campo comum opcional `approved_by` no
+        front-matter, preso ao sha256 do corpo calculado por
+        `approval_hash.py`. `validate_state.py` cobra o campo em documento
+        `approved`, `implemented` ou `superseded` criado desde a 2.5.0 em
+        projeto sob 2.5.0 ou maior, e reprova `kind` que a política não
+        permite e conteúdo mudado depois da aprovação. `executor_contract`
+        só acrescenta (`contract_version` 1). Nenhum gate, sizing, ciclo de
+        status ou template muda.
     - version: "2.4.0"
       date: "2026-11-16"
       summary: >
@@ -711,6 +726,15 @@ frontmatter_schema:
     supersedes: "id ou null — não se aplica a INC (incident_lifecycle não tem estado `superseded`); o template de INC omite este campo"
     superseded_by: "id ou null — não se aplica a INC, mesma razão de `supersedes`"
     tags: "lista de strings — livre (ex.: [onboarding] para documentos da Fase 1)"
+    approved_by: >
+      opcional — mapa { kind, actor, at, content_sha256, evidence } que
+      registra quem aprovou e sobre qual conteúdo (seção 21,
+      approval_policy). kind: human | policy; actor: login do revisor, ou
+      nome do executor quando policy; at: data YYYY-MM-DD ou data-hora ISO
+      8601; content_sha256: 64 caracteres hexadecimais, saída de
+      approval_hash.py; evidence: URL da review, obrigatório se kind:
+      human. validate_state.py cobra o campo em approved, implemented e
+      superseded desde a 2.5.0 (não-retroativo).
   type_specific_fields:
     RFC:
       requires_adr: "boolean ou null (null = gate ainda não avaliado)"
@@ -1543,7 +1567,7 @@ executor_contract:
   contract_version: 1
   description: >
     O que um executor pode usar do framework. Quebra só em versão maior.
-  reads: [sizing, decision_gates, status_lifecycle, repository_topology, frontmatter_schema, registry]
+  reads: [sizing, decision_gates, status_lifecycle, repository_topology, frontmatter_schema, registry, approval_policy]
   machine_outputs:
     - script: validate_doc.py
       args: ["<documento>", "--json"]
@@ -1566,7 +1590,32 @@ executor_contract:
     - script: parallel_plan.py
       args: ["<sdd>", "--json"]
       schema: _framework/schemas/parallel-plan.schema.json
+    - script: approval_hash.py
+      args: ["<documento>", "--json"]
+      schema: _framework/schemas/approval-hash.schema.json
   writes:
     - "Rascunho em draft de STRAT, RFC, ADR e SPEC no central, sempre por PR, nunca em main."
     - "Entrada em docs/{PROJECT_CODE}/LESSONS.md, por PR."
     - "Campo entrega e path de SDD entregue no registry de projeto."
+    - "Campo approved_by com kind: policy só onde approval_policy permite."
+
+##############################################################################
+# 21. APROVAÇÃO COMO DADO
+##############################################################################
+# Quem pode aprovar cada tipo e sizing. A primeira regra que casa vale: casa
+# quando o tipo está em `types` e, se a regra tiver `sizing`, o sizing do
+# documento está nele; nenhuma casa, vale `default_approver`. O documento
+# aprovado registra a aprovação em `approved_by` (frontmatter_schema), com
+# o sha256 do corpo calculado por _framework/scripts/approval_hash.py; as
+# seções de `hash_excluded_sections` ficam fora do hash porque o próprio
+# framework manda preenchê-las depois da aprovação. validate_state.py
+# cobra o campo, a política e o hash. Ver SPEC-DTF-0029, ADR-DTF-0008.
+approval_policy:
+  default_approver: human
+  hash_excluded_sections: ["Evidência de verificação", "Verificação de escopo (nada a mais, nada a menos)", "Gate de decisão: esta RFC exige um ADR?", "Documentos originados"]
+  rules:
+    - {types: [STRAT, RFC, ADR, BASE, PM], approver: human}
+    - {types: [SPEC], sizing: [medium, large, complex], approver: human}
+    - types: [SDD]
+      approver: policy
+      checks: ["validate_doc.py", "registry_tools.py validate", "check_source_docs.py (com source_docs)", "verify-sdd passo 0 (com source_docs)"]

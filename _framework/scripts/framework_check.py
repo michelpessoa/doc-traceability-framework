@@ -102,6 +102,9 @@ def main() -> int:
             p, w = validate_state.check_sdd(path)
             problems += p
             warnings += w
+            p, w = validate_state.check_approval(path)
+            problems += p
+            warnings += w
         failures += emit(
             problems,
             warnings,

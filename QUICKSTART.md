@@ -1,4 +1,4 @@
-# Quickstart (framework v2.4.0)
+# Quickstart (framework v2.5.0)
 
 Arquivo GERADO por `_framework/scripts/render_prompts.py`. Não edite à
 mão.

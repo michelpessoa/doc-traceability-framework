@@ -521,3 +521,13 @@ documents:
     relates_to: [SDD-DTF-0052]
     path: "docs/sdd/SDD-DTF-0053.md"
     tags: [integracao, executor, contrato, json, schema]
+  - id: SDD-DTF-0054
+    type: SDD
+    title: "Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-17"
+    updated: "2026-11-17"
+    relates_to: [SDD-DTF-0053]
+    path: "docs/sdd/SDD-DTF-0054.md"
+    tags: [integracao, executor, aprovacao, approved_by, approval_policy]
