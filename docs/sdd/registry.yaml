@@ -534,7 +534,7 @@ documents:
   - id: SDD-DTF-0055
     type: SDD
     title: "Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-11-17"
     updated: "2026-11-17"

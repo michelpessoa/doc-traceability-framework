@@ -2,7 +2,7 @@
 id: SDD-DTF-0055
 type: SDD
 title: "Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-17"
@@ -263,21 +263,45 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF07) tem código
+- [x] Todo requisito consolidado acima (RF01 a RF07) tem código
       correspondente.
-- [ ] Todo arquivo tocado aparece na "Decomposição em tasks" ou é gerado
+- [x] Todo arquivo tocado aparece na "Decomposição em tasks" ou é gerado
       por `render_prompts.py`.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, no kit na
+branch `sdd/SDD-DTF-0055-review-approval` (head `96969e6`), com base fixa
+`012ff47` (= `origin/main`), e no central na branch
+`sdd/SDD-DTF-0055-espelho` (head `0f4f842`). Os "antes" de A01, A02, A03 e
+A08 rodaram numa cópia descartável de `012ff47` (`git archive`) com os
+testes novos copiados por cima. Os sensores mutaram o arquivo da worktree
+com cópia guardada no scratchpad e restauraram por ela; `git status
+--porcelain` vazio depois de cada um.
 
-**Verificador independente:** pendente
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0055.md`. Veredito: **PASS**.
+
+**Verificador independente:** sim
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0055.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; leitura da SPEC-DTF-0030 (approved) do `main` do central (`5c5cee5`) | `✅ source_docs de SDD-DTF-0055.md conferem com o registry central.` `exit=0`; RF01 a RF07 com texto e EARS idênticos aos da SPEC; os 12 casos de borda do kit e os requisitos não funcionais iguais; formato de `approvers`, `decide`, `approvers_for`, CLI, JSON, esquema, mensagem de `check_approval` e linhas do `executor_contract` iguais aos da Parte 2, só detalhados; RF08 a RF13 declaradamente fora (fábrica) | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 1 | A01 | `python3 -m pytest _framework/scripts/tests/test_review_approval.py -q -k "not approvers"` | ANTES (base `012ff47` com os testes novos): `ImportError: cannot import name 'check_approvers' from 'registry_tools'`, 1 error na coleta; DEPOIS: `33 passed, 10 deselected` | ver A04, A05 e A06 | Sim | `_framework/scripts/tests/test_review_approval.py:168` | automatizado |
+| 1 | A02 | `python3 -m pytest _framework/scripts/tests/test_review_approval.py -q -k approvers` | ANTES (mesma base): o mesmo `ImportError`, 1 error; DEPOIS: `10 passed, 33 deselected` | `if valid:` trocado por `if True:` em `check_approvers` → `8 failed, 2 passed`; restaurado `10 passed` | Sim | `_framework/scripts/tests/test_review_approval.py:265` | automatizado |
+| 1 | A03 | `python3 -m pytest _framework/scripts/tests/test_approval.py -q` | ANTES (mesma base): `1 failed, 34 passed` (`test_actor_fora_da_lista_reprova_com_a_mensagem`); DEPOIS: `35 passed` | ver A07 | Sim | `_framework/scripts/tests/test_approval.py:319` | automatizado |
+| 1 | A04 | Em `review_approval.py`, removido o passo 5 de `decide` (`commit_id != head`); pytest de A01; restaurado pela cópia | `2 failed, 31 passed` (`test_aprovacao_sobre_commit_anterior_e_invalida`, `test_cli_invalida_sai_1_com_motivo`); restaurado `33 passed` | derrubada | Sim | `_framework/scripts/tests/test_review_approval.py:149` | automatizado |
+| 1 | A05 | Em `approves`, `.strip() == "Aprovado"` trocado por `.strip().lower().startswith("aprovado")`; pytest de A01; restaurado pela cópia | `3 failed, 30 passed` (`test_commented_com_outro_corpo_nao_aprova[aprovado]`, `[Aprovado.]`, `[Aprovado, mas ajuste X]`); restaurado `33 passed` | derrubada | Sim | `_framework/scripts/tests/test_review_approval.py:98` | automatizado |
+| 1 | A06 | Em `decide`, filtro `(approves(r) or r.get("state") == "CHANGES_REQUESTED")` trocado por `approves(r)`; pytest de A01; restaurado pela cópia | `1 failed, 32 passed` (`test_aprovacao_seguida_de_changes_requested_e_invalida`); restaurado `33 passed` | derrubada | Sim | `_framework/scripts/tests/test_review_approval.py:116` | automatizado |
+| 1 | A07 | Em `validate_state.check_approval`, removido o bloco do `actor` contra `approvers`; pytest de A03; restaurado pela cópia | `1 failed, 34 passed` (`test_actor_fora_da_lista_reprova_com_a_mensagem`); restaurado `35 passed` | derrubada | Sim | `_framework/scripts/tests/test_approval.py:319` | automatizado |
+| 1 | A08 | `python3 -m pytest _framework/tests/test_executor_contract.py -q` | ANTES (mesma base): `3 failed, 10 passed` (`KeyError`; `test_saidas_declaradas_validam_contra_o_esquema`, `test_aprovacao_por_review_no_contrato`, `test_approvers_declarado_no_registry_central`); DEPOIS: `13 passed` | segunda linha nova de `writes` removida do YAML → `1 failed, 12 passed` (`test_aprovacao_por_review_no_contrato`); restaurado `13 passed` | Sim | `_framework/tests/test_executor_contract.py:213` | automatizado |
+| 1 | A09 | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`; `git diff --stat origin/main -- _framework/scripts/tests/fixtures/` e o mesmo contra `012ff47` | `26 passed`; os dois diffs vazios (`origin/main` = `012ff47` nesta sessão) | a fixture do 2.3.2 compara stdout e exit dos validadores; sem mutação própria (o requisito é não mudar) | Sim | `_framework/scripts/tests/test_report_json.py:244` | automatizado |
+| 1 | A10 | `grep -n 'version: "2.6.0"' _framework/rules/workflow-rules.yaml`; no central (branch `sdd/SDD-DTF-0055-espelho`, `0f4f842`): `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"`; `git status --porcelain docs/` | linhas 17 e 20; `✅ 134 documento(s) ok.` nas duas verificações, `✅ Todas as verificações do framework passaram.`, `exit=0`; porcelain vazio | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 1 | A11 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"` | todos `em dia`/`sincronizado`, incluindo `review_approval.py` da skill; `exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 1 | A12 | `python3 -m pytest -q`; `ruff format --check` e `ruff check` nos 9 `.py` do diff; `python3 _framework/scripts/selftest.py` | `433 passed`; `9 files already formatted`; `All checks passed!`; `✅ 7 mutação(ões): todos os mutantes morreram.` | suíte inteira; sensores de A02 e A04 a A08 | Sim | `_framework/scripts/tests/test_review_approval.py:168` | automatizado |
+| 1 | A13 | No central: `diff -r -x __pycache__ -x .pytest_cache /home/user/doc-traceability-framework/_framework _framework; echo "diff exit=$?"` | `diff exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
 
 ## Rastreabilidade
 
