@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.6.0._
 
-Total de documentos: **54**
+Total de documentos: **55**
 
 
-## SDD (54)
+## SDD (55)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -63,3 +63,4 @@ Total de documentos: **54**
 | `SDD-DTF-0053` | Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4 | implemented | Michel Pessoa | 2026-11-16 | SDD-DTF-0052 |
 | `SDD-DTF-0054` | Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0053 |
 | `SDD-DTF-0055` | Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0054 |
+| `SDD-DTF-0056` | registry.md com seção para todo tipo de documento: ordem derivada de document_types, sem descarte silencioso | approved | Michel Pessoa | 2026-11-17 | SDD-DTF-0043 |
