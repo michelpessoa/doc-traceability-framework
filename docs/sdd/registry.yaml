@@ -531,3 +531,13 @@ documents:
     relates_to: [SDD-DTF-0053]
     path: "docs/sdd/SDD-DTF-0054.md"
     tags: [integracao, executor, aprovacao, approved_by, approval_policy]
+  - id: SDD-DTF-0055
+    type: SDD
+    title: "Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state"
+    status: approved
+    owner: "Michel Pessoa"
+    created: "2026-11-17"
+    updated: "2026-11-17"
+    relates_to: [SDD-DTF-0054]
+    path: "docs/sdd/SDD-DTF-0055.md"
+    tags: [integracao, executor, aprovacao, review, approvers, approved_by]

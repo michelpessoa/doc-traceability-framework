@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.5.0._
 
-Total de documentos: **53**
+Total de documentos: **54**
 
 
-## SDD (53)
+## SDD (54)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -62,3 +62,4 @@ Total de documentos: **53**
 | `SDD-DTF-0052` | Gate de CI do verify-sdd aceita o relatório com o nome legado validation-{PROJ}-{SEQ}.md, além do canônico | implemented | Michel Pessoa | 2026-11-16 | RFC-DTF-0009, SDD-DTF-0032 |
 | `SDD-DTF-0053` | Contrato do executor: executor_contract no YAML, --json nos validadores, esquemas publicados, SDD entregue e modelo M4 | implemented | Michel Pessoa | 2026-11-16 | SDD-DTF-0052 |
 | `SDD-DTF-0054` | Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0053 |
+| `SDD-DTF-0055` | Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state | approved | Michel Pessoa | 2026-11-17 | SDD-DTF-0054 |
