@@ -92,7 +92,7 @@ regeneração de `registry.md` em projetos que não sejam o DTF do central.
 |---|---|---|---|---|
 | 1 | Testes novos, vistos falhar com o código atual | RF01 a RF06 | `_framework/scripts/tests/test_generate_registry_md.py` | |
 | 2 | Ordem derivada do YAML, rótulos e seção para tipo não declarado | RF01 a RF05 | `_framework/scripts/generate_registry_md.py` | 1 |
-| 3 | Regenerar a cópia da skill | RF01 a RF05 | `_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py` | 2 |
+| 3 | Regenerar a cópia da skill e o índice do kit (a faixa de tamanho do teste muda) | RF01 a RF05 | `_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `_framework/INDEX.md` | 2 |
 | 4 | Espelhar no central e regenerar `docs/DTF/registry.md`, em branch e PR próprios | RF01 a RF06 | `central:_framework/scripts/generate_registry_md.py`, `central:_framework/skills/doc-traceability-framework/scripts/generate_registry_md.py`, `central:_framework/scripts/tests/test_generate_registry_md.py`, `central:docs/DTF/registry.md` | 3 |
 
 ## Critérios de aceite / definição de pronto
