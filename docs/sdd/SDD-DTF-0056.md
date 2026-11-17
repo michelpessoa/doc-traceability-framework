@@ -126,23 +126,45 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
+- [x] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
       correspondente.
 - [ ] Todo arquivo tocado pela implementação aparece na "Decomposição em
-      tasks".
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não foi
+      tasks". (Kit: sim, incluindo `_framework/INDEX.md`, que entrou na
+      task 3 depois da aprovação. Central: `_framework/INDEX.md` está no diff
+      de `e41dc71`, mas não está na task 4; ver validation, descompasso 3.)
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não foi
       pedido por nenhum requisito consolidado.
-- [ ] `workflow-rules.yaml` intocado e `framework.version` igual ao de
+- [x] `workflow-rules.yaml` intocado e `framework.version` igual ao de
       `origin/main`.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, na branch
+`sdd/SDD-DTF-0056-registry-md-todos-os-tipos` (head `a620b1c`), com base fixa
+`012ff47` (`origin/main` no momento da verificação). O "antes" do A01 é um
+worktree descartável de `012ff47` com o arquivo de teste novo copiado por
+cima. Os sensores A02 e A03 e as mutações extras rodaram em worktree
+descartável do head, nunca no checkout. O A07 rodou no central, na branch
+`claude/laughing-galileo-d9nymc` (head `e41dc71`).
 
-**Verificador independente:** pendente
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0056.md`.
+Veredito: **FAIL**. O A04 reprova porque `docs/sdd/INDEX.md` não foi
+regenerado depois da edição da task 3.
+
+Fidelidade à origem: n/a, sizing `small` sem `source_docs` (precedente SDD-DTF-0047 e SDD-DTF-0052).
+
+**Verificador independente:** sim
 
 | Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
 |---|---|---|---|---|---|---|---|
+| 1 | A01 | `python3 -m pytest _framework/scripts/tests/test_generate_registry_md.py -q`, ANTES em worktree de `012ff47` com o teste novo copiado; DEPOIS no head `a620b1c` | ANTES: `8 failed, 4 passed` (falham os 8 testes novos: `AttributeError` de `type_order`/`type_label`, `assert 6 == 10` de seções, `'## Tipo não declarado: XYZ (1)'` ausente, `assert 6 == 12` de linhas, conjunto de `TYPE_ORDER` sem SPEC/BASE/INC/PM; os 4 anteriores passam). DEPOIS: `12 passed` | Ver A02, A03 e as mutações extras no validation | Sim | _framework/scripts/tests/test_generate_registry_md.py:77, _framework/scripts/tests/test_generate_registry_md.py:82, _framework/scripts/tests/test_generate_registry_md.py:89, _framework/scripts/tests/test_generate_registry_md.py:97, _framework/scripts/tests/test_generate_registry_md.py:105, _framework/scripts/tests/test_generate_registry_md.py:112, _framework/scripts/tests/test_generate_registry_md.py:121, _framework/scripts/tests/test_generate_registry_md.py:129 | automatizado |
+| 1 | A02 | Worktree descartável do head: linha `order += sorted(t for t in by_type if t not in order)` removida de `render_registry`; pytest do A01; restaurado do backup | Com a mutação: `2 failed, 10 passed` (`test_tipo_nao_declarado_ganha_secao_propria`, `test_soma_das_linhas_igual_ao_total`). Restaurado: `12 passed`; `git status` limpo | Mutação derrubada | Sim | _framework/scripts/tests/test_generate_registry_md.py:97, _framework/scripts/tests/test_generate_registry_md.py:121 | automatizado |
+| 1 | A03 | Worktree descartável do head: corpo de `type_order` trocado por `return [t for t in TYPE_ORDER if t != "SPEC"]`; pytest do A01; restaurado | Com a mutação: `3 failed, 9 passed` (`test_type_order_vem_do_yaml_real`, `test_type_order_sem_yaml_usa_ordem_embutida`, `test_rotulos_curtos`). Restaurado: `12 passed`; `git status` limpo. Extras: sem `or list(TYPE_ORDER)` dá 1 failed; `type_label` sem `name` do YAML dá 1 failed; `type_order` fixa em `list(TYPE_ORDER)` e `rules = {}` sobrevivem (12 passed; mutantes equivalentes enquanto YAML e constante coincidem) | Mutação derrubada | Sim | _framework/scripts/tests/test_generate_registry_md.py:77, _framework/scripts/tests/test_generate_registry_md.py:82, _framework/scripts/tests/test_generate_registry_md.py:105 | automatizado |
+| 1 | A04 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; cmp _framework/scripts/generate_registry_md.py _framework/skills/doc-traceability-framework/scripts/generate_registry_md.py` | `✅ _framework/INDEX.md: em dia.`; `❌ docs/sdd/INDEX.md: divergente do gerado — rode render_indexes.py.`; `exit=1`; `cmp` sem saída. Regenerado em worktree descartável, a linha da SDD-DTF-0056 passa a começar por `_framework/INDEX.md` | n/a (comando de medição) | Não | docs/sdd/INDEX.md:61 | automatizado |
+| 1 | A05 | `python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; ruff check _framework/scripts; ruff format --check _framework/scripts; mypy _framework/scripts` | `392 passed in 50.85s`; `All checks passed!`; `38 files already formatted`; `Success: no issues found in 38 source files` | sem sensor próprio (suíte inteira; sensores em A02 e A03) | Sim | _framework/scripts/tests/test_generate_registry_md.py:77 | automatizado |
+| 1 | A06 | `git diff --name-status origin/main` (= `012ff47`); `git diff --quiet origin/main -- _framework/rules/workflow-rules.yaml` | 8 arquivos: `_framework/INDEX.md`, o script, o teste, a cópia da skill, `docs/sdd/INDEX.md`, `docs/sdd/SDD-DTF-0056.md` (A), `docs/sdd/registry.md`, `docs/sdd/registry.yaml`; `workflow-rules.yaml` intocado (exit 0), `framework.version` `2.5.0` | n/a (comando de medição) | Sim | n/a | automatizado |
+| 1 | A07 | No central (`e41dc71`): `cmp` dos 3 arquivos contra o kit; `python3 _framework/scripts/generate_registry_md.py docs/DTF --check`; `grep -c '^| \`SPEC-DTF-' docs/DTF/registry.md`; `grep -c 'type: SPEC' docs/DTF/registry.yaml`; `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | 3 linhas `igual ...`; `✅ docs/DTF/registry.md: em dia.`; `29` e `29`; `exit=0` (`Todas as verificações do framework passaram`). Seções: Strategy Doc 3, RFC 10, ADR 9, SPEC 29 = 51 = total. Diff do central: os 4 arquivos da task 4 e mais `_framework/INDEX.md` (idêntico ao do kit) | n/a (comando de medição; teste espelhado, 12 passed no central) | Sim | n/a | automatizado |
 
 ## Rastreabilidade
 | Campo | Valor |
