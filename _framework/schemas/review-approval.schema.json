@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review-approval.schema.json",
+  "title": "Saída de review_approval.py --json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "documento",
+    "valida",
+    "motivos",
+    "head",
+    "approved_by"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dtf.review-approval/1"
+    },
+    "documento": {
+      "type": "string"
+    },
+    "valida": {
+      "type": "boolean"
+    },
+    "motivos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "head": {
+      "type": "string"
+    },
+    "approved_by": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "actor",
+            "at",
+            "content_sha256",
+            "evidence"
+          ],
+          "properties": {
+            "kind": {
+              "const": "human"
+            },
+            "actor": {
+              "type": "string"
+            },
+            "at": {
+              "type": "string"
+            },
+            "content_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "evidence": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -294,3 +294,39 @@ def test_framework_check_reprova(tmp_path):
     )
     assert r.returncode == 1
     assert "approved_by ausente" in r.stdout
+
+
+# --- SPEC-DTF-0030, RF02: actor contra approvers (SDD-DTF-0055) -------------
+
+
+def _com_lista(tmp_path: Path, approvers) -> None:
+    (tmp_path / "registry.yaml").write_text(
+        yaml.safe_dump({"project": "TST", "framework_version": "2.5.0", "approvers": approvers}), encoding="utf-8"
+    )
+
+
+def test_actor_na_lista_passa(tmp_path):
+    path = _doc(tmp_path, doc_type="RFC", approved_by=None)
+    doc = _doc(tmp_path, doc_type="RFC", approved_by=_humano(path))
+    _com_lista(tmp_path, ["owner", "outro"])
+    assert _problems(doc) == []
+
+
+def test_actor_fora_da_lista_reprova_com_a_mensagem(tmp_path):
+    path = _doc(tmp_path, doc_type="RFC", approved_by=None)
+    doc = _doc(tmp_path, doc_type="RFC", approved_by=_humano(path, actor="intruso"))
+    _com_lista(tmp_path, ["owner", "outro"])
+    assert _problems(doc) == [
+        "RFC-TST-0001: approved_by.actor intruso não está em approvers (owner, outro) do registry central."
+    ]
+
+
+def test_sem_lista_actor_qualquer_passa(tmp_path):
+    path = _doc(tmp_path, doc_type="RFC", approved_by=None)
+    assert _problems(_doc(tmp_path, doc_type="RFC", approved_by=_humano(path, actor="intruso"))) == []
+
+
+def test_policy_nao_e_conferido_contra_a_lista(tmp_path):
+    doc = _doc(tmp_path)
+    _com_lista(tmp_path, ["owner"])
+    assert _problems(doc) == []

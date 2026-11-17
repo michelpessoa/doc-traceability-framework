@@ -53,6 +53,8 @@ def entradas(tmp_path) -> dict:
     mensagem.write_text("docs: mensagem no formato\n\nRefs: SDD-X-0001\n", encoding="utf-8")
     corpo = tmp_path / "PR_BODY"
     corpo.write_text("", encoding="utf-8")
+    reviews = tmp_path / "REVIEWS.json"
+    reviews.write_text("[]", encoding="utf-8")
     _git(tmp_path, "init", "-q")
     _git(tmp_path, "-c", "user.email=t@e", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "base")
     sha = _git(tmp_path, "rev-parse", "HEAD")
@@ -67,6 +69,9 @@ def entradas(tmp_path) -> dict:
         "<head>": sha,
         "<project_code>": "X",
         "<pr_body_file>": str(corpo),
+        "<arquivo>": str(reviews),
+        "<sha>": sha,
+        "<url>": "https://github.com/dono/central/pull/1",
     }
 
 
@@ -101,6 +106,7 @@ def test_saidas_declaradas_validam_contra_o_esquema(entradas):
         "ci_gate_verify_sdd.py",
         "parallel_plan.py",
         "approval_hash.py",
+        "review_approval.py",
     }
     for saida in saidas:
         script = SCRIPTS / saida["script"]
@@ -193,3 +199,26 @@ def test_hash_excluded_sections_declarado():
     """SPEC-DTF-0029, tratamento de erro: sem a chave o hash não exclui nada, e o contrato reprova o YAML."""
     rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
     assert rules["approval_policy"]["hash_excluded_sections"]
+
+
+def test_aprovacao_por_review_no_contrato():
+    """SPEC-DTF-0030, RF06: só acrescenta, contract_version continua 1."""
+    c = contrato()
+    assert c["contract_version"] == 1
+    assert {
+        "script": "review_approval.py",
+        "args": ["<documento>", "--reviews", "<arquivo>", "--head", "<sha>", "--pr-url", "<url>", "--json"],
+        "schema": "_framework/schemas/review-approval.schema.json",
+    } in c["machine_outputs"]
+    assert c["writes"][-2:] == [
+        "PR de documento novo (SPEC, RFC) no central com status in_review, de branch docs/<id>.",
+        "Na mesma PR, antes do merge: status approved e approved_by com kind: human, só com saída válida de"
+        " review_approval.py sobre o head revisado.",
+    ]
+
+
+def test_approvers_declarado_no_registry_central():
+    """SPEC-DTF-0030, RF01: o campo é declarado no YAML, ao lado de repository_field."""
+    rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
+    campo = rules["registry"]["central_registry"]["approvers_field"]
+    assert campo["field"] == "approvers" and campo["since"] == "2.6.0"
