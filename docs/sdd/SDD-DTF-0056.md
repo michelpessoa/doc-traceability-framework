@@ -38,7 +38,7 @@ e garante que todo documento do registry caia em alguma seção.
 Sem ADR — sizing `small`, nenhum critério de `decision_gates.rfc_to_adr` se
 aplica: um script e seu teste, sem mudança de regra, schema ou contrato.
 `workflow-rules.yaml` não muda (não ganha chave de rótulo), e
-`framework.version` fica em `2.5.0`: é falha de execução, não desenho
+`framework.version` não muda (igual ao de `origin/main`): é falha de execução, não desenho
 (`lessons_policy`).
 
 ## Requisitos consolidados
@@ -195,4 +195,4 @@ Fidelidade à origem: n/a, sizing `small` sem `source_docs` (precedente SDD-DTF-
 | relates_to | SDD-DTF-0043 (RF08: cabeçalho sem hora e `--check` do registry.md) |
 | Gate RFC → ADR | Nenhum critério de `decision_gates.rfc_to_adr` se aplica |
 | Aprovação | Owner (Michel Pessoa), 2026-11-17, sobre o texto desta SDD em `in_review` |
-| Ajuste pós-aprovação | Owner aceitou em 2026-11-17, depois da rodada 1 do verify-sdd: `_framework/INDEX.md` na task 3, `central:_framework/INDEX.md` na task 4 e um teste de RF01 com regras sintéticas em ordem diferente da embutida; depois da rodada 2, pipe escapado no comando do A07 (só formatação) |
+| Ajuste pós-aprovação | Owner aceitou em 2026-11-17, depois da rodada 1 do verify-sdd: `_framework/INDEX.md` na task 3, `central:_framework/INDEX.md` na task 4 e um teste de RF01 com regras sintéticas em ordem diferente da embutida; depois da rodada 2, pipe escapado no comando do A07 (só formatação); depois do merge da #145 (2.6.0) e da renumeração de SDD-DTF-0055 para SDD-DTF-0056 (colisão de id), a frase sobre `framework.version` deixou de citar `2.5.0` |
