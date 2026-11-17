@@ -534,7 +534,7 @@ documents:
   - id: SDD-DTF-0055
     type: SDD
     title: "registry.md com seção para todo tipo de documento: ordem derivada de document_types, sem descarte silencioso"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-11-17"
     updated: "2026-11-17"
