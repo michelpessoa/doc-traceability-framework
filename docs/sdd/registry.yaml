@@ -541,3 +541,13 @@ documents:
     relates_to: [SDD-DTF-0054]
     path: "docs/sdd/SDD-DTF-0055.md"
     tags: [integracao, executor, aprovacao, review, approvers, approved_by]
+  - id: SDD-DTF-0056
+    type: SDD
+    title: "registry.md com seção para todo tipo de documento: ordem derivada de document_types, sem descarte silencioso"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-17"
+    updated: "2026-11-17"
+    relates_to: [SDD-DTF-0043]
+    path: "docs/sdd/SDD-DTF-0056.md"
+    tags: [registry, gerado, tooling, tipos-de-documento]
