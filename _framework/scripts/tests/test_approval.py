@@ -330,3 +330,100 @@ def test_policy_nao_e_conferido_contra_a_lista(tmp_path):
     doc = _doc(tmp_path)
     _com_lista(tmp_path, ["owner"])
     assert _problems(doc) == []
+
+
+# --- approved_by.transitions (SDD-DTF-0057, SPEC-DTF-0031 RF12) -------------
+
+from validate_state import check_transitions  # noqa: E402
+
+ALLOWED = load_rules()["status_lifecycle"]["allowed_transitions"]
+CAMINHO = [
+    {"from": "draft", "to": "in_review", "at": "2099-01-01T10:00:00Z"},
+    {"from": "in_review", "to": "approved", "at": "2099-01-01T10:00:05Z"},
+]
+
+
+def _policy(transitions, kind: str = "policy") -> dict:
+    return {"kind": kind, "actor": "executor", "at": "2099-01-01T10:00:05Z", "transitions": transitions}
+
+
+def test_transitions_caminho_valido_passa():
+    assert check_transitions("SDD-TST-0001", _policy(CAMINHO), ALLOWED) == []
+
+
+def test_transitions_com_volta_a_draft_passa():
+    caminho = [
+        {"from": "draft", "to": "in_review", "at": "2099-01-01"},
+        {"from": "in_review", "to": "draft", "at": "2099-01-01"},
+        {"from": "draft", "to": "in_review", "at": "2099-01-02"},
+        {"from": "in_review", "to": "approved", "at": "2099-01-02T08:00:00Z"},
+    ]
+    assert check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED) == []
+
+
+def test_transitions_com_kind_human_reprova():
+    problems = check_transitions("SDD-TST-0001", _policy(CAMINHO, kind="human"), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions só vale com kind policy."]
+
+
+def test_transitions_vazio_ou_item_incompleto_reprova():
+    esperado = ["SDD-TST-0001: approved_by.transitions deve ser uma lista não vazia de {from, to, at}."]
+    assert check_transitions("SDD-TST-0001", _policy([]), ALLOWED) == esperado
+    assert check_transitions("SDD-TST-0001", _policy("draft"), ALLOWED) == esperado
+    assert check_transitions("SDD-TST-0001", _policy([{"from": "draft", "to": "approved"}]), ALLOWED) == esperado
+
+
+def test_transitions_que_nao_comeca_em_draft_reprova():
+    caminho = [
+        {"from": "in_review", "to": "draft", "at": "2099-01-01"},
+        {"from": "draft", "to": "in_review", "at": "2099-01-01"},
+        {"from": "in_review", "to": "approved", "at": "2099-01-01"},
+    ]
+    problems = check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions começa em in_review; deve começar em draft."]
+
+
+def test_transitions_salto_proibido_reprova():
+    caminho = [{"from": "draft", "to": "approved", "at": "2099-01-01"}]
+    problems = check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions[0] draft → approved não está em allowed_transitions."]
+
+
+def test_transitions_elo_quebrado_reprova():
+    caminho = [
+        {"from": "draft", "to": "in_review", "at": "2099-01-01"},
+        {"from": "draft", "to": "in_review", "at": "2099-01-01"},
+        {"from": "in_review", "to": "approved", "at": "2099-01-01"},
+    ]
+    problems = check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED)
+    assert problems == [
+        "SDD-TST-0001: approved_by.transitions[1] parte de draft, mas o passo anterior terminou em in_review."
+    ]
+
+
+def test_transitions_at_invalido_reprova():
+    caminho = [dict(CAMINHO[0]), dict(CAMINHO[1], at="ontem")]
+    problems = check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions[1] com `at` fora de ISO 8601 ('ontem')."]
+
+
+def test_transitions_at_decrescente_reprova():
+    caminho = [dict(CAMINHO[0], at="2099-01-02"), dict(CAMINHO[1], at="2099-01-01T23:00:00Z")]
+    problems = check_transitions("SDD-TST-0001", _policy(caminho), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions[1] com `at` anterior ao passo 0."]
+
+
+def test_transitions_que_nao_termina_em_approved_reprova():
+    problems = check_transitions("SDD-TST-0001", _policy(CAMINHO[:1]), ALLOWED)
+    assert problems == ["SDD-TST-0001: approved_by.transitions termina em in_review; deve terminar em approved."]
+
+
+def test_transitions_conferido_pelo_check_approval(tmp_path):
+    path = _doc(tmp_path)
+    fm, body = path.read_text(encoding="utf-8").split("\n---\n", 1)
+    data = yaml.safe_load(fm.removeprefix("---\n"))
+    data["approved_by"]["transitions"] = [{"from": "draft", "to": "approved", "at": "2099-01-01"}]
+    path.write_text("---\n" + yaml.safe_dump(data, allow_unicode=True) + "---\n" + body, encoding="utf-8")
+    assert _problems(path) == [
+        "SDD-TST-0001: approved_by.transitions[0] draft → approved não está em allowed_transitions."
+    ]
