@@ -25,10 +25,6 @@ Checa, por documento:
   10. SPEC: seção "Requisitos transversais (sweep)" presente, com todas as
       categorias fixas cobertas e Destino preenchido (RF-ID ou n/a + motivo),
       não-retroativo (STRAT-DTF-0003 item 10, SDD-DTF-0039).
-  11. SDD enxuta (com source_docs, desde a 2.7.0): `sizing` válido, tabela
-      RF-ID | Origem | Requisito (resumo) | Arquivos em "Requisitos
-      consolidados" e sem as seções que copiam SPEC e ADR; `molde` só em
-      SDD small (SPEC-DTF-0031, RF01 a RF04, SDD-DTF-0057).
 
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
@@ -201,8 +197,12 @@ def section_body(body: str, heading: str) -> str | None:
     return m.group(1) if m else None
 
 
-# SDD enxuta (SPEC-DTF-0031, RF01 a RF04): com source_docs, a SDD traz o
-# requisito por referência à SPEC e não copia o desenho nem a decisão.
+# SDD enxuta (SPEC-DTF-0031, RF01 a RF04, SDD-DTF-0057): com source_docs,
+# desde a 2.7.0, a SDD declara `sizing` válido, traz o requisito por
+# referência à SPEC (tabela RF-ID | Origem | Requisito (resumo) | Arquivos)
+# e não copia o desenho nem a decisão; `molde` só em SDD small. Fica fora
+# da docstring porque ela é a saída de uso, congelada desde a 2.3.2
+# (test_report_json).
 LEAN_COLUMNS = ["RF-ID", "Origem", "Requisito (resumo)", "Arquivos"]
 LEAN_SUMMARY_MAX = 200
 MOLDE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")

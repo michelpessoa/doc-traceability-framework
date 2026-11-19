@@ -161,7 +161,10 @@ def _arvore(tmp_path: Path) -> Path:
         campos = "".join(f"{k}: {v if v else 'null'}\n" for k, v in pais.items())
         (tmp_path / rel).write_text(f"---\nid: {doc_id}\ntype: {tipo}\n{campos}---\n\n# x\n", encoding="utf-8")
         linhas += f'  - id: {doc_id}\n    type: {tipo}\n    title: "T"\n    status: {status}\n    path: "{rel}"\n'
-    linhas += '  - id: SPEC-X-0002\n    type: SPEC\n    title: "T"\n    status: draft\n    path: "docs/X/03-spec/nao-existe.md"\n'
+    linhas += (
+        '  - id: SPEC-X-0002\n    type: SPEC\n    title: "T"\n    status: draft\n'
+        '    path: "docs/X/03-spec/nao-existe.md"\n'
+    )
     (docs / "registry.yaml").write_text(linhas, encoding="utf-8")
     return docs
 

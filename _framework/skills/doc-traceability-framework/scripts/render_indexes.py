@@ -613,6 +613,21 @@ def extract_sdd_files(body: str) -> list[str]:
                     break
             continue
         i += 1
+    # (c) coluna "Arquivos" de "Requisitos consolidados", na SDD enxuta
+    # (SPEC-DTF-0031, RF07, SDD-DTF-0057)
+    col = None
+    for ln in _section_body(body, "Requisitos consolidados"):
+        if not ln.startswith("|"):
+            continue
+        cells = split_table_row(ln.strip())
+        if col is None:
+            if "Arquivos" in cells:
+                col = cells.index("Arquivos")
+            else:
+                break
+            continue
+        if col < len(cells):
+            found.update(_paths_in(cells[col]))
     # (b) coluna "Arquivos tocados" da tabela de tasks
     col = None
     for ln in _section_body(body, "Decomposição em tasks"):

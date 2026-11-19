@@ -20,14 +20,75 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import json_flag, load_registry, read_frontmatter, report, run_main, usage_error  # noqa: E402
+from framework_lib import (  # noqa: E402
+    json_flag,
+    load_registry,
+    load_rules,
+    project_version,
+    read_frontmatter,
+    report,
+    rule_applies_since_date,
+    run_main,
+    split_table_row,
+    usage_error,
+)
 from registry_tools import check_source_docs_urls, resolve_doc_path  # noqa: E402
+from validate_doc import RF_ID, RULE_SINCE, consolidated_rf_rows, is_lean_sdd, section_body  # noqa: E402
 
 OK_STATUSES = {"approved", "implemented"}
 
 
+# Na SDD enxuta (com source_docs, desde a 2.7.0) também confere os RF-IDs
+# de "Requisitos consolidados" contra "Requisitos funcionais" de cada SPEC
+# de origem, nas duas direções (SPEC-DTF-0031, RF05, SDD-DTF-0057). Fora
+# da docstring, que é a saída de uso congelada desde a 2.3.2.
+
+
+def _rf_key(rf: str) -> str:
+    """`RF-01` e `RF01` são o mesmo RF."""
+    return rf.replace("-", "")
+
+
+def check_rf_fidelity(doc_id: str, rows: list[dict], spec_paths: dict[str, Path]) -> list[str]:
+    """
+    RF05 da SPEC-DTF-0031: para cada SPEC, os RF-IDs da tabela "Requisitos
+    funcionais" contra os RFs da SDD com `Origem` igual ao id da SPEC.
+    """
+    problems = []
+    for spec_id in sorted(spec_paths):
+        _, body = read_frontmatter(spec_paths[spec_id])
+        section = section_body(body, "Requisitos funcionais") or ""
+        lines = [ln.strip() for ln in section.splitlines() if ln.strip().startswith("|")]
+        spec_rfs = set()
+        for line in lines[2:]:
+            found = RF_ID.search(split_table_row(line)[0])
+            if found:
+                spec_rfs.add(_rf_key(found.group(0)))
+        sdd_rfs = {_rf_key(r["rf"]) for r in rows if r["rf"] and r["origem"] == spec_id}
+        missing, extra = sorted(spec_rfs - sdd_rfs), sorted(sdd_rfs - spec_rfs)
+        if missing or extra:
+            problems.append(
+                f"{doc_id}: RFs de {spec_id} fora da SDD: {', '.join(missing) or 'nenhum'}; "
+                f"RFs da SDD fora de {spec_id}: {', '.join(extra) or 'nenhum'}."
+            )
+    return problems
+
+
+def _lean(sdd_path: Path, fm: dict) -> bool:
+    """SDD enxuta: criada desde a 2.7.0, em projeto sob 2.7.0 ou maior."""
+    rules, version = load_rules(), project_version(sdd_path)
+
+    def applies(rule: str) -> bool:
+        since = RULE_SINCE[rule]
+        return rule_applies_since_date(rules, since, fm.get("created"), version) and rule_applies_since_date(
+            rules, since, None, version
+        )
+
+    return is_lean_sdd(fm, applies)
+
+
 def check_sdd_source_docs(sdd_path: Path, central_docs_dir: Path) -> list[str]:
-    fm, _ = read_frontmatter(sdd_path)
+    fm, body = read_frontmatter(sdd_path)
     doc_id = fm.get("id") or sdd_path.name
     source_docs = fm.get("source_docs") or []
 
@@ -45,6 +106,7 @@ def check_sdd_source_docs(sdd_path: Path, central_docs_dir: Path) -> list[str]:
     problems = check_source_docs_urls(doc_id, fm)
 
     _, central_docs = load_registry(central_docs_dir)
+    spec_paths: dict[str, Path] = {}
 
     for sd in source_docs:
         if not isinstance(sd, dict) or not sd.get("id"):
@@ -78,7 +140,12 @@ def check_sdd_source_docs(sdd_path: Path, central_docs_dir: Path) -> list[str]:
                 f"{doc_id}: source_docs '{sid}' tem url ('{url}') que não aponta pro "
                 f"mesmo arquivo que o `path` do registry central ('{rel_path}')."
             )
+        elif entry.get("type") == "SPEC" and status in OK_STATUSES:
+            spec_paths[sid] = resolved
 
+    rows = consolidated_rf_rows(body)
+    if rows is not None and spec_paths and _lean(sdd_path, fm):
+        problems += check_rf_fidelity(doc_id, rows, spec_paths)
     return problems
 
 

@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.6.0** (`2026-11-17`).
+Versão corrente: **2.7.0** (`2026-11-19`).
+
+## 2.7.0
+
+SPEC-DTF-0031 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0057): documentação enxuta, não-retroativa. SDD enxuta (com source_docs, criada desde a 2.7.0 em projeto sob 2.7.0): `sizing` obrigatório, "Requisitos consolidados" com RF-ID | Origem | Requisito (resumo) | Arquivos e sem as seções que copiam SPEC e ADR (`validate_doc.py`); RF-IDs conferidos contra a SPEC nas duas direções (`check_source_docs.py`). Campo `molde`, só em SDD small. Seções opcionais da SPEC em `document_types.SPEC.optional_sections`, conferidas contra o template por `check_renderings.py`. "Documentos originados" gerada no registry.md a partir dos campos `parent_*` e fora dos templates de RFC e SPEC (segue em hash_excluded_sections). `approved_by.transitions`, só com kind policy, conferido contra allowed_transitions. `executor_contract` só acrescenta (`contract_version` 1). Nenhum gate, sizing, ciclo de status ou política muda.
 
 ## 2.6.0
 

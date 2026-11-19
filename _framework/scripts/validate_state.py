@@ -271,7 +271,9 @@ def check_transitions(doc_id: str, approved_by: dict, allowed: dict) -> list[str
     if (
         not isinstance(steps, list)
         or not steps
-        or not all(isinstance(st, dict) and all(st.get(k) not in (None, "") for k in ("from", "to", "at")) for st in steps)
+        or not all(
+            isinstance(st, dict) and all(st.get(k) not in (None, "") for k in ("from", "to", "at")) for st in steps
+        )
     ):
         return [f"{doc_id}: approved_by.transitions deve ser uma lista não vazia de {{from, to, at}}."]
 
@@ -287,7 +289,9 @@ def check_transitions(doc_id: str, approved_by: dict, allowed: dict) -> list[str
                 f"mas o passo anterior terminou em {steps[i - 1]['to']}."
             )
         if target not in (allowed.get(origin) or []):
-            problems.append(f"{doc_id}: approved_by.transitions[{i}] {origin} → {target} não está em allowed_transitions.")
+            problems.append(
+                f"{doc_id}: approved_by.transitions[{i}] {origin} → {target} não está em allowed_transitions."
+            )
         if not _iso_8601(step["at"]):
             problems.append(f"{doc_id}: approved_by.transitions[{i}] com `at` fora de ISO 8601 ({step['at']!r}).")
             previous_at = None

@@ -116,14 +116,16 @@ def test_sdd_enxuta_valida_passa(tmp_path):
 def test_sizing_ausente_reprova(tmp_path):
     problems = _lean(_problems(_sdd(tmp_path, sizing=None)))
     assert problems == [
-        "SDD-TST-0001: SDD enxuta sem `sizing` válido (None); use small, medium, large ou complex (SPEC-DTF-0031, RF01)."
+        "SDD-TST-0001: SDD enxuta sem `sizing` válido (None); use small, medium, large ou complex"
+        " (SPEC-DTF-0031, RF01)."
     ]
 
 
 def test_sizing_fora_dos_niveis_reprova(tmp_path):
     problems = _lean(_problems(_sdd(tmp_path, sizing="enorme")))
     assert problems == [
-        "SDD-TST-0001: SDD enxuta sem `sizing` válido ('enorme'); use small, medium, large ou complex (SPEC-DTF-0031, RF01)."
+        "SDD-TST-0001: SDD enxuta sem `sizing` válido ('enorme'); use small, medium, large ou complex"
+        " (SPEC-DTF-0031, RF01)."
     ]
 
 
@@ -131,7 +133,8 @@ def test_tabela_com_colunas_erradas_reprova(tmp_path):
     tabela = "| RF | Requisito | Critério de aceite (EARS) |\n|---|---|---|\n| RF01 | X | O sistema deve X |\n"
     problems = _lean(_problems(_sdd(tmp_path, tabela=tabela)))
     assert problems == [
-        "SDD-TST-0001: 'Requisitos consolidados' sem a tabela RF-ID | Origem | Requisito (resumo) | Arquivos (SPEC-DTF-0031, RF02)."
+        "SDD-TST-0001: 'Requisitos consolidados' sem a tabela RF-ID | Origem | Requisito (resumo) | Arquivos"
+        " (SPEC-DTF-0031, RF02)."
     ]
 
 
@@ -341,9 +344,7 @@ def test_fidelity_duas_specs_cada_rf_contra_a_sua(tmp_path):
     source_docs = [{"id": SPEC_ID, "url": URL + SPEC_PATH}, {"id": SPEC2_ID, "url": URL + SPEC2_PATH}]
     tabela = HEADER + ROWS + f"| RF01 | {SPEC2_ID} | Outro | `b.py` |\n"
     problems = check_sdd_source_docs(_sdd(tmp_path, tabela=tabela, source_docs=source_docs), central)
-    assert problems == [
-        f"SDD-TST-0001: RFs de {SPEC2_ID} fora da SDD: RF05; RFs da SDD fora de {SPEC2_ID}: nenhum."
-    ]
+    assert problems == [f"SDD-TST-0001: RFs de {SPEC2_ID} fora da SDD: RF05; RFs da SDD fora de {SPEC2_ID}: nenhum."]
 
 
 def test_fidelity_spec_fora_do_registry_nao_compara(tmp_path):

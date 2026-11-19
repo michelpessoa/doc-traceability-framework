@@ -29,10 +29,13 @@ tags: []
 > Ambiguidade real vira `[NEEDS CLARIFICATION: pergunta objetiva]` em vez
 > de suposição silenciosa. Documento não vai a `approved` com marcador
 > pendente.
+>
+> Documentos originados: visão gerada no registry.md (generate_registry_md.py), a partir de parent_rfc e parent_adr.
 
 ## Objetivo
 
 ## Usuários / personas afetadas
+> Opcional (SPEC por sizing). Volta quando: Mais de um perfil de usuário é afetado de forma diferente.
 
 ---
 
@@ -130,21 +133,20 @@ Cada item cita o(s) arquivo(s) exato(s) a criar ou alterar.
 ## Riscos operacionais e mitigação
 
 ## Plano de rollout / rollback
+> Opcional (SPEC por sizing). Volta quando: A mudança entra por etapas, depende de flag ou tem rollback diferente de reverter a PR.
 
 ## Observabilidade (métricas, logs, alertas)
+> Opcional (SPEC por sizing). Volta quando: O sweep aponta Observabilidade para um RF com métrica, log ou alerta novo.
 
 ## Times consumidores impactados
+> Opcional (SPEC por sizing). Volta quando: Algum time fora do dono do documento consome o que muda.
 
 ---
 
 ## Dependências
+> Opcional (SPEC por sizing). Volta quando: Existe dependência operacional (acesso, ambiente, terceiro) além de parent_rfc e parent_adr.
 Referenciar `parent_rfc` e `parent_adr` quando aplicável, e qualquer
 dependência operacional (acesso, ambiente, terceiro).
-
-## Documentos originados
-| ID | Tipo | Título | Status |
-|---|---|---|---|
-| | | | |
 
 ## Autorrevisão antes de status `in_review`
 Rode como último passo antes de propor a mudança de status. Checagem

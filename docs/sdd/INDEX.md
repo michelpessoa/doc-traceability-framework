@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 55 SDDs
+Total: 56 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -45,9 +45,9 @@ Total: 55 SDDs
 | `SDD-DTF-0039` | A SPEC não força autora a considerar categorias transversais que tipicamente ficam de fora por omissão silenciosa: autorização, concorrênci… | `2.3.0`, `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `_framework/prompts/copilot-instructions.md`, `_framework/prompts/doc-framework.mdc` +11 | — | — | implemented |
 | `SDD-DTF-0040` | `docs/guias/guia-tecnico.md` não foi atualizado nas últimas 8 SDDs do kit (SDD-DTF-0032 a 0039, todas `implemented`). | `docs/guias/guia-tecnico.md` | — | — | implemented |
 | `SDD-DTF-0041` | `frontmatter_schema.common_fields.type` (seção 8 de `_framework/rules/workflow-rules.yaml`) lista o enum `[STRAT, RFC, ADR, PRD, TS, SDD, B… | `_framework/rules/workflow-rules.yaml` | — | — | implemented |
-| `SDD-DTF-0042` | Três defasagens do kit (framework 2.3.0) são corrigidas sem mudar nenhuma regra de comportamento: (1) `gate_implementation_before_code` em… | `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/universal.md` +19 | — | — | implemented |
+| `SDD-DTF-0042` | Três defasagens do kit (framework 2.3.0) são corrigidas sem mudar nenhuma regra de comportamento: (1) `gate_implementation_before_code` em… | `AGENTS.md`, `CHANGELOG.md`, `QUICKSTART.md`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/universal.md` +20 | — | — | implemented |
 | `SDD-DTF-0043` | Dar a uma LLM (e a um humano) um caminho barato até qualquer arquivo do kit, qualquer seção do `workflow-rules.yaml` e qualquer SDD de um r… | `.github/workflows/framework-check.yml`, `AGENTS.md`, `_framework/INDEX.md`, `_framework/prompts/universal.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.map.md` +31 | — | — | implemented |
-| `SDD-DTF-0044` | Reduzir o custo de contexto de cada disparo das skills do kit sem perder nenhum gate de vista. | `.claude/skills/doc-traceability-framework`, `_framework/procedures/verify-sdd.md`, `_framework/skills/doc-traceability-framework/SKILL.md`, `_framework/skills/doc-traceability-framework/references/audit.md` +10 | — | — | implemented |
+| `SDD-DTF-0044` | Reduzir o custo de contexto de cada disparo das skills do kit sem perder nenhum gate de vista. | `.claude/skills/...`, `.claude/skills/doc-traceability-framework`, `/skills`, `SKILL.md`, `_framework/`, `_framework/procedures/verify-sdd.md` +22 | — | — | implemented |
 | `SDD-DTF-0045` | Os diretórios `.ruff_cache`, `.pytest_cache` e `.mypy_cache` não são declarados pelo `.gitignore` da raiz (hoje só ficam fora do `git statu… | (sem seção de arquivos) | — | — | implemented |
 | `SDD-DTF-0046` | A pasta `_framework/skills/doc-traceability-framework/` (o bundle da skill) contém cópias geradas de scripts, do YAML de regras e de templa… | (sem seção de arquivos) | — | — | implemented |
 | `SDD-DTF-0047` | Toda leitura de tabela markdown dos scripts do framework quebra a linha com `line.strip("/").split("/")`, sem reconhecer o pipe escapado (b… | (sem seção de arquivos) | — | — | implemented |
@@ -60,3 +60,4 @@ Total: 55 SDDs
 | `SDD-DTF-0054` | Fase 2 da RFC-DTF-0009. | `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/schemas/approval-hash.schema.json`, `_framework/scripts/approval_hash.py`, `_framework/scripts/framework_check.py`, `_framework/scripts/tests/test_approval.py` +6 | — | — | implemented |
 | `SDD-DTF-0055` | Parte do kit da SPEC-DTF-0030, a primeira SPEC da fase 4 da RFC-DTF-0009. | `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/schemas/review-approval.schema.json`, `_framework/scripts/registry_tools.py`, `_framework/scripts/review_approval.py`, `_framework/scripts/tests/test_approval.py` +5 | — | — | implemented |
 | `SDD-DTF-0056` | `_framework/scripts/generate_registry_md.py` fixa `TYPE_ORDER = ["STRAT", "RFC", "ADR", "PRD", "TS", "SDD"]` e só renderiza seção para esse… | `_framework/INDEX.md`, `_framework/scripts/generate_registry_md.py`, `_framework/scripts/tests/test_generate_registry_md.py` +6 | — | — | implemented |
+| `SDD-DTF-0057` | Parte do kit da SPEC-DTF-0031, a fase 5 da RFC-DTF-0009 (P5, "Documentação enxuta"), que absorve a proposta 004 da fábrica. | `_framework/procedures/verify-sdd.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/scripts/check_renderings.py`, `_framework/scripts/check_source_docs.py` +19 | — | — | approved |

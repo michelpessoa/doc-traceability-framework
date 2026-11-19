@@ -12,10 +12,6 @@ origem errada sem saber.
 Uso:
     python3 check_source_docs.py <SDD.md> <central_docs_dir>
 
-Na SDD enxuta (com source_docs, desde a 2.7.0) também confere os RF-IDs
-de "Requisitos consolidados" contra "Requisitos funcionais" de cada SPEC
-de origem, nas duas direções (SPEC-DTF-0031, RF05, SDD-DTF-0057).
-
 Exit 1 se houver problema; --report-only sempre sai 0.
 """
 
@@ -40,6 +36,12 @@ from registry_tools import check_source_docs_urls, resolve_doc_path  # noqa: E40
 from validate_doc import RF_ID, RULE_SINCE, consolidated_rf_rows, is_lean_sdd, section_body  # noqa: E402
 
 OK_STATUSES = {"approved", "implemented"}
+
+
+# Na SDD enxuta (com source_docs, desde a 2.7.0) também confere os RF-IDs
+# de "Requisitos consolidados" contra "Requisitos funcionais" de cada SPEC
+# de origem, nas duas direções (SPEC-DTF-0031, RF05, SDD-DTF-0057). Fora
+# da docstring, que é a saída de uso congelada desde a 2.3.2.
 
 
 def _rf_key(rf: str) -> str:

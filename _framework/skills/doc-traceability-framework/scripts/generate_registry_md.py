@@ -14,6 +14,11 @@ A saída é determinística (sem hora de geração). O cabeçalho mostra a vers�
 corrente do framework quando workflow-rules.yaml é encontrado; senão,
 `framework_version` do registry.yaml (versão de mapeamento).
 
+Ao fim, a seção "Documentos originados": para cada documento com pai
+declarado no front-matter (parent_strategy, parent_postmortem, parent_rfc,
+parent_adr, source_incident), uma linha com o pai e o filho (SPEC-DTF-0031,
+RF10, SDD-DTF-0057).
+
 Se <caminho_para_docs> for omitido, assume "docs" no diretório atual.
 Requer PyYAML (pip install pyyaml --break-system-packages).
 """
@@ -25,7 +30,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from framework_lib import find_rules_file, load_rules  # noqa: E402
+from framework_lib import find_rules_file, load_rules, read_frontmatter  # noqa: E402
+from registry_tools import resolve_doc_path  # noqa: E402
 
 # Ordem embutida, usada só quando workflow-rules.yaml não é acessível.
 # Com o YAML, vale a ordem de document_types + legacy_document_types
@@ -44,6 +50,8 @@ TYPE_LABEL = {
     "TS": "Tech Spec",
 }
 UNDECLARED_LABEL = "Tipo não declarado: {type}"
+
+PARENT_FIELDS = ("parent_strategy", "parent_postmortem", "parent_rfc", "parent_adr", "source_incident")
 
 
 def _declared_types(rules: dict) -> dict:
@@ -85,6 +93,35 @@ def render_table(docs: list) -> str:
     return header + "\n".join(rows) + "\n"
 
 
+def originated(data: dict, docs_dir: Path) -> list[tuple[str, str, str, str]]:
+    """(pai, filho, tipo do filho, status do filho), ordenado por pai e filho."""
+    rows = []
+    for d in data.get("documents") or []:
+        rel = d.get("path")
+        resolved = resolve_doc_path(docs_dir, rel) if rel else None
+        if resolved is None:
+            continue
+        try:
+            fm, _ = read_frontmatter(resolved)
+        except (OSError, ValueError, yaml.YAMLError):
+            continue
+        for field in PARENT_FIELDS:
+            parent = (fm or {}).get(field)
+            if isinstance(parent, str) and parent.strip():
+                rows.append((parent.strip(), str(d.get("id")), str(d.get("type") or ""), str(d.get("status") or "")))
+    return sorted(rows, key=lambda r: (r[0], r[1]))
+
+
+def render_originated(rows) -> str:
+    lines = ["## Documentos originados", ""]
+    if not rows:
+        lines.append("Nenhum documento com pai declarado.")
+        return "\n".join(lines) + "\n"
+    lines += ["| Pai | Documento | Tipo | Status |", "|---|---|---|---|"]
+    lines += [f"| `{pai}` | `{filho}` | {tipo} | {status} |" for pai, filho, tipo, status in rows]
+    return "\n".join(lines) + "\n"
+
+
 def render_header(project: str, fw_version: str) -> str:
     """Cabeçalho do registry.md, sem hora de geração (RF08)."""
     return (
@@ -102,7 +139,7 @@ def current_framework_version() -> str | None:
     return str(version) if version else None
 
 
-def render_registry(data: dict) -> str:
+def render_registry(data: dict, docs_dir: Path | None = None) -> str:
     project = data.get("project", "N/D")
     fw_version = current_framework_version() or data.get("framework_version", "N/D")
     documents = data.get("documents", [])
@@ -126,6 +163,8 @@ def render_registry(data: dict) -> str:
             continue
         lines.append(f"\n## {type_label(t, rules)} ({len(docs_of_type)})\n")
         lines.append(render_table(docs_of_type))
+    if docs_dir is not None:
+        lines.append(render_originated(originated(data, docs_dir)))
     return "\n".join(lines)
 
 
@@ -135,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     args = [a for a in args if a != "--check"]
     docs_dir = Path(args[0]) if args else Path("docs")
     data = load_registry(docs_dir)
-    content = render_registry(data)
+    content = render_registry(data, docs_dir)
     out_path = docs_dir / "registry.md"
     if check:
         if out_path.is_file() and out_path.read_text(encoding="utf-8") == content:

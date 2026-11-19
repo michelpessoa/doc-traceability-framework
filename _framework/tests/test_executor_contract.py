@@ -228,7 +228,10 @@ def test_transicoes_da_politica_no_contrato():
     """SPEC-DTF-0031, RF13: só acrescenta, contract_version continua 1."""
     c = contrato()
     assert c["contract_version"] == 1
-    assert c["writes"][-1] == "Com kind: policy, draft → in_review → approved num único commit, com approved_by.transitions."
+    assert (
+        c["writes"][-1]
+        == "Com kind: policy, draft → in_review → approved num único commit, com approved_by.transitions."
+    )
 
 
 def test_versao_2_7_0_e_campos_da_sdd():

@@ -244,6 +244,67 @@ def approved_by_format(doc_id: str, data) -> list[str]:
     return problems
 
 
+def _as_datetime(value) -> datetime.datetime:
+    """`at` já validado por _iso_8601; data sem hora conta como meia-noite."""
+    if isinstance(value, datetime.datetime):
+        moment = value
+    elif isinstance(value, datetime.date):
+        moment = datetime.datetime.combine(value, datetime.time())
+    else:
+        try:
+            moment = datetime.datetime.fromisoformat(value)
+        except ValueError:
+            moment = datetime.datetime.combine(datetime.date.fromisoformat(value), datetime.time())
+    return moment if moment.tzinfo else moment.replace(tzinfo=datetime.timezone.utc)
+
+
+def check_transitions(doc_id: str, approved_by: dict, allowed: dict) -> list[str]:
+    """
+    RF12 da SPEC-DTF-0031: com kind policy, `transitions` é o caminho de
+    draft até approved gravado num commit só; cada passo tem que estar em
+    status_lifecycle.allowed_transitions, encadeado e com `at` não
+    decrescente.
+    """
+    if approved_by.get("kind") != "policy":
+        return [f"{doc_id}: approved_by.transitions só vale com kind policy."]
+    steps = approved_by.get("transitions")
+    if (
+        not isinstance(steps, list)
+        or not steps
+        or not all(
+            isinstance(st, dict) and all(st.get(k) not in (None, "") for k in ("from", "to", "at")) for st in steps
+        )
+    ):
+        return [f"{doc_id}: approved_by.transitions deve ser uma lista não vazia de {{from, to, at}}."]
+
+    problems = []
+    if steps[0]["from"] != "draft":
+        problems.append(f"{doc_id}: approved_by.transitions começa em {steps[0]['from']}; deve começar em draft.")
+    previous_at = None
+    for i, step in enumerate(steps):
+        origin, target = step["from"], step["to"]
+        if i > 0 and origin != steps[i - 1]["to"]:
+            problems.append(
+                f"{doc_id}: approved_by.transitions[{i}] parte de {origin}, "
+                f"mas o passo anterior terminou em {steps[i - 1]['to']}."
+            )
+        if target not in (allowed.get(origin) or []):
+            problems.append(
+                f"{doc_id}: approved_by.transitions[{i}] {origin} → {target} não está em allowed_transitions."
+            )
+        if not _iso_8601(step["at"]):
+            problems.append(f"{doc_id}: approved_by.transitions[{i}] com `at` fora de ISO 8601 ({step['at']!r}).")
+            previous_at = None
+            continue
+        moment = _as_datetime(step["at"])
+        if previous_at is not None and moment < previous_at:
+            problems.append(f"{doc_id}: approved_by.transitions[{i}] com `at` anterior ao passo {i - 1}.")
+        previous_at = moment
+    if steps[-1]["to"] != "approved":
+        problems.append(f"{doc_id}: approved_by.transitions termina em {steps[-1]['to']}; deve terminar em approved.")
+    return problems
+
+
 def check_approval(path: Path, version: str | None = None) -> tuple[list[str], list[str]]:
     """
     Cobra approved_by (SPEC-DTF-0029, RF05 a RF08): ausente em documento
@@ -283,6 +344,9 @@ def check_approval(path: Path, version: str | None = None) -> tuple[list[str], l
         return [], []
 
     problems = approved_by_format(doc_id, data)
+    if isinstance(data, dict) and "transitions" in data:
+        allowed = (rules.get("status_lifecycle") or {}).get("allowed_transitions") or {}
+        problems += check_transitions(doc_id, data, allowed)
     if problems or status not in APPROVED_STATES:
         return problems, []
 

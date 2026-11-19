@@ -46,13 +46,13 @@ def test_verify_sdd_step5_before_fenced_templates_headings():
             f"{title!r} (linha {found[0] + 1}) aparece antes de '### 5.' (linha {step5 + 1})"
         )
     order = ["### 4.", "### 5.", "### Modelos de registro", "## Red flags"]
-    positions = [next(i for i, l in enumerate(lines) if l.startswith(o)) for o in order]
+    positions = [next(i for i, ln in enumerate(lines) if ln.startswith(o)) for o in order]
     assert positions == sorted(positions), f"ordem estrutural incorreta: {dict(zip(order, positions))}"
     # Frase de introdução do passo 4 não pode terminar em ":" antes de um título.
     for i, line in enumerate(lines[:-2]):
         if line.rstrip().endswith(":") and not lines[i + 1].strip() and lines[i + 2].startswith("#"):
             raise AssertionError(f"linha {i + 1}: frase termina em ':' seguida de título: {line!r}")
-    step4 = "\n".join(lines[next(i for i, l in enumerate(lines) if l.startswith("### 4.")) : step5])
+    step4 = "\n".join(lines[next(i for i, ln in enumerate(lines) if ln.startswith("### 4.")) : step5])
     for model in ("M1", "M2", "M3"):
         assert re.search(rf"modelo {model}\b", step4), f"passo 4 não cita o modelo {model}"
 
@@ -73,9 +73,21 @@ def _without_m4(lines: list[str]) -> list[str]:
     return [line for line in kept if line not in M4_INTRO]
 
 
+# Linhas que a SDD-DTF-0057 acrescentou (SDD enxuta lê a Parte 2 da SPEC):
+# mesmo critério do M4, conteúdo novo não conta como reordenação.
+LEAN_LINES = (
+    'Na SDD enxuta (2.7.0, com `source_docs`), a SDD não tem "Especificação',
+    'técnica consolidada": o desenho a conferir é a Parte 2 da SPEC, lida',
+    "pela url de `source_docs`, e o item 2 já é mecanizado pelo",
+    "`check_source_docs.py` (RFs nas duas direções).",
+    '- Na SDD enxuta, no lugar da "Especificação técnica consolidada", confira',
+    "a Parte 2 da SPEC, lida pela url de `source_docs`.",
+)
+
+
 def test_verify_sdd_reorder_preserves_lines():
     before = _nonblank(FIXTURE)
-    after = _without_m4(_nonblank(PROCEDURE))
+    after = [line for line in _without_m4(_nonblank(PROCEDURE)) if line.strip() not in LEAN_LINES]
     from collections import Counter
 
     b, a = Counter(before), Counter(after)

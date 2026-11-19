@@ -136,13 +136,16 @@ def check_optional_sections(rules: dict, template: Path) -> list[str]:
     for heading, returns_when in declared.items():
         if heading not in marked:
             problems.append(
-                f"spec.template.md: seção opcional '{heading}' de optional_sections sem a marca de opcional no template."
+                f"spec.template.md: seção opcional '{heading}' de optional_sections"
+                " sem a marca de opcional no template."
             )
         elif marked[heading] != returns_when.strip():
             problems.append(f"spec.template.md: '{heading}' com \"Volta quando\" diferente de returns_when.")
     for heading in marked:
         if heading not in declared:
-            problems.append(f"spec.template.md: '{heading}' marcada como opcional no template e fora de optional_sections.")
+            problems.append(
+                f"spec.template.md: '{heading}' marcada como opcional no template e fora de optional_sections."
+            )
     return problems
 
 
