@@ -111,6 +111,41 @@ def check_capability_procedures(rules: dict, root: Path) -> list:
     return problems
 
 
+# SPEC por sizing (SPEC-DTF-0031, RF08 e RF09, SDD-DTF-0057): a seção
+# opcional da SPEC é marcada no template com esta linha logo abaixo do
+# heading, seguida do returns_when declarado no YAML.
+OPTIONAL_MARK = "> Opcional (SPEC por sizing). Volta quando: "
+
+
+def check_optional_sections(rules: dict, template: Path) -> list[str]:
+    """Template da SPEC e document_types.SPEC.optional_sections não divergem."""
+    declared = {
+        str(s.get("heading")): str(s.get("returns_when") or "")
+        for s in ((rules.get("document_types") or {}).get("SPEC") or {}).get("optional_sections") or []
+    }
+    lines = template.read_text(encoding="utf-8").splitlines()
+    marked: dict[str, str] = {}
+    for i, line in enumerate(lines):
+        if not line.startswith("## "):
+            continue
+        following = next((ln for ln in lines[i + 1 :] if ln.strip()), "")
+        if following.startswith(OPTIONAL_MARK):
+            marked[line[3:].strip()] = following[len(OPTIONAL_MARK) :].strip()
+
+    problems = []
+    for heading, returns_when in declared.items():
+        if heading not in marked:
+            problems.append(
+                f"spec.template.md: seção opcional '{heading}' de optional_sections sem a marca de opcional no template."
+            )
+        elif marked[heading] != returns_when.strip():
+            problems.append(f"spec.template.md: '{heading}' com \"Volta quando\" diferente de returns_when.")
+    for heading in marked:
+        if heading not in declared:
+            problems.append(f"spec.template.md: '{heading}' marcada como opcional no template e fora de optional_sections.")
+    return problems
+
+
 def framework_root() -> Path:
     rules = find_rules_file()
     if not rules:
@@ -142,6 +177,7 @@ def main() -> int:
     problems += check_links(root)
     problems += check_capability_procedures(rules, root)
     problems += check_mechanized_artifacts(root)
+    problems += check_optional_sections(rules, root / "templates/spec.template.md")
 
     for rel in RENDERINGS:
         path = root / rel
