@@ -138,3 +138,66 @@ def test_ordem_segue_o_yaml_mesmo_diferente_da_embutida(monkeypatch):
     monkeypatch.setattr(grm, "find_rules_file", lambda *a, **k: Path("workflow-rules.yaml"))
     text = grm.render_registry(_registry_with(["TS", "SPEC", "SDD"]))
     assert _sections(text) == ["SDD", "SPEC", "Tech Spec"]
+
+
+# --- Documentos originados (SDD-DTF-0057, SPEC-DTF-0031 RF10) ---------------
+
+
+def _arvore(tmp_path: Path) -> Path:
+    """Registry com RFC, ADR, SPEC, BASE, ADR reconstruído e um path quebrado."""
+    docs = tmp_path / "docs" / "X"
+    docs.mkdir(parents=True)
+    fms = {
+        "RFC-X-0001": ("RFC", "approved", "01-rfc", {"parent_strategy": None}),
+        "ADR-X-0001": ("ADR", "approved", "02-adr", {"parent_rfc": "RFC-X-0001"}),
+        "SPEC-X-0001": ("SPEC", "in_review", "03-spec", {"parent_rfc": "RFC-X-0001", "parent_adr": "ADR-X-0001"}),
+        "BASE-X-0001": ("BASE", "approved", "06-baseline", {}),
+        "ADR-X-0002": ("ADR", "approved", "02-adr", {"parent_rfc": "BASE-X-0001"}),
+    }
+    linhas = 'project: "X"\nframework_version: "2.7.0"\ndocuments:\n'
+    for doc_id, (tipo, status, pasta, pais) in fms.items():
+        rel = f"docs/X/{pasta}/{doc_id}.md"
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        campos = "".join(f"{k}: {v if v else 'null'}\n" for k, v in pais.items())
+        (tmp_path / rel).write_text(f"---\nid: {doc_id}\ntype: {tipo}\n{campos}---\n\n# x\n", encoding="utf-8")
+        linhas += f'  - id: {doc_id}\n    type: {tipo}\n    title: "T"\n    status: {status}\n    path: "{rel}"\n'
+    linhas += '  - id: SPEC-X-0002\n    type: SPEC\n    title: "T"\n    status: draft\n    path: "docs/X/03-spec/nao-existe.md"\n'
+    (docs / "registry.yaml").write_text(linhas, encoding="utf-8")
+    return docs
+
+
+def test_originated_lista_filhos_por_pai(tmp_path):
+    docs = _arvore(tmp_path)
+    assert grm.originated(grm.load_registry(docs), docs) == [
+        ("ADR-X-0001", "SPEC-X-0001", "SPEC", "in_review"),
+        ("BASE-X-0001", "ADR-X-0002", "ADR", "approved"),
+        ("RFC-X-0001", "ADR-X-0001", "ADR", "approved"),
+        ("RFC-X-0001", "SPEC-X-0001", "SPEC", "in_review"),
+    ]
+
+
+def test_parent_fields():
+    assert grm.PARENT_FIELDS == ("parent_strategy", "parent_postmortem", "parent_rfc", "parent_adr", "source_incident")
+
+
+def test_render_originated_tabela_e_vazio():
+    texto = grm.render_originated([("RFC-X-0001", "ADR-X-0001", "ADR", "approved")])
+    assert texto.startswith("## Documentos originados\n\n| Pai | Documento | Tipo | Status |\n")
+    assert "| `RFC-X-0001` | `ADR-X-0001` | ADR | approved |" in texto
+    assert grm.render_originated([]) == "## Documentos originados\n\nNenhum documento com pai declarado.\n"
+
+
+def test_registry_md_ganha_a_secao_e_e_idempotente(tmp_path):
+    docs = _arvore(tmp_path)
+    assert grm.main([str(docs)]) == 0
+    primeiro = (docs / "registry.md").read_text(encoding="utf-8")
+    assert "## Documentos originados" in primeiro
+    assert "nao-existe" not in primeiro.split("## Documentos originados")[1]
+    assert grm.main([str(docs)]) == 0
+    assert (docs / "registry.md").read_text(encoding="utf-8") == primeiro
+    assert grm.main([str(docs), "--check"]) == 0
+
+
+def test_render_registry_sem_docs_dir_nao_muda(tmp_path):
+    docs = _arvore(tmp_path)
+    assert "Documentos originados" not in grm.render_registry(grm.load_registry(docs))
