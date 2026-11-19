@@ -19,6 +19,9 @@ source_docs:
   - id: "{ex: ADR-PROJETO-0001}"
     url: "{URL completa do arquivo no repositório central}"
 consumption_instructions: "{como uma IA deve usar este documento antes de implementar}"
+sizing: "{small | medium | large | complex}"   # herdado da SPEC; obrigatório quando há source_docs (2.7.0)
+# molde: crud   # opcional, só em sizing small: nome de um padrão do projeto que a SDD
+#              # referencia em vez de repetir (^[a-z0-9][a-z0-9-]*$); onde o molde mora é do executor
 supersedes: null
 superseded_by: null
 tags: []
@@ -30,24 +33,34 @@ tags: []
 > zero. É o artefato de entrada (input) para ferramentas de IA realizarem
 > a implementação. Vive no repositório de CÓDIGO deste projeto (não no
 > repositório central do framework) porque é o único documento pensado
-> para ser lido pela IA no momento de implementar. Deve ser autocontido o
-> suficiente para que uma IA implemente corretamente sem precisar ler
-> todos os documentos de origem, mas sempre rastreável a eles via
-> `source_docs` (id + url, já que os documentos de origem estão em outro
-> repositório).
+> para ser lido pela IA no momento de implementar. Traz o que o executor
+> e os gates usam (requisitos por RF-ID, arquivos, tasks, critérios com
+> comando, instruções); o desenho e a decisão ficam na SPEC e na ADR,
+> lidos pela url de `source_docs` (id + url, já que os documentos de
+> origem estão em outro repositório).
 
 ## Resumo executivo
 O que será construído e por quê (1 parágrafo).
 
-## Decisão(ões) de arquitetura aplicável(is)
-(Resumo do(s) ADR em `source_docs`, se houver. Se não houver ADR, declarar
-explicitamente "Sem ADR — RFC dispensou decisão arquitetural via gate".)
-
 ## Requisitos consolidados
-(Consolidado da Parte 1 da SPEC. Em sizing `small`, escrito aqui mesmo.)
+> Um RF por linha, com a SPEC de origem, um resumo de até 200 caracteres
+> e os arquivos que ele toca. O critério EARS, o desenho (Parte 2) e a
+> decisão da ADR ficam na SPEC e na ADR de `source_docs`, por referência:
+> não copie "Especificação técnica consolidada" nem "Decisão(ões) de
+> arquitetura aplicável(is)" — `validate_doc.py` reprova a SDD com
+> `source_docs` que tiver essas seções, e `check_source_docs.py` reprova
+> RF da SPEC fora da SDD e RF da SDD fora da SPEC (SPEC-DTF-0031).
+>
+> Os arquivos permitidos são a união da coluna `Arquivos` dos requisitos
+> e das tasks — o gate de escopo confere o diff contra ela.
+>
+> Em SDD sem `source_docs` (sizing `small`), o requisito é escrito aqui
+> mesmo, com critério EARS no resumo e `Origem` igual a `—`. `molde`
+> (front-matter) vale só em `small`: a SDD continua com requisito,
+> critério executável e arquivos.
 
-## Especificação técnica consolidada
-(Consolidado da Parte 2 da SPEC: contratos, plano de implementação, rollout.)
+| RF-ID | Origem | Requisito (resumo) | Arquivos |
+|---|---|---|---|
 
 ## Decomposição em tasks
 Opcional quando a SDD herdar sizing `small` da SPEC de origem ou tiver um
@@ -86,8 +99,9 @@ Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
 - [ ] Todo requisito consolidado acima tem código correspondente (nada
       da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
-      técnica consolidada" ou "Instruções específicas" — se a
+- [ ] Todo arquivo tocado pela implementação aparece na coluna
+      `Arquivos` dos requisitos ou das tasks, ou em "Instruções
+      específicas" — se a
       implementação tocou um arquivo não listado aqui, ou é escopo que
       faltou registrar na SDD (atualize-a) ou é scope creep a remover
       antes do merge.

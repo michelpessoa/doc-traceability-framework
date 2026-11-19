@@ -65,7 +65,11 @@ detectar). Quatro pontos, nesta ordem:
    exige status 4xx específico, SDD generaliza para "erro tratado").
 4. **Todo contrato técnico da Parte 2 da SPEC** (assinatura, schema, onde
    vive) é descrito da mesma forma na SDD — divergência aqui é achado
-   bloqueante, porque a IA implementadora só lê a SDD, nunca a SPEC.
+   bloqueante, porque a IA implementadora só lê a SDD, nunca a SPEC. Na
+   SDD enxuta (2.7.0, com `source_docs`), a SDD não tem "Especificação
+   técnica consolidada": o desenho a conferir é a Parte 2 da SPEC, lida
+   pela url de `source_docs`, e o item 2 já é mecanizado pelo
+   `check_source_docs.py` (RFs nas duas direções).
 
 Itens 2-4 dependem de leitura humana/IA — não há parser confiável de
 "requisito equivalente" entre dois documentos em prosa (ADR-DTF-0007).
@@ -85,7 +89,9 @@ identificável como "Fidelidade à origem" — SDD sem `source_docs`
 
 - Todo item de "Requisitos consolidados" e "Especificação técnica
   consolidada" tem código correspondente identificável? Faltou algum → a
-  SDD está **parcial**, mantenha `approved`.
+  SDD está **parcial**, mantenha `approved`. Na SDD enxuta, no lugar da
+  "Especificação técnica consolidada", confira a Parte 2 da SPEC, lida
+  pela url de `source_docs`.
 - Todo arquivo do diff aparece na SDD? Arquivo fora da lista é escopo não
   registrado (atualize a SDD) ou scope creep (remova) — nunca uma terceira
   coisa silenciosa.
