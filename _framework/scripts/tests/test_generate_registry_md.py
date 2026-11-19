@@ -147,7 +147,7 @@ def _arvore(tmp_path: Path) -> Path:
     """Registry com RFC, ADR, SPEC, BASE, ADR reconstruído e um path quebrado."""
     docs = tmp_path / "docs" / "X"
     docs.mkdir(parents=True)
-    fms = {
+    fms: dict[str, tuple[str, str, str, dict]] = {
         "RFC-X-0001": ("RFC", "approved", "01-rfc", {"parent_strategy": None}),
         "ADR-X-0001": ("ADR", "approved", "02-adr", {"parent_rfc": "RFC-X-0001"}),
         "SPEC-X-0001": ("SPEC", "in_review", "03-spec", {"parent_rfc": "RFC-X-0001", "parent_adr": "ADR-X-0001"}),
