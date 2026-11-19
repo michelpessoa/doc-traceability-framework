@@ -210,7 +210,7 @@ def test_aprovacao_por_review_no_contrato():
         "args": ["<documento>", "--reviews", "<arquivo>", "--head", "<sha>", "--pr-url", "<url>", "--json"],
         "schema": "_framework/schemas/review-approval.schema.json",
     } in c["machine_outputs"]
-    assert c["writes"][-2:] == [
+    assert c["writes"][-3:-1] == [
         "PR de documento novo (SPEC, RFC) no central com status in_review, de branch docs/<id>.",
         "Na mesma PR, antes do merge: status approved e approved_by com kind: human, só com saída válida de"
         " review_approval.py sobre o head revisado.",
@@ -222,3 +222,20 @@ def test_approvers_declarado_no_registry_central():
     rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
     campo = rules["registry"]["central_registry"]["approvers_field"]
     assert campo["field"] == "approvers" and campo["since"] == "2.6.0"
+
+
+def test_transicoes_da_politica_no_contrato():
+    """SPEC-DTF-0031, RF13: só acrescenta, contract_version continua 1."""
+    c = contrato()
+    assert c["contract_version"] == 1
+    assert c["writes"][-1] == "Com kind: policy, draft → in_review → approved num único commit, com approved_by.transitions."
+
+
+def test_versao_2_7_0_e_campos_da_sdd():
+    """SPEC-DTF-0031, RF01, RF03, RF12, RF14."""
+    rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
+    assert rules["framework"]["version"] == "2.7.0"
+    assert rules["framework"]["changelog"][0]["version"] == "2.7.0"
+    sdd = rules["frontmatter_schema"]["type_specific_fields"]["SDD"]
+    assert "sizing" in sdd and "molde" in sdd
+    assert "transitions" in rules["frontmatter_schema"]["common_fields"]["approved_by"]

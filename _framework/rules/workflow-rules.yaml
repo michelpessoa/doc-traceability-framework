@@ -14,9 +14,27 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.6.0"
-  last_updated: "2026-11-17"
+  version: "2.7.0"
+  last_updated: "2026-11-19"
   changelog:
+    - version: "2.7.0"
+      date: "2026-11-19"
+      summary: >
+        SPEC-DTF-0031 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0057):
+        documentação enxuta, não-retroativa. SDD enxuta (com source_docs,
+        criada desde a 2.7.0 em projeto sob 2.7.0): `sizing` obrigatório,
+        "Requisitos consolidados" com RF-ID | Origem | Requisito (resumo) |
+        Arquivos e sem as seções que copiam SPEC e ADR (`validate_doc.py`);
+        RF-IDs conferidos contra a SPEC nas duas direções
+        (`check_source_docs.py`). Campo `molde`, só em SDD small. Seções
+        opcionais da SPEC em `document_types.SPEC.optional_sections`,
+        conferidas contra o template por `check_renderings.py`. "Documentos
+        originados" gerada no registry.md a partir dos campos `parent_*` e
+        fora dos templates de RFC e SPEC (segue em hash_excluded_sections).
+        `approved_by.transitions`, só com kind policy, conferido contra
+        allowed_transitions. `executor_contract` só acrescenta
+        (`contract_version` 1). Nenhum gate, sizing, ciclo de status ou
+        política muda.
     - version: "2.6.0"
       date: "2026-11-17"
       summary: >
@@ -366,6 +384,16 @@ document_types:
     repo: central
     folder: "docs/{PROJECT_CODE}/03-spec"
     template: "templates/spec.template.md"
+    # SPEC por sizing (SPEC-DTF-0031, RF08): seções que podem faltar; a
+    # ausência registra que não se aplicam. O template marca cada uma com
+    # "> Opcional (SPEC por sizing). Volta quando: <returns_when>", e
+    # check_renderings.py reprova divergência. O sweep segue obrigatório.
+    optional_sections:
+      - {heading: "Usuários / personas afetadas", returns_when: "Mais de um perfil de usuário é afetado de forma diferente."}
+      - {heading: "Observabilidade (métricas, logs, alertas)", returns_when: "O sweep aponta Observabilidade para um RF com métrica, log ou alerta novo."}
+      - {heading: "Plano de rollout / rollback", returns_when: "A mudança entra por etapas, depende de flag ou tem rollback diferente de reverter a PR."}
+      - {heading: "Times consumidores impactados", returns_when: "Algum time fora do dono do documento consome o que muda."}
+      - {heading: "Dependências", returns_when: "Existe dependência operacional (acesso, ambiente, terceiro) além de parent_rfc e parent_adr."}
     parent_types: ["RFC", "ADR"]   # ambos opcionais, dependem de sizing e do gate
     can_originate: ["SDD"]
     replaces: ["PRD", "TS"]
@@ -747,7 +775,10 @@ frontmatter_schema:
       8601; content_sha256: 64 caracteres hexadecimais, saída de
       approval_hash.py; evidence: URL da review, obrigatório se kind:
       human. validate_state.py cobra o campo em approved, implemented e
-      superseded desde a 2.5.0 (não-retroativo).
+      superseded desde a 2.5.0 (não-retroativo). Desde a 2.7.0, só com
+      kind: policy, o campo opcional transitions: lista de { from, to, at }
+      com o caminho de draft até approved gravado num commit só, conferido
+      contra status_lifecycle.allowed_transitions (SPEC-DTF-0031, RF12).
   type_specific_fields:
     RFC:
       requires_adr: "boolean ou null (null = gate ainda não avaliado)"
@@ -777,6 +808,8 @@ frontmatter_schema:
         vivem no repositório central, não no repositório do projeto onde
         a SDD está (ver repository_topology.cross_repo_reference).
       consumption_instructions: "texto curto — como uma IA deve usar este documento antes de implementar"
+      sizing: "small | medium | large | complex — herdado da SPEC; obrigatório na SDD enxuta (2.7.0)"
+      molde: "opcional, só com sizing small — nome (^[a-z0-9][a-z0-9-]*$) de um padrão do projeto que a SDD referencia em vez de repetir; onde o molde mora é decisão do executor"
     BASE:
       scan_date: "data em que o levantamento foi feito"
       known_gaps: "lista curta — o que a IA não conseguiu inferir com confiança a partir do código"
@@ -1338,13 +1371,16 @@ gate_scope_verification:
       1. Todo item de "Requisitos consolidados" e "Especificação técnica
          consolidada" da SDD tem código correspondente identificável —
          se algo ficou de fora, a SDD não está implementada, está
-         parcial (mantenha `approved`, não avance o status).
+         parcial (mantenha `approved`, não avance o status). Na SDD
+         enxuta (2.7.0, com source_docs), o desenho a conferir é a Parte 2
+         da SPEC de source_docs, lida pela url.
       2. Todo arquivo efetivamente criado/alterado pela implementação
          está listado na SDD (seção técnica ou instruções à IA). Arquivo
          tocado que não está na SDD é um destes dois casos, nunca
          silencioso: (a) escopo que faltou registrar — volte e atualize a
          SDD antes de prosseguir; ou (b) scope creep — remova antes do
-         commit final.
+         commit final. Na SDD enxuta (2.7.0, com source_docs), o desenho a
+         conferir é a Parte 2 da SPEC de source_docs, lida pela url.
       3. Nenhuma abstração, dependência nova, feature flag ou refactor
          que não foi pedido por nenhum requisito da SDD. "Já que eu
          estava ali" não é justificativa válida sob este framework (ver
@@ -1627,6 +1663,7 @@ executor_contract:
     - "Campo approved_by com kind: policy só onde approval_policy permite."
     - "PR de documento novo (SPEC, RFC) no central com status in_review, de branch docs/<id>."
     - "Na mesma PR, antes do merge: status approved e approved_by com kind: human, só com saída válida de review_approval.py sobre o head revisado."
+    - "Com kind: policy, draft → in_review → approved num único commit, com approved_by.transitions."
 
 ##############################################################################
 # 21. APROVAÇÃO COMO DADO
