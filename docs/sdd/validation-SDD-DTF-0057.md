@@ -1,9 +1,81 @@
 # Verificação — SDD-DTF-0057
 
-- **Veredito:** FAIL
-- **Diff verificado:** `efe1c71..17075b8` no kit (branch `sdd/SDD-DTF-0057-documentacao-enxuta`; `efe1c71` = `git merge-base HEAD origin/main` = `origin/main` nesta sessão); espelho no central em `faf53e5` (branch `claude/pickup-wkpglg`)
-- **Rodada:** 1
-- **Verificador independente:** sim (sessão diferente da que implementou; histórico dela não lido)
+- **Veredito:** PASS (rodada 2; a rodada 1 deu FAIL, registrada abaixo)
+- **Diff verificado:** rodada 2: `efe1c71..f87f9a9` no kit (branch `sdd/SDD-DTF-0057-documentacao-enxuta`; `efe1c71` = `git merge-base HEAD origin/main` = `origin/main` nesta sessão); espelho no central em `7be4d01` (branch `claude/pickup-wkpglg`). Rodada 1: `efe1c71..17075b8`, central `faf53e5`
+- **Rodadas:** 2
+- **Verificador independente:** sim (rodada 2 numa sessão diferente da que implementou e da rodada 1; histórico de nenhuma delas lido)
+
+## Rodada 2
+
+| Critério | Comando rodado | Saída (resumo) | Sensor | Passou? |
+|---|---|---|---|---|
+| Fidelidade à origem | `check_source_docs.py docs/sdd/SDD-DTF-0057.md <central>/docs/DTF`; comparação por script de RF01 a RF14 contra a SPEC-DTF-0031 (approved, central `7be4d01`); leitura dos casos de borda, não funcionais e Parte 2 | `exit=0`; `ok 14 /14` (requisito e EARS idênticos); RF15 a RF17 fora (fábrica); contratos da Parte 2 iguais; `first_table_lines` é auxiliar interno que concretiza "a primeira tabela" | sem teste automatizado (leitura) | Sim |
+| A01 | `pytest test_sdd_lean.py -q -k "not fidelity"`, ANTES em cópia de `efe1c71` com os testes novos | ANTES `16 failed, 10 passed`; DEPOIS `26 passed, 9 deselected` | ver A06 e A09 | Sim |
+| A02 | `pytest test_sdd_lean.py -q -k fidelity`, ANTES na mesma cópia | ANTES `3 failed, 6 passed`; DEPOIS `9 passed, 26 deselected` | ver A07 | Sim |
+| A03 | `pytest test_approval.py -q -k transitions`, ANTES na mesma cópia | ANTES `1 error` na coleta; DEPOIS `11 passed, 35 deselected` | ver A08 | Sim |
+| A04 | `pytest test_generate_registry_md.py -q`, ANTES na mesma cópia | ANTES `4 failed, 14 passed`; DEPOIS `18 passed` | ANTES = implementação ausente | Sim |
+| A05 | `pytest test_spec_optional_sections.py test_render_indexes.py -q`, ANTES na mesma cópia | ANTES `1 error` na coleta; DEPOIS `62 passed` | ANTES = implementação ausente | Sim |
+| A06 (RF02) | filtro `startswith("SPEC-")` tirado de `check_lean_sdd`; pytest de A01 | `1 failed, 25 passed`; restaurado `26 passed` | derrubada | Sim |
+| A07 (RF05) | `missing = []` em `check_rf_fidelity`; pytest de A02 | `2 failed, 7 passed`; restaurado `9 passed` | derrubada | Sim |
+| A08 (RF12) | `if False:` no lugar da conferência de `allowed_transitions`; pytest de A03 | `2 failed, 9 passed`; restaurado `11 passed` | derrubada | Sim |
+| A09 | `RULE_SINCE["sdd_lean"] = "1.0.0"`; `pytest test_sdd_lean.py -q` | `2 failed, 33 passed`; restaurado `35 passed` | derrubada | Sim |
+| A10 | `pytest test_executor_contract.py test_spec_optional_sections.py -q`; `check_renderings.py; echo exit=$?` | `24 passed`; `exit=0`; ANTES do contrato `3 failed, 12 passed` | ANTES = implementação ausente | Sim |
+| A11 | `pytest test_report_json.py -q`; `git diff --stat` das fixtures contra `origin/main` e `efe1c71` | `26 passed`; os dois diffs vazios | fixture do 2.3.2 | Sim |
+| A12 | `grep -n 'version: "2.7.0"'`; no central `framework_check.py --auto; echo exit=$?`; `git status --porcelain docs/ \| grep -v registry.md`; `generate_registry_md.py --check` nos 4 projetos | linhas 17 e 20; `134 documento(s) ok`, `exit=0`; porcelain vazio; 4 `em dia` | sem teste automatizado (medição) | Sim |
+| A13 | `render_prompts.py --check`; `generate_registry_md.py docs/sdd --check` | `em dia`, `exit=0` nos dois | sem teste automatizado (medição) | Sim |
+| A14 | `pytest -q`; `ruff format --check` e `ruff check` nos 19 `.py` do diff; `selftest.py` | `507 passed`; `19 files already formatted`; `All checks passed!`; `7 mutação(ões): todos os mutantes morreram` | suíte inteira | Sim |
+| A15 | no central `diff -r -x __pycache__ -x .pytest_cache <kit>/_framework _framework` | `diff exit=0` | sem teste automatizado (medição) | Sim |
+| Achado 1 e os dois casos do mesmo padrão | testes de `f87f9a9` numa cópia de `17075b8`; na cópia de `f87f9a9`, cada função revertida sozinha (`consolidated_rf_rows`, `check_rf_fidelity`, `break` do item (c) de `extract_sdd_files`, `break` de `first_table_lines`) | sem a correção `3 failed, 85 passed`; cada reversão isolada derruba o teste dela (`1 failed` / `1 failed` / `1 failed` / `2 failed`); restaurado `35 passed` e `53 passed` | derrubada nas quatro | Sim |
+
+Sensores e "antes" rodaram só em cópias descartáveis (`git archive`) no
+scratchpad, restauradas pela cópia guardada de cada arquivo. O checkout do
+kit e o do central ficaram com `git status --porcelain` vazio.
+
+### Descompassos encontrados (rodada 2)
+
+Nenhum. O achado 1 da rodada 1 e os dois casos do mesmo padrão estão
+corrigidos em `f87f9a9`:
+
+- `_framework/scripts/validate_doc.py:220` (`first_table_lines`) e `:237`
+  (`consolidated_rf_rows`): só o bloco contínuo de linhas `|` da primeira
+  tabela; coberto por `test_sdd_lean.py:377`.
+- `_framework/scripts/check_source_docs.py:67`: os RFs da SPEC saem só da
+  primeira tabela de "Requisitos funcionais"; coberto por
+  `test_sdd_lean.py:387`.
+- `_framework/scripts/render_indexes.py:620-622`: o item (c) para no fim
+  da primeira tabela; coberto por `_framework/tests/test_render_indexes.py:838`.
+
+Escopo nas duas direções: os 43 arquivos de `git diff --stat
+origin/main...HEAD` (= `efe1c71..f87f9a9`) são os 42 da rodada 1 mais este
+`validation-SDD-DTF-0057.md` (de `88d3149`); `f87f9a9` toca só arquivos já listados (`validate_doc.py`,
+`check_source_docs.py`, `render_indexes.py` e as cópias da skill,
+`test_sdd_lean.py`, `test_render_indexes.py`, `docs/sdd/INDEX.md`, a SDD).
+`first_table_lines` foi registrada na "Especificação técnica consolidada"
+da SDD. Nenhum requisito sem código, nenhum código sem requisito.
+
+Observações que não violam critério:
+
+- `docs/sdd/INDEX.md`: a linha de SDD-DTF-0042 passa de `+19` para `+20`
+  arquivos contra `efe1c71`, porque a SDD-DTF-0042 já tinha coluna
+  `Arquivos` em "Requisitos consolidados" e o item (c) não se restringe à
+  SDD enxuta. É o que o RF07 e o contrato pedem, num arquivo gerado; não é
+  documento de decisão nem muda hash. A linha de SDD-DTF-0044, que em
+  `17075b8` tinha ganhado caminhos espúrios de tabelas seguintes, voltou a
+  ser igual à de `efe1c71` com a correção.
+- O `check_source_docs.py` não compara os RFs desta própria SDD, que não
+  é enxuta (projeto do kit em `framework_version: "2.3.1"`); a comparação
+  de RF01 a RF14 do passo 0 foi feita por script nesta sessão.
+- Persistem as observações da rodada 1 (`| None` em
+  `consolidated_rf_rows`, mensagem de `Origem` listando só as SPECs,
+  `check_molde` com `applies`, A09 com um teste de comportamento só,
+  `origin/main` móvel em A11).
+
+### Lições (rodada 2)
+
+- O teste da correção discrimina por função: reverter só uma das três
+  leituras derruba exatamente o teste dela. Quando a correção é de um
+  padrão repetido, o sensor tem que reverter cada ocorrência sozinha, não
+  só a função auxiliar comum.
 
 ## Rodada 1
 
@@ -33,7 +105,7 @@ arquivo. Os "antes" rodaram em cópia de `efe1c71` (`git archive`) com os
 testes novos copiados por cima. O checkout do kit e o do central ficaram
 com `git status --porcelain` vazio.
 
-## Descompassos encontrados
+### Descompassos encontrados (rodada 1)
 
 1. **`consolidated_rf_rows` lê todas as tabelas da seção, não só a
    primeira** (`_framework/scripts/validate_doc.py:227` e `:231`). O
@@ -96,7 +168,7 @@ Observações que não violam critério:
   `CHANGELOG.md` e `QUICKSTART.md`. São gerados de `render_prompts.py`,
   não documentos de decisão.
 
-## Caminhos propostos (decisão do humano)
+### Caminhos propostos (decisão do humano, rodada 1)
 
 1. Corrigir a implementação: `consolidated_rf_rows` (e os dois
    consumidores) param na primeira linha que não começa com `|` depois do
@@ -106,7 +178,7 @@ Observações que não violam critério:
    proibir uma segunda tabela em "Requisitos consolidados" da SDD enxuta,
    com uma mensagem própria.
 
-## Lições
+### Lições (rodada 1)
 
 - Red flag: um contrato que diz "a primeira tabela", implementado como
   "toda linha da seção que começa com `|`". Os testes usam seções com uma

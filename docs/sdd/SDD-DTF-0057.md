@@ -2,11 +2,11 @@
 id: SDD-DTF-0057
 type: SDD
 title: "Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-19"
-updated: "2026-11-19"
+updated: "2026-11-20"
 relates_to: [SDD-DTF-0055, SDD-DTF-0056]
 source_docs:
   - id: "SPEC-DTF-0031"
@@ -328,14 +328,14 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima tem código correspondente (nada
+- [x] Todo requisito consolidado acima tem código correspondente (nada
       da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", "Decomposição em tasks" ou "Instruções
       específicas" — se a implementação tocou um arquivo não listado
       aqui, ou é escopo que faltou registrar na SDD (atualize-a) ou é
       scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado ("já que estava ali").
 
 ## Evidência de verificação (preencher antes de status `implemented`)
@@ -351,7 +351,16 @@ sensores A06 a A09 mutaram uma cópia descartável de `17075b8` (`git
 archive`) no scratchpad e restauraram pela cópia guardada; o checkout do
 kit e o do central ficaram com `git status --porcelain` vazio.
 
-Verificação independente completa em `docs/sdd/validation-SDD-DTF-0057.md`. Veredito: **FAIL** (rodada 1; status mantido em `approved`).
+Rodada 2: outra sessão independente (sem o histórico de quem implementou nem
+o da rodada 1), no kit na mesma branch com head `f87f9a9` (correção do
+achado 1), base fixa `efe1c71`, e no central na branch `claude/pickup-wkpglg`
+(head `7be4d01`). Os "antes" rodaram numa cópia de `efe1c71` (`git
+archive`) com os testes novos por cima; o "antes" da correção, numa cópia de
+`17075b8` com os testes de `f87f9a9` por cima. Os sensores mutaram uma cópia
+de `f87f9a9` (`git archive`) no scratchpad e restauraram pela cópia guardada;
+o checkout do kit e o do central ficaram com `git status --porcelain` vazio.
+
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0057.md`. Veredito: **PASS** (rodada 2; a rodada 1 deu FAIL e segue registrada abaixo).
 
 **Verificador independente:** sim
 
@@ -374,6 +383,23 @@ Verificação independente completa em `docs/sdd/validation-SDD-DTF-0057.md`. Ve
 | 1 | A14 | `python3 -m pytest -q`; `ruff format --check` e `ruff check` nos 19 `.py` do diff; `python3 _framework/scripts/selftest.py` | `504 passed`; `19 files already formatted`; `All checks passed!`; `✅ 7 mutação(ões): todos os mutantes morreram.` | suíte inteira | Sim | `n/a` | automatizado |
 | 1 | A15 | No central: `diff -r -x __pycache__ -x .pytest_cache /home/user/doc-traceability-framework/_framework _framework; echo "diff exit=$?"` | `diff exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
 | 1 | Contrato de `consolidated_rf_rows` (RF02, RF05, RF07) | Reprodução no scratchpad: SDD enxuta válida em `draft`, montada com os helpers de `test_sdd_lean.py`, com uma segunda tabela (`\| Caso \| RF \| Comportamento esperado \|`) dentro de "Requisitos consolidados"; `check_document` | `SDD-TST-0001: linha 3 de 'Requisitos consolidados' sem RF-ID.`, `linha 4 ...`, `linha 5 ...`: as linhas da segunda tabela (cabeçalho, separador, dado) viram linhas de requisito. O contrato manda ler só "a primeira tabela" (`validate_doc.py:227`, `:231`; mesmo padrão em `check_source_docs.py:61`, `:63` e `render_indexes.py:619`) | sem teste automatizado que cubra o caso | Não | `n/a` | manual (reprodução; nenhum teste do diff cobre o caso) |
+| 2 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0057.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; comparação por script das colunas Requisito e EARS de RF01 a RF14 entre a SDD e a SPEC-DTF-0031 (approved, central `7be4d01`); leitura dos casos de borda, não funcionais e da Parte 2 ("Contratos técnicos") | `✅ source_docs de SDD-DTF-0057.md conferem com o registry central.` `exit=0`; RF01 a RF14 com requisito e EARS idênticos (`ok 14 /14`); RF15 a RF17 fora, declaradamente (fábrica); casos de borda iguais aos da SPEC sem a parte da fábrica; contratos da Parte 2 descritos da mesma forma. `first_table_lines`, novo na SDD em `f87f9a9`, é auxiliar interno que concretiza "a primeira tabela" de `consolidated_rf_rows` e não muda contrato da SPEC | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 2 | A01 | `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py -q -k "not fidelity"` | ANTES (`efe1c71` com os testes novos): `16 failed, 10 passed, 9 deselected`; DEPOIS: `26 passed, 9 deselected` | ver A06 e A09 | Sim | `_framework/scripts/tests/test_sdd_lean.py:150` | automatizado |
+| 2 | A02 | `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py -q -k fidelity` | ANTES: `3 failed, 6 passed, 26 deselected`; DEPOIS: `9 passed, 26 deselected` | ver A07 | Sim | `_framework/scripts/tests/test_sdd_lean.py:326` | automatizado |
+| 2 | A03 | `python3 -m pytest _framework/scripts/tests/test_approval.py -q -k transitions` | ANTES: `1 error` na coleta (`check_transitions` ausente); DEPOIS: `11 passed, 35 deselected` | ver A08 | Sim | `_framework/scripts/tests/test_approval.py:389` | automatizado |
+| 2 | A04 | `python3 -m pytest _framework/scripts/tests/test_generate_registry_md.py -q` | ANTES: `4 failed, 14 passed`; DEPOIS: `18 passed` | o ANTES é a implementação ausente | Sim | `_framework/scripts/tests/test_generate_registry_md.py:174` | automatizado |
+| 2 | A05 | `python3 -m pytest _framework/scripts/tests/test_spec_optional_sections.py _framework/tests/test_render_indexes.py -q` | ANTES: `1 error` na coleta (`OPTIONAL_MARK` ausente); DEPOIS: `62 passed` | o ANTES é a implementação ausente; agora com teste de duas tabelas (ver a linha do achado 1) | Sim | `_framework/tests/test_render_indexes.py:824` | automatizado |
+| 2 | A06 | Na cópia, em `check_lean_sdd`, `if isinstance(sd, dict) and str(sd.get("id") or "").startswith("SPEC-")` trocado por `if isinstance(sd, dict)`; pytest de A01; restaurado pela cópia | `1 failed, 25 passed, 9 deselected` (`test_origem_so_com_a_adr_reprova`); restaurado `26 passed, 9 deselected` | derrubada | Sim | `_framework/scripts/tests/test_sdd_lean.py:157` | automatizado |
+| 2 | A07 | Na cópia, em `check_rf_fidelity`, `missing` trocado por `[]`; pytest de A02; restaurado pela cópia | `2 failed, 7 passed, 26 deselected` (`test_fidelity_rf_da_spec_fora_da_sdd_reprova`, `test_fidelity_duas_specs_cada_rf_contra_a_sua`); restaurado `9 passed, 26 deselected` | derrubada | Sim | `_framework/scripts/tests/test_sdd_lean.py:326` | automatizado |
+| 2 | A08 | Na cópia, em `check_transitions`, `if target not in (allowed.get(origin) or []):` trocado por `if False:`; pytest de A03; restaurado pela cópia | `2 failed, 9 passed, 35 deselected` (`test_transitions_salto_proibido_reprova`, `test_transitions_conferido_pelo_check_approval`); restaurado `11 passed, 35 deselected` | derrubada | Sim | `_framework/scripts/tests/test_approval.py:389` | automatizado |
+| 2 | A09 | Na cópia, `"sdd_lean": "2.7.0"` trocado por `"1.0.0"`; `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py -q`; restaurado pela cópia | `2 failed, 33 passed` (`test_rule_since_sdd_lean_e_2_7_0`, `test_sdd_em_projeto_sob_2_6_0_nao_muda`); restaurado `35 passed` | derrubada (só 1 teste de comportamento cai; o outro é a constante) | Sim | `_framework/scripts/tests/test_sdd_lean.py:211` | automatizado |
+| 2 | A10 | `python3 -m pytest _framework/tests/test_executor_contract.py _framework/scripts/tests/test_spec_optional_sections.py -q`; `python3 _framework/scripts/check_renderings.py; echo "exit=$?"` | `24 passed`; `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` `exit=0`. ANTES de `test_executor_contract.py` em `efe1c71`: `3 failed, 12 passed` | o ANTES é a implementação ausente | Sim | `_framework/tests/test_executor_contract.py:232` | automatizado |
+| 2 | A11 | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`; `git diff --stat origin/main -- _framework/scripts/tests/fixtures/` e o mesmo contra `efe1c71` | `26 passed`; os dois diffs vazios (`origin/main` = `efe1c71` nesta sessão) | a fixture do 2.3.2 compara stdout e exit; sem mutação própria (o requisito é não mudar) | Sim | `_framework/scripts/tests/test_report_json.py:244` | automatizado |
+| 2 | A12 | `grep -n 'version: "2.7.0"' _framework/rules/workflow-rules.yaml`; no central (`7be4d01`): `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"`; `git status --porcelain docs/ \| grep -v registry.md`; `generate_registry_md.py docs/<P> --check` nos 4 projetos | linhas 17 e 20; `✅ 134 documento(s) ok.`, `✅ Todas as verificações do framework passaram.`, `exit=0`; porcelain vazio; 4 `registry.md` `em dia`; fora de `_framework/`, a PR do central muda só os 4 `registry.md` e gerados de `render_prompts.py` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 2 | A13 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"`; `python3 _framework/scripts/generate_registry_md.py docs/sdd --check; echo "exit=$?"` | `✅ _framework/INDEX.md: em dia.`, `✅ docs/sdd/INDEX.md: em dia.` (aviso `30 SDD(s) sem seção de arquivos` preexistente), `exit=0`; `✅ docs/sdd/registry.md: em dia.` `exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 2 | A14 | `python3 -m pytest -q`; `ruff format --check` e `ruff check` nos 19 `.py` de `git diff efe1c71..HEAD`; `python3 _framework/scripts/selftest.py` | `507 passed`; `19 files already formatted`; `All checks passed!`; `✅ 7 mutação(ões): todos os mutantes morreram.` | suíte inteira | Sim | `n/a` | automatizado |
+| 2 | A15 | No central: `diff -r -x __pycache__ -x .pytest_cache /home/user/doc-traceability-framework/_framework _framework; echo "diff exit=$?"` | `diff exit=0` | sem teste automatizado (medição) | Sim | `n/a` | automatizado (medição por comando, sem asserção em arquivo) |
+| 2 | Achado 1 da rodada 1 e os dois casos do mesmo padrão (RF02, RF05, RF07) | `pytest test_sdd_lean.py test_render_indexes.py -q` numa cópia de `17075b8` (sem a correção) com os testes de `f87f9a9`; na cópia de `f87f9a9`, cada função revertida sozinha para "toda linha `\|` da seção": `consolidated_rf_rows` (pytest `test_sdd_lean.py`), `check_rf_fidelity` (idem), o `break` do item (c) de `extract_sdd_files` (pytest `test_render_indexes.py`) e o `break` de `first_table_lines`; restaurado pela cópia | sem a correção: `3 failed, 85 passed` (`test_segunda_tabela_em_requisitos_consolidados_nao_vira_requisito`, `test_fidelity_segunda_tabela_da_spec_nao_conta`, `test_extract_sdd_files_so_a_primeira_tabela_dos_requisitos`); revertendo só `consolidated_rf_rows`: `1 failed, 34 passed`; só `check_rf_fidelity`: `1 failed, 34 passed`; só o item (c): `1 failed, 52 passed`; `first_table_lines` sem `break`: `2 failed, 33 passed`; restaurado: `35 passed` / `53 passed` | derrubada nas quatro mutações | Sim | `_framework/scripts/tests/test_sdd_lean.py:377`, `:387`; `_framework/tests/test_render_indexes.py:838` | automatizado (na rodada 1 era reprodução manual; agora há teste) |
 
 ## Rastreabilidade
 

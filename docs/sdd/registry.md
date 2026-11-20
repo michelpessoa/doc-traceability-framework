@@ -64,7 +64,7 @@ Total de documentos: **56**
 | `SDD-DTF-0054` | Aprovação como dado: approval_policy no YAML, approved_by preso ao hash do conteúdo, approval_hash.py e cobrança no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0053 |
 | `SDD-DTF-0055` | Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0054 |
 | `SDD-DTF-0056` | registry.md com seção para todo tipo de documento: ordem derivada de document_types, sem descarte silencioso | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0043 |
-| `SDD-DTF-0057` | Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions | approved | Michel Pessoa | 2026-11-19 | SDD-DTF-0055, SDD-DTF-0056 |
+| `SDD-DTF-0057` | Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions | implemented | Michel Pessoa | 2026-11-20 | SDD-DTF-0055, SDD-DTF-0056 |
 
 ## Documentos originados
 
