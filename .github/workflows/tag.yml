@@ -1,0 +1,85 @@
+name: tag
+
+# Cria a tag anotada de uma versão do framework a partir de um commit que
+# já está em main. Existe porque a sessão de agente que prepara a versão
+# não pode enviar tags pelo proxy de git; ela dispara este workflow, e a
+# tag sai daqui. Quem decide o que entra em main continua sendo o merge
+# do humano: o workflow só marca um commit que já está lá.
+#
+# Recusa, sem criar nada:
+# - versão fora de X.Y.Z ou SHA fora de 40 hexadecimais;
+# - tag que já existe (tag publicada não se move nem se recria);
+# - SHA que não é ancestral de origin/main;
+# - versão diferente de `framework.version` do workflow-rules.yaml no SHA.
+
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Versão do framework, como 2.7.0"
+        required: true
+        type: string
+      sha:
+        description: "Commit completo (40 hexadecimais) já em main"
+        required: true
+        type: string
+      mensagem:
+        description: "Mensagem da tag anotada; vazia vira 'framework <versão>'"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Conferir e criar a tag
+        env:
+          VERSAO: ${{ inputs.versao }}
+          SHA: ${{ inputs.sha }}
+          MENSAGEM: ${{ inputs.mensagem }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$VERSAO" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::versão '$VERSAO' fora de X.Y.Z"; exit 1
+          fi
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::sha '$SHA' não tem 40 hexadecimais"; exit 1
+          fi
+          git fetch -q --tags origin
+          if git rev-parse -q --verify "refs/tags/$VERSAO" >/dev/null; then
+            echo "::error::a tag $VERSAO já existe em $(git rev-list -n 1 "refs/tags/$VERSAO")"; exit 1
+          fi
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "::error::$SHA não está em main"; exit 1
+          fi
+          declarada=$(git show "$SHA:_framework/rules/workflow-rules.yaml" \
+            | python3 -c 'import sys, yaml; print(yaml.safe_load(sys.stdin)["framework"]["version"])')
+          if [ "$declarada" != "$VERSAO" ]; then
+            echo "::error::$SHA declara framework.version $declarada, não $VERSAO"; exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSAO" "$SHA" -m "${MENSAGEM:-framework $VERSAO}"
+          git push origin "refs/tags/$VERSAO"
+          echo "tag $VERSAO criada em $SHA" >> "$GITHUB_STEP_SUMMARY"
