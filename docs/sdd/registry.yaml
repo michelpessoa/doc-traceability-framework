@@ -551,3 +551,13 @@ documents:
     relates_to: [SDD-DTF-0043]
     path: "docs/sdd/SDD-DTF-0056.md"
     tags: [registry, gerado, tooling, tipos-de-documento]
+  - id: SDD-DTF-0057
+    type: SDD
+    title: "Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-19"
+    updated: "2026-11-20"
+    relates_to: [SDD-DTF-0055, SDD-DTF-0056]
+    path: "docs/sdd/SDD-DTF-0057.md"
+    tags: [documentacao-enxuta, sdd, spec, sizing, molde, registry, approved_by]

@@ -22,6 +22,8 @@ tags: []
 > Use antes de decisões relevantes: mudança transversal, impacto em
 > múltiplos times, custo alto, risco técnico, nova tecnologia ou
 > alteração de contrato entre serviços.
+>
+> Documentos originados: visão gerada no registry.md (generate_registry_md.py), a partir de parent_strategy e parent_postmortem.
 
 ## Contexto
 ## Problema
@@ -50,8 +52,3 @@ tags: []
 
 **Decisão do gate:** `requires_adr = {true|false}`
 **Justificativa:**
-
-## Documentos originados
-| ID | Tipo | Título | Status |
-|---|---|---|---|
-| | | | |

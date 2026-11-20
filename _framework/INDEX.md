@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 129 arquivos
+Total: 131 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Total: 129 arquivos
 | `scripts/approval_hash.py` | Hash do corpo aprovado de um documento, gravado em approved_by | Ao gravar ou conferir approved_by de documento aprovado | 2-8 KB |
 | `scripts/check_commit.py` | Checa mensagem de commit: Conventional Commits e referência a id do framework | Ao depurar hook commit-msg ou checagem de intervalo | 2-8 KB |
 | `scripts/check_hooks.py` | Reprova .claude/settings.json com hook mudo ou mal configurado | Ao editar hooks do Claude Code | 2-8 KB |
-| `scripts/check_renderings.py` | Compara os fatos entre YAML, SKILL.md, universal, Cursor e Copilot | Ao mudar uma renderização e ver divergência | 2-8 KB |
+| `scripts/check_renderings.py` | Compara os fatos entre YAML, SKILL.md, universal, Cursor e Copilot | Ao mudar uma renderização e ver divergência | 8-32 KB |
 | `scripts/check_source_docs.py` | Confere que cada source_docs da SDD existe, usável e no arquivo certo | Ao depurar falha de fidelidade à origem da SDD | 2-8 KB |
 | `scripts/ci_gate_verify_sdd.py` | Gate de CI que barra SDD implemented sem validação PASS real | Ao adotar ou depurar o gate de CI do verify-sdd | 8-32 KB |
 | `scripts/framework_check.py` | Entrada única dos validadores: registry, conteúdo e estado das SDDs | Ao rodar a validação completa ou configurar o pre-commit | 2-8 KB |
@@ -50,7 +50,7 @@ Total: 129 arquivos
 | `scripts/tests/test_check_hooks.py` | Testes do check_hooks.py: um caso por regra de hook | Ao alterar a checagem de hooks | 2-8 KB |
 | `scripts/tests/test_check_source_docs.py` | Testes do check_source_docs.py sobre origens da SDD | Ao alterar a checagem de source_docs | 2-8 KB |
 | `scripts/tests/test_discover.py` | Testes da descoberta de diretórios em framework_check.discover | Ao alterar como o framework_check acha os documentos | 2-8 KB |
-| `scripts/tests/test_generate_registry_md.py` | Testes do cabeçalho, da ausência de hora e do --check do registry.md | Ao alterar o generate_registry_md.py | 2-8 KB |
+| `scripts/tests/test_generate_registry_md.py` | Testes do cabeçalho, da ausência de hora e do --check do registry.md | Ao alterar o generate_registry_md.py | 8-32 KB |
 | `scripts/tests/test_guard_bash.py` | Testes do guard_bash.sh: exit 0 libera, exit 2 bloqueia | Ao alterar o hook de bloqueio de comandos | <2 KB |
 | `scripts/tests/test_hook_post_edit.py` | Testes do hook_post_edit.py sobre documentos mínimos | Ao alterar o hook pós-edição | 2-8 KB |
 | `scripts/tests/test_hook_session_start.py` | Testes do hook_session_start.py com repositório mínimo | Ao alterar o hook de início de sessão | 2-8 KB |
@@ -61,7 +61,9 @@ Total: 129 arquivos
 | `scripts/tests/test_render_prompts_sync.py` | Testes do sync de templates e da cópia byte a byte da skill | Ao alterar sync_copies ou a paridade do bundle | 2-8 KB |
 | `scripts/tests/test_report_json.py` | Testes do --json dos validadores e da saída em texto inalterada | Ao alterar report() ou o main() de um validador | 8-32 KB |
 | `scripts/tests/test_review_approval.py` | Testes do review_approval.py e de approvers no registry central | Ao mudar a regra da review válida ou o campo approvers | 8-32 KB |
+| `scripts/tests/test_sdd_lean.py` | Testes da SDD enxuta, do molde e da fidelidade de RF contra a SPEC | Ao mudar o formato da SDD com source_docs ou o check_source_docs | 8-32 KB |
 | `scripts/tests/test_selftest.py` | Testes do selftest.py: mutante morto, sobrevivente e não aplicável | Ao alterar a mutação dos validadores | 2-8 KB |
+| `scripts/tests/test_spec_optional_sections.py` | Testes das seções opcionais da SPEC e dos templates sem Documentos originados | Ao mudar optional_sections ou os templates de SPEC e RFC | 2-8 KB |
 | `scripts/tests/test_table_cells.py` | Testes do split_table_row para células de tabela markdown | Ao alterar a leitura de células de tabela | <2 KB |
 | `scripts/tests/test_validate_state.py` | Testes do validate_state.py sobre o YAML real | Ao alterar o gate de evidência da SDD | 8-32 KB |
 | `scripts/validate_doc.py` | Validador do gate de qualidade de conteúdo: placeholders e seções | Ao depurar reprovação de conteúdo de documento | 8-32 KB |
@@ -76,7 +78,7 @@ Total: 129 arquivos
 | `skills/doc-traceability-framework/scripts/approval_hash.py` | Cópia gerada de scripts/approval_hash.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_commit.py` | Cópia gerada de scripts/check_commit.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/check_hooks.py` | Cópia gerada de scripts/check_hooks.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
-| `skills/doc-traceability-framework/scripts/check_renderings.py` | Cópia gerada de scripts/check_renderings.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
+| `skills/doc-traceability-framework/scripts/check_renderings.py` | Cópia gerada de scripts/check_renderings.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 8-32 KB |
 | `skills/doc-traceability-framework/scripts/check_source_docs.py` | Cópia gerada de scripts/check_source_docs.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/scripts/ci_gate_verify_sdd.py` | Cópia gerada de scripts/ci_gate_verify_sdd.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 8-32 KB |
 | `skills/doc-traceability-framework/scripts/framework_check.py` | Cópia gerada de scripts/framework_check.py dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |

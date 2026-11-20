@@ -60,6 +60,7 @@ RULE_SINCE = {
     "contract_where": "1.7.0",
     "ears": "2.0.0",
     "sweep": "2.3.0",
+    "sdd_lean": "2.7.0",
 }
 
 # gate_content_quality item 4: termos que descrevem o que fazer sem mostrar
@@ -196,6 +197,120 @@ def section_body(body: str, heading: str) -> str | None:
     return m.group(1) if m else None
 
 
+# SDD enxuta (SPEC-DTF-0031, RF01 a RF04, SDD-DTF-0057): com source_docs,
+# desde a 2.7.0, a SDD declara `sizing` válido, traz o requisito por
+# referência à SPEC (tabela RF-ID | Origem | Requisito (resumo) | Arquivos)
+# e não copia o desenho nem a decisão; `molde` só em SDD small. Fica fora
+# da docstring porque ela é a saída de uso, congelada desde a 2.3.2
+# (test_report_json).
+LEAN_COLUMNS = ["RF-ID", "Origem", "Requisito (resumo)", "Arquivos"]
+LEAN_SUMMARY_MAX = 200
+MOLDE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+LEAN_FORBIDDEN = {
+    "Especificação técnica consolidada": "SPEC",
+    "Decisão(ões) de arquitetura aplicável(is)": "ADR",
+}
+
+
+def is_lean_sdd(fm: dict, applies) -> bool:
+    """SDD com source_docs sob a regra `sdd_lean` (2.7.0): é a SDD enxuta."""
+    return fm.get("type") == "SDD" and bool(fm.get("source_docs")) and applies("sdd_lean")
+
+
+def first_table_lines(section: str) -> list[str]:
+    """Linhas da primeira tabela da seção: o bloco contínuo de linhas `|`."""
+    lines: list[str] = []
+    for ln in section.splitlines():
+        if ln.strip().startswith("|"):
+            lines.append(ln.strip())
+        elif lines:
+            break
+    return lines
+
+
+def consolidated_rf_rows(body: str) -> list[dict] | None:
+    """
+    Linhas da tabela de "Requisitos consolidados" da SDD enxuta, ou None
+    se a primeira tabela da seção não tiver exatamente as colunas de
+    LEAN_COLUMNS.
+    """
+    lines = first_table_lines(section_body(body, "Requisitos consolidados") or "")
+    if len(lines) < 2 or split_table_row(lines[0]) != LEAN_COLUMNS:
+        return None
+    rows = []
+    for line in lines[2:]:
+        cells = split_table_row(line) + [""] * len(LEAN_COLUMNS)
+        found = RF_ID.search(cells[0])
+        rows.append(
+            {
+                "rf": found.group(0) if found else "",
+                "origem": cells[1],
+                "resumo": cells[2],
+                "arquivos": cells[3],
+            }
+        )
+    return rows
+
+
+def check_lean_sdd(doc_id: str, fm: dict, body: str) -> list[str]:
+    """RF01, RF02 e RF04 da SPEC-DTF-0031, na SDD enxuta em draft ou in_review."""
+    problems = []
+    levels = [str(lvl.get("id")) for lvl in (load_rules().get("sizing") or {}).get("levels") or []]
+    sizing = fm.get("sizing")
+    if sizing not in levels:
+        problems.append(
+            f"{doc_id}: SDD enxuta sem `sizing` válido ({sizing!r}); use "
+            f"{', '.join(levels[:-1])} ou {levels[-1]} (SPEC-DTF-0031, RF01)."
+        )
+
+    rows = consolidated_rf_rows(body)
+    if rows is None:
+        problems.append(
+            f"{doc_id}: 'Requisitos consolidados' sem a tabela {' | '.join(LEAN_COLUMNS)} (SPEC-DTF-0031, RF02)."
+        )
+    else:
+        specs = [
+            str(sd.get("id"))
+            for sd in fm.get("source_docs") or []
+            if isinstance(sd, dict) and str(sd.get("id") or "").startswith("SPEC-")
+        ]
+        for n, row in enumerate(rows, 1):
+            rf = row["rf"]
+            if not rf:
+                problems.append(f"{doc_id}: linha {n} de 'Requisitos consolidados' sem RF-ID.")
+                continue
+            if row["origem"] not in specs:
+                problems.append(
+                    f"{doc_id}: {rf} com Origem '{row['origem']}' que não é SPEC de source_docs ({', '.join(specs)})."
+                )
+            if len(row["resumo"]) > LEAN_SUMMARY_MAX:
+                problems.append(
+                    f"{doc_id}: {rf} com resumo de {len(row['resumo'])} caracteres; "
+                    f"o limite é {LEAN_SUMMARY_MAX} (o resto fica na SPEC)."
+                )
+            if not row["arquivos"]:
+                problems.append(f"{doc_id}: {rf} sem caminho na coluna Arquivos.")
+
+    for heading, origin in LEAN_FORBIDDEN.items():
+        if section_body(body, heading) is not None:
+            problems.append(
+                f"{doc_id}: SDD enxuta com a seção '{heading}': o conteúdo fica na {origin} "
+                "de source_docs, por referência (SPEC-DTF-0031, RF04)."
+            )
+    return problems
+
+
+def check_molde(doc_id: str, fm: dict) -> list[str]:
+    """RF03 da SPEC-DTF-0031: `molde` só em SDD small, com nome em minúsculas."""
+    molde = fm.get("molde")
+    problems = []
+    if fm.get("sizing") != "small":
+        problems.append(f"{doc_id}: `molde` só vale em SDD small (sizing {fm.get('sizing')}).")
+    if not MOLDE_NAME.match(str(molde)):
+        problems.append(f"{doc_id}: `molde` com nome inválido ({molde!r}); use ^[a-z0-9][a-z0-9-]*$.")
+    return problems
+
+
 def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     problems, warnings = [], []
     if version is None:
@@ -286,6 +401,17 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
     if drafting and doc_type == "SDD":
         problems += check_files_column(doc_id, doc_type, section_body(body, "Decomposição em tasks"))
         problems += check_tasks_section(doc_id, fm, body)
+
+    # A regra da SDD enxuta pede as duas coisas: documento criado desde a
+    # 2.7.0 e projeto sob 2.7.0 ou maior (a segunda chamada, sem `created`,
+    # confere só a versão — como validate_state.check_approval).
+    def lean_applies(rule: str) -> bool:
+        return applies(rule) and rule_applies_since_date(rules, RULE_SINCE[rule], None, version)
+
+    if drafting and is_lean_sdd(fm, lean_applies):
+        problems += check_lean_sdd(doc_id, fm, body)
+    if doc_type == "SDD" and fm.get("molde") is not None and lean_applies("sdd_lean"):
+        problems += check_molde(doc_id, fm)
 
     return problems, warnings
 
