@@ -618,6 +618,8 @@ def extract_sdd_files(body: str) -> list[str]:
     col = None
     for ln in _section_body(body, "Requisitos consolidados"):
         if not ln.startswith("|"):
+            if col is not None:
+                break  # só a primeira tabela da seção
             continue
         cells = split_table_row(ln.strip())
         if col is None:

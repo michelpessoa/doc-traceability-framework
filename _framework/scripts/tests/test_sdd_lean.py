@@ -363,3 +363,25 @@ def test_fidelity_sdd_sem_tabela_enxuta_nao_compara(tmp_path):
     central = _central(tmp_path, {SPEC_ID: ["RF01", "RF02", "RF03"]})
     tabela = "| RF | Requisito |\n|---|---|\n| RF01 | X |\n"
     assert check_sdd_source_docs(_sdd(tmp_path, tabela=tabela), central) == []
+
+
+# --- Só a primeira tabela conta (rodada 1 do verify-sdd, SDD-DTF-0057) ------
+
+SEGUNDA_TABELA = (
+    "\nCasos de borda:\n\n| Caso | RF | Comportamento esperado |\n|---|---|---|\n| Vazio | RF01 | Recusa |\n"
+)
+
+
+def test_segunda_tabela_em_requisitos_consolidados_nao_vira_requisito(tmp_path):
+    path = _sdd(tmp_path, tabela=HEADER + ROWS + SEGUNDA_TABELA)
+    assert _problems(path) == []
+
+
+def test_fidelity_segunda_tabela_da_spec_nao_conta(tmp_path):
+    central = _central(tmp_path, {SPEC_ID: ["RF01", "RF02"]})
+    spec = central / SPEC_PATH
+    spec.write_text(
+        spec.read_text(encoding="utf-8") + "\nNotas:\n\n| RF | Nota |\n|---|---|\n| RF09 | fora |\n",
+        encoding="utf-8",
+    )
+    assert check_sdd_source_docs(_sdd(tmp_path), central) == []

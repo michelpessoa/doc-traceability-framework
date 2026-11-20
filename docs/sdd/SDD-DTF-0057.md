@@ -153,6 +153,11 @@ implementação precisa acertar, com as mensagens exatas:
     `LEAN_FORBIDDEN = {"Especificação técnica consolidada": "SPEC", "Decisão(ões) de arquitetura aplicável(is)": "ADR"}`.
   - `is_lean_sdd(fm: dict, applies) -> bool`: `fm.get("type") == "SDD"`,
     `fm.get("source_docs")` não vazio e `applies("sdd_lean")`.
+  - `first_table_lines(section: str) -> list[str]`: as linhas da
+    primeira tabela da seção, o bloco contínuo de linhas `|`; usada por
+    `consolidated_rf_rows` e por `check_rf_fidelity`, para uma segunda
+    tabela na seção não virar requisito (achado 1 da rodada 1 do
+    verify-sdd).
   - `consolidated_rf_rows(body: str) -> list[dict] | None`: a primeira
     tabela de "Requisitos consolidados"; `None` se o cabeçalho, sem
     espaços nas pontas das células, não for exatamente `LEAN_COLUMNS`.

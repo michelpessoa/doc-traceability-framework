@@ -217,14 +217,24 @@ def is_lean_sdd(fm: dict, applies) -> bool:
     return fm.get("type") == "SDD" and bool(fm.get("source_docs")) and applies("sdd_lean")
 
 
+def first_table_lines(section: str) -> list[str]:
+    """Linhas da primeira tabela da seção: o bloco contínuo de linhas `|`."""
+    lines: list[str] = []
+    for ln in section.splitlines():
+        if ln.strip().startswith("|"):
+            lines.append(ln.strip())
+        elif lines:
+            break
+    return lines
+
+
 def consolidated_rf_rows(body: str) -> list[dict] | None:
     """
     Linhas da tabela de "Requisitos consolidados" da SDD enxuta, ou None
     se a primeira tabela da seção não tiver exatamente as colunas de
     LEAN_COLUMNS.
     """
-    section = section_body(body, "Requisitos consolidados") or ""
-    lines = [ln.strip() for ln in section.splitlines() if ln.strip().startswith("|")]
+    lines = first_table_lines(section_body(body, "Requisitos consolidados") or "")
     if len(lines) < 2 or split_table_row(lines[0]) != LEAN_COLUMNS:
         return None
     rows = []

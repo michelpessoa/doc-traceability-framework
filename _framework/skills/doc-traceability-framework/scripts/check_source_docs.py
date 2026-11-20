@@ -33,7 +33,14 @@ from framework_lib import (  # noqa: E402
     usage_error,
 )
 from registry_tools import check_source_docs_urls, resolve_doc_path  # noqa: E402
-from validate_doc import RF_ID, RULE_SINCE, consolidated_rf_rows, is_lean_sdd, section_body  # noqa: E402
+from validate_doc import (  # noqa: E402
+    RF_ID,
+    RULE_SINCE,
+    consolidated_rf_rows,
+    first_table_lines,
+    is_lean_sdd,
+    section_body,
+)
 
 OK_STATUSES = {"approved", "implemented"}
 
@@ -57,8 +64,7 @@ def check_rf_fidelity(doc_id: str, rows: list[dict], spec_paths: dict[str, Path]
     problems = []
     for spec_id in sorted(spec_paths):
         _, body = read_frontmatter(spec_paths[spec_id])
-        section = section_body(body, "Requisitos funcionais") or ""
-        lines = [ln.strip() for ln in section.splitlines() if ln.strip().startswith("|")]
+        lines = first_table_lines(section_body(body, "Requisitos funcionais") or "")
         spec_rfs = set()
         for line in lines[2:]:
             found = RF_ID.search(split_table_row(line)[0])

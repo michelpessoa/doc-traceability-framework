@@ -827,3 +827,12 @@ def test_extract_sdd_files_le_a_coluna_arquivos_dos_requisitos():
 def test_extract_sdd_files_sem_coluna_arquivos_nos_requisitos_nao_muda():
     body = "## Requisitos consolidados\n\n| RF | Requisito |\n|---|---|\n| RF01 | Ler `x/y.py` |\n"
     assert ri.extract_sdd_files(body) == []
+
+
+def test_extract_sdd_files_so_a_primeira_tabela_dos_requisitos():
+    body = SDD_ENXUTA.replace(
+        "\n## Decomposição em tasks",
+        "\n| Caso | A | B | Arquivos |\n|---|---|---|---|\n| borda | x | y | `nao/entra.py` |\n"
+        "\n## Decomposição em tasks",
+    )
+    assert "nao/entra.py" not in ri.extract_sdd_files(body)
