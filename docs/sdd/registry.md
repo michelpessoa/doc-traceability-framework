@@ -1,6 +1,6 @@
 # Registry — Projeto DTF
 
-_Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.7.0._
+_Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.8.0._
 
 Total de documentos: **57**
 

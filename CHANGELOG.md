@@ -4,7 +4,11 @@ Arquivo GERADO por `_framework/scripts/render_prompts.py` a partir de
 `framework.changelog` em `_framework/rules/workflow-rules.yaml`. Não
 edite à mão — para registrar uma versão, acrescente a entrada no YAML.
 
-Versão corrente: **2.7.0** (`2026-11-19`).
+Versão corrente: **2.8.0** (`2026-11-21`).
+
+## 2.8.0
+
+SPEC-DTF-0032 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0058): RFs de uma SPEC divididos por projeto. Coluna opcional `Projeto`, a última da tabela "Requisitos funcionais" da SPEC, depois de `Arquivos`, em `document_types.SPEC.rf_optional_columns`: `validate_doc.py` reprova célula vazia e código fora de ^[A-Z][A-Z0-9]*$. Com a coluna na SPEC, `check_source_docs.py` confere a SDD enxuta só contra os RFs do `project` do registry dela, nas duas direções, e reprova RF de outro projeto e SPEC sem RF do projeto. A regra vale pela presença da coluna: nenhum documento existente muda. Nenhum gate, sizing, ciclo de status, política ou contract_version muda.
 
 ## 2.7.0
 

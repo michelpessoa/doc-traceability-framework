@@ -130,7 +130,6 @@ def test_registry_central_inacessivel_levanta_erro_explicito(tmp_path):
 # --- Fidelidade por projeto (SPEC-DTF-0032, RF02; SDD-DTF-0058) --------------
 
 import yaml  # noqa: E402
-
 from check_source_docs import _project, check_rf_fidelity  # noqa: E402
 
 P_SPEC = "SPEC-TST-0009"
@@ -230,7 +229,9 @@ def test_projeto_check_rf_fidelity_sem_project_e_a_assinatura_antiga(tmp_path):
     central = _p_central(tmp_path, {"RF01": "AAA", "RF02": "BBB"})
     rows = [{"rf": "RF01", "origem": P_SPEC, "resumo": "", "arquivos": "a.py"}]
     spec = {P_SPEC: central / P_REL}
-    assert check_rf_fidelity("X", rows, spec) == [f"X: RFs de {P_SPEC} fora da SDD: RF02; RFs da SDD fora de {P_SPEC}: nenhum."]
+    assert check_rf_fidelity("X", rows, spec) == [
+        f"X: RFs de {P_SPEC} fora da SDD: RF02; RFs da SDD fora de {P_SPEC}: nenhum."
+    ]
     assert check_rf_fidelity("X", rows, spec, project="AAA") == []
 
 

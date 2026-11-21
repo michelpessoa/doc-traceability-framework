@@ -185,10 +185,10 @@ exatas:
 
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
 |---|---|---|---|---|
-| 1 | Testes de `rf_projects` e `check_project_column` (coluna válida, `DTF, FAB`, vazia, `-`, `fab`, `FAB-1`, `DTF,,FAB`, sem coluna, SPEC `approved` com a coluna, duas tabelas), vistos falhar; implementação | RF01 | `_framework/scripts/tests/test_validate_doc.py`, `_framework/scripts/validate_doc.py` | |
+| 1 | Testes de `rf_projects` e `check_project_column` (coluna válida, `DTF, FAB`, vazia, `-`, `fab`, `FAB-1`, `DTF,,FAB`, sem coluna, SPEC `approved` com a coluna, duas tabelas), vistos falhar; implementação | RF01 | `_framework/tests/test_validate_doc.py`, `_framework/scripts/validate_doc.py` | |
 | 2 | Testes de `check_rf_fidelity` com `project` (SDD de cada projeto passa, `DTF, FAB` vale para os dois, RF de outro projeto reprova, SPEC sem RF do projeto reprova, RF do projeto faltando reprova, SPEC sem coluna e `project` `None` iguais à 2.7.0) e de `_project`, vistos falhar; implementação | RF02 | `_framework/scripts/tests/test_check_source_docs.py`, `_framework/scripts/check_source_docs.py` | 1 |
 | 3 | Mutantes dos dois checks novos no `selftest.py` | RF01, RF02 | `_framework/scripts/tests/mutations.yaml` | 2 |
-| 4 | YAML: `rf_optional_columns`, 2.8.0 e changelog | RF01, RF03 | `_framework/rules/workflow-rules.yaml` | |
+| 4 | YAML: `rf_optional_columns`, 2.8.0 e changelog; teste de contrato da 2.8.0, com o teste da 2.7.0 conferindo o changelog em vez da versão atual | RF01, RF03 | `_framework/rules/workflow-rules.yaml`, `_framework/tests/test_executor_contract.py` | |
 | 5 | Template da SPEC e `verify-sdd.md`; teste da estrutura do procedimento com a linha nova | RF01, RF03 | `_framework/templates/spec.template.md`, `_framework/procedures/verify-sdd.md`, `_framework/tests/test_procedures_structure.py` | 4 |
 | 6 | Manifesto, gerados e `registry.md` do kit | RF03 | `_framework/rules/kit-index.yaml`, gerados por `render_prompts.py`, `docs/sdd/registry.yaml`, `docs/sdd/registry.md` | 3, 5 |
 | 7 | Espelho no central, branch e PR próprios, com os `registry.md` regenerados; `fabrica-central-teste` em 2.8.0 | RF03 | `central:_framework/`, `central:docs/*/registry.md`, `fabrica-central-teste:_framework/` | 6 |
@@ -199,12 +199,12 @@ Executar na raiz do kit, na branch de implementação.
 
 | # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado | Perfil esperado |
 |---|---|---|---|---|
-| A01 | RF01: coluna `Projeto` | `python3 -m pytest _framework/scripts/tests/test_validate_doc.py -q -k projeto` | ANTES da task 1: falha; DEPOIS: todos passam | automatizado |
+| A01 | RF01: coluna `Projeto` | `python3 -m pytest _framework/tests/test_validate_doc.py -q -k projeto` | ANTES da task 1: falha; DEPOIS: todos passam | automatizado |
 | A02 | RF02: fidelidade por projeto | `python3 -m pytest _framework/scripts/tests/test_check_source_docs.py -q -k projeto` | ANTES da task 2: falha; DEPOIS: todos passam | automatizado |
 | A03 | RF01: sensor do formato | Em cópia descartável, trocar `PROJECT_CODE` por `re.compile(r".+")`; rodar o pytest de A01; restaurar | Pelo menos 1 failed; restaurado, 0 failed | automatizado |
 | A04 | RF02: sensor do filtro por projeto | Em cópia descartável, ignorar `project` em `check_rf_fidelity` (usar todos os RFs da SPEC); rodar o pytest de A02; restaurar | Pelo menos 1 failed; restaurado, 0 failed | automatizado |
 | A05 | RF02: sensor do RF de outro projeto | Em cópia descartável, tirar de `check_rf_fidelity` a mensagem `é do projeto`; rodar o pytest de A02; restaurar | Pelo menos 1 failed; restaurado, 0 failed | automatizado |
-| A06 | RF01, RF02: sem a coluna, igual à 2.7.0 | `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py _framework/scripts/tests/test_check_source_docs.py _framework/scripts/tests/test_validate_doc.py -q` | Todos passam, inclusive os testes da 2.7.0 sem alteração | automatizado |
+| A06 | RF01, RF02: sem a coluna, igual à 2.7.0 | `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py _framework/scripts/tests/test_check_source_docs.py _framework/tests/test_validate_doc.py -q` | Todos passam, inclusive os testes da 2.7.0 sem alteração | automatizado |
 | A07 | RF01: a SPEC de origem passa | No central: `python3 <kit>/_framework/scripts/validate_doc.py docs/DTF/03-spec/SPEC-DTF-0032.md; echo "exit=$?"` | `exit=0` | automatizado |
 | A08 | Não funcional: saída dos validadores | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`; `git diff --stat origin/main -- _framework/scripts/tests/fixtures/` | Todos passam; diff vazio | automatizado |
 | A09 | RF03: versão, procedimento e central | `grep -n 'version: "2.8.0"' _framework/rules/workflow-rules.yaml`; `grep -n 'coluna Projeto' _framework/procedures/verify-sdd.md`; no central, com `_framework/` desta branch e os `registry.md` regenerados: `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` e `git status --porcelain docs/ \| grep -v registry.md` | A linha da versão; a linha do procedimento; `exit=0`; nenhum documento alterado além dos `registry.md` | automatizado |
@@ -232,6 +232,11 @@ Executar na raiz do kit, na branch de implementação.
   testes, use códigos como `AAA` e `BBB`, não `FAB`.
 - **Gerados só por script.**
 - **Evidência de verificação** só por verificador independente.
+- **Correção na implementação:** a SPEC e a primeira versão desta SDD
+  apontavam os testes do RF01 para `_framework/scripts/tests/test_validate_doc.py`.
+  Esse arquivo colidiria no pytest com `_framework/tests/test_validate_doc.py`,
+  que já existe, porque as pastas de teste não têm `__init__.py`. Os
+  testes ficam no arquivo existente.
 
 ## Verificação de escopo (nada a mais, nada a menos)
 

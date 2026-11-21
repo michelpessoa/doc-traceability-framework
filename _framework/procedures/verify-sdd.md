@@ -61,6 +61,8 @@ detectar). Quatro pontos, nesta ordem:
    não precisa ser 1:1 textual, mas nenhum RF pode ficar sem
    representação alguma. RF ausente é achado bloqueante, mesma
    severidade de um requisito sem código (passo 1 abaixo).
+   Quando a SPEC tem a coluna `Projeto`, contam só os RFs do `project` do
+   registry da SDD; o `check_source_docs.py` já confere isso na SDD enxuta.
 3. **Nenhum critério de aceite foi relaxado na consolidação** (ex.: SPEC
    exige status 4xx específico, SDD generaliza para "erro tratado").
 4. **Todo contrato técnico da Parte 2 da SPEC** (assinatura, schema, onde
