@@ -2,7 +2,7 @@
 id: SDD-DTF-0058
 type: SDD
 title: "Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-21"
