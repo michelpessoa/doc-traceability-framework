@@ -195,9 +195,11 @@ def test_vocabulario_vago_reprova_documento_approved(tmp_path):
     quanto 'TBD' — descrevem o resultado desejado sem dizer como
     verificá-lo. Só reprova (problems, não warnings) em status decidido."""
     path = tmp_path / "spec.md"
-    text = _spec("`caminho/qualquer.py`").replace(
-        "O sistema deve fazer algo", "O sistema deve tratar o erro gracefully"
-    ).replace("status: draft", "status: approved")
+    text = (
+        _spec("`caminho/qualquer.py`")
+        .replace("O sistema deve fazer algo", "O sistema deve tratar o erro gracefully")
+        .replace("status: draft", "status: approved")
+    )
     path.write_text(text, encoding="utf-8")
     problems, _ = check_document(path)
     assert any("gracefully" in p for p in problems)
@@ -251,9 +253,7 @@ def test_sweep_destino_vazio_falha(tmp_path):
 
 
 def test_sweep_na_sem_motivo_falha(tmp_path):
-    sweep = SWEEP_TABLE_COMPLETA.replace(
-        "| Observabilidade | n/a | sem log novo |\n", "| Observabilidade | n/a | |\n"
-    )
+    sweep = SWEEP_TABLE_COMPLETA.replace("| Observabilidade | n/a | sem log novo |\n", "| Observabilidade | n/a | |\n")
     path = tmp_path / "spec.md"
     path.write_text(_spec("`caminho/qualquer.py`", sweep=sweep), encoding="utf-8")
     problems, _ = check_document(path)
@@ -285,3 +285,84 @@ def test_pipe_escapado_em_tabela_de_arquivos(tmp_path):
     path.write_text(text, encoding="utf-8")
     problems, _ = check_document(path)
     assert any("Arquivos vazia" in p and "RF06" in p for p in problems), problems
+
+
+# --- Coluna Projeto (SPEC-DTF-0032, RF01; SDD-DTF-0058) ----------------------
+
+TABELA_PROJETO = "| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos | Projeto |\n|---|---|---|---|---|\n"
+
+
+def _spec_projeto(celulas: list[str], status: str = "draft", extra: str = "") -> str:
+    linhas = "".join(
+        f"| RF0{i} | Algo | O sistema deve fazer algo | `a.py` | {celula} |\n" for i, celula in enumerate(celulas, 1)
+    )
+    base = _spec("`a.py`").replace("status: draft", f"status: {status}")
+    antiga = (
+        "| RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |\n|---|---|---|---|\n"
+        "| RF01 | Algo | O sistema deve fazer algo | `a.py` |\n"
+    )
+    return base.replace(antiga, TABELA_PROJETO + linhas + extra)
+
+
+def _problemas_projeto(tmp_path, texto: str) -> list[str]:
+    path = tmp_path / "spec.md"
+    path.write_text(texto, encoding="utf-8")
+    problems, _ = check_document(path)
+    return [p for p in problems if "Projeto" in p or "projeto" in p]
+
+
+def test_projeto_coluna_valida_passa(tmp_path):
+    path = tmp_path / "spec.md"
+    path.write_text(_spec_projeto(["AAA", "AAA, BBB", "B2"]), encoding="utf-8")
+    problems, _ = check_document(path)
+    assert problems == []
+
+
+def test_projeto_celula_vazia_reprova(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec_projeto(["AAA", ""])) == ["SPEC-TEST-0001: RF02: coluna Projeto vazia."]
+
+
+def test_projeto_hifen_e_travessao_contam_como_vazio(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec_projeto(["-", "—"])) == [
+        "SPEC-TEST-0001: RF01: coluna Projeto vazia.",
+        "SPEC-TEST-0001: RF02: coluna Projeto vazia.",
+    ]
+
+
+def test_projeto_codigo_fora_do_formato_reprova_nomeando_o_codigo(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec_projeto(["fab", "AAA, BB-1"])) == [
+        "SPEC-TEST-0001: RF01: projeto fab fora do formato ^[A-Z][A-Z0-9]*$.",
+        "SPEC-TEST-0001: RF02: projeto BB-1 fora do formato ^[A-Z][A-Z0-9]*$.",
+    ]
+
+
+def test_projeto_item_vazio_entre_virgulas_e_ignorado(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec_projeto(["AAA,,BBB"])) == []
+
+
+def test_projeto_sem_coluna_nada_muda(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec("`a.py`")) == []
+
+
+def test_projeto_vale_em_spec_approved(tmp_path):
+    assert _problemas_projeto(tmp_path, _spec_projeto([""], status="approved")) == [
+        "SPEC-TEST-0001: RF01: coluna Projeto vazia."
+    ]
+
+
+def test_projeto_segunda_tabela_nao_conta(tmp_path):
+    extra = "\nNotas:\n\n| RF-ID | Nota | Projeto |\n|---|---|---|\n| RF09 | x | |\n"
+    assert _problemas_projeto(tmp_path, _spec_projeto(["AAA"], extra=extra)) == []
+
+
+def test_projeto_rf_projects_mapeia_rf_sem_hifen():
+    from validate_doc import rf_projects
+
+    secao = (
+        TABELA_PROJETO
+        + "| RF-01 | A | O sistema deve | `a.py` | AAA, BBB |\n"
+        + "| RF02 | B | O sistema deve | `b.py` | - |\n"
+    )
+    assert rf_projects(secao) == {"RF01": ["AAA", "BBB"], "RF02": []}
+    assert rf_projects("| RF-ID | Requisito |\n|---|---|\n| RF01 | A |\n") is None
+    assert rf_projects(None) is None

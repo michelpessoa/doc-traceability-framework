@@ -237,8 +237,22 @@ def test_transicoes_da_politica_no_contrato():
 def test_versao_2_7_0_e_campos_da_sdd():
     """SPEC-DTF-0031, RF01, RF03, RF12, RF14."""
     rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
-    assert rules["framework"]["version"] == "2.7.0"
-    assert rules["framework"]["changelog"][0]["version"] == "2.7.0"
+    assert "2.7.0" in [entry["version"] for entry in rules["framework"]["changelog"]]
     sdd = rules["frontmatter_schema"]["type_specific_fields"]["SDD"]
     assert "sizing" in sdd and "molde" in sdd
     assert "transitions" in rules["frontmatter_schema"]["common_fields"]["approved_by"]
+
+
+def test_versao_2_8_0_e_coluna_projeto_da_spec():
+    """SPEC-DTF-0032, RF01, RF03 (SDD-DTF-0058)."""
+    rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
+    assert rules["framework"]["version"] == "2.8.0"
+    assert rules["framework"]["changelog"][0]["version"] == "2.8.0"
+    assert rules["document_types"]["SPEC"]["rf_optional_columns"] == [
+        {
+            "column": "Projeto",
+            "position": "última, depois de Arquivos",
+            "value": "lista de PROJECT_CODE separados por vírgula",
+            "format": "^[A-Z][A-Z0-9]*$",
+        }
+    ]

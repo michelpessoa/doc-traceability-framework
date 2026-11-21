@@ -59,6 +59,11 @@ vírgula se houver mais de um, ou `(decisão pura)` quando o RF não tocar
 arquivo algum. Usada para derivar paralelismo (`parallel_plan.py`) — não
 deixe vazia.
 
+Coluna `Projeto` (opcional, SPEC-DTF-0032): só quando a SPEC divide os RFs
+entre projetos. Fica por último, depois de `Arquivos`, com os
+`PROJECT_CODE` do RF separados por vírgula (ex.: `ABC, XYZ`). A SDD
+enxuta de cada projeto cobre só os RFs do seu código.
+
 | RF-ID | Requisito | Critério de aceite (EARS) | Arquivos |
 |---|---|---|---|
 | RF01 | | | |

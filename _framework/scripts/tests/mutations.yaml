@@ -46,3 +46,21 @@
   description: "checagem de Conventional Commits neutralizada (mutação nova, sem fonte anterior — decisão de SDD-DTF-0038)"
   find: "if not m:"
   replace: "if False:"
+
+- validator: "_framework/scripts/validate_doc.py"
+  test_file: "_framework/tests/test_validate_doc.py"
+  description: "check_project_column: formato do código de projeto deixa de ser conferido (SDD-DTF-0058 RF01)"
+  find: 'PROJECT_CODE = re.compile(r"^[A-Z][A-Z0-9]*$")'
+  replace: 'PROJECT_CODE = re.compile(r".+")'
+
+- validator: "_framework/scripts/check_source_docs.py"
+  test_file: "_framework/scripts/tests/test_check_source_docs.py"
+  description: "check_rf_fidelity: project ignorado, todos os RFs da SPEC contam (SDD-DTF-0058 RF02)"
+  find: "projects = rf_projects(section) if project else None"
+  replace: "projects = None"
+
+- validator: "_framework/scripts/check_source_docs.py"
+  test_file: "_framework/scripts/tests/test_check_source_docs.py"
+  description: "check_rf_fidelity: RF de outro projeto deixa de reprovar (SDD-DTF-0058 RF02)"
+  find: "if rf in spec_rfs and rf not in own:"
+  replace: "if False:"

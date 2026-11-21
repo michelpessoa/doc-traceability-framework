@@ -14,9 +14,22 @@
 
 framework:
   name: "Framework de Documentação & Rastreabilidade para IA"
-  version: "2.7.0"
-  last_updated: "2026-11-19"
+  version: "2.8.0"
+  last_updated: "2026-11-21"
   changelog:
+    - version: "2.8.0"
+      date: "2026-11-21"
+      summary: >
+        SPEC-DTF-0032 / ADR-DTF-0008 / RFC-DTF-0009 (SDD-DTF-0058): RFs de
+        uma SPEC divididos por projeto. Coluna opcional `Projeto`, a última
+        da tabela "Requisitos funcionais" da SPEC, depois de `Arquivos`, em
+        `document_types.SPEC.rf_optional_columns`: `validate_doc.py` reprova
+        célula vazia e código fora de ^[A-Z][A-Z0-9]*$. Com a coluna na
+        SPEC, `check_source_docs.py` confere a SDD enxuta só contra os RFs
+        do `project` do registry dela, nas duas direções, e reprova RF de
+        outro projeto e SPEC sem RF do projeto. A regra vale pela presença
+        da coluna: nenhum documento existente muda. Nenhum gate, sizing,
+        ciclo de status, política ou contract_version muda.
     - version: "2.7.0"
       date: "2026-11-19"
       summary: >
@@ -394,6 +407,15 @@ document_types:
       - {heading: "Plano de rollout / rollback", returns_when: "A mudança entra por etapas, depende de flag ou tem rollback diferente de reverter a PR."}
       - {heading: "Times consumidores impactados", returns_when: "Algum time fora do dono do documento consome o que muda."}
       - {heading: "Dependências", returns_when: "Existe dependência operacional (acesso, ambiente, terceiro) além de parent_rfc e parent_adr."}
+    # Coluna Projeto (SPEC-DTF-0032, RF01): opcional, só quando a SPEC divide
+    # os RFs entre projetos. A última, para não deslocar as colunas que os
+    # scripts leem pela posição. validate_doc.py confere o formato e
+    # check_source_docs.py filtra os RFs pelo project da SDD enxuta.
+    rf_optional_columns:
+      - column: "Projeto"
+        position: "última, depois de Arquivos"
+        value: "lista de PROJECT_CODE separados por vírgula"
+        format: "^[A-Z][A-Z0-9]*$"
     parent_types: ["RFC", "ADR"]   # ambos opcionais, dependem de sizing e do gate
     can_originate: ["SDD"]
     replaces: ["PRD", "TS"]

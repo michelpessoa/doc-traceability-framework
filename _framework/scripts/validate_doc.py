@@ -252,6 +252,56 @@ def consolidated_rf_rows(body: str) -> list[dict] | None:
     return rows
 
 
+# Coluna Projeto da SPEC (SPEC-DTF-0032, RF01, SDD-DTF-0058): opcional, a
+# última da tabela "Requisitos funcionais", com os PROJECT_CODE de cada RF.
+# Vale pela presença da coluna, sem RULE_SINCE: nenhuma SPEC anterior à
+# 2.8.0 a tem. Fora da docstring, que é a saída de uso congelada.
+PROJECT_COLUMN = "Projeto"
+PROJECT_CODE = re.compile(r"^[A-Z][A-Z0-9]*$")
+PROJECT_EMPTY = {"", "-", "—"}
+
+
+def rf_projects(section: str | None) -> dict[str, list[str]] | None:
+    """
+    RF (sem hífen) -> códigos da coluna Projeto, na primeira tabela da
+    seção; None se a seção faltar ou a tabela não tiver a coluna.
+    """
+    if section is None:
+        return None
+    lines = first_table_lines(section)
+    if len(lines) < 2:
+        return None
+    header = split_table_row(lines[0])
+    if PROJECT_COLUMN not in header:
+        return None
+    col = header.index(PROJECT_COLUMN)
+    projects: dict[str, list[str]] = {}
+    for line in lines[2:]:
+        cells = split_table_row(line) + [""] * len(header)
+        found = RF_ID.search(cells[0])
+        if not found:
+            continue
+        cell = cells[col]
+        codes = [] if cell in PROJECT_EMPTY else [c.strip() for c in cell.split(",") if c.strip()]
+        projects[found.group(0).replace("-", "")] = codes
+    return projects
+
+
+def check_project_column(doc_id: str, section: str | None) -> list[str]:
+    """RF01 da SPEC-DTF-0032: célula Projeto não vazia, códigos no formato."""
+    projects = rf_projects(section)
+    if projects is None:
+        return []
+    problems = []
+    for rf, codes in projects.items():
+        if not codes:
+            problems.append(f"{doc_id}: {rf}: coluna Projeto vazia.")
+        for code in codes:
+            if not PROJECT_CODE.match(code):
+                problems.append(f"{doc_id}: {rf}: projeto {code} fora do formato ^[A-Z][A-Z0-9]*$.")
+    return problems
+
+
 def check_lean_sdd(doc_id: str, fm: dict, body: str) -> list[str]:
     """RF01, RF02 e RF04 da SPEC-DTF-0031, na SDD enxuta em draft ou in_review."""
     problems = []
@@ -392,6 +442,9 @@ def check_document(path: Path, version: str | None = None) -> tuple[list, list]:
                 f"{doc_id}: 'Contratos técnicos' não aponta nenhum arquivo/módulo "
                 "('onde' do gate_content_quality item 2)."
             )
+
+    if doc_type == "SPEC":
+        problems += check_project_column(doc_id, section_body(body, "Requisitos funcionais"))
 
     drafting = status in DRAFTING_STATUSES
     if drafting and doc_type == "SPEC":

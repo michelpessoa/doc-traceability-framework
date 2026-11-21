@@ -85,9 +85,21 @@ LEAN_LINES = (
 )
 
 
+# Linhas que a SDD-DTF-0058 acrescentou (coluna Projeto da SPEC, item 2 do
+# passo 0): mesmo critério, conteúdo novo não conta como reordenação.
+PROJECT_LINES = (
+    "Quando a SPEC tem a coluna `Projeto`, contam só os RFs do `project` do",
+    "registry da SDD; o `check_source_docs.py` já confere isso na SDD enxuta.",
+)
+
+
 def test_verify_sdd_reorder_preserves_lines():
     before = _nonblank(FIXTURE)
-    after = [line for line in _without_m4(_nonblank(PROCEDURE)) if line.strip() not in LEAN_LINES]
+    after = [
+        line
+        for line in _without_m4(_nonblank(PROCEDURE))
+        if line.strip() not in LEAN_LINES and line.strip() not in PROJECT_LINES
+    ]
     from collections import Counter
 
     b, a = Counter(before), Counter(after)
