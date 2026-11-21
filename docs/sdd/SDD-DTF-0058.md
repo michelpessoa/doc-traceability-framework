@@ -2,7 +2,7 @@
 id: SDD-DTF-0058
 type: SDD
 title: "Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-21"
@@ -242,24 +242,47 @@ Executar na raiz do kit, na branch de implementação.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima tem código correspondente (nada
+- [x] Todo requisito consolidado acima tem código correspondente (nada
       da SPEC ficou de fora).
-- [ ] Todo arquivo tocado pela implementação aparece em "Especificação
+- [x] Todo arquivo tocado pela implementação aparece em "Especificação
       técnica consolidada", "Decomposição em tasks" ou "Instruções
       específicas" — se a implementação tocou um arquivo não listado
       aqui, ou é escopo que faltou registrar na SDD (atualize-a) ou é
       scope creep a remover antes do merge.
-- [ ] Nenhuma abstração, config, feature flag ou refactor extra que não
+- [x] Nenhuma abstração, config, feature flag ou refactor extra que não
       foi pedido por nenhum requisito consolidado ("já que estava ali").
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
+Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, no kit em
+`1d9b16c` (merge da PR #150 em `main`), com base fixa `233fc2a` (primeiro
+pai do merge, o `main` anterior à mudança), e no central em `main`
+`6e76c95` (espelho da 2.8.0, PR #213). Os "antes" de A01 e A02 rodaram
+numa worktree descartável de `233fc2a` com os testes de `1d9b16c` copiados
+por cima. Os sensores A03 a A05 mutaram o arquivo a partir de uma cópia
+guardada no scratchpad e restauraram por ela, sem stash e sem commit. O
+checkout do kit e o do central ficaram com `git status --porcelain` vazio.
 
-**Verificador independente:** pendente
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0058.md`. Veredito: **PASS**.
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+**Verificador independente:** sim
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0058.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; leitura de RF01 a RF03, casos de borda, não funcionais e Parte 2 da SPEC-DTF-0032 (approved, central `6e76c95`) | `✅ source_docs de SDD-DTF-0058.md conferem com o registry central.` `exit=0`; RF01 a RF03 (Projeto DTF) com requisito e EARS idênticos; RF04 a RF10 fora, declaradamente (FAB); casos de borda do kit presentes, os da fábrica fora; contratos do kit (`check_rf_fidelity`, mensagens de `validate_doc.py`, coluna no YAML) iguais; a SDD só acrescenta detalhe (`—` vazio, `DTF,,FAB`, duas tabelas) sem relaxar critério. Observação: a SPEC tem duas mensagens para célula vazia (`RF07 sem projeto na coluna Projeto` nos casos de borda, `RF07: coluna Projeto vazia` na Parte 2); a SDD segue a Parte 2 | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 1 | A01 | `python3 -m pytest _framework/tests/test_validate_doc.py -q -k projeto` | ANTES (`233fc2a` com os testes novos): `5 failed, 4 passed, 19 deselected`; DEPOIS: `9 passed, 19 deselected` | ver A03 | Sim | `_framework/tests/test_validate_doc.py:322` | automatizado |
+| 1 | A02 | `python3 -m pytest _framework/scripts/tests/test_check_source_docs.py -q -k projeto` | ANTES (mesma cópia): `1 error` na coleta (`rf_projects` não existe); DEPOIS: `9 passed, 11 deselected` | ver A04 e A05 | Sim | `_framework/scripts/tests/test_check_source_docs.py:188` | automatizado |
+| 1 | A03 | `PROJECT_CODE = re.compile(r".+")` em `validate_doc.py`; pytest de A01; restaurado pela cópia | `1 failed, 8 passed, 19 deselected`; restaurado `9 passed, 19 deselected` | derrubada | Sim | `_framework/tests/test_validate_doc.py:333` | automatizado |
+| 1 | A04 | `projects = None` no lugar de `projects = rf_projects(section) if project else None` em `check_rf_fidelity`; pytest de A02; restaurado | `6 failed, 3 passed, 11 deselected`; restaurado `9 passed, 11 deselected` | derrubada | Sim | `_framework/scripts/tests/test_check_source_docs.py:188` | automatizado |
+| 1 | A05 | `problems.append(... é do projeto ...)` trocado por `pass` em `check_rf_fidelity`; pytest de A02; restaurado | `1 failed, 8 passed, 11 deselected`; restaurado `9 passed, 11 deselected` | derrubada | Sim | `_framework/scripts/tests/test_check_source_docs.py:201` | automatizado |
+| 1 | A06 | `python3 -m pytest _framework/scripts/tests/test_sdd_lean.py _framework/scripts/tests/test_check_source_docs.py _framework/tests/test_validate_doc.py -q` | `83 passed` | ver A04 (o caso sem coluna segue no caminho 2.7.0) | Sim | `_framework/scripts/tests/test_check_source_docs.py:219` | automatizado |
+| 1 | A07 | no central: `python3 <kit>/_framework/scripts/validate_doc.py docs/DTF/03-spec/SPEC-DTF-0032.md; echo "exit=$?"` | `✅ 1 documento(s) passaram no gate de qualidade de conteúdo.` `exit=0` | sem teste automatizado (medição) | Sim | `_framework/scripts/validate_doc.py:447` | automatizado |
+| 1 | A08 | `python3 -m pytest _framework/scripts/tests/test_report_json.py -q`; `git diff --stat 233fc2a..HEAD -- _framework/scripts/tests/fixtures/` (base fixa no lugar de `origin/main`, que já contém a mudança) | `26 passed`; diff vazio (0 linhas) | fixture do 2.3.2 | Sim | `_framework/scripts/tests/test_report_json.py:29` | automatizado |
+| 1 | A09 | `grep -n 'version: "2.8.0"' _framework/rules/workflow-rules.yaml`; `grep -n 'coluna Projeto' _framework/procedures/verify-sdd.md`; no central `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"`; `git status --porcelain docs/ \| grep -v registry.md` | linhas 17 e 20; o grep literal do procedimento sai `exit=1`, porque o texto tem crase (`` coluna `Projeto` ``); com a crase, linha 64; `✅ 134 documento(s) ok.` `exit=0`; porcelain vazio | sem teste automatizado (medição) | Sim (o comando do critério não casa a crase; o conteúdo exigido está na linha 64) | `_framework/procedures/verify-sdd.md:64` | automatizado |
+| 1 | A10 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"`; `python3 _framework/scripts/generate_registry_md.py docs/sdd --check; echo "exit=$?"`; `python3 _framework/scripts/check_renderings.py; echo "exit=$?"` | todos `em dia`, `exit=0`; `✅ docs/sdd/registry.md: em dia.` `exit=0`; `✅ 5 renderização(ões) concordam com workflow-rules.yaml` `exit=0` | sem teste automatizado (medição) | Sim | `_framework/scripts/render_prompts.py:19` | automatizado |
+| 1 | A11 | `python3 -m pytest -q`; `ruff format --check` e `ruff check` nos 8 `.py` do diff; `python3 _framework/scripts/selftest.py` | `526 passed`; `8 files already formatted`; `All checks passed!`; `✅ 10 mutação(ões): todos os mutantes morreram.` (3 novas da SDD em `mutations.yaml`) | suíte inteira e mutantes | Sim | `_framework/scripts/tests/mutations.yaml:50` | automatizado |
+| 1 | A12 | no central: `diff -r -x __pycache__ -x .pytest_cache <kit>/_framework _framework; echo "exit=$?"` | `exit=0`, sem diferença | sem teste automatizado (medição) | Sim | `_framework/rules/workflow-rules.yaml:17` | automatizado |
 
 ## Rastreabilidade
 
