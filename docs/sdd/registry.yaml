@@ -561,3 +561,13 @@ documents:
     relates_to: [SDD-DTF-0055, SDD-DTF-0056]
     path: "docs/sdd/SDD-DTF-0057.md"
     tags: [documentacao-enxuta, sdd, spec, sizing, molde, registry, approved_by]
+  - id: SDD-DTF-0058
+    type: SDD
+    title: "Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-11-21"
+    updated: "2026-11-21"
+    relates_to: [SDD-DTF-0057]
+    path: "docs/sdd/SDD-DTF-0058.md"
+    tags: [spec, coluna-projeto, check_source_docs, validate_doc, multi-repo]

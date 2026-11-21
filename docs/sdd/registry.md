@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.7.0._
 
-Total de documentos: **56**
+Total de documentos: **57**
 
 
-## SDD (56)
+## SDD (57)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -65,6 +65,7 @@ Total de documentos: **56**
 | `SDD-DTF-0055` | Aprovação por review no kit: review_approval.py, approvers no registry central e actor conferido no validate_state | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0054 |
 | `SDD-DTF-0056` | registry.md com seção para todo tipo de documento: ordem derivada de document_types, sem descarte silencioso | implemented | Michel Pessoa | 2026-11-17 | SDD-DTF-0043 |
 | `SDD-DTF-0057` | Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions | implemented | Michel Pessoa | 2026-11-20 | SDD-DTF-0055, SDD-DTF-0056 |
+| `SDD-DTF-0058` | Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0 | in_review | Michel Pessoa | 2026-11-21 | SDD-DTF-0057 |
 
 ## Documentos originados
 
