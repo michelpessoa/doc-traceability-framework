@@ -7,6 +7,9 @@ consegue pular em silêncio.
 Não depende de fornecedor de IA. As regras vivem em um YAML canônico; cada
 ferramenta recebe uma renderização gerada dele.
 
+Versão corrente: **2.8.0**. O que mudou em cada versão está no
+[`CHANGELOG.md`](CHANGELOG.md).
+
 ## Comece por aqui
 
 | Se você quer | Vá para |
@@ -15,6 +18,7 @@ ferramenta recebe uma renderização gerada dele.
 | **entender a regra** completa | [`docs/especificacao.md`](docs/especificacao.md) — gerada do YAML |
 | **operar como IA** (Codex, Cursor, Gemini CLI, Copilot, Aider) | [`AGENTS.md`](AGENTS.md) — lido nativamente |
 | **aprender pelo exemplo** | [`docs/guias/`](docs/guias/) e [`examples/`](examples/) |
+| **automatizar o fluxo** com um executor | [Aprovação e executores](#aprovação-e-executores), abaixo |
 | **saber o que mudou** | [`CHANGELOG.md`](CHANGELOG.md) — gerado do YAML |
 
 ## A ideia em três frases
@@ -61,6 +65,41 @@ uma IA no momento de implementar.
 
 Projeto cujo repositório de código ainda não existe roda o fluxo inteiro no
 central — veja o modo greenfield no `QUICKSTART.md`.
+
+## Aprovação e executores
+
+Um **executor** é uma ferramenta que roda o fluxo sozinha: lê o central,
+abre documentos por PR e implementa SDDs. O que ele pode ler, escrever e
+chamar está em `executor_contract` (seção 20 do `workflow-rules.yaml`),
+com saída de máquina (`--json`) nos validadores e os esquemas em
+`_framework/schemas/`. O contrato só quebra em versão maior.
+
+Quem aprova cada documento é dado, não costume (`approval_policy`,
+seção 21):
+
+- **Humano** aprova STRAT, RFC, ADR, BASE, PM e a SPEC `medium` ou maior.
+  A aprovação pode vir de uma review na PR: `review_approval.py` decide sem
+  rede, e o campo opcional `approvers` do registry central limita quem
+  conta.
+- **Política** aprova a SDD, com os checks declarados. Assim um executor
+  leva a SDD de `approved` a `implemented` sem humano no meio, mas não
+  aprova o que veio antes dela.
+- Em todos os casos, `approved_by` no front-matter prende a aprovação ao
+  sha256 do corpo (`approval_hash.py`), e o `validate_state.py` reprova
+  conteúdo mudado depois.
+
+A SDD compilada de uma SPEC é **enxuta**: aponta para a origem por
+`source_docs`, em vez de copiar, e o `check_source_docs.py` confere os
+RF-IDs nas duas direções. Se a SPEC tiver a coluna `Projeto`, ele confere
+só os RFs do projeto da SDD.
+
+Exemplos públicos de uso, com dados fictícios:
+
+- [`fabrica-central-teste`](https://github.com/michelpessoa/fabrica-central-teste):
+  um central montado com este kit;
+- [`agentic-factory`](https://github.com/michelpessoa/agentic-factory):
+  uma fábrica de agentes que, a partir da versão 0.8.0, é executora do
+  fluxo, do rascunho de SPEC à SDD implementada e verificada.
 
 ## Licença
 
