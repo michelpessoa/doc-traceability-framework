@@ -155,18 +155,25 @@ Executar na raiz do kit, na branch de implementação, salvo o A08. O A09 entrou
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [x] Todo requisito consolidado acima (RF01 a RF09) tem trecho
-      correspondente nos três arquivos. (Verificado na rodada 1: RF01
-      SKILL.md:79-89; RF02 :49-53 e :105; RF03 :106-107; RF04 :120; RF05
-      onboarding:10-12 e :36-42; RF06 :87-93 e :109-111; RF07 audit:31-34;
-      RF08 :107-113; RF09 linha 1 dos dois prompts.)
-- [x] Todo arquivo tocado aparece nas tasks ou nas instruções. (Os 8
-      arquivos de `git diff --name-only 6233635..0618b27`.)
+- [x] Todo requisito consolidado acima (RF01 a RF10) tem trecho
+      correspondente nos arquivos. (Rodada 2, em `d9ea3a4`: RF01
+      SKILL.md:79-90, depois de "Ciclo de vida de status" em :69; RF02
+      :49-53 e :105; RF03 :106-107; RF04 :120; RF05 onboarding:10-12 e
+      :33-42; RF06 :87-93 e :109-111; RF07 audit:31-34; RF08 :107-113; RF09
+      linha 1 dos dois prompts; RF10 as duas cópias em
+      `skills/doc-traceability-framework/prompts/`, idênticas às canônicas.)
+- [x] Todo arquivo tocado aparece nas tasks ou nas instruções. (Rodada 2:
+      os 11 arquivos de `git diff --name-only 7d9e858..d9ea3a4`, que são
+      os três de produto (tasks 1-3), as duas cópias do RF10 (task 4),
+      `_framework/INDEX.md` (task 4b), esta SDD,
+      `docs/sdd/validation-SDD-DTF-0060.md` e os três gerados de
+      `docs/sdd/`, exatamente a lista do A07.)
 - [x] Nenhuma mudança em regra, script, template, gerado, outra skill ou
-      guia. (Ressalva da rodada 1: a cópia bundlada
-      `skills/doc-traceability-framework/prompts/` não mudou e por isso
-      ficou divergente do canônico; ver descompasso 1 em
-      `docs/sdd/validation-SDD-DTF-0060.md`.)
+      guia. (Rodada 2: fora as cópias de `prompts/` que o RF10 trouxe para
+      o escopo, nada mudou em `rules/`, `scripts/`, `templates/`,
+      `references/`, outras skills ou guias. A ressalva da rodada 1, a
+      cópia bundlada divergente, está resolvida pelo RF10: `cmp` sem saída
+      no kit e no central.)
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
@@ -176,8 +183,16 @@ Rodada 1: todas as linhas abaixo foram rodadas nesta sessão, no kit em
 central na branch `espelho/SDD-DTF-0059-0060` (`e824ebb`), só leitura. Os
 sensores mutaram cópias descartáveis em `/tmp` (`git archive`, `git clone`
 e cópias dos arquivos do central), sem stash e sem commit.
+Rodada 2: linhas com Rodada = 2, rodadas por outro subagente independente
+(não fez a implementação nem a rodada 1), no kit em `d9ea3a4` com base fixa
+`7d9e858` (`git merge-base HEAD origin/main`, depois do merge de main em
+`aa9dba2`; os commits desta SDD no intervalo são `0618b27`, `d0b842c`,
+`8ab9bc2` e `d9ea3a4`), e no central na branch `espelho/SDD-DTF-0059-0060`
+(`065e53a`), só leitura. Sensores em `/tmp/sensor-0060-r2*` (`git archive`,
+`git clone`, cópias dos arquivos do central e cópia inteira do central),
+sem stash e sem commit.
 
-Verificação independente completa em `docs/sdd/validation-SDD-DTF-0060.md`. Veredito: **FAIL**.
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0060.md`. Veredito: rodada 1 **FAIL**; rodada 2 **PASS**.
 
 **Verificador independente:** sim
 
@@ -193,3 +208,13 @@ Verificação independente completa em `docs/sdd/validation-SDD-DTF-0060.md`. Ve
 | 1 | A07 | `python3 _framework/scripts/check_renderings.py; echo "exit=$?"; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main` | `exit=0`; `exit=0`; `526 passed`; `exit=0`; 8 arquivos: `_framework/INDEX.md`, os dois prompts, `SKILL.md`, `docs/sdd/INDEX.md`, `SDD-DTF-0060.md`, `registry.md`, `registry.yaml` (`origin/main` = `6233635`) | INDEX.md com `2-8 KB`: `❌ divergente`, `exit=1`; Iron Law alterada no SKILL.md: `exit=1`; status do registry divergente: `exit=1`; arquivo extra aparece no `git diff --name-only 6233635`; restaurados: `exit=0`. Status inexistente no SKILL.md não derruba `check_renderings` (pré-existente) | Sim | `docs/sdd/SDD-DTF-0060.md:108` | automatizado |
 | 1 | A08 | no central: `for p in <SKILL.md> <onboarding-bootstrap.md> <framework-audit.md> _framework/INDEX.md; do cmp $KIT/$p $p; done; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | `cmp` sem saída nos quatro; `✅ Todas as verificações do framework passaram.` `exit=0` | título revertido na cópia: `differ: char 44, line 1`; SKILL.md de `dfa82db` (central): `differ: char 2726, line 49`; restaurado: sem saída | Sim | `docs/sdd/SDD-DTF-0060.md:109` | automatizado |
 | 1 | Descompasso (bloqueante) | `git show 6233635:<canônico> \| cmp - <(git show 6233635:<cópia na skill>)`; `diff -q` dos mesmos em `0618b27` | em `6233635` idênticos; em `0618b27` divergem: `skills/doc-traceability-framework/prompts/{onboarding-bootstrap,framework-audit}.md` seguem v1.3.0 sem RF05 a RF09; `references/onboarding.md:4-5` e `references/audit.md:6` mandam o agente para essa cópia; `render_prompts.py --check` não a confere (`sync_copies`, `render_prompts.py:734`) | n/a | Não | `n/a` | manual |
+| 2 | Fidelidade à origem | n/a: sizing `small`, `source_docs: []`, sem SPEC de origem; emenda RF10 conferida contra a review do owner (`gh api .../pulls/154/reviews`) | SDD lida inteira, incluindo "Emendas"; review `6057468337`: `michelpessoa COMMENTED aa9dba2 Aprovado` | sem teste automatizado (não se aplica) | Sim | `n/a` | n/a |
+| 2 | A01 | `f=_framework/skills/doc-traceability-framework/SKILL.md; grep -n "^## Aprovação" $f; for t in approval_policy approved_by approval_hash.py review_approval.py approvers; do grep -q "$t" $f \|\| echo "falta $t"; done` | `79:## Aprovação`; nenhum `falta` | SKILL.md de `7d9e858`: 5 `falta`, sem título; cada termo trocado: `falta <termo>`; título trocado: saída vazia; restaurado: normal. Fraco (como na rodada 1): termos não restritos à seção; `awk` da seção acha os 5 termos e `content_sha256` | Sim | `docs/sdd/SDD-DTF-0060.md:122` (resolve em `SKILL.md:79-90`) | automatizado |
+| 2 | A02 | `f=_framework/skills/doc-traceability-framework/SKILL.md; for t in enxuta Projeto executor_contract; do grep -q "$t" $f \|\| echo "falta $t"; done` | nenhum `falta` | SKILL.md de `7d9e858`: `falta enxuta`, `falta executor_contract` (`Projeto` pré-existente, não discrimina RF02 nessa parte); cada termo trocado: `falta <termo>`; restaurado: nenhum. RF02 e RF04 confirmados por leitura (`:49-53`, `:120`) | Sim | `docs/sdd/SDD-DTF-0060.md:123` (resolve em `SKILL.md:49-53`, `:107`, `:120`) | automatizado |
+| 2 | A03 | `f=_framework/prompts/onboarding-bootstrap.md; for t in repository_status none_yet approved_by review_approval.py; do grep -q "$t" $f \|\| echo "falta $t"; done` | nenhum `falta` | prompt de `7d9e858`: 4 `falta`; cada termo trocado: `falta <termo>`; restaurado: nenhum | Sim | `docs/sdd/SDD-DTF-0060.md:124` (resolve em `onboarding-bootstrap.md:10-12`, `:33-42`, `:87-93`, `:109-111`) | automatizado |
+| 2 | A04 | `f=_framework/prompts/framework-audit.md; for t in none_yet approved_by; do grep -q "$t" $f \|\| echo "falta $t"; done` | nenhum `falta` | prompt de `7d9e858`: 2 `falta`; cada termo trocado: `falta <termo>`; restaurado: nenhum | Sim | `docs/sdd/SDD-DTF-0060.md:125` (resolve em `framework-audit.md:31-34`, `:107-113`) | automatizado |
+| 2 | A05 | `head -1 _framework/prompts/onboarding-bootstrap.md _framework/prompts/framework-audit.md \| grep -c "revisado na 2.8.0"` | `2` | título de cada prompt revertido: `1`; prompts de `7d9e858`: `0`; restaurado: `2` | Sim | `docs/sdd/SDD-DTF-0060.md:126` (resolve na linha 1 dos dois prompts) | automatizado |
+| 2 | A06 | leitura lado a lado de `git diff 7d9e858..d9ea3a4` dos três arquivos (e `git diff aa9dba2..d9ea3a4` do SKILL.md) com `workflow-rules.yaml` em `approval_policy`, `frontmatter_schema.common_fields.approved_by`, `executor_contract.writes`, `registry.central_registry` (`repository_field`, `approvers_field`), `audit.precondition`, `document_types.SPEC.rf_optional_columns`, changelog 2.7.0; `review_approval.py:9,143-145`; `validate_doc.py:459` | nenhuma afirmação sem chave ou que a contradiga. Ajustes da rodada 1 resolvidos: item Executor (`SKILL.md:107`) agora cobre os itens de `writes` (central por PR; `entrega` e `path` no registry de projeto; `approved_by` `kind: policy` só onde `approval_policy` permite); "sob 2.7.0 ou maior" em `:49` e `:105`, igual a `validate_doc.py:459` | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 2 | A07 | `python3 _framework/scripts/check_renderings.py; echo "exit=$?"; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main` | `exit=0`; `exit=0`; `526 passed`; `✅ Todas as verificações do framework passaram.` `exit=0`; 11 arquivos, os previstos (`origin/main` = merge-base `7d9e858`; igual com `git diff --name-only 7d9e858`) | INDEX.md com `2-8 KB`: `❌ _framework/INDEX.md: divergente`, `exit=1`; Iron Law `gate_branch_before_commit` alterada no SKILL.md: `exit=1`; status da SDD-0060 no registry trocado: `exit=1`; arquivo extra aparece no `git diff --name-only 7d9e858`; restaurados: `exit=0`. Cópia de prompt da skill mutada não derruba `render_prompts.py --check` (por isso o A09) | Sim | `docs/sdd/SDD-DTF-0060.md:128` | automatizado |
+| 2 | A08 | no central (`065e53a`): `for p in <SKILL.md> <2 prompts> <2 cópias da skill> _framework/INDEX.md; do cmp $KIT/$p $p; done; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | `cmp` sem saída e exit 0 nos seis; `✅ 134 documento(s) ok.` `✅ Todas as verificações do framework passaram.` `exit=0`; `diff -rq` de `_framework/` inteiro kit x central: sem saída; `git status` do central vazio | cópia de `framework-audit.md` da skill mutada: `differ: char 1465, line 31`; SKILL.md e cópia de onboarding de `e824ebb` (central na rodada 1): `differ: char 2746, line 49` e `differ: char 70, line 1`; status trocado num registry de cópia inteira do central: `framework_check` `exit=1`; restaurado: sem saída | Sim | `docs/sdd/SDD-DTF-0060.md:129` | automatizado |
+| 2 | A09 | `for p in onboarding-bootstrap framework-audit; do cmp _framework/prompts/$p.md _framework/skills/doc-traceability-framework/prompts/$p.md; done; echo "exit=$?"` | sem saída de `cmp`; `exit=0` (cada `cmp` isolado: exit 0) | cópia de onboarding mutada: `differ: char 659, line 11`, mas `exit=0` (o `$?` é só do último `cmp`; a saída discrimina); cópia de audit com linha a mais: `EOF on ... after byte 5254`, `exit=1`; cópias de `7d9e858`: `differ` nas duas, `exit=1`; restaurado: sem saída, `exit=0` | Sim | `docs/sdd/SDD-DTF-0060.md:130` | automatizado |
