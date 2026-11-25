@@ -64,3 +64,9 @@
   description: "check_rf_fidelity: RF de outro projeto deixa de reprovar (SDD-DTF-0058 RF02)"
   find: "if rf in spec_rfs and rf not in own:"
   replace: "if False:"
+
+- validator: "_framework/scripts/check_renderings.py"
+  test_file: "_framework/scripts/tests/test_check_renderings_unknown.py"
+  description: "check_unknown_names: cadeia de status deixa de ser conferida (SDD-DTF-0063 RF01, RF06)"
+  find: 'cited_statuses += re.findall(r"[a-z_]+", m.group(0))'
+  replace: "cited_statuses += []"
