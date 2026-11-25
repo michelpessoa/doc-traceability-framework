@@ -124,6 +124,38 @@ não estava verificando nada.
 Se você ler "implementado", pode confiar que existe evidência por trás,
 não só a impressão de que ficou pronto.
 
+## Quem aprova, e como
+
+Decisões de direção, propostas, decisões de arquitetura e SPECs de
+funcionalidade são aprovadas por uma pessoa. Essa aprovação acontece na
+própria revisão do documento no GitHub (a PR): você deixa uma revisão de
+aprovação, ou um comentário de revisão com o texto exatamente `Aprovado`,
+sem nada a mais. Só vale a aprovação de quem está na lista de aprovadores
+do projeto, e vale para a versão que você leu: se o documento mudar
+depois, é preciso aprovar de novo.
+
+O documento final de implementação (a SDD) é diferente: ele é aprovado
+pelas checagens automáticas do framework, que conferem se está completo e
+fiel ao que já foi aprovado antes. Ninguém precisa aprovar esse documento
+à mão.
+
+Uma vez aprovado, o documento guarda quem aprovou e uma espécie de
+impressão digital do texto aprovado. Se alguém mudar o texto depois, a
+impressão digital deixa de bater e o framework acusa: aquela versão nova
+ainda não foi aprovada por ninguém.
+
+## Quando uma ferramenta automática executa o fluxo
+
+Às vezes quem opera o framework é uma ferramenta automática, sem uma
+pessoa em cada passo. Ela segue regras fixas:
+
+- Lê as decisões aprovadas e trabalha a partir delas.
+- Escreve só por proposta de mudança (PR), que alguém revisa. Nunca
+  altera direto a versão principal.
+- Não aprova documento que cabe a uma pessoa aprovar. Pode propor o
+  documento, mas a aprovação continua sendo sua.
+- Não leva a mudança para a versão principal sozinha.
+
 ## Rastreabilidade — o que isso significa na prática para você
 
 Cada documento aponta para os documentos que o originaram e para os que
@@ -143,6 +175,14 @@ que decisões dá para inferir do próprio sistema) e, a partir daquele
 momento, passa a seguir o processo normal para qualquer trabalho novo.
 Ou seja: o passado é resumido honestamente uma vez; o futuro segue o
 processo completo.
+
+O caso oposto também existe: um projeto que ainda não tem código nenhum
+(o chamado modo greenfield). Nada impede de começar: a direção, as
+propostas, as decisões de arquitetura e as SPECs são escritas e aprovadas
+normalmente no repositório central. Só o documento final de implementação
+espera, porque ele mora junto do código, e o código ainda não existe.
+Quando o repositório do projeto for criado, esse documento passa a ser
+feito ali, como em qualquer outro projeto.
 
 ## E quando alguém esquece de documentar?
 
