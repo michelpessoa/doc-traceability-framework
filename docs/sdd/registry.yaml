@@ -591,3 +591,13 @@ documents:
     relates_to: [SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058]
     path: "docs/sdd/SDD-DTF-0060.md"
     tags: [skill, prompts, onboarding, audit, documentacao, drift, aprovacao, executor, greenfield]
+  - id: SDD-DTF-0063
+    type: SDD
+    title: "check_renderings.py cumpre a checagem 4: status e tipo inexistentes nas renderizações reprovam"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-11-25"
+    updated: "2026-11-25"
+    relates_to: [SDD-DTF-0060]
+    path: "docs/sdd/SDD-DTF-0063.md"
+    tags: [check_renderings, tooling, status, tipos, renderizacoes]
