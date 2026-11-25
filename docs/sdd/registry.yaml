@@ -574,7 +574,7 @@ documents:
   - id: SDD-DTF-0059
     type: SDD
     title: "Guias técnico e não técnico cobrem a 2.4.0 a 2.8.0: aprovação como dado, aprovação por review, contrato do executor, SDD enxuta e coluna Projeto"
-    status: approved
+    status: implemented
     owner: "Michel Pessoa"
     created: "2026-11-25"
     updated: "2026-11-25"
