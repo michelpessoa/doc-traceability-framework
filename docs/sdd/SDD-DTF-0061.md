@@ -2,7 +2,7 @@
 id: SDD-DTF-0061
 type: SDD
 title: "render_prompts.py sincroniza e confere as cópias dos prompts dentro da skill"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"
