@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.8.0._
 
-Total de documentos: **59**
+Total de documentos: **60**
 
 
-## SDD (59)
+## SDD (60)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -68,6 +68,7 @@ Total de documentos: **59**
 | `SDD-DTF-0058` | Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0 | implemented | Michel Pessoa | 2026-11-21 | SDD-DTF-0057 |
 | `SDD-DTF-0059` | Guias técnico e não técnico cobrem a 2.4.0 a 2.8.0: aprovação como dado, aprovação por review, contrato do executor, SDD enxuta e coluna Projeto | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
 | `SDD-DTF-0060` | Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
+| `SDD-DTF-0062` | Núcleo canônico das renderizações traz a aprovação como dado e o executor, e o ciclo de status deixa de sugerir rejected → implemented | in_review | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
 
 ## Documentos originados
 
