@@ -2,7 +2,7 @@
 id: SDD-DTF-0065
 type: SDD
 title: "Achados não bloqueantes das SDD-DTF-0062 a 0064: checks da policy no núcleo, testes que discriminam a chamada da checagem 4 e os tipos legados, e negativo que discrimina"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"
