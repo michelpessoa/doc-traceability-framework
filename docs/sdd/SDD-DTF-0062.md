@@ -39,6 +39,21 @@ monta uma cadeia com os cinco primeiros estados (`draft` → `in_review` →
 `approved` → `rejected` → `implemented`), o que sugere a transição
 `rejected → implemented`, que `allowed_transitions` não tem.
 
+## Emendas
+
+- **2026-11-25, task 1b.** A implementação parou antes da task 3: o
+  arquivo novo do RF05, `_framework/scripts/tests/test_render_prompts_core.py`,
+  não tem entrada em `_framework/rules/kit-index.yaml`, e sem ela
+  `render_prompts.py` sai com 1 (`arquivo sem entrada em kit-index.yaml`),
+  o que impede o RF06. O `kit-index.yaml` não estava nas tasks nem no
+  escopo do A06. O owner escolheu, na conversa de 2026-11-25, emendar esta
+  SDD: a task 1b acrescenta a entrada do teste novo ao `kit-index.yaml`, e
+  a task 4 passa a levar esse arquivo ao central. A emenda não muda os
+  RF01 a RF06 nem os critérios; o escopo do A06 ("tasks 1 a 3") inclui a
+  1b. O status segue `approved`, porque `status_lifecycle` não tem
+  `approved → in_review`; a aprovação da emenda é uma review "Aprovado" do
+  owner no commit dela, na PR #157.
+
 ## Decisão(ões) de arquitetura aplicável(is)
 
 Sem ADR — sizing `small`, nenhum critério de `decision_gates.rfc_to_adr` se
@@ -95,9 +110,10 @@ Fora de escopo: a prosa fixa dos prompts (`prefix` de `build_universal`,
 | # | Task | RF(s) de origem | Arquivos tocados | Depende de (#) |
 |---|---|---|---|---|
 | 1 | Testes novos, vistos falhar | RF01 a RF05 | `_framework/scripts/tests/test_render_prompts_core.py` | |
+| 1b | Entrada do teste novo no manifesto do kit (emenda de 2026-11-25) | RF05, RF06 | `_framework/rules/kit-index.yaml` | 1 |
 | 2 | Subseções de aprovação e executor e o ciclo de status | RF01 a RF04 | `_framework/scripts/render_prompts.py` | 1 |
-| 3 | Regenerar gerados | RF06 | `AGENTS.md`, `docs/especificacao.md`, `_framework/prompts/universal.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `_framework/INDEX.md`, `_framework/rules/workflow-rules.map.md` | 2 |
-| 4 | Espelhar no central e regenerar lá, em branch e PR próprios | RF01 a RF06 | `central:_framework/scripts/render_prompts.py`, `central:_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `central:_framework/scripts/tests/test_render_prompts_core.py` e os gerados do central | 3 |
+| 3 | Regenerar gerados | RF06 | `AGENTS.md`, `docs/especificacao.md`, `_framework/prompts/universal.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `_framework/INDEX.md`, `_framework/rules/workflow-rules.map.md` | 1b, 2 |
+| 4 | Espelhar no central e regenerar lá, em branch e PR próprios | RF01 a RF06 | `central:_framework/scripts/render_prompts.py`, `central:_framework/skills/doc-traceability-framework/scripts/render_prompts.py`, `central:_framework/scripts/tests/test_render_prompts_core.py`, `central:_framework/rules/kit-index.yaml` e os gerados do central | 3 |
 
 ## Critérios de aceite / definição de pronto
 
