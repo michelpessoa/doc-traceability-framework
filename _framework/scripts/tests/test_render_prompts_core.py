@@ -93,3 +93,37 @@ def test_sem_chaves_no_yaml_nao_gera_subsecoes():
     out = core_facts(rules)
     assert "### Aprovação" not in out
     assert "### Executor" not in out
+
+
+# SDD-DTF-0065, RF01 e RF05: itens de checks depois da tabela de Aprovação
+
+
+def _aprovacao(text: str) -> str:
+    return text.split("### Aprovação", 1)[1].split("\n### ", 1)[0]
+
+
+def _check_items(text: str) -> list[str]:
+    return [ln for ln in _aprovacao(text).splitlines() if ln.startswith("- Checks de ")]
+
+
+def test_sdd0065_item_de_checks_da_regra_sdd_com_yaml_real():
+    out = core_facts(RULES)
+    item = (
+        "- Checks de SDD (policy): `validate_doc.py`, `registry_tools.py validate`,"
+        " `check_source_docs.py (com source_docs)`, `verify-sdd passo 0 (com source_docs)`."
+    )
+    assert _check_items(out) == [item]
+    lines = _aprovacao(out).splitlines()
+    i = lines.index(item)
+    assert lines[i - 1] == ""
+    assert lines[i - 2] == "| SDD | todos | policy |"
+
+
+def test_sdd0065_regra_sem_checks_nao_ganha_item():
+    rules = copy.deepcopy(RULES)
+    for r in rules["approval_policy"]["rules"]:
+        r.pop("checks", None)
+    out = core_facts(rules)
+    assert _check_items(out) == []
+    assert "Checks de" not in out
+    assert _table_rows(out) == _table_rows(core_facts(RULES))
