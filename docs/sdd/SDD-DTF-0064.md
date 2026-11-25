@@ -132,16 +132,26 @@ Executar na raiz do kit, na branch de implementação, salvo o A07.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF05) tem código ou teste
+- [x] Todo requisito consolidado acima (RF01 a RF05) tem código ou teste
       correspondente.
-- [ ] Todo arquivo tocado aparece nas tasks ou nas instruções.
-- [ ] Nenhuma abstração, config ou refactor extra.
+- [x] Todo arquivo tocado aparece nas tasks ou nas instruções.
+- [x] Nenhuma abstração, config ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** sim
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+Verificação independente completa em `docs/sdd/validation-SDD-DTF-0064.md`. Veredito: **PASS**.
+
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0064.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; `git diff 57454fa HEAD -- docs/sdd/SDD-DTF-0064.md` | `✅ source_docs de SDD-DTF-0064.md conferem com o registry central.` `exit=0`; `source_docs: []`, sizing `small`: RF01 a RF05 escritos na própria SDD, itens 2 a 4 do passo 0 não se aplicam; desde `57454fa` (commit da review de aprovação do owner na PR #159, "Aprovado") o único diff da SDD é `status: in_review` → `approved` | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 1 | A01 | `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest _framework/scripts/tests/test_check_renderings_unknown.py -q`, no kit em `e5ac326` e numa cópia de `2430f9a` (testes antes da task 2) | `e5ac326`: `18 passed`; `2430f9a`: `1 failed, 17 passed` (`test_sdd0064_placeholders_de_sequencia_reprovam_tipo_inexistente`) | ver A02; `(?!\w)` removido (sem fronteira alguma): `1 failed` (`test_sdd0064_negativo_sequencia_que_nao_e_id_nao_acusa`, por `XYZ-EVM-00012`); restaurado: `18 passed`. `ID_PREFIX.findall` no texto de `test_rf03_tipos_ativos_e_legados_passam`: novo `['SPEC', 'SDD', 'ADR', 'PRD', 'TS']`, antigo `['SDD', 'ADR', 'PRD']`, ou seja, `SPEC-{PROJECT_CODE}-{SEQ4}` e `TS-EVM-{SEQ}` agora casam e passam | Sim | `_framework/scripts/tests/test_check_renderings_unknown.py:127`, `:131` | automatizado |
+| 1 | A02 | cópia descartável (`git archive e5ac326`): `\|X\|N)(?!\w)")` → `\|X\|N)\b")` em `ID_PREFIX` (trecho único no script); pytest do A01; restaurado pela cópia guardada (`cmp` igual ao kit) | com a mutação: `1 failed, 17 passed` (`test_sdd0064_placeholders_de_sequencia_reprovam_tipo_inexistente`); restaurado: `18 passed` | o próprio critério é o sensor | Sim | `_framework/scripts/tests/test_check_renderings_unknown.py:127` | automatizado |
+| 1 | A03 | cópia descartável (`git archive e5ac326`): `` Veja `FOO-{PROJECT_CODE}-{SEQ4}`. `` acrescentado a `_framework/skills/doc-traceability-framework/SKILL.md`; `python3 _framework/scripts/check_renderings.py; echo "exit=$?"` | `❌ 1 problema(s) encontrado(s):` `skills/doc-traceability-framework/SKILL.md: cita o tipo inexistente 'FOO'.` `exit=1` | mesma linha numa cópia de `2430f9a` (regex antiga): `✅ 5 renderização(ões) concordam`, `exit=0`, ou seja, o critério discrimina | Sim | `_framework/scripts/check_renderings.py:163` (via script) | automatizado |
+| 1 | A04 | `python3 _framework/scripts/check_renderings.py; echo "exit=$?"` | `✅ 5 renderização(ões) concordam com workflow-rules.yaml (8 tipos ativos, 6 Iron Laws, 4 níveis).` `exit=0` | `test_rf04_kit_real_passa` na suíte do A01: passa; sem mutação nova específica | Sim | `_framework/scripts/tests/test_check_renderings_unknown.py:145` | automatizado |
+| 1 | A05 | `PYTHONDONTWRITEBYTECODE=1 python3 _framework/scripts/selftest.py; echo "exit=$?"` em cópia de `e5ac326` e em cópia de `2a4c5c9` (`origin/main` = merge-base) | `e5ac326`: `✅ 13 mutação(ões): todos os mutantes morreram.` `exit=0`; base: `✅ 12 mutação(ões): todos os mutantes morreram.` `exit=0` (N sobe uma unidade) | a mutação nova, aplicada à mão (A02), mata `test_sdd0064_placeholders_de_sequencia_reprovam_tipo_inexistente`, teste de comportamento (regex válida, sem erro de import) | Sim | `_framework/scripts/tests/mutations.yaml:80` | automatizado |
+| 1 | A06 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; cmp _framework/scripts/check_renderings.py _framework/skills/doc-traceability-framework/scripts/check_renderings.py; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; ruff check _framework/scripts; ruff format --check _framework/scripts; mypy _framework/scripts; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main` (SDD-DTF-0063 em main; `origin/main` = merge-base `2a4c5c9`) | `exit=0`, 0 `❌` (`check_renderings.py: sincronizado`, `_framework/INDEX.md: em dia`); `cmp` sem saída; `556 passed in 75.14s`; `All checks passed!`; `44 files already formatted`; `Success: no issues found in 44 source files`; `✅ Todas as verificações do framework passaram.` `exit=0`; diff: script, cópia da skill, teste, `mutations.yaml`, `SDD-DTF-0064.md`, `docs/sdd/INDEX.md`, `registry.md`, `registry.yaml` | sem mutação própria (suíte e lista do diff) | Sim | `n/a` (suíte inteira e lista do diff) | automatizado |
+| 1 | A07 | no central `/home/user/doc-traceability-central` (`048251a`, só leitura): `cmp` de cada arquivo da task 5 contra o kit | `check_renderings.py` e a cópia da skill `differ: char 7060, line 163`; `test_check_renderings_unknown.py` `differ: char 3836, line 122`; `mutations.yaml` `EOF ... after byte 4282, line 78`; `_framework/INDEX.md` igual (`cmp=0`). O central ainda não tem o espelho desta SDD | sem teste automatizado nesta etapa: o espelho vem depois do merge no kit (task 5), e o critério é rodado por quem espelhar | Pendente: etapa pós-merge no kit | `n/a` (`cmp`) | automatizado (estado pré-espelho) |
