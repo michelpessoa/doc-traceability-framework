@@ -51,6 +51,25 @@ Esta SDD fecha os quatro: uma linha nova no núcleo, testes que rodam o
 `main` do script numa cópia do kit, a troca de um caso de teste e as
 mutações que os seguram no selftest.
 
+## Emendas
+
+- **2026-11-25, especificação do RF02 e do RF03.** A implementação parou
+  antes da task 1: o `main` de `check_renderings.py` também confere os
+  artefatos de `MECHANIZED_ARTIFACTS` em `../.claude/`
+  (`settings.json`, `agents/sdd-verifier.md`,
+  `commands/framework-check.md`). Uma cópia só de `_framework/` e
+  `AGENTS.md` sai com 1 sem nenhuma alteração, o que impede o RF03
+  (espera 0) e tira do RF02 o valor do código de saída. Além disso, no
+  `SKILL.md` a cadeia de status fica inteira dentro de uma única crase
+  (`` `draft → in_review → …` ``), então não existe `` `in_review` `` entre
+  crases para trocar. O owner escolheu, na conversa de 2026-11-25, emendar
+  esta SDD: o helper copia também `.claude/`, e a troca do RF02 passa a ser
+  a da primeira ocorrência de `→ in_review →` por `→ obsolete →`, como no
+  sensor A02 da SDD-DTF-0063. A emenda não muda os RF01 a RF06 nem os
+  critérios. O status segue `approved`, porque `status_lifecycle` não tem
+  `approved → in_review`; a aprovação da emenda é uma review "Aprovado" do
+  owner no commit dela, na PR #161.
+
 ## Decisão(ões) de arquitetura aplicável(is)
 
 Sem ADR — sizing `small`, nenhum critério de `decision_gates.rfc_to_adr` se
@@ -86,17 +105,20 @@ inclui o `registry.yaml`, que não é gerado); `STATUS_CHAIN`,
   verdadeiro, depois de uma única linha em branco, e só se houver ao
   menos uma regra com `checks`.
 - **RF02 e RF03, a cópia.** Um helper do teste copia
-  `_framework/` (sem `__pycache__`) e `AGENTS.md` da raiz do kit para
-  `tmp_path` com `shutil.copytree`, mantendo a mesma estrutura, para que
+  `_framework/` (sem `__pycache__`), `.claude/` e `AGENTS.md` da raiz do
+  kit para `tmp_path` com `shutil.copytree` (e `shutil.copy2` para o
+  `AGENTS.md`), mantendo a mesma estrutura (emenda de 2026-11-25). O
+  `.claude/` entra porque o `main` confere os artefatos de
+  `MECHANIZED_ARTIFACTS` nele. A estrutura igual serve para que
   `find_rules_file` ache o `workflow-rules.yaml` da cópia e `RENDERINGS`
   (`../AGENTS.md`) resolva. O teste edita só
   `tmp_path/_framework/skills/doc-traceability-framework/SKILL.md` e roda
   `tmp_path/_framework/scripts/check_renderings.py` com `sys.executable`,
   `cwd=tmp_path`.
 - **RF02, a cadeia.** Trocar, na cópia do `SKILL.md`, a primeira
-  ocorrência de `` `in_review` `` numa cadeia de status por
-  `` `obsolete` ``, como no sensor A02 da SDD-DTF-0063; se a renderização
-  não tiver cadeia com `in_review`, acrescentar ao fim a linha
+  ocorrência de `→ in_review →` por `→ obsolete →`, como no sensor A02 da
+  SDD-DTF-0063 (emenda de 2026-11-25); se a renderização não tiver essa
+  ocorrência, acrescentar ao fim a linha
   `` `draft` → `obsolete` → `approved` ``.
 - **RF04.** Só o texto do caso muda: `ADR-EVM-Xy` → `XYZ-EVM-Xy`.
 - **RF06, mutações.** No formato das entradas existentes, cada `find`
