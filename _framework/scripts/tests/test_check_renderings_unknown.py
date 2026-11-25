@@ -119,6 +119,18 @@ def test_tipo_reportado_uma_vez_por_renderizacao():
     assert _check("XYZ-EVM-0001 e XYZ-EVM-0002\n") == [_tipo("XYZ")]
 
 
+# SDD-DTF-0064: placeholders de sequência e o fim do id
+
+
+def test_sdd0064_placeholders_de_sequencia_reprovam_tipo_inexistente():
+    raw = "`FOO-{PROJECT_CODE}-{SEQ4}`, BAR-DTF-{SEQ4}. e BAZ-{PROJECT_CODE}-{SEQ}\n"
+    assert _check(raw) == [_tipo("FOO"), _tipo("BAR"), _tipo("BAZ")]
+
+
+def test_sdd0064_negativo_sequencia_que_nao_e_id_nao_acusa():
+    assert _check("XYZ-EVM-12, XYZ-EVM-00012 e ADR-EVM-Xy\n") == []
+
+
 # RF04: sem falso positivo no kit real
 
 

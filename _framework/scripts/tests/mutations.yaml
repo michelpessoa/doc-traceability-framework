@@ -76,3 +76,9 @@
   description: "check_unknown_names: cadeia de status deixa de ser conferida (SDD-DTF-0063 RF01, RF06)"
   find: 'cited_statuses += re.findall(r"[a-z_]+", m.group(0))'
   replace: "cited_statuses += []"
+
+- validator: "_framework/scripts/check_renderings.py"
+  test_file: "_framework/scripts/tests/test_check_renderings_unknown.py"
+  description: "ID_PREFIX: fim do id volta a \\b e ids com {SEQ4}/{SEQ} deixam de casar (SDD-DTF-0064 RF01, RF05)"
+  find: '|X|N)(?!\w)")'
+  replace: '|X|N)\b")'
