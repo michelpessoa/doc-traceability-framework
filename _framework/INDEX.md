@@ -68,7 +68,7 @@ Total: 131 arquivos
 | `scripts/tests/test_validate_state.py` | Testes do validate_state.py sobre o YAML real | Ao alterar o gate de evidência da SDD | 8-32 KB |
 | `scripts/validate_doc.py` | Validador do gate de qualidade de conteúdo: placeholders e seções | Ao depurar reprovação de conteúdo de documento | 8-32 KB |
 | `scripts/validate_state.py` | Validador do gate de escopo: SDD implemented exige evidência real | Ao depurar reprovação de evidência de uma SDD | 8-32 KB |
-| `skills/doc-traceability-framework/SKILL.md` | Skill principal: roteador do fluxo de documentos, sizing e gates | Ao ajustar gatilho ou roteamento da skill principal | 2-8 KB |
+| `skills/doc-traceability-framework/SKILL.md` | Skill principal: roteador do fluxo de documentos, sizing e gates | Ao ajustar gatilho ou roteamento da skill principal | 8-32 KB |
 | `skills/doc-traceability-framework/prompts/framework-audit.md` | Cópia gerada de prompts/framework-audit.md dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/prompts/onboarding-bootstrap.md` | Cópia gerada de prompts/onboarding-bootstrap.md dentro da skill | Nunca à mão; regenere com render_prompts.py | 2-8 KB |
 | `skills/doc-traceability-framework/references/audit.md` | Referência da skill sobre auditoria de commits e PRs contra o registry | Ao pedir auditoria e a skill carregar a referência | <2 KB |
