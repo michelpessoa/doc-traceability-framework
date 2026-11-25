@@ -1,4 +1,4 @@
-# Prompt de Auditoria de Aderência (v1.3.0)
+# Prompt de Auditoria de Aderência (v1.3.0, revisado na 2.8.0)
 
 Use este prompt **periodicamente, sob demanda** — não é um gate de CI, não
 bloqueia PR nem merge, e não presume que o time seguiu qualquer convenção
@@ -27,6 +27,11 @@ repositório central — é ele que diz qual repositório de código
 inspecionar. **Nunca assuma ou adivinhe** essa URL. Se o campo estiver
 ausente ou vazio, pergunte a URL ao usuário e grave-a nesse campo antes de
 continuar para o Passo 1.
+
+Se o registry declara `repository_status: none_yet`, o projeto está em
+modo greenfield: não há repositório de código e nenhum commit a auditar.
+Pare aqui e reporte isso ao usuário, sem seguir para o Passo 1
+(`audit.precondition`).
 
 ## Passo 1 — Reúna o histórico
 
@@ -98,6 +103,14 @@ aprovado sozinho pela IA**. Apresente:
 Documentos aprovados a partir desta auditoria ganham `tags: [audit]` no
 registry correspondente (diferente de `tags: [onboarding]`, para
 distinguir descoberta contínua de bootstrap inicial).
+
+Em projeto sob 2.5.0 ou maior, cada ADR reconstruído confirmado entra em
+`approved` com `approved_by` (`frontmatter_schema`, `approval_policy`):
+`kind: human`, `actor` com o login de quem revisou, `at`, `content_sha256`
+calculado por `_framework/scripts/approval_hash.py` e `evidence` com a URL
+da review. Se a revisão é feita na PR, o `approved_by` sai de
+`_framework/scripts/review_approval.py` sobre o head revisado, e o ADR só
+passa a `approved` com saída válida desse script.
 
 ## O que este prompt NÃO faz
 

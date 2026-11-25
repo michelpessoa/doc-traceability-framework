@@ -46,6 +46,11 @@ ADR (`workflow-rules.yaml:decision_gates`); registre `decision_gate_criteria_met
 A ausência do documento É o registro de que a fase foi pulada. A SDD nasce
 no repositório do projeto, compilada de SPEC/ADR `approved`, com
 `source_docs` `{id, url}`; tasks em paralelo: `scripts/parallel_plan.py`.
+Em projeto sob 2.7.0 ou maior, a SDD com `source_docs` é enxuta: requisitos por
+referência à SPEC (RF-ID | Origem | Requisito (resumo) | Arquivos), `sizing`
+obrigatório, RF-IDs conferidos contra a SPEC nas duas direções por
+`scripts/check_source_docs.py`. Com a coluna `Projeto` na SPEC (2.8.0), só
+contam os RFs do `project` da SDD (`workflow-rules.yaml:document_types.SPEC.rf_optional_columns`).
 
 ## Gates
 
@@ -71,6 +76,18 @@ archived. ADR `approved` é imutável: mudança gera ADR novo
 (`workflow-rules.yaml:status_lifecycle`). INC usa `open → mitigated →
 resolved → closed`.
 
+## Aprovação
+
+Quem aprova cada tipo e sizing: `workflow-rules.yaml:approval_policy`.
+Vale a primeira regra que casa; nenhuma casa, vale `default_approver`
+(`human`). STRAT, RFC, ADR, BASE, PM e SPEC `medium` ou maior: `human`. SDD:
+`policy`, com os `checks` declarados na regra.
+
+- Registro em `approved_by` (`workflow-rules.yaml:frontmatter_schema`): `kind` (`human` | `policy`), `actor`, `at`, `content_sha256` e, com `kind: human`, `evidence` (URL da review). `validate_state.py` cobra o campo em `approved`, `implemented` e `superseded` desde a 2.5.0, sem retroagir.
+- `content_sha256` sai de `scripts/approval_hash.py`, sem as `hash_excluded_sections`. Mudar o corpo depois da aprovação invalida o `content_sha256`, e `validate_state.py` reprova.
+- Por review da PR: `scripts/review_approval.py` decide, sem rede, se as reviews aprovam sobre o head e monta o `approved_by`. Só contam logins de `approvers`, no topo do registry central (`workflow-rules.yaml:registry.central_registry.approvers_field`).
+- Com `kind: policy`, `draft → in_review → approved` num único commit, com `approved_by.transitions`.
+
 ## IDs e registry
 
 - ID `{TYPE}-{PROJECT_CODE}-{SEQ4}`, sequencial por tipo, nunca reutilizado.
@@ -85,7 +102,9 @@ resolved → closed`.
 - **"Precisa de ADR?"**: aplique o gate, mostre os critérios e o próximo documento.
 - **"Implementa o que foi decidido"**: pare antes de código; SPEC e SDD primeiro.
 - **Muda o status**: valide no ciclo certo; documento e registry juntos.
-- **Monta a SDD**: SPEC/ADR `approved`, compile no repo do projeto, `source_docs` com id+url.
+- **Monta a SDD**: SPEC/ADR `approved`, compile no repo do projeto, `source_docs` com id+url; sob 2.7.0 ou maior, enxuta (ver "Fluxo e sizing").
+- **Registra a aprovação**: seção "Aprovação"; pela PR, `approved_by` humano só com saída válida de `review_approval.py` sobre o head revisado.
+- **Executor (ferramenta que roda o fluxo)**: `workflow-rules.yaml:executor_contract`: o que lê, os scripts com `--json` e o esquema de cada saída, e o que escreve: no central por PR, nunca em main; no registry de projeto, `entrega` e `path` da SDD entregue; `approved_by` com `kind: policy` só onde `approval_policy` permite.
 - **De onde veio X / rastreia**: percorra `relates_to`, `parent_*`, `source_docs`.
 - **Valida o registry**: `scripts/registry_tools.py validate`.
 - **Terminei de implementar**: skill `verify-sdd` antes de mudar o status.
@@ -98,6 +117,7 @@ resolved → closed`.
 | incidente, severidade, postmortem, action items | `references/incidents.md` |
 | projeto com código já em produção, baseline | `references/onboarding.md` |
 | auditar commits/PRs contra o registry | `references/audit.md` |
+| aprovação, review, hash, executor | `references/workflow-rules.yaml`, chaves `approval_policy` e `executor_contract` |
 | detalhe exato de campo, transição, critério | `references/workflow-rules.yaml`, na chave citada |
 
 ## Handover e novo projeto

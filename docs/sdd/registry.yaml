@@ -581,3 +581,13 @@ documents:
     relates_to: [SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058]
     path: "docs/sdd/SDD-DTF-0059.md"
     tags: [guia-tecnico, guia-nao-tecnico, documentacao, drift, aprovacao, executor, sdd-enxuta]
+  - id: SDD-DTF-0060
+    type: SDD
+    title: "Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-25"
+    updated: "2026-11-25"
+    relates_to: [SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058]
+    path: "docs/sdd/SDD-DTF-0060.md"
+    tags: [skill, prompts, onboarding, audit, documentacao, drift, aprovacao, executor, greenfield]
