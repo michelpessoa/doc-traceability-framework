@@ -2,7 +2,7 @@
 id: SDD-DTF-0060
 type: SDD
 title: "Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"

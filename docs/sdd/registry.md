@@ -67,7 +67,7 @@ Total de documentos: **59**
 | `SDD-DTF-0057` | Documentação enxuta no kit: SDD que referencia a SPEC, molde na SDD small, seções opcionais da SPEC, Documentos originados gerados e approved_by.transitions | implemented | Michel Pessoa | 2026-11-20 | SDD-DTF-0055, SDD-DTF-0056 |
 | `SDD-DTF-0058` | Coluna Projeto na SPEC: RFs de uma SPEC divididos por projeto, conferidos no validate_doc e no check_source_docs, kit 2.8.0 | implemented | Michel Pessoa | 2026-11-21 | SDD-DTF-0057 |
 | `SDD-DTF-0059` | Guias técnico e não técnico cobrem a 2.4.0 a 2.8.0: aprovação como dado, aprovação por review, contrato do executor, SDD enxuta e coluna Projeto | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
-| `SDD-DTF-0060` | Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield | approved | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
+| `SDD-DTF-0060` | Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
 
 ## Documentos originados
 
