@@ -624,7 +624,7 @@ documents:
   - id: SDD-DTF-0064
     type: SDD
     title: "check_renderings.py acusa tipo inexistente também em id com placeholder de sequência ({SEQ4}, {SEQ})"
-    status: in_review
+    status: approved
     owner: "Michel Pessoa"
     created: "2026-11-25"
     updated: "2026-11-25"
