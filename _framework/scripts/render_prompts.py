@@ -202,6 +202,12 @@ def core_facts(rules: dict) -> str:
         lines += ["", "### Aprovação", "", "| Tipos | Sizing | Quem aprova |", "|---|---|---|"]
         for r in policy.get("rules") or []:
             lines.append(f"| {', '.join(r['types'])} | {', '.join(r.get('sizing') or ['todos'])} | {r['approver']} |")
+        with_checks = [r for r in policy.get("rules") or [] if r.get("checks")]
+        if with_checks:
+            lines.append("")
+            for r in with_checks:
+                checks = ", ".join(f"`{c}`" for c in r["checks"])
+                lines.append(f"- Checks de {', '.join(r['types'])} ({r['approver']}): {checks}.")
         excluded = ", ".join(f"`{s}`" for s in policy.get("hash_excluded_sections") or [])
         lines += [
             "",
