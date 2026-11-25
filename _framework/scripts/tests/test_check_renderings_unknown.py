@@ -5,6 +5,7 @@ check_unknown_names com textos curtos, e o script roda como subprocesso
 sobre o kit real para o RF04 (sem falso positivo).
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -128,7 +129,7 @@ def test_sdd0064_placeholders_de_sequencia_reprovam_tipo_inexistente():
 
 
 def test_sdd0064_negativo_sequencia_que_nao_e_id_nao_acusa():
-    assert _check("XYZ-EVM-12, XYZ-EVM-00012 e ADR-EVM-Xy\n") == []
+    assert _check("XYZ-EVM-12, XYZ-EVM-00012 e XYZ-EVM-Xy\n") == []
 
 
 # RF04: sem falso positivo no kit real
@@ -144,3 +145,60 @@ def test_rf04_kit_real_passa():
     )
     assert r.returncode == 0, r.stdout + r.stderr
     assert "inexistente" not in r.stdout + r.stderr
+
+
+# SDD-DTF-0065: o main de check_renderings.py numa cópia do kit (RF02, RF03)
+
+SKILL_REL = Path("_framework/skills/doc-traceability-framework/SKILL.md")
+
+
+def _copia_do_kit(tmp_path: Path) -> Path:
+    """Copia _framework/ (sem __pycache__), .claude/ e AGENTS.md para tmp_path.
+
+    Mesma estrutura da raiz do kit: find_rules_file acha o YAML da cópia,
+    RENDERINGS resolve ../AGENTS.md e MECHANIZED_ARTIFACTS acha ../.claude/.
+    """
+    shutil.copytree(REPO / "_framework", tmp_path / "_framework", ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copytree(REPO / ".claude", tmp_path / ".claude")
+    shutil.copy2(REPO / "AGENTS.md", tmp_path / "AGENTS.md")
+    return tmp_path
+
+
+def _roda_copia(kit: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(kit / "_framework/scripts/check_renderings.py")],
+        cwd=kit,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def _copia_que_passa(tmp_path: Path) -> Path:
+    kit = _copia_do_kit(tmp_path)
+    r = _roda_copia(kit)
+    assert r.returncode == 0, "a cópia sem alteração já reprova: " + r.stdout + r.stderr
+    return kit
+
+
+def test_sdd0065_main_reprova_status_inexistente_na_copia(tmp_path):
+    kit = _copia_que_passa(tmp_path)
+    skill = kit / SKILL_REL
+    raw = skill.read_text(encoding="utf-8")
+    if "→ in_review →" in raw:
+        raw = raw.replace("→ in_review →", "→ obsolete →", 1)
+    else:
+        raw += "\n`draft` → `obsolete` → `approved`\n"
+    skill.write_text(raw, encoding="utf-8")
+    r = _roda_copia(kit)
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert "cita o status inexistente" in r.stdout + r.stderr
+
+
+def test_sdd0065_main_aceita_tipos_legados_na_copia(tmp_path):
+    kit = _copia_que_passa(tmp_path)
+    skill = kit / SKILL_REL
+    raw = skill.read_text(encoding="utf-8")
+    skill.write_text(raw + "\nIds legados: PRD-EVM-0001 e TS-EVM-0001.\n", encoding="utf-8")
+    r = _roda_copia(kit)
+    assert r.returncode == 0, r.stdout + r.stderr

@@ -71,6 +71,8 @@ INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
 | SPEC | medium, large, complex | human |
 | SDD | todos | policy |
 
+- Checks de SDD (policy): `validate_doc.py`, `registry_tools.py validate`, `check_source_docs.py (com source_docs)`, `verify-sdd passo 0 (com source_docs)`.
+
 Sem regra que case: human.
 
 A aprovação fica em `approved_by`, presa ao `content_sha256` do documento, calculado por `approval_hash.py` sem as seções `Evidência de verificação`, `Verificação de escopo (nada a mais, nada a menos)`, `Gate de decisão: esta RFC exige um ADR?`, `Documentos originados`; `review_approval.py` confere a review humana.
