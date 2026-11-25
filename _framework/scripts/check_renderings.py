@@ -160,7 +160,7 @@ def check_optional_sections(rules: dict, template: Path) -> list[str]:
 # não contam como cadeia.
 STATUS_CHAIN = re.compile(r"(?<![\w/-])[a-z_]+(?:\s*→\s*[a-z_]+(?:\|[a-z_]+)*){2,}")
 STATUS_DECLARED = re.compile(r"`status:\s*([a-z_]+)`")
-ID_PREFIX = re.compile(r"\b([A-Z]+)-(?:\{PROJECT_CODE\}|[A-Z][A-Z0-9]*)-(?:\d{4}|\{SEQ4?\}|X|N)\b")
+ID_PREFIX = re.compile(r"\b([A-Z]+)-(?:\{PROJECT_CODE\}|[A-Z][A-Z0-9]*)-(?:\d{4}|\{SEQ4?\}|X|N)(?!\w)")
 
 
 def check_unknown_names(rel: str, raw: str, statuses: set[str], types: set[str]) -> list[str]:
