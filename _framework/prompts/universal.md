@@ -21,7 +21,7 @@
 - [16. Gate obrigatório: verificação de escopo antes de SDD "implemented"](#16-gate-obrigatório-verificação-de-escopo-antes-de-sdd-implemented) — 1285 bytes
 - [17. Handover/pickup: transferindo contexto entre sessões](#17-handoverpickup-transferindo-contexto-entre-sessões) — 1673 bytes
 - [18. Reuso em outro projeto](#18-reuso-em-outro-projeto) — 489 bytes
-- [Núcleo canônico (framework 2.8.0)](#núcleo-canônico-framework-280) — 4431 bytes
+- [Núcleo canônico (framework 2.8.0)](#núcleo-canônico-framework-280) — 4589 bytes
 <!-- END GENERATED -->
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
@@ -473,6 +473,8 @@ INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
 | STRAT, RFC, ADR, BASE, PM | todos | human |
 | SPEC | medium, large, complex | human |
 | SDD | todos | policy |
+
+- Checks de SDD (policy): `validate_doc.py`, `registry_tools.py validate`, `check_source_docs.py (com source_docs)`, `verify-sdd passo 0 (com source_docs)`.
 
 Sem regra que case: human.
 
