@@ -4,15 +4,17 @@
 **Sumário**
 
 - [1. Os dois repositórios](#1-os-dois-repositórios) — 714 bytes
-- [2. Estrutura de pastas](#2-estrutura-de-pastas) — 1468 bytes
-- [3. Criando um projeto novo](#3-criando-um-projeto-novo) — 864 bytes
+- [2. Estrutura de pastas](#2-estrutura-de-pastas) — 2162 bytes
+- [3. Criando um projeto novo](#3-criando-um-projeto-novo) — 1712 bytes
 - [4. Criando um documento — passo a passo](#4-criando-um-documento--passo-a-passo) — 661 bytes
-- [4.1 Antes de tudo: qual o tamanho da mudança](#41-antes-de-tudo-qual-o-tamanho-da-mudança) — 925 bytes
+- [4.1 Antes de tudo: qual o tamanho da mudança](#41-antes-de-tudo-qual-o-tamanho-da-mudança) — 1388 bytes
 - [5. O gate RFC → ADR na prática](#5-o-gate-rfc--adr-na-prática) — 640 bytes
-- [6. Compilando a SDD](#6-compilando-a-sdd) — 1018 bytes
+- [6. Compilando a SDD](#6-compilando-a-sdd) — 2464 bytes
 - [7. Os gates obrigatórios](#7-os-gates-obrigatórios) — 3302 bytes
+- [7.1 Aprovação como dado](#71-aprovação-como-dado) — 3124 bytes
+- [7.2 Executores](#72-executores) — 1928 bytes
 - [8. Passagem de contexto entre sessões (handover/pickup)](#8-passagem-de-contexto-entre-sessões-handoverpickup) — 1622 bytes
-- [9. Scripts disponíveis](#9-scripts-disponíveis) — 3171 bytes
+- [9. Scripts disponíveis](#9-scripts-disponíveis) — 4188 bytes
 - [9.1 Verificação independente antes de `implemented`](#91-verificação-independente-antes-de-implemented) — 2090 bytes
 - [9.2 Quando um gate for violado](#92-quando-um-gate-for-violado) — 968 bytes
 - [10. Onboarding de um projeto já existente](#10-onboarding-de-um-projeto-já-existente) — 773 bytes
@@ -20,7 +22,7 @@
 - [12. Incidentes e postmortem](#12-incidentes-e-postmortem) — 885 bytes
 - [13. Configurando as ferramentas de IA](#13-configurando-as-ferramentas-de-ia) — 782 bytes
 - [14. Paralelização por trilhas de negócio (opcional)](#14-paralelização-por-trilhas-de-negócio-opcional) — 608 bytes
-- [15. Erros comuns a evitar](#15-erros-comuns-a-evitar) — 1266 bytes
+- [15. Erros comuns a evitar](#15-erros-comuns-a-evitar) — 1793 bytes
 <!-- END GENERATED -->
 
 > Guia narrativo, escrito à mão. A regra canônica vive em
@@ -64,11 +66,18 @@ _framework/
   skills/doc-traceability-framework/   (skill principal)
   skills/handover/  skills/pickup/     (passagem de contexto entre sessões)
   skills/verify-sdd/                   (verificação independente)
+  schemas/ (esquema JSON de cada saída --json, ver seção 7.2)
   scripts/ (framework_check.py, registry_tools.py, validate_doc.py,
             validate_state.py, check_commit.py, check_renderings.py,
             check_source_docs.py, ci_gate_verify_sdd.py, lessons_check.py,
             selftest.py, parallel_plan.py, render_prompts.py,
-            generate_registry_md.py, framework_lib.py)
+            render_indexes.py, generate_registry_md.py, framework_lib.py,
+            approval_hash.py, review_approval.py, check_hooks.py,
+            hook_session_start.py, hook_post_edit.py, guard_bash.sh)
+  # hook_session_start.py, hook_post_edit.py e guard_bash.sh são hooks
+  # do Claude Code, ligados no .claude/settings.json que render_prompts.py
+  # gera (guard_bash.sh também é gerado); check_hooks.py confere essa
+  # configuração
 docs/
   guias/ (guia-tecnico.md, guia-nao-tecnico.md, paralelizacao-trilhas.md,
           gate-ci-verify-sdd.md)
@@ -93,9 +102,14 @@ docs/
 docs/
   sdd/
     SDD-{PROJECT_CODE}-0001.md
+    arquivo/      (SDD entregue, ainda implemented; ver seção 7.2)
     registry.yaml
     registry.md   (gerado)
 ```
+
+A pasta `docs/sdd/arquivo/` vem de
+`repository_topology.project_repo.delivered`: a SDD entregue pode sair
+do caminho dos agentes, com o `path` do registry atualizado.
 
 ## 3. Criando um projeto novo
 
@@ -105,10 +119,23 @@ docs/
    código do projeto se ainda não souber, nunca adivinhe:
    ```yaml
    project: "{PROJECT_CODE}"
-   framework_version: "1.7.0"   # use o framework.version do workflow-rules.yaml
+   framework_version: "2.8.0"   # use o framework.version do workflow-rules.yaml
    repository: "https://github.com/{ORG}/{PROJECT_CODE}"
+   repository_status: active    # ou none_yet, sem repositório de código ainda
+   approvers: ["login-github"]  # opcional: quem pode aprovar por review (seção 7.1)
    documents: []
    ```
+   `repository_status` e `approvers` ficam no topo do arquivo, ao lado de
+   `project` e `framework_version` (`registry.central_registry.repository_field`
+   e `registry.central_registry.approvers_field`).
+
+   **Modo greenfield.** Se o repositório de código ainda não existe,
+   declare `repository_status: none_yet` e não preencha `repository`. STRAT,
+   RFC, ADR e SPEC rodam inteiros no central; SDD fica bloqueada enquanto
+   durar, porque vive em `docs/sdd/` do repositório de projeto. Quando o
+   repositório nascer, num único ato: preencha `repository`, troque para
+   `repository_status: active` e faça o passo 2 abaixo
+   (`repository_field.leaving_greenfield`).
 2. No repositório de código do projeto, crie `docs/sdd/` com seu próprio
    `registry.yaml` vazio.
 3. Escolha o `PROJECT_CODE` (curto, maiúsculo, sem espaços) — ele é usado
@@ -147,6 +174,14 @@ escrita no documento; subir, não.
 Tamanho decide **quais** documentos existem, nunca se os gates valem.
 `small` tem menos documento, não menos gate.
 
+O tamanho também enxuga a própria SPEC: as seções listadas em
+`document_types.SPEC.optional_sections` (personas, observabilidade,
+rollout/rollback, times consumidores, dependências) podem faltar, e a
+ausência registra que não se aplicam. Cada uma volta quando o seu
+`returns_when` se aplica; o template marca a seção com essa condição, e
+`check_renderings.py` reprova divergência entre os dois. O sweep de
+requisitos transversais segue obrigatório.
+
 ## 5. O gate RFC → ADR na prática
 
 Depois que uma RFC é aprovada, responda objetivamente:
@@ -177,6 +212,32 @@ A SDD nasce no repositório do projeto, não no central. Regras práticas:
   arquivo no repositório central (ex.:
   `https://github.com/org/framework-central/blob/main/docs/CHECKOUT/03-spec/SPEC-CHECKOUT-0002.md`).
   Sem essa URL, quem olhar a SDD depois não consegue chegar à origem.
+
+**SDD enxuta (desde a 2.7.0).** A SDD com `source_docs`, criada desde a
+2.7.0 em projeto sob 2.7.0 ou maior, referencia a SPEC em vez de
+copiá-la:
+
+- `sizing` é obrigatório no front-matter (herdado da SPEC).
+- "Requisitos consolidados" é uma tabela
+  `RF-ID | Origem | Requisito (resumo) | Arquivos`, em que `Origem` é a
+  SPEC de `source_docs` de onde o RF vem.
+- Não há "Especificação técnica consolidada" nem "Decisão(ões) de
+  arquitetura aplicável(is)": o desenho fica na SPEC e a decisão no ADR,
+  e `validate_doc.py` reprova a SDD enxuta que traz essas seções.
+- `check_source_docs.py` confere os RF-IDs contra a SPEC nas duas
+  direções: nenhum RF da SPEC some, nenhum RF aparece sem estar nela.
+- `molde` (opcional) só vale em SDD `small`: é o nome de um padrão do
+  projeto que a SDD referencia em vez de repetir
+  (`frontmatter_schema.type_specific_fields.SDD.molde`).
+
+**Coluna `Projeto` (desde a 2.8.0).** Quando uma SPEC divide os RFs entre
+projetos, a tabela "Requisitos funcionais" ganha a coluna `Projeto`, a
+última, depois de `Arquivos`, com códigos de projeto separados por
+vírgula (`document_types.SPEC.rf_optional_columns`). `validate_doc.py`
+reprova célula vazia e código fora do formato. Com a coluna presente,
+`check_source_docs.py` confere a SDD enxuta só contra os RFs do `project`
+do registry dela, e reprova RF de outro projeto e SPEC sem RF do
+projeto. SPEC sem a coluna segue como antes.
 
 A qualidade da SDD é herdada: SDD genérica quase sempre é sintoma de SPEC
 vaga, não de erro na compilação. Por isso a Parte 1 da SPEC precisa
@@ -248,6 +309,108 @@ rodou o comando pela última vez, rode de novo.
 Descompasso encontrado (requisito sem código, ou código sem requisito)
 não avança status em silêncio: relate ao responsável e proponha atualizar
 a SDD ou remover o código fora de escopo — a decisão é dele.
+
+## 7.1 Aprovação como dado
+
+Desde a 2.5.0, aprovar um documento deixa um registro conferível: quem
+aprovou e sobre qual conteúdo.
+
+**Quem aprova.** `approval_policy.rules` decide por tipo e sizing; vale a
+primeira regra que casa, e o que nenhuma casa cai em
+`approval_policy.default_approver` (`human`). Em resumo: STRAT, RFC, ADR,
+BASE e PM são aprovados por pessoa; SPEC `medium`, `large` ou `complex`
+também; SDD é aprovada por política (`policy`), depois dos checks que a
+regra lista (`validate_doc.py`, `registry_tools.py validate` e, com
+`source_docs`, `check_source_docs.py` e o passo 0 do `verify-sdd`).
+
+**O registro.** O documento aprovado ganha o campo `approved_by` no
+front-matter (`frontmatter_schema.common_fields.approved_by`):
+
+```yaml
+approved_by:
+  kind: human            # human | policy
+  actor: login-github    # login do revisor, ou nome do executor se policy
+  at: 2026-11-25         # data ou data-hora ISO 8601
+  content_sha256: <64 hex, saída de approval_hash.py>
+  evidence: https://github.com/{ORG}/{REPO}/pull/12#pullrequestreview-345   # obrigatório se human
+```
+
+**O hash.** `approval_hash.py <documento>` calcula o sha256 do corpo, sem
+o front-matter, com CRLF normalizado para LF e sem as seções de
+`approval_policy.hash_excluded_sections` — as que o framework manda
+preencher depois da aprovação, como "Evidência de verificação". Qualquer
+outra mudança no corpo muda o hash, e `validate_state.py` reprova o
+documento: mudou depois de aprovado, precisa de nova aprovação.
+
+**Aprovação por review (desde a 2.6.0).** A aprovação humana é uma
+review na PR do documento. Quem chama busca as reviews da PR, grava num
+arquivo e roda:
+
+```bash
+python3 _framework/scripts/review_approval.py docs/{PROJECT_CODE}/03-spec/SPEC-{PROJECT_CODE}-0001.md \
+  --reviews reviews.json --head <sha do head> --pr-url https://github.com/{ORG}/{REPO}/pull/12
+```
+
+O script decide sem rede:
+
+- só contam reviews de logins em `approvers` do registry central; sem
+  `approvers` declarado, a aprovação é inválida;
+- aprova uma review `APPROVED`, ou `COMMENTED` com o corpo exatamente
+  `Aprovado`;
+- entre as que aprovam e as `CHANGES_REQUESTED`, decide a mais recente;
+- a decisiva vale só se foi feita sobre o head informado — commit novo
+  depois da review pede review nova;
+- o documento precisa estar `in_review`.
+
+Com aprovação válida, ele imprime o `approved_by` pronto, com `kind:
+human`, o hash e o link da review como `evidence`. `validate_state.py`
+confere depois o `approved_by.actor` humano contra `approvers`.
+
+**Aprovação por política.** Com `kind: policy`, o caminho de `draft` até
+`approved` pode ser gravado num commit só, registrado no campo opcional
+`approved_by.transitions` (lista de `{from, to, at}`), que só existe com
+`kind: policy` e é conferido contra `status_lifecycle.allowed_transitions`
+(desde a 2.7.0).
+
+**Não-retroatividade.** `validate_state.py` só cobra `approved_by` em
+documento `approved`, `implemented` ou `superseded` criado desde a 2.5.0
+em projeto sob 2.5.0 ou maior. Documento anterior não é reprovado por não
+ter o campo.
+
+## 7.2 Executores
+
+Executor é a ferramenta que roda o fluxo deste framework sem um humano em
+cada passo. O que ele pode usar sem depender de detalhe interno está em
+`executor_contract`, e o kit não cita nenhum executor específico.
+
+**O que lê.** As chaves do YAML em `executor_contract.reads` (`sizing`,
+`decision_gates`, `status_lifecycle`, `repository_topology`,
+`frontmatter_schema`, `registry`, `approval_policy`) e as saídas de
+máquina de `executor_contract.machine_outputs`: `validate_doc.py`,
+`validate_state.py`, `check_source_docs.py`, `registry_tools.py
+validate`, `check_commit.py`, `ci_gate_verify_sdd.py`, `parallel_plan.py`,
+`approval_hash.py` e `review_approval.py` aceitam `--json` e imprimem um
+objeto validado pelo esquema correspondente em `_framework/schemas/`. A
+saída em texto não muda. `_framework/tests/test_executor_contract.py`
+roda cada saída declarada e a valida contra o esquema.
+
+**O que escreve.** Só o que `executor_contract.writes` lista: rascunho em
+`draft` de STRAT, RFC, ADR e SPEC no central, sempre por PR e nunca em
+`main`; entrada em `LESSONS.md`, por PR; PR de documento novo com status
+`in_review`, de branch `docs/<id>`; `approved_by` com `kind: policy` só
+onde `approval_policy` permite; `approved_by` com `kind: human` só com
+saída válida de `review_approval.py` sobre o head revisado; e o campo
+`entrega` e o `path` de SDD entregue no registry de projeto.
+
+**Versão do contrato.** `executor_contract.contract_version` (hoje `1`)
+identifica o contrato. Quebrar algo declarado nele só em versão maior;
+versão minor só acrescenta.
+
+**SDD entregue.** A SDD `implemented` pode ir para `docs/sdd/arquivo/`
+(`repository_topology.project_repo.delivered`), mantendo o status, com o
+`path` do registry atualizado e o campo opcional `entrega: {pr, data,
+resultado}` na entrada (`registry.optional_entry_fields`).
+`registry_tools.py trace` imprime a entrega quando existe.
 
 ## 8. Passagem de contexto entre sessões (handover/pickup)
 
@@ -328,9 +491,28 @@ python3 _framework/scripts/lessons_check.py docs/sdd/LESSONS.md ../outro-projeto
 # Deriva o grafo de dependências entre tasks da SDD para execução em
 # paralelo por trilha (seção 14)
 python3 _framework/scripts/parallel_plan.py docs/sdd/SDD-{PROJECT_CODE}-0001.md
+
+# Hash do conteúdo aprovado, o valor de approved_by.content_sha256 (seção 7.1)
+python3 _framework/scripts/approval_hash.py docs/{PROJECT_CODE}/03-spec/SPEC-{PROJECT_CODE}-0001.md
+
+# Decide, sem rede, se as reviews da PR aprovam o documento e monta o
+# approved_by (seção 7.1)
+python3 _framework/scripts/review_approval.py docs/{PROJECT_CODE}/03-spec/SPEC-{PROJECT_CODE}-0001.md --reviews reviews.json --head <sha> --pr-url <url>
+
+# Índices navegáveis: _framework/INDEX.md, mapa do YAML, sumário deste
+# guia e docs/sdd/INDEX.md (render_prompts.py já o chama)
+python3 _framework/scripts/render_indexes.py --check
+python3 _framework/scripts/render_indexes.py sdd docs/sdd --check
+
+# Configuração dos hooks do Claude Code em .claude/settings.json
+python3 _framework/scripts/check_hooks.py .claude/settings.json
 ```
 
-Todos aceitam `--report-only` para listar sem falhar.
+Os validadores aceitam `--report-only` para listar sem falhar.
+
+Os scripts de `executor_contract.machine_outputs` aceitam também `--json`
+e imprimem um objeto validado pelo esquema de `_framework/schemas/`, sem
+mudar a saída em texto (seção 7.2).
 
 **Ligue isso no seu repositório central**, não deixe como comando manual:
 
@@ -529,3 +711,11 @@ carregar a sessão inteira adiante.
   coisas em silêncio.
 - Reescrever no `HANDOFF.md` o conteúdo que já está na SPEC/SDD em vez
   de referenciar os ids — handover é mapa, não cópia (seção 8).
+- Editar o corpo de um documento já aprovado sem nova aprovação: o
+  `approved_by.content_sha256` deixa de bater com `approval_hash.py` e
+  `validate_state.py` reprova. Só as seções de
+  `approval_policy.hash_excluded_sections` mudam sem reaprovar (seção 7.1).
+- Aprovar por comentário fora do formato que `review_approval.py` aceita:
+  vale review `APPROVED` ou `COMMENTED` com o corpo exatamente `Aprovado`.
+  "Aprovado!", "ok" ou "LGTM" não aprovam, nem review feita antes do
+  último commit da PR (seção 7.1).

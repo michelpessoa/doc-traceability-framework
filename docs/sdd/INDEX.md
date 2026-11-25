@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 57 SDDs
+Total: 58 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -62,3 +62,4 @@ Total: 57 SDDs
 | `SDD-DTF-0056` | `_framework/scripts/generate_registry_md.py` fixa `TYPE_ORDER = ["STRAT", "RFC", "ADR", "PRD", "TS", "SDD"]` e só renderiza seção para esse… | `_framework/INDEX.md`, `_framework/scripts/generate_registry_md.py`, `_framework/scripts/tests/test_generate_registry_md.py` +6 | — | — | implemented |
 | `SDD-DTF-0057` | Parte do kit da SPEC-DTF-0031, a fase 5 da RFC-DTF-0009 (P5, "Documentação enxuta"), que absorve a proposta 004 da fábrica. | `_framework/procedures/verify-sdd.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/scripts/check_renderings.py`, `_framework/scripts/check_source_docs.py` +19 | — | — | implemented |
 | `SDD-DTF-0058` | Parte do kit da SPEC-DTF-0032, a segunda SPEC da fase 4 da RFC-DTF-0009. | `_framework/procedures/verify-sdd.md`, `_framework/rules/kit-index.yaml`, `_framework/rules/workflow-rules.yaml`, `_framework/scripts/check_source_docs.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_check_source_docs.py` +11 | — | — | implemented |
+| `SDD-DTF-0059` | `docs/guias/guia-tecnico.md` e `docs/guias/guia-nao-tecnico.md` não mudam desde setembro (última versão coberta: 2.3.x). | `_framework/INDEX.md`, `central:_framework/INDEX.md`, `central:docs/guias/guia-nao-tecnico.md`, `central:docs/guias/guia-tecnico.md`, `docs/guias/guia-nao-tecnico.md`, `docs/guias/guia-tecnico.md` | — | — | implemented |
