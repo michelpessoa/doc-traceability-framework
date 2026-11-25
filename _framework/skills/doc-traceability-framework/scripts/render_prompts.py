@@ -181,7 +181,7 @@ def core_facts(rules: dict) -> str:
             "",
             "### Ciclo de vida de status",
             "",
-            "`" + "` → `".join(lifecycle["states"][:5]) + "`",
+            "Estados: " + ", ".join(f"`{s}`" for s in lifecycle["states"]) + ".",
             "",
             "Transições válidas: "
             + "; ".join(f"{k} → {', '.join(v)}" for k, v in (lifecycle.get("allowed_transitions") or {}).items() if v)
@@ -191,6 +191,28 @@ def core_facts(rules: dict) -> str:
             + "` → `".join((rules.get("incident_lifecycle") or {}).get("states") or [])
             + "`.",
         ]
+
+    policy = rules.get("approval_policy") or {}
+    if policy:
+        lines += ["", "### Aprovação", "", "| Tipos | Sizing | Quem aprova |", "|---|---|---|"]
+        for r in policy.get("rules") or []:
+            lines.append(f"| {', '.join(r['types'])} | {', '.join(r.get('sizing') or ['todos'])} | {r['approver']} |")
+        excluded = ", ".join(f"`{s}`" for s in policy.get("hash_excluded_sections") or [])
+        lines += [
+            "",
+            f"Sem regra que case: {policy['default_approver']}.",
+            "",
+            "A aprovação fica em `approved_by`, presa ao `content_sha256` do documento,"
+            f" calculado por `approval_hash.py` sem as seções {excluded};"
+            " `review_approval.py` confere a review humana.",
+        ]
+
+    contract = rules.get("executor_contract") or {}
+    if contract:
+        cv = contract.get("contract_version")
+        lines += ["", "### Executor", "", f"`contract_version` {cv}. O que um executor pode escrever:", ""]
+        for phrase in contract.get("writes") or []:
+            lines.append(f"- {phrase}")
 
     gate = (rules.get("decision_gates") or {}).get("rfc_to_adr") or {}
     if gate.get("criteria"):

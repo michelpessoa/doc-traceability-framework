@@ -21,7 +21,7 @@
 - [16. Gate obrigatório: verificação de escopo antes de SDD "implemented"](#16-gate-obrigatório-verificação-de-escopo-antes-de-sdd-implemented) — 1285 bytes
 - [17. Handover/pickup: transferindo contexto entre sessões](#17-handoverpickup-transferindo-contexto-entre-sessões) — 1673 bytes
 - [18. Reuso em outro projeto](#18-reuso-em-outro-projeto) — 489 bytes
-- [Núcleo canônico (framework 2.8.0)](#núcleo-canônico-framework-280) — 3191 bytes
+- [Núcleo canônico (framework 2.8.0)](#núcleo-canônico-framework-280) — 4431 bytes
 <!-- END GENERATED -->
 
 Cole este prompt inteiro no início de uma conversa em qualquer assistente de
@@ -460,11 +460,35 @@ divergência com qualquer texto abaixo ou acima, o YAML manda.
 
 ### Ciclo de vida de status
 
-`draft` → `in_review` → `approved` → `rejected` → `implemented`
+Estados: `draft`, `in_review`, `approved`, `rejected`, `implemented`, `superseded`, `archived`.
 
 Transições válidas: draft → in_review, archived; in_review → approved, rejected, draft; approved → implemented, superseded, archived; rejected → archived; implemented → superseded, archived; superseded → archived.
 
 INC usa o ciclo próprio: `open` → `mitigated` → `resolved` → `closed`.
+
+### Aprovação
+
+| Tipos | Sizing | Quem aprova |
+|---|---|---|
+| STRAT, RFC, ADR, BASE, PM | todos | human |
+| SPEC | medium, large, complex | human |
+| SDD | todos | policy |
+
+Sem regra que case: human.
+
+A aprovação fica em `approved_by`, presa ao `content_sha256` do documento, calculado por `approval_hash.py` sem as seções `Evidência de verificação`, `Verificação de escopo (nada a mais, nada a menos)`, `Gate de decisão: esta RFC exige um ADR?`, `Documentos originados`; `review_approval.py` confere a review humana.
+
+### Executor
+
+`contract_version` 1. O que um executor pode escrever:
+
+- Rascunho em draft de STRAT, RFC, ADR e SPEC no central, sempre por PR, nunca em main.
+- Entrada em docs/{PROJECT_CODE}/LESSONS.md, por PR.
+- Campo entrega e path de SDD entregue no registry de projeto.
+- Campo approved_by com kind: policy só onde approval_policy permite.
+- PR de documento novo (SPEC, RFC) no central com status in_review, de branch docs/<id>.
+- Na mesma PR, antes do merge: status approved e approved_by com kind: human, só com saída válida de review_approval.py sobre o head revisado.
+- Com kind: policy, draft → in_review → approved num único commit, com approved_by.transitions.
 
 ### Critérios do gate RFC → ADR (qualquer um verdadeiro exige ADR)
 
