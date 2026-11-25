@@ -55,6 +55,11 @@ FULL_TARGETS = [
     ("../_framework/scripts/guard_bash.sh", "build_guard_bash"),
 ]
 
+# Prompts que a skill embute: cada `prompts/{nome}` é copiado para
+# `skills/doc-traceability-framework/prompts/{nome}` por sync_copies
+# (SDD-DTF-0061). Os demais prompts não vão para a skill.
+BUNDLED_PROMPTS = ("framework-audit.md", "onboarding-bootstrap.md")
+
 # artifact_type aceitos em capabilities.<id>.mechanization — qualquer outro
 # valor é erro de configuração no YAML, reprovado antes de escrever arquivo.
 MECHANIZATION_ARTIFACT_TYPES = {
@@ -734,12 +739,13 @@ def _bundle_orphans(src_dir: Path, dest_dir: Path) -> list[Path]:
 def sync_copies(root: Path, check: bool) -> bool:
     """Sincroniza a cópia dentro de skills/doc-traceability-framework/.
 
-    Cobre scripts, o YAML de regras e templates (`templates/*.md`, não
-    recursivo). Essa cópia é renderização da skill Claude Code — nunca
+    Cobre scripts, o YAML de regras, templates (`templates/*.md`, não
+    recursivo) e os prompts embutidos (`BUNDLED_PROMPTS`). Essa cópia é renderização da skill Claude Code — nunca
     editada à mão. Sem isto, as duas cópias divergem em silêncio
     (aconteceu: 5 scripts e o YAML ficaram parados na v2.0.0 enquanto o
     original ia para 2.1.0). Template órfão no bundle reprova e nunca é
-    apagado.
+    apagado; o mesmo vale para prompt `*.md` da skill fora de
+    `BUNDLED_PROMPTS`.
     """
     ok = True
     skill = root / "skills/doc-traceability-framework"
@@ -756,6 +762,14 @@ def sync_copies(root: Path, check: bool) -> bool:
     for orphan in _bundle_orphans(root / "templates", skill / "templates"):
         print(f"❌ {orphan}: órfão (sem original em {root}/templates) — remova à mão.")
         ok = False
+    for name in BUNDLED_PROMPTS:
+        ok &= _sync_file(root / "prompts" / name, skill / "prompts" / name, check)
+    skill_prompts = skill / "prompts"
+    if skill_prompts.is_dir():
+        for extra in sorted(skill_prompts.glob("*.md")):
+            if extra.name not in BUNDLED_PROMPTS:
+                print(f"❌ {extra}: órfão (fora de BUNDLED_PROMPTS) — remova à mão.")
+                ok = False
     return ok
 
 

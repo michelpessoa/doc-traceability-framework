@@ -1,4 +1,5 @@
-"""Testes do sync de templates e da cópia por bytes — SDD-DTF-0046 (RF04 a RF08)."""
+"""Testes do sync de templates e da cópia por bytes — SDD-DTF-0046 (RF04 a RF08) —
+e dos prompts embutidos na skill — SDD-DTF-0061 (RF01 a RF03, RF05)."""
 
 import sys
 from pathlib import Path
@@ -8,6 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from render_prompts import _sync_file, sync_copies  # noqa: E402
 
 SKILL = "skills/doc-traceability-framework"
+PROMPTS = ("framework-audit.md", "onboarding-bootstrap.md")
+KIT_FRAMEWORK = Path(__file__).resolve().parents[2]
 
 
 def _root(tmp_path: Path) -> Path:
@@ -20,6 +23,10 @@ def _root(tmp_path: Path) -> Path:
     (root / "rules" / "workflow-rules.yaml").write_text("k: v\n", encoding="utf-8")
     (root / "templates" / "spec.template.md").write_text("# spec\n", encoding="utf-8")
     (root / "templates" / "prd.template.md").write_text("# prd\n", encoding="utf-8")
+    (root / "prompts").mkdir()
+    for name in PROMPTS:
+        (root / "prompts" / name).write_text(f"# {name}\n", encoding="utf-8")
+    (root / "prompts" / "universal.md").write_text("# universal\n", encoding="utf-8")
     return root
 
 
@@ -89,3 +96,54 @@ def test_sync_copies_idempotente(tmp_path):
     snap = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
     assert sync_copies(root, check=False) is True
     assert {p: p.read_bytes() for p in root.rglob("*") if p.is_file()} == snap
+
+
+def test_sync_copies_gera_prompts_embutidos(tmp_path):
+    root = _root(tmp_path)
+    assert sync_copies(root, check=False) is True
+    for name in PROMPTS:
+        assert (root / SKILL / "prompts" / name).read_bytes() == (root / "prompts" / name).read_bytes()
+    assert not (root / SKILL / "prompts" / "universal.md").exists()
+
+
+def test_sync_copies_atualiza_prompt_divergente(tmp_path):
+    root = _root(tmp_path)
+    sync_copies(root, check=False)
+    canonico = root / "prompts" / "onboarding-bootstrap.md"
+    canonico.write_text("# onboarding v2\n", encoding="utf-8")
+    assert sync_copies(root, check=False) is True
+    assert (root / SKILL / "prompts" / "onboarding-bootstrap.md").read_bytes() == canonico.read_bytes()
+
+
+def test_sync_copies_check_detecta_prompt_divergente_ou_ausente(tmp_path, capsys):
+    root = _root(tmp_path)
+    sync_copies(root, check=False)
+    assert sync_copies(root, check=True) is True
+    capsys.readouterr()
+    twin = root / SKILL / "prompts" / "framework-audit.md"
+    twin.write_text("editado\n", encoding="utf-8")
+    assert sync_copies(root, check=True) is False
+    assert "divergente de" in capsys.readouterr().out
+    assert twin.read_text(encoding="utf-8") == "editado\n"
+    twin.unlink()
+    assert sync_copies(root, check=True) is False
+    assert "divergente de" in capsys.readouterr().out
+    assert not twin.exists()
+
+
+def test_sync_copies_reprova_prompt_orfao_nos_dois_modos(tmp_path, capsys):
+    root = _root(tmp_path)
+    sync_copies(root, check=False)
+    orfao = root / SKILL / "prompts" / "extra.md"
+    orfao.parent.mkdir(parents=True, exist_ok=True)
+    orfao.write_text("x\n", encoding="utf-8")
+    capsys.readouterr()
+    for check in (True, False):
+        assert sync_copies(root, check=check) is False
+        out = capsys.readouterr().out
+        assert f"❌ {orfao}: órfão (fora de BUNDLED_PROMPTS) — remova à mão." in out
+        assert orfao.exists()
+
+
+def test_sync_copies_kit_real_em_dia():
+    assert sync_copies(KIT_FRAMEWORK, check=True) is True
