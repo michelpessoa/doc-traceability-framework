@@ -2,7 +2,7 @@
 id: SDD-DTF-0061
 type: SDD
 title: "render_prompts.py sincroniza e confere as cópias dos prompts dentro da skill"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"
@@ -123,10 +123,10 @@ Executar na raiz do kit, na branch de implementação, salvo o A07.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
+- [x] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
       correspondente.
-- [ ] Todo arquivo tocado aparece nas tasks ou nas instruções.
-- [ ] Nenhuma abstração, config ou refactor extra.
+- [x] Todo arquivo tocado aparece nas tasks ou nas instruções.
+- [x] Nenhuma abstração, config ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
