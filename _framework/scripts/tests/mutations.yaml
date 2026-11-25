@@ -65,6 +65,12 @@
   find: "if rf in spec_rfs and rf not in own:"
   replace: "if False:"
 
+- validator: "_framework/scripts/render_prompts.py"
+  test_file: "_framework/scripts/tests/test_render_prompts_sync.py"
+  description: "sync_copies: sincronização dos prompts de BUNDLED_PROMPTS removida (SDD-DTF-0061 RF01)"
+  find: 'ok &= _sync_file(root / "prompts" / name, skill / "prompts" / name, check)'
+  replace: "pass"
+
 - validator: "_framework/scripts/check_renderings.py"
   test_file: "_framework/scripts/tests/test_check_renderings_unknown.py"
   description: "check_unknown_names: cadeia de status deixa de ser conferida (SDD-DTF-0063 RF01, RF06)"
