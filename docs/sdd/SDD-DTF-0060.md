@@ -36,6 +36,19 @@ não tratam `repository_status` e mandam "registrar o que for aprovado" sem
 dizer como a aprovação é registrada desde a 2.5.0. Esta SDD fecha essas
 lacunas sem mudar regra nenhuma.
 
+## Emendas
+
+- **2026-11-25, RF10.** A verificação independente da rodada 1
+  (`docs/sdd/validation-SDD-DTF-0060.md`, veredito FAIL, causa
+  `especificacao`) achou escopo não registrado: as cópias dos dois prompts
+  dentro da skill eram idênticas às canônicas antes desta SDD e ficaram
+  para trás com ela, e a skill instalada as lê. O owner escolheu, na
+  conversa de 2026-11-25, emendar esta SDD para copiar os dois prompts
+  (RF10, task 4, A09), deixando a mudança no gerador para uma SDD própria.
+  A emenda não muda os RF01 a RF09. O status segue `approved`, porque
+  `status_lifecycle` não tem `approved → in_review`; a aprovação da emenda
+  é uma review "Aprovado" do owner no commit dela, na PR #154.
+
 ## Decisão(ões) de arquitetura aplicável(is)
 
 Sem ADR — sizing `small`, nenhum critério de `decision_gates.rfc_to_adr` se
@@ -56,9 +69,13 @@ não mudam (`lessons_policy`).
 | RF07 | framework-audit.md: o Passo 0 trata `repository_status: none_yet` — sem repositório de código não há commit a auditar, e o prompt para e reporta isso | Quando o prompt for lido, ele deve conter `none_yet` |
 | RF08 | framework-audit.md: o Passo 5 diz como a aprovação de ADR reconstruído é registrada desde a 2.5.0, igual ao RF06 | Quando o prompt for lido, ele deve conter `approved_by` |
 | RF09 | Os títulos dos dois prompts deixam de se apresentar como v1.3.0: passam a `(v1.3.0, revisado na 2.8.0)` | Quando os prompts forem lidos, a primeira linha de cada um deve conter `revisado na 2.8.0` |
+| RF10 | Emenda de 2026-11-25 (ver "Emendas"): as cópias dos dois prompts dentro da skill, `_framework/skills/doc-traceability-framework/prompts/onboarding-bootstrap.md` e `framework-audit.md`, ficam idênticas às canônicas de `_framework/prompts/`, porque `references/onboarding.md` e `references/audit.md` mandam o agente da skill instalada ler essas cópias | Quando a SDD for verificada, `cmp` de cada cópia da skill contra o prompt canônico não deve imprimir nada |
 
 Fora de escopo: `workflow-rules.yaml`, scripts, templates, as cópias
-geradas dentro da skill (`references/`, `scripts/`, `templates/`), as
+geradas dentro da skill (`references/`, `scripts/`, `templates/`; as de
+`prompts/` entram pelo RF10, copiadas sem script), a mudança em
+`render_prompts.py` para gerar e conferir as cópias de `prompts/` (SDD
+própria), as
 skills `handover`, `pickup` e `verify-sdd`, `prompts/universal.md` (gerado)
 e os guias (SDD-DTF-0059). Os prompts de Cursor e Copilot também ficam de
 fora: são gerados por `render_prompts.py` a partir de prefixos fixos no
@@ -69,7 +86,9 @@ mudança de script, para uma SDD própria.
 
 - **Onde.** `_framework/skills/doc-traceability-framework/SKILL.md`
   (RF01 a RF04), `_framework/prompts/onboarding-bootstrap.md` (RF05,
-  RF06, RF09) e `_framework/prompts/framework-audit.md` (RF07 a RF09).
+  RF06, RF09) e `_framework/prompts/framework-audit.md` (RF07 a RF09);
+  as cópias dos dois prompts em
+  `_framework/skills/doc-traceability-framework/prompts/` (RF10).
 - **SKILL.md continua roteador.** As adições apontam a chave do YAML
   (`workflow-rules.yaml:approval_policy`, no formato das linhas
   existentes) e não copiam a regra. O front-matter (`name`,
@@ -90,12 +109,13 @@ mudança de script, para uma SDD própria.
 | 1 | Seções e itens novos da skill | RF01 a RF04 | `_framework/skills/doc-traceability-framework/SKILL.md` | |
 | 2 | Prompt de onboarding | RF05, RF06, RF09 | `_framework/prompts/onboarding-bootstrap.md` | |
 | 3 | Prompt de auditoria | RF07 a RF09 | `_framework/prompts/framework-audit.md` | |
-| 4 | Regenerar o índice | RF01 a RF09 | `_framework/INDEX.md` | 1, 2, 3 |
-| 5 | Espelhar no central, em branch e PR próprios | RF01 a RF09 | `central:_framework/skills/doc-traceability-framework/SKILL.md`, `central:_framework/prompts/onboarding-bootstrap.md`, `central:_framework/prompts/framework-audit.md`, `central:_framework/INDEX.md` | 4 |
+| 4 | Copiar os dois prompts para a pasta da skill | RF10 | `_framework/skills/doc-traceability-framework/prompts/onboarding-bootstrap.md`, `_framework/skills/doc-traceability-framework/prompts/framework-audit.md` | 2, 3 |
+| 4b | Regenerar o índice | RF01 a RF10 | `_framework/INDEX.md` | 1, 2, 3, 4 |
+| 5 | Espelhar no central, em branch e PR próprios | RF01 a RF10 | `central:_framework/skills/doc-traceability-framework/SKILL.md`, `central:_framework/prompts/onboarding-bootstrap.md`, `central:_framework/prompts/framework-audit.md`, `central:_framework/skills/doc-traceability-framework/prompts/onboarding-bootstrap.md`, `central:_framework/skills/doc-traceability-framework/prompts/framework-audit.md`, `central:_framework/INDEX.md` | 4b |
 
 ## Critérios de aceite / definição de pronto
 
-Executar na raiz do kit, na branch de implementação, salvo o A08.
+Executar na raiz do kit, na branch de implementação, salvo o A08. O A09 entrou pela emenda de 2026-11-25.
 
 | # | Critério (origem: RF-ID / contrato) | Comando de verificação | Resultado esperado | Perfil esperado |
 |---|---|---|---|---|
@@ -105,8 +125,9 @@ Executar na raiz do kit, na branch de implementação, salvo o A08.
 | A04 | RF07 e RF08: prompt de auditoria | `f=_framework/prompts/framework-audit.md; for t in none_yet approved_by; do grep -q "$t" $f \|\| echo "falta $t"; done` | Nenhum `falta` | automatizado |
 | A05 | RF09: títulos dos prompts | `head -1 _framework/prompts/onboarding-bootstrap.md _framework/prompts/framework-audit.md \| grep -c "revisado na 2.8.0"` | `2` | automatizado |
 | A06 | RF01 a RF09: cada afirmação nova bate com a chave do YAML que ela cita (`approval_policy`, `frontmatter_schema.approved_by`, `executor_contract`, `registry.central_registry`) | Leitura lado a lado do diff dos três arquivos e das chaves citadas de `_framework/rules/workflow-rules.yaml` | Nenhuma afirmação sem chave correspondente ou que a contradiga | manual |
-| A07 | Renderizações, gerados, suíte, validação e escopo | `python3 _framework/scripts/check_renderings.py; echo "exit=$?"; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main` | `exit=0` três vezes; 0 failed; só os três arquivos, `_framework/INDEX.md`, esta SDD e os gerados de `docs/sdd/` (`registry.yaml`, `registry.md`, `INDEX.md`) | automatizado |
-| A08 | Central: espelho idêntico | No central: `cmp` dos três arquivos e de `_framework/INDEX.md` contra o kit; `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | `cmp` sem saída e `exit=0` | automatizado |
+| A07 | Renderizações, gerados, suíte, validação e escopo | `python3 _framework/scripts/check_renderings.py; echo "exit=$?"; python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main` | `exit=0` três vezes; 0 failed; só os três arquivos, as duas cópias do RF10, `_framework/INDEX.md`, esta SDD, `docs/sdd/validation-SDD-DTF-0060.md` e os gerados de `docs/sdd/` (`registry.yaml`, `registry.md`, `INDEX.md`) | automatizado |
+| A08 | Central: espelho idêntico | No central: `cmp` dos três arquivos, das duas cópias do RF10 e de `_framework/INDEX.md` contra o kit; `python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"` | `cmp` sem saída e `exit=0` | automatizado |
+| A09 | RF10: cópias da skill idênticas às canônicas | `for p in onboarding-bootstrap framework-audit; do cmp _framework/prompts/$p.md _framework/skills/doc-traceability-framework/prompts/$p.md; done; echo "exit=$?"` | Sem saída de `cmp` e `exit=0` | automatizado |
 
 ## Instruções específicas para a IA implementadora
 
@@ -115,8 +136,16 @@ Executar na raiz do kit, na branch de implementação, salvo o A08.
 - **Fonte:** cada afirmação nova vem da chave do YAML citada no RF, aberta
   na hora de escrever.
 - **Não mudar** `workflow-rules.yaml`, scripts, templates, as cópias
-  geradas dentro da skill, as outras skills, os prompts gerados nem os
-  guias.
+  geradas dentro da skill (`references/`, `scripts/`, `templates/`), as
+  outras skills, os prompts gerados nem os guias.
+- **RF10:** copie os dois prompts canônicos, já com o texto final, sobre
+  as cópias de `_framework/skills/doc-traceability-framework/prompts/`
+  (`cp`), sem editar a cópia à mão e sem mudar `render_prompts.py`.
+  Aproveite a rodada para os dois descompassos não bloqueantes do A06 da
+  rodada 1: o item Executor do SKILL.md não pode dizer que toda escrita é
+  por PR (`executor_contract.writes` também lista `entrega` e
+  `approved_by` com `kind: policy`), e "em projeto sob 2.7.0" passa a
+  "sob 2.7.0 ou maior".
 - **Gerados só por script:** `render_prompts.py` para `_framework/INDEX.md`;
   `generate_registry_md.py` para `registry.md`.
 - **Evidência de verificação** só por verificador independente, em sessão
