@@ -14,7 +14,12 @@ precisa carregar para não induzir a IA ao erro:
   1. Todo tipo de documento não-legado aparece na renderização.
   2. Toda Iron Law tem correspondência (busca por termo característico).
   3. Os níveis de sizing aparecem.
-  4. Nenhuma renderização cita tipo ou status que não existe no YAML.
+  4. Nenhuma renderização cita tipo ou status que não existe no YAML
+     (SDD-DTF-0063): toda palavra de uma cadeia de três ou mais status
+     ligados por `→` e todo `status: <palavra>` entre crases estão em
+     status_lifecycle.states ou incident_lifecycle.states; todo prefixo
+     de id `{TIPO}-{PROJETO}-{SEQ}` está em document_types ou em
+     legacy_document_types.
 
 Uso:
     python3 check_renderings.py [--report-only]
@@ -149,6 +154,40 @@ def check_optional_sections(rules: dict, template: Path) -> list[str]:
     return problems
 
 
+# Checagem 4 (SDD-DTF-0063). Cadeia de status: três ou mais palavras
+# minúsculas ligadas por →, aceitando alternativas com | — duas palavras
+# só (draft → approved) ou um trecho colado a / ou - (feature/x → develop)
+# não contam como cadeia.
+STATUS_CHAIN = re.compile(r"(?<![\w/-])[a-z_]+(?:\s*→\s*[a-z_]+(?:\|[a-z_]+)*){2,}")
+STATUS_DECLARED = re.compile(r"`status:\s*([a-z_]+)`")
+ID_PREFIX = re.compile(r"\b([A-Z]+)-(?:\{PROJECT_CODE\}|[A-Z][A-Z0-9]*)-(?:\d{4}|\{SEQ4?\}|X|N)\b")
+
+
+def check_unknown_names(rel: str, raw: str, statuses: set[str], types: set[str]) -> list[str]:
+    """Status e prefixos de tipo citados na renderização existem no YAML.
+
+    Cada palavra é reportada uma vez por renderização, mesmo que apareça
+    em mais de uma cadeia ou também em `status:`.
+    """
+    text = re.sub(r"[`*]", "", raw)
+    chained = re.sub(r"\s*\n\s*", " ", text)
+
+    cited_statuses: list[str] = []
+    for m in STATUS_CHAIN.finditer(chained):
+        cited_statuses += re.findall(r"[a-z_]+", m.group(0))
+    cited_statuses += STATUS_DECLARED.findall(raw)
+    cited_types = ID_PREFIX.findall(text)
+
+    problems = []
+    for word in dict.fromkeys(cited_statuses):
+        if word not in statuses:
+            problems.append(f"{rel}: cita o status inexistente '{word}'.")
+    for prefix in dict.fromkeys(cited_types):
+        if prefix not in types:
+            problems.append(f"{rel}: cita o tipo inexistente '{prefix}'.")
+    return problems
+
+
 def framework_root() -> Path:
     rules = find_rules_file()
     if not rules:
@@ -169,6 +208,10 @@ def main() -> int:
         k for k, v in types.items() if (v or {}).get("deprecated_since")
     ]
     sizing = [lvl["id"] for lvl in (rules.get("sizing") or {}).get("levels") or []]
+    known_statuses = set((rules.get("status_lifecycle") or {}).get("states") or []) | set(
+        (rules.get("incident_lifecycle") or {}).get("states") or []
+    )
+    known_types = set(types) | set((rules.get("legacy_document_types") or {}).keys())
 
     iron_laws = {
         key: (value or {}).get("iron_law")
@@ -214,6 +257,8 @@ def main() -> int:
         for t in legacy_types:
             if re.search(rf"\b{re.escape(t)}\b", text) and "legad" not in text.lower():
                 warnings.append(f"{rel}: cita o tipo legado '{t}' sem marcar que é legado.")
+
+        problems += check_unknown_names(rel, raw, known_statuses, known_types)
 
     return report(
         problems,

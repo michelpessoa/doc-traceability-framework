@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 61 SDDs
+Total: 62 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -66,3 +66,4 @@ Total: 61 SDDs
 | `SDD-DTF-0060` | `_framework/skills/doc-traceability-framework/SKILL.md` é o roteador que os agentes seguem, e não muda desde setembro: não cita `approval_p… | `_framework/INDEX.md`, `_framework/prompts/framework-audit.md`, `_framework/prompts/onboarding-bootstrap.md`, `_framework/skills/doc-traceability-framework/SKILL.md` +8 | — | — | implemented |
 | `SDD-DTF-0061` | `_framework/rules/kit-index.yaml` declara `skills/doc-traceability-framework/prompts/*` como "Cópia gerada de prompts/{name} dentro da skil… | `_framework/INDEX.md`, `_framework/scripts/render_prompts.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_render_prompts_sync.py` +6 | — | — | implemented |
 | `SDD-DTF-0062` | `core_facts` (`_framework/scripts/render_prompts.py`) gera o "Núcleo canônico". | `AGENTS.md`, `_framework/INDEX.md`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/universal.md`, `_framework/rules/kit-index.yaml` +9 | — | — | implemented |
+| `SDD-DTF-0063` | A docstring de `_framework/scripts/check_renderings.py` promete quatro checagens. | `_framework/INDEX.md`, `_framework/rules/kit-index.yaml`, `_framework/scripts/check_renderings.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_check_renderings_unknown.py` +7 | — | — | implemented |
