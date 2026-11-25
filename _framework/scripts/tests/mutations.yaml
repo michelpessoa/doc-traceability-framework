@@ -82,3 +82,21 @@
   description: "ID_PREFIX: fim do id volta a \\b e ids com {SEQ4}/{SEQ} deixam de casar (SDD-DTF-0064 RF01, RF05)"
   find: '|X|N)(?!\w)")'
   replace: '|X|N)\b")'
+
+- validator: "_framework/scripts/check_renderings.py"
+  test_file: "_framework/scripts/tests/test_check_renderings_unknown.py"
+  description: "main: a chamada da checagem 4 (check_unknown_names) vira pass (SDD-DTF-0065 RF02, RF06)"
+  find: "problems += check_unknown_names(rel, raw, known_statuses, known_types)"
+  replace: "pass"
+
+- validator: "_framework/scripts/check_renderings.py"
+  test_file: "_framework/scripts/tests/test_check_renderings_unknown.py"
+  description: "main: known_types sem legacy_document_types, PRD/TS passam a reprovar (SDD-DTF-0065 RF03, RF06)"
+  find: 'known_types = set(types) | set((rules.get("legacy_document_types") or {}).keys())'
+  replace: "known_types = set(types)"
+
+- validator: "_framework/scripts/render_prompts.py"
+  test_file: "_framework/scripts/tests/test_render_prompts_core.py"
+  description: "core_facts: laço dos itens de checks da policy desligado (SDD-DTF-0065 RF01, RF06)"
+  find: 'with_checks = [r for r in policy.get("rules") or [] if r.get("checks")]'
+  replace: "with_checks = []"
