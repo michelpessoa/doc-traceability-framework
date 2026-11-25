@@ -149,16 +149,24 @@ Executar na raiz do kit, na branch de implementação, salvo o A07.
 
 Antes de marcar `implemented`, confirme as duas direções — SDD incompleta
 tanto quanto SDD estourada são falha:
-- [ ] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
+- [x] Todo requisito consolidado acima (RF01 a RF06) tem código ou teste
       correspondente.
-- [ ] Todo arquivo tocado aparece nas tasks ou nas instruções.
-- [ ] Nenhuma abstração, config ou refactor extra.
+- [x] Todo arquivo tocado aparece nas tasks ou nas instruções.
+- [x] Nenhuma abstração, config ou refactor extra.
 
 ## Evidência de verificação (preencher antes de status `implemented`)
 
 Preenchida pela skill `verify-sdd`, em sessão separada da que implementou.
 
-**Verificador independente:** {sim | não — mesma sessão que implementou}
+**Verificador independente:** sim
 
-| # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
-|---|---|---|---|---|---|---|
+| Rodada | # | Comando rodado | Saída (resumo) | Sensor | Passou? | Assertion (file:line) | Perfil usado |
+|---|---|---|---|---|---|---|---|
+| 1 | Fidelidade à origem | `python3 _framework/scripts/check_source_docs.py docs/sdd/SDD-DTF-0062.md /home/user/doc-traceability-central/docs/DTF; echo "exit=$?"`; leitura do front-matter e da emenda | `✅ source_docs de SDD-DTF-0062.md conferem com o registry central.` `exit=0`; `source_docs: []` e `sizing: small`, sem SPEC nem ADR de origem (precedente SDD-DTF-0056): os itens 2 a 4 do passo 0 não se aplicam, e RF01 a RF06 estão na própria SDD. Emenda (task 1b, `643d566`): `gh api .../pulls/157/reviews` dá `COMMENTED michelpessoa 643d566... Aprovado` | sem teste automatizado (leitura) | Sim | `n/a` | manual |
+| 1 | A01 | `python3 -m pytest _framework/scripts/tests/test_render_prompts_core.py -q`, no kit em `bbb5b80` e numa cópia de `bbb5b80` com `render_prompts.py` de `7c86bb9` (antes da task 2) | `bbb5b80`: `7 passed`; antes da task 2: `6 failed, 1 passed` | ver A02 | Sim | `_framework/scripts/tests/test_render_prompts_core.py:43`, `:52`, `:67`, `:74`, `:85` | automatizado |
+| 1 | A02 | em cópia descartável (`verify-0062/`, `git archive HEAD`): bloco `approval_policy` (`render_prompts.py:195-208`) removido de `core_facts`; pytest do A01; restaurado por cópia guardada (`cmp` igual ao kit) | mutação: `5 failed, 2 passed`; restaurado: `7 passed` | outras mutações na cópia: executor desligado (`if False`): `1 failed`; ciclo de volta à cadeia dos 5 primeiros: `1 failed`; regras fixas em `[:3]` (YAML de teste com 4): `1 failed`; `hash_excluded_sections` fora da frase: `1 failed`; restaurado: `7 passed` | Sim | `_framework/scripts/tests/test_render_prompts_core.py:34` | automatizado |
+| 1 | A03 | comando literal da SDD (laço `grep -qF` nos cinco gerados) | nenhuma linha `falta` | o mesmo laço numa cópia de `7c86bb9`: 25 linhas `falta` (5 termos × 5 arquivos), então o critério discrimina | Sim | `n/a` (grep nos gerados) | automatizado |
+| 1 | A04 | ``grep -c '`rejected` → `implemented`' AGENTS.md _framework/prompts/universal.md docs/especificacao.md`` | `AGENTS.md:0`, `universal.md:0`, `especificacao.md:0` | os três arquivos em `7c86bb9`: `1` cada, então o critério discrimina | Sim | `n/a` (grep nos gerados) | automatizado |
+| 1 | A05 | leitura lado a lado de `git diff 7c86bb9..HEAD -- AGENTS.md` e de `approval_policy`, `executor_contract` e `status_lifecycle` de `workflow-rules.yaml` (lidos com `yaml.safe_load`) | `Estados:` lista os 7 de `states` na ordem; "Transições válidas" e INC inalteradas; tabela com 3 linhas = 3 regras, tipos e sizing na ordem do YAML, `todos` onde não há `sizing`; `Sem regra que case: human.` = `default_approver`; frase cita as 4 `hash_excluded_sections` na ordem, e `approval_hash.py` (docstring) e `review_approval.py` (docstring) fazem o que ela diz; `contract_version` 1 e as 7 frases de `writes` literais. Nenhuma linha sem chave ou que a contradiga | sem teste automatizado (leitura); os testes do A01 cobrem a mesma correspondência por código | Sim | `n/a` | manual |
+| 1 | A06 | `python3 _framework/scripts/render_prompts.py --check; echo "exit=$?"; python3 _framework/scripts/check_renderings.py; echo "exit=$?"; python3 -m pytest _framework/scripts/tests/ _framework/tests/ -q; ruff check _framework/scripts; ruff format --check _framework/scripts; mypy _framework/scripts; python3 _framework/scripts/framework_check.py --auto; echo "exit=$?"; git diff --name-only origin/main`; e `python3 _framework/scripts/selftest.py` | `exit=0`, 0 `❌`; `✅ 5 renderização(ões) concordam` `exit=0`; `533 passed in 68.43s`; `All checks passed!`; `43 files already formatted`; `Success: no issues found in 43 source files`; `✅ Todas as verificações do framework passaram.` `exit=0`; diff: os 9 arquivos das tasks 1, 1b, 2 e 3 (sem `workflow-rules.map.md`, que segue `em dia`), `SDD-DTF-0062.md`, `docs/sdd/INDEX.md`, `registry.md`, `registry.yaml` (`origin/main` = merge-base `7c86bb9`); selftest: `✅ 10 mutação(ões): todos os mutantes morreram.` `exit=0` | cópia com `AGENTS.md` editado à mão (`Sem regra que case: policy.`): `❌ AGENTS.md: divergente do gerado`, `exit=1`; restaurado `exit=0` | Sim | `n/a` (suíte inteira e lista do diff) | automatizado |
+| 1 | A07 | no central `/home/user/doc-traceability-central` (`8798155`): `cmp` de `_framework/scripts/render_prompts.py`, da cópia da skill, de `_framework/scripts/tests/test_render_prompts_core.py` e de `_framework/rules/kit-index.yaml` contra o kit; `grep -c "### Aprovação" AGENTS.md` | script e cópia `differ: char 40699, line 184`; teste `No such file or directory`; `kit-index.yaml` `differ: char 9958, line 167`; `grep -c` dá `0`. O central ainda não tem o espelho | sem teste automatizado nesta etapa: o espelho vem depois do merge no kit (task 4), e o critério é rodado por quem espelhar | Pendente: etapa pós-merge no kit | `n/a` (`cmp`) | automatizado (estado pré-espelho) |
