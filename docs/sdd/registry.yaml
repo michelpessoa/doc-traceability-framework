@@ -631,3 +631,13 @@ documents:
     relates_to: [SDD-DTF-0063]
     path: "docs/sdd/SDD-DTF-0064.md"
     tags: [check_renderings, tooling, tipos, renderizacoes, regex]
+  - id: SDD-DTF-0065
+    type: SDD
+    title: "Achados não bloqueantes das SDD-DTF-0062 a 0064: checks da policy no núcleo, testes que discriminam a chamada da checagem 4 e os tipos legados, e negativo que discrimina"
+    status: in_review
+    owner: "Michel Pessoa"
+    created: "2026-11-25"
+    updated: "2026-11-25"
+    relates_to: [SDD-DTF-0062, SDD-DTF-0063, SDD-DTF-0064]
+    path: "docs/sdd/SDD-DTF-0065.md"
+    tags: [render_prompts, core_facts, check_renderings, testes, mutacoes, tooling]

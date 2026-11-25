@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.8.0._
 
-Total de documentos: **63**
+Total de documentos: **64**
 
 
-## SDD (63)
+## SDD (64)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -72,6 +72,7 @@ Total de documentos: **63**
 | `SDD-DTF-0063` | check_renderings.py cumpre a checagem 4: status e tipo inexistentes nas renderizações reprovam | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
 | `SDD-DTF-0062` | Núcleo canônico das renderizações traz a aprovação como dado e o executor, e o ciclo de status deixa de sugerir rejected → implemented | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
 | `SDD-DTF-0064` | check_renderings.py acusa tipo inexistente também em id com placeholder de sequência ({SEQ4}, {SEQ}) | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0063 |
+| `SDD-DTF-0065` | Achados não bloqueantes das SDD-DTF-0062 a 0064: checks da policy no núcleo, testes que discriminam a chamada da checagem 4 e os tipos legados, e negativo que discrimina | in_review | Michel Pessoa | 2026-11-25 | SDD-DTF-0062, SDD-DTF-0063, SDD-DTF-0064 |
 
 ## Documentos originados
 
