@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.8.0._
 
-Total de documentos: **62**
+Total de documentos: **63**
 
 
-## SDD (62)
+## SDD (63)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
@@ -70,6 +70,7 @@ Total de documentos: **62**
 | `SDD-DTF-0060` | Skill do framework e prompts de onboarding e auditoria cobrem a aprovação como dado, o executor, a SDD enxuta e o greenfield | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0040, SDD-DTF-0053, SDD-DTF-0054, SDD-DTF-0055, SDD-DTF-0057, SDD-DTF-0058 |
 | `SDD-DTF-0061` | render_prompts.py sincroniza e confere as cópias dos prompts dentro da skill | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
 | `SDD-DTF-0063` | check_renderings.py cumpre a checagem 4: status e tipo inexistentes nas renderizações reprovam | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
+| `SDD-DTF-0062` | Núcleo canônico das renderizações traz a aprovação como dado e o executor, e o ciclo de status deixa de sugerir rejected → implemented | implemented | Michel Pessoa | 2026-11-25 | SDD-DTF-0060 |
 | `SDD-DTF-0064` | check_renderings.py acusa tipo inexistente também em id com placeholder de sequência ({SEQ4}, {SEQ}) | in_review | Michel Pessoa | 2026-11-25 | SDD-DTF-0063 |
 
 ## Documentos originados

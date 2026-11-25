@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 62 SDDs
+Total: 63 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|
@@ -65,5 +65,6 @@ Total: 62 SDDs
 | `SDD-DTF-0059` | `docs/guias/guia-tecnico.md` e `docs/guias/guia-nao-tecnico.md` não mudam desde setembro (última versão coberta: 2.3.x). | `_framework/INDEX.md`, `central:_framework/INDEX.md`, `central:docs/guias/guia-nao-tecnico.md`, `central:docs/guias/guia-tecnico.md`, `docs/guias/guia-nao-tecnico.md`, `docs/guias/guia-tecnico.md` | — | — | implemented |
 | `SDD-DTF-0060` | `_framework/skills/doc-traceability-framework/SKILL.md` é o roteador que os agentes seguem, e não muda desde setembro: não cita `approval_p… | `_framework/INDEX.md`, `_framework/prompts/framework-audit.md`, `_framework/prompts/onboarding-bootstrap.md`, `_framework/skills/doc-traceability-framework/SKILL.md` +8 | — | — | implemented |
 | `SDD-DTF-0061` | `_framework/rules/kit-index.yaml` declara `skills/doc-traceability-framework/prompts/*` como "Cópia gerada de prompts/{name} dentro da skil… | `_framework/INDEX.md`, `_framework/scripts/render_prompts.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_render_prompts_sync.py` +6 | — | — | implemented |
+| `SDD-DTF-0062` | `core_facts` (`_framework/scripts/render_prompts.py`) gera o "Núcleo canônico". | `AGENTS.md`, `_framework/INDEX.md`, `_framework/prompts/copilot/copilot-instructions.md`, `_framework/prompts/cursor/doc-framework.mdc`, `_framework/prompts/universal.md`, `_framework/rules/kit-index.yaml` +9 | — | — | implemented |
 | `SDD-DTF-0063` | A docstring de `_framework/scripts/check_renderings.py` promete quatro checagens. | `_framework/INDEX.md`, `_framework/rules/kit-index.yaml`, `_framework/scripts/check_renderings.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_check_renderings_unknown.py` +7 | — | — | implemented |
 | `SDD-DTF-0064` | A SDD-DTF-0063 fez `check_renderings.py` reprovar prefixo de id que não é tipo, com a regex fixada no RF03 dela e guardada em `ID_PREFIX`:… | `_framework/INDEX.md`, `_framework/scripts/check_renderings.py`, `_framework/scripts/tests/mutations.yaml`, `_framework/scripts/tests/test_check_renderings_unknown.py` +6 | — | — | in_review |
