@@ -2,7 +2,7 @@
 id: SDD-DTF-0063
 type: SDD
 title: "check_renderings.py cumpre a checagem 4: status e tipo inexistentes nas renderizações reprovam"
-status: in_review
+status: approved
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"
