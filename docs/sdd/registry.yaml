@@ -611,3 +611,13 @@ documents:
     relates_to: [SDD-DTF-0060]
     path: "docs/sdd/SDD-DTF-0063.md"
     tags: [check_renderings, tooling, status, tipos, renderizacoes]
+  - id: SDD-DTF-0062
+    type: SDD
+    title: "Núcleo canônico das renderizações traz a aprovação como dado e o executor, e o ciclo de status deixa de sugerir rejected → implemented"
+    status: implemented
+    owner: "Michel Pessoa"
+    created: "2026-11-25"
+    updated: "2026-11-25"
+    relates_to: [SDD-DTF-0060]
+    path: "docs/sdd/SDD-DTF-0062.md"
+    tags: [render_prompts, core_facts, agents-md, prompts, aprovacao, executor, status]

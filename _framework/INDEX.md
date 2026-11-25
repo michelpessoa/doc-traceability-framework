@@ -1,7 +1,7 @@
 # Índice do kit
 
 Gerado por `render_indexes.py` — não edite à mão. Fonte: `rules/kit-index.yaml`.
-Total: 132 arquivos
+Total: 133 arquivos
 
 | Caminho (relativo a `_framework/`) | O que é | Quando ler | Tamanho |
 |---|---|---|---|
@@ -58,6 +58,7 @@ Total: 132 arquivos
 | `scripts/tests/test_lessons_check.py` | Testes do lessons_check.py: contagem de recorrência de lições | Ao alterar a contagem de lições | 2-8 KB |
 | `scripts/tests/test_operational_artifacts.py` | Testes dos artefatos operacionais por glob, como validation-*.md | Ao alterar quais arquivos dispensam front-matter | <2 KB |
 | `scripts/tests/test_registry_entrega.py` | Testes do campo entrega no trace e de SDD em docs/sdd/arquivo/ | Ao alterar o registro de entrega de SDD | 2-8 KB |
+| `scripts/tests/test_render_prompts_core.py` | Testes de core_facts: aprovação, executor e estados | Ao alterar core_facts | 2-8 KB |
 | `scripts/tests/test_render_prompts_mechanization.py` | Testes do bloco mechanization gerado pelo render_prompts.py | Ao alterar a mecanização dos gates nas renderizações | 2-8 KB |
 | `scripts/tests/test_render_prompts_sync.py` | Testes do sync de templates e da cópia byte a byte da skill | Ao alterar sync_copies ou a paridade do bundle | 2-8 KB |
 | `scripts/tests/test_report_json.py` | Testes do --json dos validadores e da saída em texto inalterada | Ao alterar report() ou o main() de um validador | 8-32 KB |
