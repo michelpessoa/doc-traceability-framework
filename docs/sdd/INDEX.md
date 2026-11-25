@@ -1,7 +1,7 @@
 # Índice de SDDs
 
 Gerado por `render_indexes.py sdd` — não edite à mão.
-Total: 61 SDDs
+Total: 62 SDDs
 
 | ID | Resumo | Arquivos de código | Substitui | Substituída por | Status |
 |---|---|---|---|---|---|

@@ -2,10 +2,10 @@
 
 _Gerado automaticamente a partir de `registry.yaml`. Não editar manualmente. Framework v2.8.0._
 
-Total de documentos: **61**
+Total de documentos: **62**
 
 
-## SDD (61)
+## SDD (62)
 
 | ID | Título | Status | Owner | Atualizado | Relacionados |
 |---|---|---|---|---|---|
