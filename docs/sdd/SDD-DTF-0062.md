@@ -2,7 +2,7 @@
 id: SDD-DTF-0062
 type: SDD
 title: "Núcleo canônico das renderizações traz a aprovação como dado e o executor, e o ciclo de status deixa de sugerir rejected → implemented"
-status: approved
+status: implemented
 project: "DTF"
 owner: "Michel Pessoa"
 created: "2026-11-25"
