@@ -46,7 +46,7 @@ ADR (`workflow-rules.yaml:decision_gates`); registre `decision_gate_criteria_met
 A ausência do documento É o registro de que a fase foi pulada. A SDD nasce
 no repositório do projeto, compilada de SPEC/ADR `approved`, com
 `source_docs` `{id, url}`; tasks em paralelo: `scripts/parallel_plan.py`.
-Em projeto sob 2.7.0, a SDD com `source_docs` é enxuta: requisitos por
+Em projeto sob 2.7.0 ou maior, a SDD com `source_docs` é enxuta: requisitos por
 referência à SPEC (RF-ID | Origem | Requisito (resumo) | Arquivos), `sizing`
 obrigatório, RF-IDs conferidos contra a SPEC nas duas direções por
 `scripts/check_source_docs.py`. Com a coluna `Projeto` na SPEC (2.8.0), só
@@ -102,9 +102,9 @@ Vale a primeira regra que casa; nenhuma casa, vale `default_approver`
 - **"Precisa de ADR?"**: aplique o gate, mostre os critérios e o próximo documento.
 - **"Implementa o que foi decidido"**: pare antes de código; SPEC e SDD primeiro.
 - **Muda o status**: valide no ciclo certo; documento e registry juntos.
-- **Monta a SDD**: SPEC/ADR `approved`, compile no repo do projeto, `source_docs` com id+url; sob 2.7.0, enxuta (ver "Fluxo e sizing").
+- **Monta a SDD**: SPEC/ADR `approved`, compile no repo do projeto, `source_docs` com id+url; sob 2.7.0 ou maior, enxuta (ver "Fluxo e sizing").
 - **Registra a aprovação**: seção "Aprovação"; pela PR, `approved_by` humano só com saída válida de `review_approval.py` sobre o head revisado.
-- **Executor (ferramenta que roda o fluxo)**: `workflow-rules.yaml:executor_contract`: o que lê, os scripts com `--json` e o esquema de cada saída, e o que escreve no central, sempre por PR, nunca em main.
+- **Executor (ferramenta que roda o fluxo)**: `workflow-rules.yaml:executor_contract`: o que lê, os scripts com `--json` e o esquema de cada saída, e o que escreve: no central por PR, nunca em main; no registry de projeto, `entrega` e `path` da SDD entregue; `approved_by` com `kind: policy` só onde `approval_policy` permite.
 - **De onde veio X / rastreia**: percorra `relates_to`, `parent_*`, `source_docs`.
 - **Valida o registry**: `scripts/registry_tools.py validate`.
 - **Terminei de implementar**: skill `verify-sdd` antes de mudar o status.

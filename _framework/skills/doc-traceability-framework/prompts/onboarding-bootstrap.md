@@ -1,4 +1,4 @@
-# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.3.0)
+# Prompt de Onboarding — Bootstrap de Projeto Já Existente (v1.3.0, revisado na 2.8.0)
 
 Use este prompt **uma única vez por projeto**, no dia em que um projeto
 que já tem código em produção (mas nunca usou este framework) vai passar
@@ -8,7 +8,9 @@ de código do projeto (Claude Code, Cursor, etc.). Ele implementa a seção
 alternativo, é a Fase 1 do mesmo framework.
 
 Não use este prompt para um projeto novo que ainda não tem código — nesse
-caso, comece direto por um Strategy Doc ou RFC com o `prompts/universal.md`.
+caso, o projeto segue em modo greenfield (`repository_status: none_yet` no
+registry central) e começa direto por um Strategy Doc ou RFC com o
+`prompts/universal.md`.
 
 ---
 
@@ -31,9 +33,13 @@ desatualizadas críticas).
 Antes de escrever o BASE, confirme (ou pergunte ao usuário, se não
 souber) a URL do repositório de código deste projeto, e grave-a no campo
 `repository` de `docs/{PROJECT_CODE}/registry.yaml` no repositório
-central. Nunca adivinhe essa URL. Este campo é o que a auditoria de
-aderência (`prompts/framework-audit.md`) vai ler no futuro para saber
-qual repositório inspecionar — sem ele, a auditoria não tem como rodar.
+central, junto com `repository_status: active`
+(`registry.central_registry.repository_field`). Nunca adivinhe essa URL.
+Este campo é o que a auditoria de aderência (`prompts/framework-audit.md`)
+vai ler no futuro para saber qual repositório inspecionar — sem ele, a
+auditoria não tem como rodar. Se o repositório de código ainda não existe,
+este prompt não se aplica: pare, e o projeto segue em greenfield, com
+`repository_status: none_yet`.
 
 **Passo 2 — Escreva UM documento BASE.**
 Use `templates/base.template.md`. Id: `BASE-{PROJECT_CODE}-0001` (pergunte
@@ -78,6 +84,14 @@ Para cada documento aprovado (BASE + ADRs confirmados), adicione a
 entrada correspondente em `docs/{PROJECT_CODE}/registry.yaml` no
 repositório central, com `tags: [onboarding]`.
 
+Em projeto sob 2.5.0 ou maior, o BASE e cada ADR confirmados entram em
+`approved` com `approved_by` (`frontmatter_schema`, `approval_policy`):
+`kind: human`, `actor` com o login de quem revisou, `at`, `content_sha256`
+calculado por `_framework/scripts/approval_hash.py` e `evidence` com a URL
+da review. Se a revisão é feita na PR, o `approved_by` sai de
+`_framework/scripts/review_approval.py` sobre o head revisado, e o
+documento só passa a `approved` com saída válida desse script.
+
 ## Fase 2 — Retomando o fluxo normal (não é você quem faz isso agora)
 
 Depois que a Fase 1 estiver completa e revisada, diga claramente ao time:
@@ -92,10 +106,14 @@ como em um projeto que nasceu dentro do framework.
 - [ ] Existe exatamente um `BASE-{PROJECT_CODE}-0001`
 - [ ] Todo ADR reconstruído tem `provenance: reconstructed`
 - [ ] Nenhum ADR reconstruído foi aprovado sem revisão humana
+- [ ] Em projeto sob 2.5.0 ou maior, o BASE e cada ADR `approved` têm
+      `approved_by` com `kind: human` e `evidence` (URL da review); pela
+      PR, saído de `review_approval.py`
 - [ ] `known_gaps` no BASE está preenchido honestamente (não vazio "para
       parecer completo")
 - [ ] `docs/{PROJECT_CODE}/registry.yaml` tem entradas para todos os
       documentos desta fase, com `tags: [onboarding]`
 - [ ] Nenhuma SPEC retroativa foi criada
 - [ ] Campo `repository` em `docs/{PROJECT_CODE}/registry.yaml` está
-      preenchido com a URL do repositório de código do projeto
+      preenchido com a URL do repositório de código do projeto, com
+      `repository_status: active`
